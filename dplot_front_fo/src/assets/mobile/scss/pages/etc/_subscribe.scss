@@ -1,0 +1,33 @@
+.dp-subscribe {
+  //app title
+  .dp-subscribe-title {
+    font-size: 18px;
+    letter-spacing: -.72px;
+    padding-top: 30px;
+  }
+  .dp-subscribe__checkbox {
+    align-items: center;
+  }
+  .dp-subscribe__email__label {
+    font-size: 14px;
+    letter-spacing: -.56px;
+    margin-bottom: 10px;
+  }
+  .icon-question {
+    background-image: url("~@/assets/common/icon/icon-question-mark-gray-20px.svg");
+  }
+  .subscribe__button__text {
+    font-size: 16px;
+    letter-spacing: -.64px;
+  }
+}
+//뉴스레터 구독신청 모달 scss
+.news-letter-modal {
+  &.dp-modal .modal-body {
+    padding: 30px 14px;
+  }
+  .news-letter__item__text {
+    font-size: 14px;
+    letter-spacing: -.56px;
+  }
+}

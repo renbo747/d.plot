@@ -1,0 +1,41 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.dplot.mapper.EvtCommentReportMapper">
+
+    <select id="selectAdminEvtCommentReportList" parameterType="somap" resultType="somap">
+    <![CDATA[
+        /* selectAdminEvtCommentReportList */
+        SELECT if(@rownum < 10, concat('0', @rownum := @rownum + 1), @rownum := @rownum + 1) as num,
+               a.idx,
+               a.commentidx,
+               b.userid,
+               c.name,
+               fn_get_codename('base', 'dadamembertype', c.dadamembertype)                   AS dadamembertype,
+               fn_get_codename('base', 'mumemlvtype', c.memlvtype)                           AS mumemlvtype,
+               date_format(a.regdate, '%Y-%m-%d %H:%m')                                      AS regdate,
+               fn_get_codename('base', 'reporttype', a.reporttype)                           AS reporttype,
+               a.etcreason
+        FROM t_evtcomment_report a
+                 LEFT JOIN t_user b
+                           ON a.userno = b.no
+                 LEFT JOIN t_member c ON b.no = c.userno
+           , (SELECT @rownum := 0) temp
+        WHERE 1 = 1
+          AND commentidx = #{commentidx}
+    ]]>
+    </select>
+    
+    <insert id="insertReportComment" parameterType="somap">
+    	INSERT INTO t_evtcomment_report(commentidx, userno, reporttype, etcreason, regdate)
+    	VALUES(#{commentidx}, #{userno}, #{reporttype}, #{etcreason}, now())
+    </insert>
+
+	<select id="selectReportCommentCnt" parameterType="somap" resultType="Integer">
+		SELECT count(*)
+		FROM t_evtcomment_report
+		WHERE 1 = 1
+		AND commentidx = #{commentidx}
+		AND userno = #{userno}
+	</select>
+</mapper>

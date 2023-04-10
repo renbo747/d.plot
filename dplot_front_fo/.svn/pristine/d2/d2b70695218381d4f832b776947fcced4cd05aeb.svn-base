@@ -1,0 +1,58 @@
+.dp-badge {
+  display: inline-flex;
+  align-items: center;
+  text-transform: uppercase;
+  justify-content: center;
+  padding: 0 8px;
+  height: 20px;
+  border-radius: 10px;
+  background:#eee;
+  color: $gray-800;
+  font-size: 10px;
+  letter-spacing: -.4px;
+  //text-transform: uppercase;
+  @include media-breakpoint-up(xl) {
+    font-size: 12px;
+  }
+  &.best {
+    order:0;
+    background : #ccff00;
+  }
+  &.sm {
+    height: 18px;
+    border-radius: 9px;
+    letter-spacing: -.3px;
+  }
+  &.lg {
+    height: 24px;
+    border-radius: 12px;
+    font-size: 12px;
+    letter-spacing: -.48px;
+  }
+  &.h26 {
+    height: 26px;
+    border-radius: 13px;
+    font-size: 12px;
+    letter-spacing: -.48px;
+  }
+  &.h30 {
+    height: 30px;
+    font-size: 16px;
+    letter-spacing: -.64px;
+  }
+  &.square {
+    border-radius: 0;
+  }
+  &.primary {
+    border-color: $primary;
+    color: $primary;
+  }
+  &.secondary {
+    border-color: $secondary;
+    color: $secondary;
+  }
+}
+
+.dp-badge + .dp-badge {
+  margin-left: 4px;
+}

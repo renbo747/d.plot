@@ -1,0 +1,185 @@
+.mypage-grade {
+  .grade__summary {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 42px 0;
+    text-align: center;
+    background: $gray-100;
+    .summary__figure {
+      width: 74px;
+      margin-bottom: 16px;
+      img {
+        width: 100%;
+      }
+    }
+    .summary__info {
+      .info__text {
+        font-size: 18px;
+        letter-spacing: -.72px;
+        line-height: 24px;
+        margin-bottom: 4px;
+      }
+      .info__period {
+        font-size: 16px;
+        letter-spacing: -.64px;
+        line-height: 22px;
+        color: $gray-700;
+      }
+    }
+  }
+  .grade-section {
+    padding-top: 50px;
+  }
+  .grade__title {
+    font-size: 18px;
+    letter-spacing: -.72px;
+    line-height: 24px;
+    font-weight: 500;
+    margin-bottom: 30px;
+  }
+  .dp-table {
+    th {
+      font-weight: 500;
+    }
+    td b {
+      font-size: 18px;
+      letter-spacing: -.54px;
+    }
+  }
+  .necessity__p {
+    font-size: 14px;
+    letter-spacing: -.56px;
+    font-weight: 500;
+    color: $gray-700;
+    margin-bottom: 10px;
+    span {
+      color: $black;
+    }
+  }
+
+  .grade__benefit {
+    padding-top: 184px;
+  }
+
+  .grade__expectation {
+    .expectation__p {
+      margin-top: 30px;
+      font-size: 18px;
+      letter-spacing: -.72px;
+    }
+  }
+
+  .benefit-box {
+    .benefit-header {
+      display: flex;
+      align-items: flex-end;
+      .header-relative {
+        position: relative;
+        flex: 1;
+        border-top: 1px solid $border-color;
+        &:after {
+          position: absolute;
+          top: 0;
+          right: 0;
+          display: block;
+          content: '';
+          width: 1px;
+          height: 51px;
+          background: $border-color;
+          transform: translateY(-100%);
+        }
+      }
+      .header-relative:first-child:after {
+        height: 50px;
+      }
+      .header-relative:last-child {
+        border-right: 1px solid $border-color;
+        &:after {
+          display: none;
+        }
+      }
+      .header__grade {
+        position: absolute;
+        top: -20px;
+        left: 50%;
+        transform: translate(-50%, -100%);
+        text-align: center;
+        .grade__p {
+          font-family: 'AttenNew', sans-serif;
+          font-size: 12px;
+          letter-spacing: -.36px;
+          line-height: 1;
+          font-weight: 600;
+          margin-bottom: 10px;
+          //text-transform: uppercase;
+        }
+        .grade__figure {
+          width: 50px;
+          margin: 0 auto;
+          img {
+            width: 100%;
+          }
+        }
+      }
+    }
+    .benefit-body {
+      position: relative;
+      display: flex;
+      border-left: 1px solid $border-color;
+      border-right: 1px solid $border-color;
+      border-bottom: 1px solid $border-color;
+      padding: 30px 16px;
+      height: 180px;
+      .body__title {
+        margin-bottom: 16px;
+        line-height: 1;
+        .title__span {
+          font-size: 18px;
+          letter-spacing: -.72px;
+          line-height: 28px;
+          font-weight: 700;
+          color: $black;
+        }
+        span {
+          font-size: 12px;
+          letter-spacing: -.48px;
+          font-weight: 400;
+          color: $gray-700;
+          margin-left: 4px;
+        }
+      }
+      .body__ul {
+        flex: 1;
+        text-align: center;
+        li {
+          line-height: 1;
+        }
+        li + li {
+          margin-top: 12px;
+        }
+        li:first-child {
+          margin-bottom: 24px;
+          .body__text {
+            font-size: 18px;
+            letter-spacing: -.72px;
+            font-weight: 500;
+            color: $black;
+          }
+        }
+        .body__text {
+          font-size: 16px;
+          line-height: 22px;
+          letter-spacing: -.64px;
+          color: $gray-700;
+        }
+      }
+    }
+  }
+
+  .grade__etc {
+    .grade__title {
+      margin-bottom: 12px;
+    }
+  }
+}

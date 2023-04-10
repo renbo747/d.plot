@@ -1,0 +1,242 @@
+.dp-mypage-reward-pc {
+  .h1 {
+    margin: 0;
+    background: $gray-400;
+  }
+  .price-unit-p.atten-new {
+    font-size: 18px !important;
+    letter-spacing: -.72px !important;
+    font-weight: 500 !important;
+    //text-transform: uppercase;
+  }
+  .dp-bar {
+    margin-left: 0;
+    margin-right: 0;
+  }
+  .dp-sort__badge {
+    padding: 0 15px;
+    font-size: 14px;
+    letter-spacing: -.42px;
+  }
+  .dp-sort__ul li + li {
+    margin-left: 10px;
+  }
+  // 공통사항
+  .price-unit {
+    margin-left: 1px;
+  }
+  .mypage-reward__header {
+    padding-bottom: 60px;
+    p {
+      font-size: 26px;
+      letter-spacing: -1.04px;
+      line-height: 37px;
+      font-weight: 700;
+    }
+  }
+  .reward-use__guide__section {
+    .reward-use__guide__body {
+      .price__area {
+        display: flex;
+        align-items: center;
+      }
+      .price-unit {
+        font-size: 18px;
+        letter-spacing: -.72px;
+      }
+      .price-unit-p {
+        font-size: 18px;
+        letter-spacing: -.72px;
+        font-weight: 500;
+        margin-left: 2px;
+        //text-transform: uppercase;
+      }
+      .reward__box-area {
+        display: flex;
+        height: 100px;
+        width: 100%;
+        background-color: $gray-100;
+        .h1 {
+          margin-top: 20px;
+        }
+        .price-unit {
+          margin-left: 2px;
+        }
+        .use-reward__box {
+          padding: 0 30px;
+          width: 50%;
+          display: flex;
+          align-items: center;
+          justify-content: space-between;
+          .box__left {
+            display: flex;
+            align-items: center;
+            .dp-icon {
+              margin-right: 2px;
+            }
+            .use-reward__p {
+              font-size: 18px;
+              letter-spacing: -.72px;
+              line-height: 26px;
+            }
+          }
+          .reward-price__area {
+            .text-primary {
+              font-size: 28px;
+              letter-spacing: -.84px;
+              line-height: 34px;
+              font-weight: 600;
+            }
+          }
+        }
+        .dp-bar__area {
+          .dp-bar {
+            position: relative;
+            top: 50%;
+            transform: translateY(-50%);
+            height: 40px;
+          }
+        }
+        .extinction-reward__box {
+          padding: 0 30px;
+          width: 50%;
+          display: flex;
+          justify-content: space-between;
+          align-items: center;
+          .extinction-reward__p {
+            font-size: 18px;
+            letter-spacing: -.72px;
+            color: $gray-700;
+          }
+          .atten-new {
+            font-size: 22px;
+            letter-spacing: -.66px;
+            font-weight: 600;
+          }
+        }
+      }
+    }
+  }
+
+  // 프로모션 코드 등록
+  .promotion-code__section {
+    padding-top: 50px;
+    .base-input .form-control {
+      width: 433px;
+      height: 48px;
+    }
+    .promotion-code__header {
+      padding-bottom: 20px;
+      .promotion-code__header__title {
+        font-size: 18px;
+        letter-spacing: -.72px;
+        line-height: 26px;
+        font-weight: 500;
+      }
+    }
+    .promotion-code__body {
+      .input__area {
+        display: flex;
+      }
+      .dp-btn {
+        width: 110px;
+        margin-left: 10px;
+        font-size: 16px;
+        letter-spacing: -.64px;
+        line-height: 24px;
+      }
+      .reward-use__guide__header__title {
+        font-size: 16px;
+        letter-spacing: -.64px;
+        color: $gray-700;
+        margin-left: 4px;
+      }
+    }
+  }
+
+  // 적립 내역
+  .reward-content__section {
+    // 라디오 버튼
+    .dp-sort__ul {
+      padding-top: 80px;
+      padding-bottom: 50px;
+    }
+    .dp-sort__badge {
+      height: 40px;
+      border-radius: 20px;
+      background: #ffffff;
+      border: 1px solid $gray-400;
+    }
+    // 내용
+    .reward-content__area {
+      ul {
+        .h1 {
+          margin: 20px 0;
+        }
+      }
+      .li__header {
+        padding-bottom: 6px;
+        .date {
+          font-size: 16px;
+          letter-spacing: -.64px;
+          font-family: 'AttenNew', sans-serif;
+          color: $gray-700;
+        }
+      }
+      .li__body {
+        .li__body__title {
+          font-size: 18px;
+          letter-spacing: -.72px;
+        }
+        .li__body__price {
+          font-size: 22px;
+          letter-spacing: -.66px;
+          font-weight: 500;
+        }
+        .price-unit {
+          font-size: 18px;
+          letter-spacing: -.72px;
+          margin-top: -4px;
+        }
+        .price-unit-p {
+          font-size: 22px;
+          letter-spacing: -.66px;
+          font-weight: 500;
+          //text-transform: uppercase;
+        }
+      }
+      .list__footer {
+        padding-top: 6px;
+        .available__period {
+          font-size: 16px;
+          letter-spacing: -.64px;
+          color: $gray-700;
+        }
+      }
+      // 내역이 없을 때
+      .empty__area {
+        .h1 {
+          margin-top: -20px;
+        }
+        .empty__body {
+          padding-top: 170px;
+        }
+        .empty-icon-area {
+          width: 100px;
+          height: 100px;
+          background: $gray-100;
+          border-radius: 50%;
+        }
+        .empty-text__area {
+          padding-top: 30px;
+          .empty-text {
+            font-size: 18px;
+            letter-spacing: -.72px;
+            line-height: 26px;
+            color: $gray-700;
+          }
+        }
+      }
+    }
+  }
+}

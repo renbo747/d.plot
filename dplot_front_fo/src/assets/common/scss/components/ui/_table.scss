@@ -1,0 +1,32 @@
+.dp-table {
+  width: 100%;
+  border: 1px solid $gray-400;
+  table-layout: fixed;
+  tr {
+    font-size: 14px;
+    letter-spacing: -.56px;
+    line-height: 20px;
+  }
+  th, td {
+    border: 1px solid $gray-400;
+    padding: 12px 10px;
+  }
+  th {
+    background-color: $gray-100;
+    font-weight: 500;
+  }
+  td {
+    color: $gray-800;
+    word-break: break-all;
+  }
+  tbody {
+    border: 1px solid $gray-400;
+  }
+  .point-background {
+    background-color: rgba(245, 76, 43, .1);
+  }
+  .point-text {
+    color: $primary;
+    font-weight: 500;
+  }
+}

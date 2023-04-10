@@ -1,0 +1,55 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.dplot.mapper.GoodsApprMapper">
+
+	<!-- 상품 승인상태 히스토리 저장 -->
+	<insert id="insertGoodsApprHist" parameterType="somap">
+		/* GoodsMapper.xml - insertGoodsApprHist 상품 승인상태 히스토리 저장 */
+		INSERT INTO t_goods_appr (
+			  goodsno  		/* 상품번호 */
+			, goodsapprtype /* 상품승인상태 */
+			, contents  	/* 내용 */
+			, regdate  		/* 등록일시 */
+			, reguserid  	/* 등록자ID */
+		)
+		<choose>
+			<when test="goodsnolist != null and goodsnolist.size > 0">
+				VALUES
+				<foreach collection="goodsnolist" item="_goodsno" open="" separator="," close="">
+			    (	  #{_goodsno}
+			    	, #{goodsapprtype}
+			    	, #{contents}
+			    	, NOW()
+					, #{authuserid}
+			    )
+			    </foreach>
+			</when>
+			<otherwise>
+			VALUES (
+				  #{goodsno}
+				, #{goodsapprtype}
+		    	, #{contents}
+		    	, NOW()
+				, #{authuserid}
+			)
+			</otherwise>
+		</choose>
+	</insert>
+	
+	<!-- 상품 처리(승인)이력 조회 -->
+	<select id="selectGoodsApprHistList" parameterType="somap" resultType="somap">
+		SELECT	/* GoodsApprMapper.xml - selectGoodsApprHistList 상품 처리(승인)이력 조회 */
+			  ga.goodsno
+			, ga.goodsapprtype
+			, FN_GET_CODENAME(#{siteid}, 'GOODSAPPRTYPE', ga.goodsapprtype) AS goodsapprtypename
+			, DATE_FORMAT(ga.regdate, '%Y-%m-%d %H:%m:%i') AS regdate
+			, IFNULL(u.name, d.name) as regusername
+			, ga.contents
+		FROM t_goods_appr ga
+		LEFT OUTER JOIN (SELECT userid, name FROM t_user a LEFT JOIN t_admin b ON a.no = b.userno) u ON u.userid = ga.reguserid
+		LEFT OUTER JOIN (SELECT userid, name FROM t_user a LEFT JOIN t_dealer b ON a.no = b.userno) d ON d.userid = ga.reguserid
+		WHERE ga.goodsno = #{goodsno}
+		ORDER BY ga.regdate DESC
+    </select>
+</mapper>

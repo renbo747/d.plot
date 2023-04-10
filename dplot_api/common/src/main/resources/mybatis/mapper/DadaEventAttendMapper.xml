@@ -1,0 +1,86 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.dplot.mapper.DadaEventAttendMapper">
+
+    <!-- 출석 체크 리스트 조회 -->
+    <select id="selectAdminDadaEventAttendList" parameterType="somap" resultType="somap">
+    /* selectAdminDadaEventAttendList */
+    <![CDATA[
+        SELECT d.userid as memberid,                                                                    -- 유저 아이디
+               c.name,                                                                                  -- 유저 이름
+               concat(a.attendcnt, ' / ', b.winattendcnt) AS totalcount,                                -- 출석인정/출석일
+               0                                          AS benefitpaycount,                           -- 혜택지급
+               a.userno,                                                                                -- 유저 no
+               a.eventidx,                                                                              -- 이벤트 idx
+               if(@rownum < 10, concat('0', @rownum := @rownum + 1), @rownum := @rownum + 1) as num
+    ]]>
+        FROM t_dadaevent_attend a
+                 JOIN t_dadaevent b ON a.eventidx = b.eventidx
+                 JOIN t_member c ON a.userno = c.userno
+                 JOIN t_user d ON a.userno = d.no
+           ,(SELECT @ROWNUM := 0) num
+        WHERE 1 = 1
+        AND a.eventidx = #{eventidx}
+    </select>
+
+    <!-- 출첵 사라짐으로 UNION 작업 x -->
+    <select id="selectAdminDadaEventAttendExcelDownload" parameterType="somap" resultType="somap">
+        /* selectAdminDadaEventAttendExcelDownload */
+        <![CDATA[
+        SELECT d.userid                                                                                                 -- 유저 아이디
+             , c.name                                                                                                   -- 유저 이름
+             , concat(a.attendcnt, ' / ', b.winattendcnt)                                    AS totalcount              -- 출석인정/출석일
+             , 0                                                                             AS benefitpaycount         -- 혜택지급
+             , a.userno                                                                                                 -- 유저 no
+             , a.eventidx                                                                                               -- 이벤트 idx
+             , if(@rownum < 10, concat('0', @rownum := @rownum + 1), @rownum := @rownum + 1) as num                     -- 번호
+             , c.mobile                                                                                                 -- 핸드폰 벊도
+             , (SELECT count(*)
+                  FROM t_comcoupon_memissue cm
+                 WHERE cm.userno = d.no
+                   AND cm.isdownload = 'T'
+                   AND cm.issuedate <= now()
+                   AND cm.usedate IS NULL)													 AS couponcount             -- 쿠폰
+             , c.lastlogindate                                                                                          -- 최근접속일
+             , c.email                                                                                                  -- 이메일
+             , (SELECT sum(point)
+                FROM (
+                         SELECT ifnull(sum(paypoint), 0) AS point
+                         FROM t_reserve_pay
+                         WHERE userno = d.no
+                         UNION ALL
+                         SELECT ifnull(usepoint * -1, 0)
+                         FROM t_reserve_use
+                         WHERE userno = d.no
+                     ) a
+        )                                                                                    AS paypoint                -- 적립금
+             , c.lastbuydate                                                                                            -- 최근구매일
+             , if(c.gender = '100', '남', '여')                                                AS gender                  -- 성별
+             , (
+            SELECT sum(point)
+            FROM (
+                     SELECT ifnull(sum(paypoint), 0) AS point
+                     FROM t_epoint_pay
+                     WHERE userno = d.no
+                     UNION ALL
+                     SELECT ifnull(usepoint * -1, 0)
+                     FROM t_epoint_use
+                     WHERE userno = d.no
+                 ) a
+        )                                                                                    AS epoint                  -- e포인트
+             , c.frstbuydate                                                                                            -- 첫구매일
+             , c.birthdate                                                                                              -- 생년 월일
+             , '임직원적립금'                                                                      AS payemploypoint      -- 임직원적립금
+             , c.regdate                                                                     AS memregdate              -- 가입일자
+             , concat(c.addr, ' ', c.addrdetail)                                             AS address                 -- 배송지 주소
+        ]]>
+        FROM t_dadaevent_attend a
+                 LEFT JOIN t_dadaevent b ON a.eventidx = b.eventidx
+                 LEFT JOIN t_member c ON a.userno = c.userno
+                 LEFT JOIN t_user d ON a.userno = d.no
+           , (SELECT @ROWNUM := 0) num
+        WHERE 1 = 1
+          AND a.eventidx = #{eventidx}
+    </select>
+</mapper>

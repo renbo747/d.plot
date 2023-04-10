@@ -1,0 +1,142 @@
+package com.dplot.admin.service.operation;
+
+import java.util.List;
+import java.util.Map;
+
+import org.springframework.web.multipart.MultipartFile;
+
+import com.dplot.common.SOMap;
+import com.dplot.common.Status;
+
+/**
+ * @author : LKW
+ * @discription : 프로모션 Service
+ * @fileName : ShoppingPromotionService.java
+ * @date : 2022-04-07
+ * =================================================================
+ * DATE			AUTHOR		NOTE
+ * -----------------------------------------------------------------
+ * 2022-04-07	LKW		최초생성
+ * -----------------------------------------------------------------
+ */
+public interface ShoppingPromotionService {
+
+    /**
+     * 프로모션 등록
+     *
+     * @param params
+     * @throws Exception
+     */
+    void insertPromotion(SOMap params, Map<String, MultipartFile> files) throws Exception;
+
+    /**
+     * 프로모션 상세 수정
+     *
+     * @param params
+     * @param files
+     * @throws Exception
+     */
+    void updatePromotionDetail(SOMap params, Map<String, MultipartFile> files) throws Exception;
+
+    /**
+     * 프로모션 사용 여부 수정
+     *
+     * @param params
+     * @throws Exception
+     */
+    void updatePromotionUse(SOMap params) throws Exception;
+
+    /**
+     * 프로모션 댓글 블라인드 수정
+     *
+     * @param params
+     * @throws Exception
+     */
+    void updatePromotionCommentBlind(SOMap params) throws Exception;
+
+    /**
+     * 프로모션 댓글 추가, 수정
+     *
+     * @param params
+     * @throws Exception
+     */
+    void insertAndUpdatePromotionComment(SOMap params) throws Exception;
+
+    /**
+     * 프로모션 댓글 삭제
+     *
+     * @param params
+     * @throws Exception
+     */
+    void deletePromotionComment(SOMap params) throws Exception;
+//
+//    /**
+//     * 저장 가능 여부
+//     *
+//     * @param params
+//     * @return
+//     * @throws Exception
+//     */
+//    SOMap isCanSaveCheck(SOMap params) throws Exception;
+
+    /**
+     * 프로모션 리스트 조회
+     *
+     * @param params
+     * @return
+     * @throws Exception
+     */
+    SOMap selectPromotionList(SOMap params) throws Exception;
+
+    /**
+     * 프로모션 상세 조회
+     *
+     * @param params
+     * @return
+     * @throws Exception
+     */
+    SOMap selectPromotionDetail(SOMap params) throws Exception;
+
+    /**
+     * 프로모션 댓글 신고 조회
+     *
+     * @param params
+     * @return
+     * @throws Exception
+     */
+    SOMap selectPromotionReportList(SOMap params) throws Exception;
+
+    /**
+     * 페이지에 필요한 코드값 조회
+     *
+     * @param params
+     * @return
+     * @throws Exception
+     */
+//    SOMap selectCodeList(SOMap params) throws Exception;
+
+    /**
+     * 댓글 조회
+     *
+     * @param params
+     * @return
+     * @throws Exception
+     */
+    SOMap selectCommentList(SOMap params) throws Exception;
+
+    /**
+     * 엑셀 다운로드 - 이벤트 관리 댓글
+     *
+     * @param params
+     * @return
+     * @throws Exception
+     */
+    List<Map<String, Object>> selectPromotionCommentExcelDownload(SOMap params) throws Exception;
+
+    /**
+     * 프로모션 변경 체크
+     * @param params
+     * @return
+     */
+	SOMap checkChange(SOMap params) throws Exception;
+}

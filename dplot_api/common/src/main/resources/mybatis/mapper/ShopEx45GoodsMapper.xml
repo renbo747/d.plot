@@ -1,0 +1,59 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.dplot.mapper.ShopEx45GoodsMapper">
+	<!-- 전시영역45상품 저장 -->
+	<insert id="insertShopEx45Goods" parameterType="somap">
+        /* ShopEx45GoodsMapper.xml - insertShopEx45Goods 전시영역45상품 저장  */
+        INSERT INTO t_shopex45_goods
+        (ex45idx, goodsno, sort, keyword, reguserid, regdate)
+        VALUES
+        <foreach collection="goodslist" index="index" item="item" separator=",">
+        	(#{ex45idx}, #{item.goodsno}, #{index}, #{item.keyword}, #{reguserid}, now())
+        </foreach>
+    </insert>
+    
+    <!-- 전시영역45상품 조회 -->
+	<select id="selectShopEx45GoodsList" resultType="somap" parameterType="somap">
+        /* ShopEx45GoodsMapper.xml - selectShopEx45GoodsList 전시영역45상품 조회  */
+        SELECT a.ex45gdidx, a.ex45idx as idx, a.sort as sortnum,  a.keyword, a.goodsno, b.goodscode
+        FROM t_shopex45_goods a
+        LEFT OUTER JOIN t_goods b on a.goodsno = b.goodsno
+        WHERE ex45idx = #{ex45idx}
+        ORDER BY a.sort
+    </select>
+    
+    <!-- 전시영역45상품 삭제 -->
+	<delete id="deleteShopEx45Goods" parameterType="somap">
+        /* ShopEx45GoodsMapper.xml - deleteShopEx45Goods 전시영역45상품 삭제  */
+        DELETE FROM t_shopex45_goods
+        WHERE ex45idx = #{ex45idx}
+    </delete>
+    
+        <select id="selectFrontShopEx45GoodsList" parameterType="somap" resultType="somap">
+	    SELECT    tsg.EX45GDIDX 
+	            , tsg.EX45IDX
+	            , tsg.GOODSNO
+	            , tg.goodscode
+	            , tsg.KEYWORD
+	            , tg.GOODSNAME
+	            , fn_get_file_url(tsg.goodsno,'FLT001',#{imgtype}) as fullpath
+	            , tgc.cateidx
+	            , fn_get_goods_stock(tg.siteid, tsg.goodsno) as stockcnt
+	            , ifnull((select 'T' from t_wish where goodsno = tsg.goodsno and userno = #{userno} and istrash = 'F'), 'F') as iswished
+	            , FN_GET_GOODS_MARKETPRICE(#{siteid}, tsg.goodsno) as marketprice -- 대표상품공급가
+	            , FN_GET_GOODS_PRICE(#{siteid}, tsg.goodsno) as price -- 대표상품판매가
+	            , FN_GET_GOODS_SALEPROMOAMT(#{siteid}, tsg.goodsno, null, 0, #{platform}) as saleamt -- 프로모션할인적용가(할인가)
+	            , FN_GET_GOODS_SALECOUPONAMT(#{siteid}, tsg.goodsno, null, 0, #{platform}) as goodscpnamt -- 즉시할인쿠폰할인가
+	            , ifnull(tb.enname, '') as brandname -- 브랜드명
+	     FROM t_shopex45_goods tsg
+	     INNER JOIN t_goods tg ON tsg.GOODSNO  = tg.GOODSNO
+	       	    AND tg.SITEID  = #{siteid}
+	     LEFT OUTER JOIN t_goods_category tgc ON tsg.GOODSNO  = tgc.GOODSNO
+	       	    AND tgc.ISREPRE  = 'T'
+	     LEFT OUTER JOIN t_brand tb on tb.idx = tg.brandidx
+	     WHERE 1 = 1
+	     AND tsg.EX45IDX  = #{ex45idx}
+	     ORDER BY tsg.SORT ASC
+    </select>
+</mapper>

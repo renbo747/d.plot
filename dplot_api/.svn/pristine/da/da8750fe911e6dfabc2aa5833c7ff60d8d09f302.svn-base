@@ -1,0 +1,121 @@
+package com.dplot.common;
+
+import java.util.Properties;
+
+import javax.annotation.Resource;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.scheduling.annotation.Scheduled;
+import org.springframework.stereotype.Component;
+
+import com.dplot.common.service.CommonService;
+
+import net.javacrumbs.shedlock.core.SchedulerLock;
+
+@Component
+public class ScheduledTask {
+
+    private static final Logger logger = LoggerFactory.getLogger(ScheduledTask.class);
+
+    @Autowired
+    private CommonService commonService;
+
+    @Resource(name="propertiesFactory")
+    private Properties prop;
+    
+    /**
+     * 네이버 전체EP 파일 생성
+     * 수신시간 : 매일 01:00/05:00/07:00/13:00/16:00/20:00
+     * 생성시간 : 매일 00:50/04:50/06:50/12:50/15:50/19:50
+     */
+    @Scheduled(cron = "0 50 0,4,6,12,15,19 * * *")
+	@SchedulerLock(name = "createNaverEpAll")
+	public void createNaverEpAll1(){
+	    String siteArrStr = prop.getProperty("schedule.site.id");
+	    String[] siteArr = siteArrStr.split(",");
+	
+	    try {
+	        for (String siteId : siteArr) {
+	            SOMap param = new SOMap();
+	            param.put("siteid", siteId);
+	            param.put("kind", CMConst.EP_KIND_ALL);
+	            commonService.createNaverEp(param);
+	        }
+	        logger.info("createNaverEpAll1 : 네이버 전체 EP 파일생성 완료");
+	    } catch(Exception e){
+	    	e.printStackTrace();
+	    }
+	}
+	
+    /**
+     * 네이버 전체EP 파일 생성
+     * 수신시간 : 매일 03:30/08:30/09:30/11:30/14:30/18:30
+     * 생성시간 : 매일 03:20/08:20/09:20/11:20/14:20/18:20
+     */
+    @Scheduled(cron = "0 20 3,8,9,11,14,18 * * *")
+	@SchedulerLock(name = "createNaverEpAll")
+	public void createNaverEpAll2(){
+	    String siteArrStr = prop.getProperty("schedule.site.id");
+	    String[] siteArr = siteArrStr.split(",");
+	
+	    try {
+	        for (String siteId : siteArr) {
+	            SOMap param = new SOMap();
+	            param.put("siteid", siteId);
+	            param.put("kind", CMConst.EP_KIND_ALL);
+	            commonService.createNaverEp(param);
+	        }
+	        logger.info("createNaverEpAll2 : 네이버 전체 EP 파일생성 완료");
+	    } catch(Exception e){
+	    	e.printStackTrace();
+	    }
+	}
+	
+	/**
+	 * 메타 전체EP 파일 생성
+	 * 생성시간 : 매일 00:00/12:00
+	 */
+	@Scheduled(cron = "0 00 00,12 * * *")
+	@SchedulerLock(name = "createMetaEpAll")
+	public void createMetaEpAll(){
+		String siteArrStr = prop.getProperty("schedule.site.id");
+		String[] siteArr = siteArrStr.split(",");
+	
+		try {
+			for (String siteId : siteArr) {
+				SOMap param = new SOMap();
+				param.put("siteid", siteId);
+				param.put("kind", CMConst.EP_KIND_ALL);
+				commonService.createMetaEp(param);
+			}
+			logger.info("createMetaEpAll : 메타 전체 EP 파일생성 완료");
+		} catch(Exception e){
+			e.printStackTrace();
+		}
+	}
+	
+	/**
+	 * 구글 전체EP 파일 생성
+	 * 생성시간 : 매일 00:00/12:00
+	 **/
+	@Scheduled(cron = "0 00 00,12 * * *")
+	@SchedulerLock(name = "createGoogleEpAll")
+	public void createGoogleEpAll(){
+		String siteArrStr = prop.getProperty("schedule.site.id");
+		String[] siteArr = siteArrStr.split(",");
+		
+		try {
+			for (String siteId : siteArr) {
+				SOMap param = new SOMap();
+				param.put("siteid", siteId);
+				param.put("kind", CMConst.EP_KIND_ALL);
+				commonService.createGoogleEp(param);
+			}
+			logger.info("createGoogleEpAll : 구글 전체 EP 파일생성 완료");
+		} catch(Exception e){
+			e.printStackTrace();
+		}
+	}
+}

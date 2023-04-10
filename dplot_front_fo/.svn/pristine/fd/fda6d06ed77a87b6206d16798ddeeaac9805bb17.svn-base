@@ -1,0 +1,96 @@
+<!doctype html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport"
+        content="width=device-width, user-scalable=no, initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0">
+  <meta http-equiv="X-UA-Compatible" content="ie=edge">
+  <title>뉴스레터</title>
+
+  <!--font-->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@100;300;400;500;700;900&display=swap" rel="stylesheet">
+
+  <link href="src/assets/common/fonts/AttenNew-Medium.woff" rel="stylesheet">
+  <link href="src/assets/common/fonts/AttenNew-Bold.woff" rel="stylesheet">
+  <link href="src/assets/common/fonts/AttenNew-Book.woff" rel="stylesheet">
+  <link href="src/assets/common/fonts/AttenNew-ExtraBold.woff" rel="stylesheet">
+  <link href="src/assets/common/fonts/AttenNew-Medium.woff2" rel="stylesheet">
+  <link href="src/assets/common/fonts/AttenNew-Bold.woff2" rel="stylesheet">
+  <link href="src/assets/common/fonts/AttenNew-Book.woff2" rel="stylesheet">
+  <link href="src/assets/common/fonts/AttenNew-ExtraBold.woff2" rel="stylesheet">
+</head>
+<body style="margin: 0;">
+  <div id="email-news-letter" style="width: 800px; padding: 0 40px; margin: 0 auto; font-family: 'Noto Sans KR', sans-serif; background-color: #ffffff;">
+    <!-- 헤더 -->
+    <table style="width: 100%; padding: 30px 0 0 0">
+      <tr>
+        <td>
+          <div>
+            <img src="/src/assets/common/logo02.svg" alt="로고">
+          </div>
+        </td>
+      </tr>
+      <tr>
+        <td style="text-align: right; padding-top: 70px;">
+          <span style="font-size: 14px; letter-spacing: -.56px; font-weight: 500;">2022. 07.01</span>
+        </td>
+      </tr>
+    </table>
+    <table style="padding-top: 20px; width: 100%;">
+      <tr style="width: 100%; height: 650px; background-color: #f8f8f8; vertical-align: middle; text-align: center;">
+        <td>
+          <span>뉴스레터 내용</span>
+        </td>
+      </tr>
+    </table>
+    <table style="padding-top: 40px;">
+      <tr>
+        <td>
+          <div>
+            <span style="font-size: 14px; letter-spacing: -.56px; color:#666666;">본 메일은 정보통신망 이용촉진 및 정보보호 등에 관한 법률 시행규칙에 의거 2022년 7월 15일 기준으로 고객님의 이메일 수신동의 여부를 확인한 결과, 수신동의를 하셨기에 발송되는 메일입니다.</span>
+            <span style="display:block; margin-top: 8px; font-size: 14px; letter-spacing: -.56px; color:#666666;">뉴스레터 메일 수신을 원하지 않으시면 <a href="#" style=" color: #111111;">수신거부</a>를 눌러주세요. If you don’t want to receive this e-mail anymore,
+              <a href="#" style="color: #111111;">click here</a>.</span>
+          </div>
+
+        </td>
+      </tr>
+    </table>
+    <!-- 메일 푸터 -->
+    <table class="mail-footer" style="width: 100%; margin-top: 80px; background-color: #f8f8f8; padding: 40px 40px;">
+      <colgroup>
+        <col width="20%">
+        <col width="80%">
+      </colgroup>
+      <tr style="vertical-align: top; width: 100%;">
+        <td>
+          <div style="text-align: left; width: 100%;">
+            <img src="/src/assets/common/icon/icon-logo-gray.svg" alt="footer logo">
+          </div>
+        </td>
+        <td>
+          <div style="margin-bottom: 10px; line-height: 1;">
+            <span style="color: #666666; font-size: 14px; letter-spacing: -.42px;">
+              본 메일은 발신 전용으로 회신이 되지 않습니다.<br />
+              문의사항은 [<a href="https://www.naver.com/" style="color:#666666;">D.PLOT 홈페이지</a>]를 이용해주시기 바랍니다.
+            </span>
+          </div>
+          <div style="margin-bottom: 4px;">
+            <span style="font-size: 14px; letter-spacing: -.42px; color: #666666;">주식회사 다다엠엔씨</span>
+            <span style="display:inline-block; margin: 0 10px; width: 1px; height: 10px; background-color: #dddddd;"></span>
+            <span style="font-size: 14px; letter-spacing: -.42px; color: #666666;">고객센터 1666-3642</span>
+          </div>
+          <div style="margin-bottom: 4px;">
+            <span style="font-size: 14px; letter-spacing: -.42px; color: #666666;">04377 서울특별시 용산구 한강대로23길 55 (한강로3가) 아이파크몰 6층</span>
+          </div>
+
+          <div>
+            <span style="font-size: 14px; letter-spacing: -.42px; color: #666666;">COPYRIGHT © DALIFE. ALL RIGHTS RESERVED.</span>
+          </div>
+        </td>
+      </tr>
+    </table>
+  </div>
+</body>
+</html>

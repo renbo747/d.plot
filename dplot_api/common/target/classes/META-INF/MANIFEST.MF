@@ -1,0 +1,122 @@
+Manifest-Version: 1.0
+Built-By: James Park
+Build-Jdk: 17.0.3
+Class-Path: src/main/java/javax.annotation-api-1.3.2.jar src/main/java
+ /spring-context-4.2.9.RELEASE.jar src/main/java/spring-core-4.2.9.REL
+ EASE.jar src/main/java/spring-expression-4.2.9.RELEASE.jar src/main/j
+ ava/spring-webmvc-4.2.9.RELEASE.jar src/main/java/spring-web-4.2.9.RE
+ LEASE.jar src/main/java/spring-beans-4.2.9.RELEASE.jar src/main/java/
+ spring-security-web-4.2.1.RELEASE.jar src/main/java/aopalliance-1.0.j
+ ar src/main/java/spring-security-core-4.2.1.RELEASE.jar src/main/java
+ /spring-security-config-4.2.1.RELEASE.jar src/main/java/spring-aop-4.
+ 2.9.RELEASE.jar src/main/java/cglib-2.2.2.jar src/main/java/asm-3.3.1
+ .jar src/main/java/aspectjrt-1.7.3.jar src/main/java/aspectjweaver-1.
+ 7.3.jar src/main/java/slf4j-api-1.7.3.jar src/main/java/jcl-over-slf4
+ j-1.7.3.jar src/main/java/log4j-slf4j-impl-2.16.0.jar src/main/java/l
+ og4j-api-2.16.0.jar src/main/java/log4j-core-2.16.0.jar src/main/java
+ /xercesImpl-2.11.0.jar src/main/java/xml-apis-1.4.01.jar src/main/jav
+ a/log4jdbc-remix-0.2.7.jar src/main/java/commons-fileupload-1.2.2.jar
+  src/main/java/commons-io-1.3.2.jar src/main/java/tika-parsers-1.5.ja
+ r src/main/java/tika-core-1.5.jar src/main/java/vorbis-java-tika-0.1.
+ jar src/main/java/netcdf-4.2-min.jar src/main/java/apache-mime4j-core
+ -0.7.2.jar src/main/java/apache-mime4j-dom-0.7.2.jar src/main/java/co
+ mmons-compress-1.5.jar src/main/java/xz-1.2.jar src/main/java/commons
+ -codec-1.5.jar src/main/java/pdfbox-1.8.4.jar src/main/java/fontbox-1
+ .8.4.jar src/main/java/jempbox-1.8.4.jar src/main/java/bcmail-jdk15-1
+ .45.jar src/main/java/bcprov-jdk15-1.45.jar src/main/java/tagsoup-1.2
+ .1.jar src/main/java/asm-debug-all-4.1.jar src/main/java/isoparser-1.
+ 0-RC-1.jar src/main/java/metadata-extractor-2.6.2.jar src/main/java/x
+ mpcore-5.1.2.jar src/main/java/boilerpipe-1.1.0.jar src/main/java/rom
+ e-0.9.jar src/main/java/jdom-1.0.jar src/main/java/vorbis-java-core-0
+ .1.jar src/main/java/juniversalchardet-1.0.3.jar src/main/java/jhighl
+ ight-1.0.jar src/main/java/json-lib-2.4-jdk15.jar src/main/java/commo
+ ns-beanutils-1.8.0.jar src/main/java/commons-collections-3.2.1.jar sr
+ c/main/java/commons-lang-2.5.jar src/main/java/commons-logging-1.1.1.
+ jar src/main/java/ezmorph-1.0.6.jar src/main/java/cage-1.0.jar src/ma
+ in/java/javax.inject-1.jar src/main/java/jstl-1.2.jar src/main/java/m
+ ybatis-3.2.2.jar src/main/java/mybatis-spring-1.2.0.jar src/main/java
+ /spring-jdbc-4.2.9.RELEASE.jar src/main/java/spring-tx-4.2.9.RELEASE.
+ jar src/main/java/commons-configuration-1.6.jar src/main/java/commons
+ -digester-1.8.jar src/main/java/commons-beanutils-core-1.8.0.jar src/
+ main/java/thumbnailator-0.4.17.jar src/main/java/javax.mail-1.5.1.jar
+  src/main/java/activation-1.1.jar src/main/java/opencsv-2.3.jar src/m
+ ain/java/dwr-2.0.3.jar src/main/java/spring-test-4.2.9.RELEASE.jar sr
+ c/main/java/spring-context-support-4.2.9.RELEASE.jar src/main/java/tw
+ itter4j-core-4.0.7.jar src/main/java/facebook4j-core-2.4.13.jar src/m
+ ain/java/restfb-1.6.16.jar src/main/java/maven-failsafe-plugin-2.17.j
+ ar src/main/java/maven-surefire-common-2.17.jar src/main/java/surefir
+ e-booter-2.17.jar src/main/java/maven-toolchain-2.0.9.jar src/main/ja
+ va/commons-lang3-3.1.jar src/main/java/surefire-api-2.17.jar src/main
+ /java/maven-plugin-annotations-3.2.jar src/main/java/poi-3.10.1.jar s
+ rc/main/java/poi-ooxml-3.10.1.jar src/main/java/poi-scratchpad-3.10.1
+ .jar src/main/java/poi-ooxml-schemas-3.10.1.jar src/main/java/ooxml-s
+ chemas-1.1.jar src/main/java/openxml4j-1.0-beta.jar src/main/java/jxl
+ s-core-1.0.6.jar src/main/java/commons-jexl-2.0.1.jar src/main/java/j
+ xls-2.4.5.jar src/main/java/logback-core-1.1.3.jar src/main/java/jxls
+ -poi-2.11.0.jar src/main/java/jxls-jexcel-1.0.6.jar src/main/java/jxl
+ -2.6.10.jar src/main/java/log4j-1.2.14.jar src/main/java/jxls-reader-
+ 2.0.3.jar src/main/java/commons-digester3-3.2-with-deps.jar src/main/
+ java/cglib-2.2.2.jar src/main/java/jxls-reader-1.0.6.jar src/main/jav
+ a/xmlbeans-2.6.0.jar src/main/java/stax-api-1.0.1.jar src/main/java/d
+ om4j-1.6.1.jar src/main/java/geronimo-stax-api_1.0_spec-1.0.1.jar src
+ /main/java/json-simple-1.1.jar src/main/java/quartz-2.2.1.jar src/mai
+ n/java/c3p0-0.9.1.1.jar src/main/java/jcaptcha-all-1.0-RC6.jar src/ma
+ in/java/commons-dbcp-1.2.1.jar src/main/java/commons-pool-1.3.jar src
+ /main/java/hsqldb-1.8.0.7.jar src/main/java/ehcache-1.2.4.jar src/mai
+ n/java/concurrent-1.3.4.jar src/main/java/xmlParserAPIs-2.2.1.jar src
+ /main/java/jackson-annotations-2.2.3.jar src/main/java/jackson-core-2
+ .2.2.jar src/main/java/jackson-databind-2.2.3.jar src/main/java/httpc
+ lient-4.5.13.jar src/main/java/httpcore-4.4.13.jar src/main/java/jedi
+ s-2.4.2.jar src/main/java/spring-data-redis-1.2.0.RELEASE.jar src/mai
+ n/java/commons-pool2-2.0.jar src/main/java/json-smart-1.3.1.jar src/m
+ ain/java/jjwt-0.9.0.jar src/main/java/s3-2.17.57.jar src/main/java/aw
+ s-xml-protocol-2.17.57.jar src/main/java/aws-query-protocol-2.17.57.j
+ ar src/main/java/protocol-core-2.17.57.jar src/main/java/arns-2.17.57
+ .jar src/main/java/profiles-2.17.57.jar src/main/java/sdk-core-2.17.5
+ 7.jar src/main/java/reactive-streams-1.0.3.jar src/main/java/auth-2.1
+ 7.57.jar src/main/java/json-utils-2.17.57.jar src/main/java/third-par
+ ty-jackson-core-2.17.57.jar src/main/java/eventstream-1.0.1.jar src/m
+ ain/java/http-client-spi-2.17.57.jar src/main/java/regions-2.17.57.ja
+ r src/main/java/annotations-2.17.57.jar src/main/java/utils-2.17.57.j
+ ar src/main/java/aws-core-2.17.57.jar src/main/java/metrics-spi-2.17.
+ 57.jar src/main/java/apache-client-2.17.57.jar src/main/java/netty-ni
+ o-client-2.17.57.jar src/main/java/netty-codec-http-4.1.68.Final.jar 
+ src/main/java/netty-codec-http2-4.1.68.Final.jar src/main/java/netty-
+ codec-4.1.68.Final.jar src/main/java/netty-transport-4.1.68.Final.jar
+  src/main/java/netty-resolver-4.1.68.Final.jar src/main/java/netty-co
+ mmon-4.1.68.Final.jar src/main/java/netty-buffer-4.1.68.Final.jar src
+ /main/java/netty-handler-4.1.68.Final.jar src/main/java/netty-transpo
+ rt-native-epoll-4.1.68.Final-linux-x86_64.jar src/main/java/netty-tra
+ nsport-native-unix-common-4.1.68.Final.jar src/main/java/netty-reacti
+ ve-streams-http-2.0.5.jar src/main/java/netty-reactive-streams-2.0.5.
+ jar src/main/java/shedlock-spring-0.16.1.jar src/main/java/shedlock-c
+ ore-0.16.1.jar src/main/java/shedlock-provider-jdbc-template-0.16.1.j
+ ar src/main/java/shedlock-provider-jdbc-internal-0.16.1.jar src/main/
+ java/jcodec-0.2.5.jar src/main/java/jcodec-javase-0.2.5.jar src/main/
+ java/maven-resources-plugin-2.4.3.jar src/main/java/maven-plugin-api-
+ 2.0.6.jar src/main/java/maven-project-2.0.6.jar src/main/java/maven-p
+ rofile-2.0.6.jar src/main/java/maven-artifact-manager-2.0.6.jar src/m
+ ain/java/maven-plugin-registry-2.0.6.jar src/main/java/maven-core-2.0
+ .6.jar src/main/java/wagon-file-1.0-beta-2.jar src/main/java/maven-pl
+ ugin-parameter-documenter-2.0.6.jar src/main/java/wagon-http-lightwei
+ ght-1.0-beta-2.jar src/main/java/wagon-http-shared-1.0-beta-2.jar src
+ /main/java/jtidy-4aug2000r7-dev.jar src/main/java/maven-reporting-api
+ -2.0.6.jar src/main/java/doxia-sink-api-1.0-alpha-7.jar src/main/java
+ /wagon-provider-api-1.0-beta-2.jar src/main/java/maven-repository-met
+ adata-2.0.6.jar src/main/java/maven-error-diagnostics-2.0.6.jar src/m
+ ain/java/commons-cli-1.0.jar src/main/java/wagon-ssh-external-1.0-bet
+ a-2.jar src/main/java/wagon-ssh-common-1.0-beta-2.jar src/main/java/m
+ aven-plugin-descriptor-2.0.6.jar src/main/java/plexus-interactivity-a
+ pi-1.0-alpha-4.jar src/main/java/wagon-ssh-1.0-beta-2.jar src/main/ja
+ va/jsch-0.1.27.jar src/main/java/classworlds-1.1.jar src/main/java/ma
+ ven-artifact-2.0.6.jar src/main/java/maven-settings-2.0.6.jar src/mai
+ n/java/maven-model-2.0.6.jar src/main/java/maven-monitor-2.0.6.jar sr
+ c/main/java/plexus-container-default-1.0-alpha-9-stable-1.jar src/mai
+ n/java/plexus-utils-2.0.5.jar src/main/java/maven-filtering-1.0-beta-
+ 4.jar src/main/java/plexus-build-api-0.0.4.jar src/main/java/plexus-i
+ nterpolation-1.13.jar src/main/java/thymeleaf-3.0.9.RELEASE.jar src/m
+ ain/java/ognl-3.1.12.jar src/main/java/javassist-3.20.0-GA.jar src/ma
+ in/java/attoparser-2.0.4.RELEASE.jar src/main/java/unbescape-1.1.5.RE
+ LEASE.jar src/main/java/thymeleaf-spring4-3.0.9.RELEASE.jar
+Created-By: Maven Integration for Eclipse
+

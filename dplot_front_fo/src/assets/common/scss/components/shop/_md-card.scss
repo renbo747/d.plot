@@ -1,0 +1,33 @@
+.md-card {
+  .card__img {
+    margin-bottom: 0;
+    img {
+      width: 100%;
+    }
+  }
+  .card__contents {
+    padding: 20px 20px 40px;
+
+    @include media-breakpoint-up(xl) {
+      padding: 30px 20px 60px;
+    }
+    .contents__text {
+      font-size: 12px;
+      letter-spacing: -.48px;
+      line-height: 20px;
+      margin-bottom: 0;
+      color: #666;
+      @include media-breakpoint-up(xl) {
+        font-size: 16px;
+        letter-spacing: -.64px;
+        line-height: 24px;
+      }
+    }
+    .contents__text +.contents__text {
+      margin-top: 4px;
+      @include media-breakpoint-up(xl) {
+        margin-top: 6px;
+      }
+    }
+  }
+}

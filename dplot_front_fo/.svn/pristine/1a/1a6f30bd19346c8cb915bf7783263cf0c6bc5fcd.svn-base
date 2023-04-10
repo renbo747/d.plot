@@ -1,0 +1,597 @@
+// 재입고 알림 신청 모달
+.restock-modal {
+  .modal-body {
+    @include media-breakpoint-up(xl) {
+      padding: 30px !important;
+      padding-top: 40px !important;
+    }
+  }
+
+  .magic-checkbox + label {
+    line-height: 20px;
+  }
+
+  .form-group {
+    margin-bottom: 10px;
+  }
+
+  .form-control {
+    padding: 0 12px;
+  }
+
+  .dp-bar {
+    margin-right: 10px;
+    margin-left: 10px;
+  }
+
+  &.dp-modal {
+    padding: 0;
+  }
+
+  .btn-group .btn + .btn {
+    margin-left: 0;
+  }
+
+  .btn.dp-btn {
+    font-size: 14px;
+    letter-spacing: -.56px;
+    line-height: 20px;
+  }
+
+  .btn-group .btn {
+    width: 50%;
+  }
+
+  .product-info-area {
+    padding-bottom: 30px;
+    .product-thumbnail {
+      @include media-breakpoint-up(xl) {
+        max-width: 150px;
+      }
+    }
+    .product-thumbnail .thumbnail__img {
+      width: 80px;
+      height: 80px;
+      background:#f9f9f9;
+      @include media-breakpoint-up(xl) {
+        width: 150px;
+        height: 150px;
+      }
+    }
+    .productInfo-area {
+      padding-left: 16px;
+      @include media-breakpoint-up(xl) {
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+      }
+    }
+    .productInfo-ctg {
+      padding-bottom: 4px;
+      @include media-breakpoint-up(xl) {
+        font-size: 14px;
+        letter-spacing: -.42px;
+        line-height: 28px;
+      }
+    }
+    .productInfo-option {
+      color: $gray-700;
+      .productInfo-name {
+        @include media-breakpoint-up(xl) {
+          font-size: 16px;
+          letter-spacing: -.64px;
+          line-height: 28px;
+        }
+      }
+      .dp-caption {
+        @include media-breakpoint-up(xl) {
+          font-size: 16px;
+          letter-spacing: -.64px;
+          line-height: 26px;
+        }
+      }
+    }
+  }
+
+  .phone-number__input {
+    .base-input .input-label {
+      font-weight: 500;
+
+      @include media-breakpoint-up(xl) {
+        font-size: 18px;
+        margin-bottom: 20px;
+      }
+    }
+
+  }
+  .certification-number-area {
+    display: flex;
+    &.mb-20 {
+      margin-bottom: 10px !important;
+    }
+  }
+  .certification-number {
+    width: calc(100% - 100px);
+  }
+  .certification-confirm-btn {
+    width: 100px;
+    margin-left: 10px;
+  }
+
+  // 수신동의
+  .magic-radio + label, .magic-checkbox + label {
+    @include media-breakpoint-up(xl) {
+      font-size: 16px;
+      letter-spacing: -.64px;
+      padding-left: 35px;
+    }
+  }
+  .reception-agree {
+    padding-top: 6px;
+
+    @include media-breakpoint-up(xl) {
+      padding-bottom: 40px;
+    }
+  }
+  .reception-agree__description {
+    margin-top: 30px;
+    margin-bottom: 10px;
+    li {
+      word-break: normal;
+      font-size: 14px;
+      letter-spacing: -.56px;
+      line-height: 22px;
+    }
+    li + li {
+      margin-top: 10px;
+    }
+  }
+
+  //.footer__btn-area {
+  //  .dp-btn {
+  //    @include media-breakpoint-up(xl) {
+  //      width: 190px;
+  //    }
+  //  }
+  // }
+
+}
+
+// 배송지 목록 모달
+.no-shipping-list-modal {
+  &.dp-modal.page-layer .modal-body {
+    padding-top: 0;
+  }
+}
+
+// 배송지 등록 모달
+.shipping-registration-modal {
+  .modal-body {
+    padding: 30px !important;
+  }
+  .form-group {
+    margin-bottom: 10px;
+    .base-input-horizon {
+      width: 100%;
+    }
+  }
+  .base-input-horizon .input-label {
+    font-size: 14px;
+    letter-spacing: -.56px;
+    line-height: 24px;
+    font-weight: 500;
+  }
+  .post-find-btn {
+    width: 130px;
+    margin-left: 10px;
+    flex: 0 0 130px;
+    @include media-breakpoint-up(xl) {
+      width: 150px;
+      flex: 0 0 150px;
+    }
+  }
+  .btn.dp-btn {
+    padding: 0;
+    font-size: 14px;
+  }
+  .reception-agree {
+    padding-top: 20px;
+    padding-bottom: 40px;
+    @include media-breakpoint-up(xl) {
+      padding-bottom: 30px;
+      padding-top: 0;
+    }
+  }
+}
+
+// 배송지 목록 있을 때 모달
+.yes-shipping-list-modal {
+  .no-shipping-list__body {
+    padding: 80px 0;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    @include media-breakpoint-up(xl) {
+      padding-top: 0;
+      padding-bottom: 40px;
+    }
+  }
+  .icon-pick-area {
+    width: 94px;
+    height: 94px;
+    background: $gray-100;
+    border-radius: 50%;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    margin-bottom: 20px;
+  }
+  .no-shipping-list__text {
+    color: $gray-700;
+  }
+  .shipping-list__area {
+    margin-bottom: 30px;
+    @include media-breakpoint-up(xl) {
+      padding-bottom: 80px;
+    }
+  }
+  .dp-btn-icon {
+    position: sticky;
+    bottom: 0;
+    z-index: 20;
+    @include media-breakpoint-up(xl) {
+      position: absolute;
+      width: calc(100% - 60px);
+      bottom: 30px;
+      left: 30px;
+    }
+  }
+  .shipping-list {
+    overflow-y: auto;
+    @include media-breakpoint-up(xl) {
+      height: 562px;
+      padding-bottom: 0;
+    }
+    li + li {
+      padding-top :20px;
+    }
+  }
+}
+
+// 쿠폰 다운로드 모달 (쿠폰 더 받기) 모달
+.coupon-more-modal {
+  .modal-dialog {
+    max-width: 760px !important;
+  }
+
+  .modal-body {
+    @include media-breakpoint-up(xl) {
+      padding: 60px 50px 40px 50px !important;
+    }
+  }
+
+  .coupon-footer-btn {
+    position: fixed;
+    bottom: 0;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 100%;
+    max-width: 758px;
+    padding: 20px;
+    background: #fff;
+    border-top: none;
+  }
+
+  .coupon-list__area {
+    margin-bottom: 60px;
+    @include media-breakpoint-up(xl) {
+      max-height: 414px;
+      overflow-y: auto;
+      overflow-x: hidden;
+      margin-bottom: 30px;
+    }
+
+    .coupon-list {
+
+      li {
+        @include media-breakpoint-up(xl) {
+          padding-bottom: 20px;
+        }
+      }
+
+      li + li {
+        padding-top: 10px;
+        @include media-breakpoint-up(xl) {
+          padding-top: 0;
+        }
+      }
+    }
+  }
+  // pagination pc만 있음
+  .pagination__area {
+    padding-bottom: 40px;
+  }
+
+  .download-icon__area {
+    .icon-download {
+      margin-top: 6px;
+      margin-left: 4px;
+      @include media-breakpoint-up(xl) {
+        margin-top: 10px;
+        margin-left: 10px;
+      }
+    }
+  }
+}
+
+// 쿠폰 다운로드 모달 (추가 쿠폰 받기)
+.coupon-add-modal {
+  .modal-dialog {
+    max-width: 760px !important;
+  }
+
+  .modal-body {
+    @include media-breakpoint-up(xl) {
+      padding: 60px 50px 40px 50px !important;
+    }
+  }
+
+  .modal-btn-area {
+    position: sticky;
+    bottom: 0;
+    @include media-breakpoint-up(xl) {
+      position: static;
+      padding: 0;
+    }
+  }
+
+  .dp-btn-icon {
+    position: sticky;
+    bottom: -20px;
+    margin: 0 -20px;
+    width: auto;
+    padding: 20px;
+    border: 20px solid #fff;
+    @include media-breakpoint-up(xl) {
+      position: static;
+      margin: 0 auto;
+      width: 100%;
+      padding: 0;
+      border: 0;
+    }
+  }
+
+  .dp-hr {
+    margin-bottom: 0;
+  }
+
+  .dp-coupon__with-area {
+    margin-bottom: 30px;
+    @include media-breakpoint-up(xl) {
+      max-height: 478px;
+      margin-bottom: 0;
+      overflow-y: auto;
+      overflow-x: hidden;
+    }
+  }
+
+  .dp-coupon__area {
+    &:first-child {
+      padding-top: 0;
+    }
+    @include media-breakpoint-up(xl) {
+      padding-top: 0;
+      padding-bottom: 0;
+    }
+  }
+
+  .coupon-area__title {
+    font-weight: 500;
+    padding-top: 30px;
+    padding-bottom: 20px;
+  }
+
+  .coupon-list {
+    li {
+      @include media-breakpoint-up(xl) {
+        padding-bottom: 10px;
+        &:nth-last-child(1),
+        &:nth-last-child(2) {
+          padding-bottom: 0;
+        }
+      }
+    }
+    li + li {
+      padding-top: 10px;
+      @include media-breakpoint-up(xl) {
+        padding-top: 0;
+      }
+    }
+  }
+
+  // pagination pc만 있음
+  .pagination__area {
+    padding: 40px 0;
+  }
+
+  .download-icon__area {
+    .icon-download {
+      margin-top: 6px;
+      margin-left: 4px;
+      @include media-breakpoint-up(xl) {
+        margin-left: 4px;
+        @include media-breakpoint-up(xl) {
+          margin-top: 10px;
+          margin-left: 10px;
+        }
+      }
+    }
+  }
+}
+
+// 배송비 상세 모달
+.dp-modal.detail-shipping-modal {
+
+  .modal-body {
+    @include media-breakpoint-up(xl) {
+      padding: 20px 30px;
+    }
+  }
+
+  .dp-section + .dp-section {
+    margin-top: 10px;
+  }
+  .atten-new.dp-price01 {
+    line-height: 20px;
+  }
+
+  .h1 {
+    margin-bottom: 0;
+  }
+
+  .seller-name-area {
+    padding-bottom: 20px;
+    .seller-name {
+      color: $gray-700;
+      letter-spacing: -.48px;
+      line-height: 17px;
+      @include media-breakpoint-up(xl) {
+        font-size: 16px;
+        letter-spacing: -.64px;
+        line-height: 24px;
+      }
+    }
+  }
+
+  .shipping__header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding-bottom: 10px;
+  }
+  .shipping-product__title {
+    font-weight: 500;
+    @include media-breakpoint-up(xl) {
+      font-size: 16px;
+      letter-spacing: -.64px;
+      line-height: 24px;
+    }
+  }
+  .shipping__price {
+    font-weight: 600;
+    @include media-breakpoint-up(xl) {
+      font-size: 18px;
+      letter-spacing: -.54px;
+      line-height: 21px;
+    }
+  }
+  .product-name {
+    padding-bottom: 10px;
+  }
+  .price-unit {
+    margin-left: 2px;
+    @include media-breakpoint-up(xl) {
+      font-size: 16px;
+      letter-spacing: -.64px;
+      line-height: 24px;
+    }
+  }
+  .detail-add {
+    li::before {
+      top: 50%;
+      transform: translateY(-50%);
+    }
+
+    li + li {
+      margin-top: 8px;
+    }
+
+    .atten-new.dp-price02 {
+      font-size: 14px;
+      letter-spacing: -.42px;
+      line-height: 17px;
+    }
+
+    li > span:first-child {
+      @include media-breakpoint-up(xl) {
+        font-size: 16px;
+        letter-spacing: -.64px;
+        line-height: 24px;
+      }
+    }
+    li .atten-new {
+      @include media-breakpoint-up(xl) {
+        font-size: 16px;
+        letter-spacing: -.48px;
+        line-height: 20px;
+      }
+    }
+    .price-unit {
+      @include media-breakpoint-up(xl) {
+        font-size: 14px;
+        letter-spacing: -.56px;
+        line-height: 20px;
+      }
+    }
+  }
+
+  .shipping-product__area {
+    padding: 10px 0;
+    @include media-breakpoint-up(xl) {
+      padding: 20px 0;
+    }
+
+    .price-unit {
+      font-size: 12px;
+      letter-spacing: -.48px;
+      font-weight: 400;
+      font-family: 'Noto Sans KR', sans-serif;
+      @include media-breakpoint-up(xl) {
+        font-size: 14px;
+        letter-spacing: -.56px;
+      }
+    }
+  }
+  .shipping-product__area + .shipping-product__area {
+    padding-top: 20px;
+    @include media-breakpoint-up(xl) {
+      padding-top: 30px;
+    }
+    &:last-child {
+      padding-bottom: 20px;
+    }
+  }
+  .total-shipping-price__area {
+    padding: 20px 0 30px;
+
+    .total-shipping-title {
+      font-weight: 700;
+      @include media-breakpoint-up(xl) {
+        font-size: 16px;
+        letter-spacing: -.64px;
+        line-height: 24px;
+        margin-right: 20px;
+      }
+    }
+    .atten-new {
+      @include media-breakpoint-up(xl) {
+        font-size: 18px;
+        letter-spacing: -.54px;
+        font-weight: 600;
+      }
+    }
+  }
+
+  .confirm-btn-area {
+    margin-top: 30px;
+    @include media-breakpoint-up(xl) {
+      margin-top: 0;
+    }
+
+    .btn.dp-btn {
+      font-size: 16px;
+      letter-spacing: -.64px;
+      line-height: 24px;
+    }
+  }
+}

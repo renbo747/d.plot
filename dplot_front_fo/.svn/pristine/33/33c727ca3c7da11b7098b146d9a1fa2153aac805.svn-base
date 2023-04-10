@@ -1,0 +1,94 @@
+.mypage-previous-order {
+  min-height: calc((var(--vh, 1vh) * 100) - 110px);
+  padding-bottom: 80px;
+  // 이전구매내역 있을 때
+  .dp-section + .dp-section {
+    margin-top: 30px;
+  }
+  .dp-hr {
+    margin: 30px 0;
+  }
+  .hr-order {
+    margin-left: -20px;
+    margin-right: -20px;
+    background-color: #f1f1f1;
+  }
+  .order-list__wrap {
+    &:first-child {
+      margin-top: 22px;
+    }
+    .order-date__area {
+      padding-bottom: 20px;
+      .date__P {
+        font-size: 14px;
+        letter-spacing: -0.42px;
+        font-weight: 500;
+        color: $gray-800;
+      }
+    }
+    .order-number__area {
+      margin-bottom: 20px;
+      background: $gray-100;
+      .order-number__p {
+        padding: 12px 20px;
+        font-size: 14px;
+        letter-spacing: -.56px;
+        color: $gray-700;
+      }
+    }
+    .product-info__area {
+      .product-title {
+        font-size: 14px;
+        letter-spacing: -.56px;
+        color: $gray-800;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        display: -webkit-box;
+        -webkit-line-clamp: 2;
+        -webkit-box-orient: vertical;
+      }
+    }
+    .product-info__bottom {
+      margin-top: 12px;
+      display: flex;
+      justify-content: space-between;
+      .product-conunt {
+        font-size: 12px;
+        letter-spacing: -.48px;
+        color: $gray-700;
+      }
+      .product-price__area {
+        .product-price {
+          font-size: 18px;
+          letter-spacing: -.54px;
+          font-weight: 600;
+        }
+        .price-unit {
+          margin-left: 2px;
+          font-size: 14px;
+          letter-spacing: -.56px;
+        }
+      }
+    }
+  }
+  // 이전구매내역 없을 때
+  .empty__area {
+    padding-top: 144px;
+    .empty__body {
+      .empty-icon-area {
+        width: 94px;
+        height: 94px;
+        background: $gray-100;
+        border-radius: 50%;
+      }
+      .empty-text__area {
+        padding-top: 20px;
+      }
+      .empty-text__p {
+        font-size: 14px;
+        letter-spacing: -0.56px;
+        color: $gray-700;
+      }
+    }
+  }
+}

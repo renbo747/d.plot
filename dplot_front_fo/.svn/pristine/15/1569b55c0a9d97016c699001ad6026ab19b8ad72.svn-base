@@ -1,0 +1,4 @@
+@import './main';
+@import "./faq";
+@import './inquiry';
+@import './notice';

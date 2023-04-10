@@ -1,0 +1,73 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.dplot.mapper.CodeMapper">
+
+	<select id="selectCodeMstList" parameterType="HashMap" resultType="HashMap" >
+		SELECT cmclass, classname
+		FROM t_common_class
+		<where>
+			AND isnum = 'F'
+			<if test="cmclass !=null and cmclass !='' ">
+				AND cmclass = #{cmclass}
+			</if>
+		</where>
+		ORDER BY classname ASC
+	</select>
+	
+	<select id="selectCodeDtlList" parameterType="somap" resultType="somap" >
+		SELECT cmclass, cmcode, codename, detail ,sort, istrash
+		FROM t_common_code
+		WHERE 1 = 1
+		<if test="cmclass !=null and cmclass !='' ">
+			AND cmclass = #{cmclass}
+		</if>
+		<if test="cmcode !=null and cmcode !='' ">
+			AND cmcode = #{cmcode}
+		</if>
+		<if test="codename !=null and codename !='' ">
+			AND codename = #{codename}
+		</if>
+		AND istrash != 'T'
+		ORDER BY sort ASC
+	</select>
+
+	<select id="selectCodeDtlMapList" parameterType="somap" resultType="somap" >
+		SELECT cmclass, cmcode, codename, detail ,sort, istrash
+		FROM t_common_code
+		WHERE 1 = 1
+		<if test="cmclass !=null and cmclass !='' ">
+			AND cmclass IN <foreach item="item" collection="cmclass" open="(" separator="," close=")">#{item}</foreach>
+		</if>
+		AND istrash != 'T'
+		ORDER BY sort ASC
+	</select>
+
+	<select id="selectCodeDtlAddDummyTotalList" parameterType="somap" resultType="somap">
+		(
+			SELECT 'TEMP' AS cmclass,
+				   ''     AS cmcode,
+				   '전체'   AS codename,
+				   '0'    AS sort,
+				   'F'    AS istrash,
+				   '0'    AS regdate
+		)
+		UNION
+		(
+			SELECT cmclass, cmcode, codename, sort, istrash, regdate
+			FROM t_common_code
+			WHERE 1 = 1
+			<if test="cmclass !=null and cmclass !='' ">
+				AND cmclass = #{cmclass}
+			</if>
+			<if test="cmcode !=null and cmcode !='' ">
+				AND cmcode = #{cmcode}
+			</if>
+			<if test="codename !=null and codename !='' ">
+				AND codename = #{codename}
+			</if>
+			  AND istrash != 'T'
+			ORDER BY sort
+		)
+	</select>
+</mapper>

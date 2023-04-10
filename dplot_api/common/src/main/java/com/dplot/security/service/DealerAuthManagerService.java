@@ -1,0 +1,145 @@
+package com.dplot.security.service;
+
+import java.util.ArrayList;
+import java.util.List;
+
+import javax.servlet.http.HttpServletRequest;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.core.userdetails.UserDetailsService;
+import org.springframework.security.core.userdetails.UsernameNotFoundException;
+import org.springframework.stereotype.Service;
+
+import com.dplot.common.CMConst;
+import com.dplot.common.SOMap;
+import com.dplot.common.service.MallConfigService;
+import com.dplot.mapper.DealerMapper;
+import com.dplot.mapper.UserMapper;
+import com.dplot.security.domain.Message;
+import com.dplot.security.domain.Role;
+import com.dplot.security.domain.RoleName;
+import com.dplot.security.model.Dealer;
+import com.dplot.util.BeanUtil;
+import com.dplot.util.ServletRequestInfoUtil;
+import com.dplot.util.Util;
+
+@Service
+public class DealerAuthManagerService implements UserDetailsService{
+
+	private static final Logger logger = LoggerFactory.getLogger(DealerAuthManagerService.class);
+
+	@Autowired
+	private UserMapper userMapper;
+
+	@Autowired
+	private DealerMapper dealerMapper;
+
+	@Autowired
+	private MallConfigService cs;
+
+	@Override
+	public Dealer loadUserByUsername(String username) throws UsernameNotFoundException {
+
+		try {
+			String logPrefix = cs.makeLogPrefix("loadUserByUsername");
+			SOMap dbparams = new SOMap();
+
+			int userNo = 0;
+			String userType = "";
+			String userId = "";
+			String userPw = "";
+
+			HttpServletRequest request = ServletRequestInfoUtil.getRequest();
+			cs.init(request.getServerName());
+			dbparams.put("siteid", cs.getStr("siteid"));
+			dbparams.put("userid", username);
+
+			SOMap userMap = userMapper.selectUserJoinUserTotal(dbparams);
+
+			if (Util.isNotEmpty(userMap) && CMConst.USER_TYPE_PARTNER.equals(userMap.getStr("usertype"))) {
+				userNo = userMap.getDbInt("no");
+				userType = userMap.getDbStr("usertype");
+				userId = userMap.getDbStr("userid");
+				userPw = userMap.getDbStr("userpw");
+			} else {
+				logger.info(String.format("%s 존재하지 않거나 아이디가 파트너사 종류가 아닌 아이디 [%s]", logPrefix, username));
+				throw new UsernameNotFoundException(Message.USER_OR_PWD_NOT_MATCH.getMsg());
+			}
+
+			dbparams.put("userno", userNo);
+			String reqDealst = "";
+			String dealerst = "";
+			Long templateCnt = (long) 0;
+			SOMap dealerMap = dealerMapper.selectDealer(dbparams);
+			Dealer dealer = BeanUtil.convertMapToBean(dealerMap, Dealer.class);
+
+			if (Util.isNotEmpty(dealerMap)) {
+				reqDealst = (dealerMap.containsKey("reqdealst")) ? dealerMap.get("reqdealst").toString() : "";
+				dealerst = (dealerMap.containsKey("dealerst")) ? dealerMap.get("dealerst").toString() : "";
+				templateCnt = (dealerMap.containsKey("templatecnt")) ? Long.parseLong(dealerMap.get("templatecnt").toString()) : 0;
+			}
+
+			if (Util.equal(dealerst, CMConst.PARTNSER_DEALST_STOP)){
+//				logger.info(String.format("%s 일시정지 중인 아이디 [%s]", logPrefix, username));
+//				throw new UsernameNotFoundException(Message.PARTNERS_DEALERST_STOP.getMsg());
+			} else if (Util.equal(dealerst, CMConst.PARTNSER_DEALST_CLOSED)){
+				logger.info(String.format("%s 휴점 상태인 아이디 [%s]", logPrefix, username));
+				throw new UsernameNotFoundException(Message.PARTNERS_DEALERST_CLOSED.getMsg());
+			} else if (Util.equal(dealerst, CMConst.PARTNSER_DEALST_EXIT)){
+				logger.info(String.format("%s 퇴점 처리된 아이디 [%s]", logPrefix, username));
+				throw new UsernameNotFoundException(Message.PARTNERS_DEALERST_EXIT.getMsg());
+			}
+
+			if (dealer.getPwfailcnt() >= 5) {
+				throw new UsernameNotFoundException("비밀번호 실패가 5회 초과했습니다.");
+			}
+
+			if(dealer != null) {
+				dealer.setPassword(userPw);
+				dealer.setUserid(userId);
+				dealer.setUsername(dealerMap.getDateStr("name"));
+				dealer.setChargename(dealerMap.getDateStr("chargename"));
+				dealer.setChargemobile(dealerMap.getDateStr("chargemobile"));
+				dealer.setUsertype(userType);
+				dealer.setUserno(userNo);
+				dealer.setDealerst(dealerst);
+				dealer.setReqdealst(reqDealst);
+				dealer.setTemplatecnt(templateCnt);
+
+				Role role = new Role();
+				role.setName(RoleName.ROLE_DEALER.getName());
+
+				List<Role> roles = new ArrayList<>();
+				roles.add(role);
+				dealer.setAuthorities(roles);
+
+				//중복 로그인 체크용
+				dealer.setSecurecode(Util.getGUID());
+			}
+
+			return dealer;
+		} catch(UsernameNotFoundException ue) {
+			logger.error("", ue);
+			throw new UsernameNotFoundException(ue.getMessage());
+		} catch (Exception se) {
+			logger.error("", se);
+			throw new UsernameNotFoundException("로그인 처리중 에러가 발생하였습니다.");
+		}
+
+	}
+
+	public void increasePwdFailCnt(String userid) {
+		SOMap param = new SOMap();
+		param.put("userid", userid);
+		userMapper.increasePwFailCnt(param);
+	}
+
+	public void resetPwFailCnt(String userid) {
+		// 비밀번호 실패횟수 초기화
+		SOMap param = new SOMap();
+		param.put("userid", userid);
+		userMapper.resetPwFailCnt(param);
+	}
+}

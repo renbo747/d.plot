@@ -1,0 +1,422 @@
+<template>
+  <main class="shop">
+    <!-- 메인 비주얼 -->
+    <section class="shop__vis" v-if="isLoading01">
+      <!-- swiper loop 버그 => for문사용시 렌더링 문제로 loop가 인식 x 하여 if로 리스트가 있을경우 init되도록-->
+      <swiper :options="swiperOptionPc" v-if="mainBannerList.length > 0">
+        <swiper-slide v-for="(list, index) in mainBannerList" :key="index">
+          <div
+            class="vis__imgs"
+            :style="{
+              backgroundImage: 'url(' + list.fullpath + ')'
+            }"
+            style="cursor: pointer"
+            @click="goLink(list)"
+          ></div>
+          <div class="vis__txt-wrap">
+            <h2 class="vis__tit" v-html="list.subject"></h2>
+            <p class="vis__desc" v-html="list.desc"></p>
+          </div>
+        </swiper-slide>
+        <div class="swiper-pagination" slot="pagination"></div>
+      </swiper>
+    </section>
+    <section v-else style="height:100vh; display: flex; align-items: center; justify-content: center;">
+      <div class="vld-icon"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 30 30" height="80" width="80" fill="#222222"><rect x="0" y="13" width="4" height="5"><animate attributeName="height" attributeType="XML" values="5;21;5" begin="0s" dur="0.6s" repeatCount="indefinite"></animate><animate attributeName="y" attributeType="XML" values="13; 5; 13" begin="0s" dur="0.6s" repeatCount="indefinite"></animate></rect><rect x="10" y="13" width="4" height="5"><animate attributeName="height" attributeType="XML" values="5;21;5" begin="0.15s" dur="0.6s" repeatCount="indefinite"></animate><animate attributeName="y" attributeType="XML" values="13; 5; 13" begin="0.15s" dur="0.6s" repeatCount="indefinite"></animate></rect><rect x="20" y="13" width="4" height="5"><animate attributeName="height" attributeType="XML" values="5;21;5" begin="0.3s" dur="0.6s" repeatCount="indefinite"></animate><animate attributeName="y" attributeType="XML" values="13; 5; 13" begin="0.3s" dur="0.6s" repeatCount="indefinite"></animate></rect></svg></div>
+    </section>
+    <!-- // 메인 비주얼 -->
+
+    <div class="container">
+      <!-- masonry 레이아웃 -->
+      <section class="shop__card dp-section"  v-if="isLoading01">
+        <div class="container-inner">
+          <div class="card__container">
+            <div
+              class="card-box"
+              v-for="(cate, index) in cateList"
+              :key="index"
+              @click="goCateLink(cate)"
+            >
+              <shop-card
+                :title="cate.engname"
+                :catecolor="cate.catecolor"
+                :style="{ backgroundImage: 'url(' + cate.fullpath + ')'}"
+                style="cursor: pointer"
+              />
+            </div>
+            <div class="card-box" v-if="cateList.length % 3 !== 0">
+              <shop-card
+                class="none-backdrop"
+                v-for="(item, index) in cateSubsetList"
+                :key="index"
+              >
+                <template v-for="(item, index) in cateSubsetList">
+                  <p
+                    class="shop-card__text1"
+                    :key="index"
+                    v-html="item.content"
+                  ></p>
+                </template>
+                <template v-html="item.content"></template>
+              </shop-card>
+            </div>
+          </div>
+        </div>
+      </section>
+      <section v-else style="height:100vh; display: flex; align-items: center; justify-content: center;">
+        <div class="vld-icon"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 30 30" height="80" width="80" fill="#222222"><rect x="0" y="13" width="4" height="5"><animate attributeName="height" attributeType="XML" values="5;21;5" begin="0s" dur="0.6s" repeatCount="indefinite"></animate><animate attributeName="y" attributeType="XML" values="13; 5; 13" begin="0s" dur="0.6s" repeatCount="indefinite"></animate></rect><rect x="10" y="13" width="4" height="5"><animate attributeName="height" attributeType="XML" values="5;21;5" begin="0.15s" dur="0.6s" repeatCount="indefinite"></animate><animate attributeName="y" attributeType="XML" values="13; 5; 13" begin="0.15s" dur="0.6s" repeatCount="indefinite"></animate></rect><rect x="20" y="13" width="4" height="5"><animate attributeName="height" attributeType="XML" values="5;21;5" begin="0.3s" dur="0.6s" repeatCount="indefinite"></animate><animate attributeName="y" attributeType="XML" values="13; 5; 13" begin="0.3s" dur="0.6s" repeatCount="indefinite"></animate></rect></svg></div>
+      </section>
+      <!-- // masonry 레이아웃 -->
+
+      <!-- Weelky Best 전시영역 6 -->
+      <section
+        class="shop__newin dp-section new-layout"
+        v-if="!$util.isNull(shopExnameList[5]) && shopEx1List.length > 0"
+      >
+        <div class="container-inner" v-if="isLoading02">
+          <header class="shop-section__header">
+            <div class="header__flex">
+              <h2 class="shop-section__title atten-new" v-html="shopExnameList[5].exhibitname"></h2>              
+            </div>
+            <p
+              class="shop-section__dec"
+              v-if="shopExnameList[5].isintro == 'T'"
+              v-html="shopExnameList[5].intro"
+            >              
+            </p>
+          </header>
+          <div>
+            <ul class="product_list">
+              <weekly-item  v-for="(item, index) in bestGoodsList" :key="index" :productInfo="{...item, index}" style="cursor: pointer;"/>
+            </ul>
+          </div>
+        </div>
+      </section>
+      <!-- // Weelky Best 전시영역 6 -->
+
+      <!-- eventBanner -->
+      <template v-if="shopBanner1List.length > 0 && shopBanner2List.length > 0">
+        <section class="shop__event-banner dp-section" v-if="isLoading03">
+          <div class="container-inner">
+            <div class="row">
+              <div
+                class="col-6"
+                v-for="(item, index) in shopBanner1List"
+                :key="index"
+              >
+                <eventBanner :banner-info="item" />
+              </div>
+              <div
+                class="col-6"
+                v-for="(item, index) in shopBanner2List"
+                :key="index + 'b'"
+              >
+                <eventBanner class="black" :banner-info="item" />
+              </div>
+            </div>
+          </div>
+        </section>
+        <section v-else style="height:100vh; display: flex; align-items: center; justify-content: center;">
+          <div class="vld-icon"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 30 30" height="80" width="80" fill="#222222"><rect x="0" y="13" width="4" height="5"><animate attributeName="height" attributeType="XML" values="5;21;5" begin="0s" dur="0.6s" repeatCount="indefinite"></animate><animate attributeName="y" attributeType="XML" values="13; 5; 13" begin="0s" dur="0.6s" repeatCount="indefinite"></animate></rect><rect x="10" y="13" width="4" height="5"><animate attributeName="height" attributeType="XML" values="5;21;5" begin="0.15s" dur="0.6s" repeatCount="indefinite"></animate><animate attributeName="y" attributeType="XML" values="13; 5; 13" begin="0.15s" dur="0.6s" repeatCount="indefinite"></animate></rect><rect x="20" y="13" width="4" height="5"><animate attributeName="height" attributeType="XML" values="5;21;5" begin="0.3s" dur="0.6s" repeatCount="indefinite"></animate><animate attributeName="y" attributeType="XML" values="13; 5; 13" begin="0.3s" dur="0.6s" repeatCount="indefinite"></animate></rect></svg></div>
+        </section>
+      </template>
+      <template v-else>
+        <section
+          class="shop__event-banner dp-section"
+          v-for="(list, index) in shopBanner1List"
+          :key="index"
+        >
+          <eventBanner :banner-info="list" />
+        </section>
+        <section
+          class="shop__event-banner dp-section"
+          v-for="(list, index) in shopBanner2List"
+          :key="index"
+        >
+          <eventBanner :banner-info="list" />
+        </section>
+      </template>
+      <!-- // 이벤트 배너 -->
+
+      <!-- new arrivals -->
+      <section
+        class="shop__imready dp-section new-layout"
+        v-if="!$util.isNull(shopExnameList[0]) && shopEx1List.length > 0 && isLoading03"
+      >
+        <div class="container-inner">
+          <header class="shop-section__header">
+            <div class="header__flex">
+              <h2 class="shop-section__title atten-new" v-html="shopExnameList[0].exhibitname"></h2>
+            </div>
+            <p
+              class="shop-section__dec"
+              v-if="shopExnameList[0].isintro == 'T'"
+              v-html="shopExnameList[0].intro"
+            ></p>
+          </header>
+          <div class="imready__list">
+            <swiper class="vis-swiper" :options="orderSwiperOption">
+              <swiper-slide :key="index" v-for="(list, index) in shopEx1List">
+                <product :product-info="list" />
+              </swiper-slide>
+              <div class="swiper-pagination" slot="pagination"></div>
+            </swiper>
+          </div>
+        </div>
+      </section>
+      <!-- // new arrivals -->
+
+      <!-- BND 전시영역 3 -->
+      <!-- Todo: (변경) 0414 기획서 및 디자인 변경 -->
+      <section
+        class="shop__bnd dp-section new-layout"
+        v-if="!$util.isNull(shopExnameList[2]) && shopEx3List.length > 0 && isLoading03"
+      >
+        <div class="container-inner">
+          <header class="shop-section__header">
+            <div class="header__flex">
+              <h2 class="shop-section__title atten-new" v-html="shopExnameList[2].exhibitname"></h2>
+            </div>
+            <p
+              class="shop-section__dec"
+              v-if="shopExnameList[2].isintro == 'T'"
+              v-html="shopExnameList[2].intro"
+            ></p>
+          </header>
+          <div class="bnd__detail">
+            <swiper class="bnd__swiper" :options="bndOption">
+              <swiper-slide v-for="(list, index) in shopEx3List" :key="index">
+                <div class="bnd__contents">
+                  <div class="bnd__left-content">
+                    <figure>
+                      <img :src="list.fullpath" @click="$router.push(list.pclinkurl)" style="cursor: pointer"/>
+                    </figure>
+                    <div>
+                      <div class="bnd__designer">
+                        <h4 class="designer-name atten-new">
+                          {{ list.subject }}
+                        </h4>
+                        <div class="designer__contents">
+                          <p
+                            class="bnd__designer-desc"
+                            v-if="list.desc"
+                            v-html="list.desc"
+                          ></p>
+                        </div>
+                        <a href="javascript:void(0);" class="bnd__link" @click="$router.push(list.pclinkurl)">
+                          <img
+                            :src="`${require('@/assets/pc/img/icon/icon-more-black-40px.svg')}`"
+                            alt="이달의 디자이너 상품 더보기"
+                          />
+                        </a>
+                      </div>
+                    </div>
+                  </div>
+                  <div class="bnd__right-content">
+                    <div class="row">
+                      <div
+                        v-for="(item, index) in list.goodslist"
+                        :key="index"
+                        class="prd_row"
+                      >
+                        <product :product-info="item" :isHorizontal="false" :height="200" style="cursor: pointer"/>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </swiper-slide>
+              <div class="swiper-pagination" slot="pagination" v-show="shopEx3List.length > 1"></div>
+            </swiper>
+          </div>
+        </div>
+      </section>
+      <!-- // (변경) 0414 기획서 및 디자인 변경 -->
+      <!-- // BND -->
+
+      <!-- HIGHLIGHTS 전시영역 4 -->
+      <section
+        class="shop__preorder dp-section new-layout highlights_section dplot_v2"
+        v-if="!$util.isNull(shopExnameList[3]) && shopEx4List.length > 0 && isLoading03"
+      >
+        <div class="container-inner">
+          <header class="shop-section__header">
+            <div class="header__flex">
+              <h2 class="shop-section__title atten-new">{{shopExnameList[3].exhibitname}}</h2>
+            </div>
+            <p
+              class="shop-section__dec"
+              v-if="shopExnameList[3].isintro == 'T'"
+              v-html="shopExnameList[3].intro"
+            ></p>
+          </header>
+
+          <swiper class="order-swiper"
+            :options="highlightSwiperOption"
+            v-if="shopEx4List.length > 0"
+          >
+            <swiper-slide
+              v-for="(highlightsItem, index) in shopEx4List"
+              :key="index"
+            >
+              <div class="brand-card" style="cursor: pointer;" @click="goLink(highlightsItem)">
+                <span class="card__label atten-new">{{highlightsItem.tagname}}</span>
+                <figure class="card__img">
+                  <img :src="highlightsItem.fullpath">
+                </figure>
+                <div class="brand_card_text_box">
+                  <h4 v-html="highlightsItem.subject"></h4>
+                  <p v-html="highlightsItem.desc"></p>
+                </div>
+              </div>
+            </swiper-slide>
+            <div class="swiper-pagination" slot="pagination" v-show="shopEx4List.length > 2"></div>
+          </swiper>
+        </div>
+      </section>
+      <!-- // HIGHLIGHTS 전시영역 4 -->
+
+      <!-- PRE-ORDER 전시영역 5 -->
+      <section
+        class="shop__promotion dp-section new-layout"
+        v-if="!$util.isNull(shopExnameList[4]) && shopEx5List.length > 0 && isLoading03"
+      >
+        <div class="container-inner">
+          <header class="shop-section__header">
+            <h2 class="shop-section__title atten-new">{{shopExnameList[4].exhibitname}}</h2>
+          </header>
+          <div class="imready__list">
+            <swiper class="vis-swiper" :options="orderSwiperOption">
+              <swiper-slide :key="index" v-for="(list, index) in shopEx5List[0].goodslist">
+                <product :product-info="list" :height="295" />
+              </swiper-slide>
+              <div class="swiper-pagination" slot="pagination"></div>
+            </swiper>
+          </div>
+          <!-- <div class="promotion__body">
+            <div class="row">
+              <div
+                v-for="(list, index) in shopEx5List"
+                :key="index"
+              >
+                <div class="promotion__box">
+                  <brand-card :option="list" />
+
+                  <swiper :options="saleSwiperOption">
+                    <swiper-slide
+                      v-for="(item, index) in list.goodslist"
+                      :key="index"
+                    >
+                      <div class="promotion__thumbnail" @click="$router.push({name:'shop-detail', params:{pid: item.goodscode}})" style="cursor: pointer">
+                        <figure class="thumbnail__figure" >
+                          <img :src="item.fullpath"  width="190" height="190" />
+                        </figure>
+                        <p class="thumbnail__text" v-if="item.keyword.length > 0">
+                          #{{ item.keyword[0] }}
+                        </p>
+                      </div>
+                    </swiper-slide>
+                    <div class="swiper-pagination" slot="pagination"></div>
+                  </swiper>
+                </div>
+              </div>
+            </div>
+          </div> -->
+        </div>
+      </section>
+      <!-- // PRE-ORDER 전시영역 5 -->
+
+      <!-- MD's Pick -->
+      <!-- <section
+        class="shop__md dp-section new-layout md_pick"
+        v-if="!$util.isNull(shopExnameList[6]) && mzTrendList.length"
+      > -->
+      <section
+        class="shop__md dp-section new-layout md_pick"
+        v-if="!$util.isNull(shopExnameList[6] && mzTrendList.length)"
+      >
+        <div class="container-inner">
+          <header class="shop-section__header">
+            <div class="header__flex">
+              <h2 class="shop-section__title atten-new" v-html="shopExnameList[6].exhibitname"></h2>
+            </div>
+            <p
+              class="shop-section__dec"
+              v-if="shopExnameList[6].isintro == 'T'"
+              v-html="shopExnameList[6].intro"
+            ></p>
+          </header>
+
+          <swiper class="order-swiper"
+            :options="highlightSwiperOption"
+            v-if="shopEx4List.length > 0"
+          >
+            <swiper-slide
+              v-for="(mzItem, index) in mzTrendList"
+              :key="index"
+            >
+              <div class="brand-card" style="cursor: pointer;">
+                <figure class="card__img" @click="$router.push('/magazine/trend/detail/'+mzItem.tridx)">
+                  <img :src="mzItem.fullpath">
+                </figure>
+                <div class="brand_card_text_box" @click="$router.push('/magazine/trend/detail/'+mzItem.tridx)">
+                  <h4 v-html="mzItem.subject"></h4>
+                  <p v-html="mzItem.desc"></p>
+                  <a href="javascript:void(0);" class="bnd__link">
+                    <img
+                      :src="`${require('@/assets/pc/img/icon/new_arrow.png')}`"
+                      alt="MD's Pick content"
+                    />
+                  </a>
+                </div>
+              </div>
+            </swiper-slide>
+            <div class="swiper-pagination" slot="pagination" v-show="mzTrendList.length > 2"></div>
+          </swiper>
+        </div>
+      </section>
+      <!-- // MD's Pick -->
+
+          <!-- Trends -->
+      <!-- 7/19 임시숨김 --> 
+      <!-- <section
+        class="shop__trend dp-section"
+        v-if="!$util.isNull(shopExnameList[5])"
+      >
+        <div class="container-inner">
+          <header class="shop-section__header">
+            <div class="header__flex">
+              <h2 class="shop-section__title atten-new">{{shopExnameList[5].exhibitname}}</h2>
+            </div>
+            <p
+              class="shop-section__dec"
+              v-if="shopExnameList[5].isintro == 'T'"
+            >{{shopExnameList[5].intro}}</p>
+          </header>
+
+          <div class="trend__tabs">
+            <div class="dp-tabs">
+              <b-tabs v-model="currentTab"> 
+                <template v-for="(list, index) in category1Depthlist">
+                  <b-tab :title="list.value" :key="index">
+                    <ul class="row list-style-none product-list">
+                      <li
+                        v-for="(item, index) in bestGoodsList"
+                        :key="index"
+                        class="col-3"
+                      >
+                        <product :product-info="item" :height="295" style="cursor: pointer"/>
+                      </li>
+                    </ul>
+                  </b-tab>
+                </template>
+              </b-tabs>
+            </div>
+          </div>
+        </div>
+      </section> -->
+      <!-- Trends -->
+    </div>
+  </main>
+</template>
+
+<script src="@views.mobile/shop/Index.js"></script>

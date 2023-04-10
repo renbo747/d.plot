@@ -1,0 +1,429 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.dplot.mapper.BrandMapper">
+	<!--
+	****************************************************************************************************************************
+	**  ADMIN 영역 쿼리 시작
+	***************************************************************************************************************************** 
+	-->
+	<!-- 브랜드 목록 조회 -->
+	<select id="selectBrandList" parameterType="somap" resultType="somap" >
+		/* BrandMapper.xml::selectBrandList 브랜드 목록 조회 */
+		SELECT 
+        		@rownum:= @rownum + 1 as no
+               ,a.*
+		FROM (
+			<include refid="selectBrandListSQL"/>
+		) a, (select @ROWNUM := #{startpage}) as b
+		<choose>
+			<when test="psort == 'brcode_asc'">
+				ORDER BY a.brcode ASC
+			</when>
+			<when test="psort == 'brcode_desc'">
+				ORDER BY a.brcode DESC
+			</when>
+			<when test="psort == 'name_asc'">
+				ORDER BY a.name ASC
+			</when>
+			<when test="psort == 'name_desc'">
+				ORDER BY a.name DESC
+			</when>
+			<when test="psort == 'enname_asc'">
+				ORDER BY a.enname ASC
+			</when>
+			<when test="psort == 'enname_desc'">
+				ORDER BY a.enname DESC
+			</when>
+			<when test="psort == 'headcopy_asc'">
+				ORDER BY a.headcopy ASC
+			</when>
+			<when test="psort == 'headcopy_desc'">
+				ORDER BY a.headcopy DESC
+			</when>
+			<when test="psort == 'istrash_asc'">
+				ORDER BY a.istrash ASC
+			</when>
+			<when test="psort == 'istrash_desc'">
+				ORDER BY a.istrash DESC
+			</when>
+			<when test="psort == 'bannercnt_asc'">
+				ORDER BY a.bannercnt ASC
+			</when>
+			<when test="psort == 'bannercnt_desc'">
+				ORDER BY a.bannercnt DESC
+			</when>
+			<when test="psort == 'regdate_asc'">
+				ORDER BY a.sortregdate ASC
+			</when>
+			<when test="psort == 'regdate_desc'">
+				ORDER BY a.sortregdate DESC
+			</when>
+			<otherwise>
+				ORDER BY a.sortregdate DESC
+			</otherwise>
+		</choose>
+		<if test="startpage != null and !startpage.equals('') and endpage != null and !endpage.equals('')">
+		LIMIT #{startpage}, #{endpage}
+		</if>
+	</select>
+	
+	<!-- 브랜드 건수 조회 -->
+	<select id="selectBrandListCount" parameterType="somap" resultType="Integer" >
+		SELECT
+			COUNT(*) AS cnt
+		FROM t_brand tb
+		<where>
+			<if test="siteid != null and siteid != ''">
+				AND tb.siteid = #{siteid}
+			</if>
+			<if test="startdate != null and startdate != '' and enddate != null and enddate != ''">
+				<![CDATA[
+					AND tb.regdate >= DATE_FORMAT(CONCAT(#{startdate}, ' ', '00:00:00') , '%Y-%m-%d %H:%i:%s')
+					AND tb.regdate < DATE_FORMAT(CONCAT(#{enddate}, ' ', '23:59:59'), '%Y-%m-%d %H:%i:%s')
+				]]>
+			</if>
+			<if test="sword != null and sword != ''">
+				<choose>
+					<when test="skey == 'brcode'">
+						AND tb.brcode LIKE CONCAT('%',#{brcode},'%')
+					</when>
+					<when test="skey == 'brandname'">
+						AND (tb.name LIKE CONCAT('%',#{sword},'%')
+							OR tb.enname LIKE CONCAT('%', #{sword}, '%')
+						)
+					</when>
+					<otherwise>
+						AND (
+							tb.brcode LIKE CONCAT('%',#{sword},'%')
+							OR tb.name LIKE CONCAT('%',#{sword},'%')
+							OR tb.enname LIKE CONCAT('%', #{sword}, '%')
+						)
+					</otherwise>
+				</choose>
+			</if>
+			<if test="istrash != null and istrash != ''">
+				AND istrash = #{istrash}				
+			</if>
+		</where>
+	</select>
+	
+	<!-- 브랜드 사용여부 별 건수 조회 -->
+	<select id="selectBrandUseCount" parameterType="somap" resultType="somap">
+		SELECT /* BrandMapper.xml - selectBrandUseCount 브랜드 사용여부별 건수 조회*/
+			count(*) as total_cnt,
+			IFNULL(SUM(CASE istrash WHEN 'F' THEN 1 ELSE 0 END),0) AS use_cnt,
+			IFNULL(SUM(CASE istrash WHEN 'T' THEN 1 ELSE 0 END),0) AS trash_cnt
+		FROM t_brand tb
+		LEFT JOIN t_dealer td ON tb.dealerno = td.userno
+		<where>
+			<if test="siteid != null and siteid != ''">
+				AND tb.siteid = #{siteid}
+			</if>
+			<if test="startdate != null and startdate != '' and enddate != null and enddate != ''">
+				<![CDATA[
+					AND tb.regdate >= DATE_FORMAT(CONCAT(#{startdate}, ' ', '00:00:00') , '%Y-%m-%d %H:%i:%s')
+					AND tb.regdate < DATE_FORMAT(CONCAT(#{enddate}, ' ', '23:59:59'), '%Y-%m-%d %H:%i:%s')
+				]]>
+			</if>
+			<if test="sword != null and sword != ''">
+				<choose>
+					<when test="skey == 'brcode'">
+						AND tb.brcode LIKE CONCAT('%',#{sword},'%')
+					</when>
+					<when test="skey == 'brandname'">
+						AND tb.name LIKE CONCAT('%',#{sword},'%')
+					</when>
+					<when test="skey == 'dealname'">
+						AND td.name LIKE CONCAT('%',#{sword},'%')
+					</when>
+					<otherwise>
+						AND (
+							tb.brcode LIKE CONCAT('%',#{sword},'%')
+							OR tb.name LIKE CONCAT('%',#{sword},'%')
+							OR td.name LIKE CONCAT('%',#{sword},'%')
+						)
+					</otherwise>
+				</choose>
+			</if>
+			<if test="istrash != null and istrash != ''">
+				AND istrash = #{istrash}				
+			</if>
+			<if test="isdealer != null and isdealer != ''">
+				AND isdealer = #{isdealer}
+				<if test='isdealer == "T" and dealerno != null and dealerno != ""'>
+					AND dealerno = #{dealerno}
+				</if>
+			</if>
+		</where>
+	</select>
+	
+	<!-- 브랜드 추가 -->
+	<insert id="insertBrand" parameterType="somap" useGeneratedKeys="true" keyProperty="idx">
+		/* BrandMapper.xml - insertBrand 브랜드 추가 */
+		INSERT INTO t_brand(siteid, name, regdate, istrash, reguserid, brcode, cateidx, enname, frstname, frstename, headcopy, detail)  
+		VALUES(#{siteid}, #{name}, now(), #{istrash}, #{authuserid}, fn_get_brand_code(), #{cateidx}, #{enname}, #{frstname}, #{frstename}, #{headcopy}, #{detail})
+	</insert>
+	
+	<!-- 브랜드 상세 조회 -->
+	<select id="selectBrandDetail" parameterType="somap" resultType="somap">
+		SELECT  /* BrandMapper.xml - selectBrandDetail 브랜드 상세 조회 */
+		idx
+		, name
+		, ifnull(enname, '') as enname
+		, istrash
+		, ifnull(cateidx, '') as cateidx
+		, date_format(regdate, '%Y-%m-%d') as regdate
+		, ifnull(headcopy, '') as headcopy
+		, ifnull(detail, '') as detail
+		, ifnull(brcode, '') as brcode
+		FROM t_brand
+		<where>
+			AND siteid = #{siteid}
+			<choose>
+				<when test="brcode != null and brcode !=''">
+				AND brcode = #{brcode}
+				</when>
+				<otherwise>
+				AND idx = #{idx}
+				</otherwise>
+			</choose>
+		</where>
+	</select>
+	
+	<!-- 브랜드 수정 -->
+	<update id="updateBrand" parameterType="somap">
+		/* BrandMapper.xml - updateBrand 브랜드 수정 */
+		UPDATE t_brand SET name = #{name}, istrash = #{istrash}, cateidx = #{cateidx}, enname = #{enname}, frstname = #{frstname}, frstename = #{frstename}, headcopy = #{headcopy}, detail = #{detail}
+		<if test="moduserid != null and moduserid != ''">
+		, moduserid = #{moduserid}, moddate = sysdate()
+		</if>
+		WHERE idx = #{idx}  
+	</update>
+	<!--
+	****************************************************************************************************************************
+	**  ADMIN 영역 쿼리 종료
+	***************************************************************************************************************************** 
+	-->
+	<!--
+	****************************************************************************************************************************
+	**  FRONT 영역 쿼리 시작
+	***************************************************************************************************************************** 
+	-->
+	<select id="selectBrandFrontList" parameterType="somap" resultType="somap">
+		<!-- 대표 카테고리 추후 추가 필요 -->
+		SELECT /*BrandMapper.xml - selectFrontBrandList:: 브랜드목록 조회*/
+		       tb.IDX       -- 브랜드 idx
+		     , tb.DEALERNO  -- 입점업체 번호
+		     , tb.NAME      -- 브랜드명
+		     , tb.BRCODE    -- 브랜드코드
+		     , tb.CATEIDX   -- 카테고리IDX
+		     , tb.ENNAME    -- 브랜드명_영문
+		     , tb.FRSTNAME  -- 브랜드초성
+		     , if((tb.FRSTNAME BETWEEN 'ㄱ' AND 'ㅎ') || (tb.FRSTNAME BETWEEN 'A' AND 'z'), tb.FRSTNAME, 'ETC') as filterfrstname -- 필터링용 브랜드명초성
+		     , tb.FRSTENAME -- 브랜드명초성_영문
+		     , if((tb.FRSTENAME BETWEEN 'ㄱ' AND 'ㅎ') || (tb.FRSTENAME BETWEEN 'A' AND 'z'), UPPER(tb.frstename), 'ETC') as filterfrstename -- 필터링용 브랜드명초성 영문
+		     , tb.HEADCOPY  -- 헤드카피
+		     , tb.DETAIL    -- 브랜드상세설명
+		     , FN_GET_FILE_URL(tb.IDX, 'FLT001', #{imgtype}) AS imgpath -- IGT027::브랜드_PC이미지, IGT028::브랜드_Mobile이미지
+		     , FN_GET_FILE_URL(tb.IDX, 'FLT001', 'IGT011') AS logopath -- IGT027::브랜드_PC이미지, IGT028::브랜드_Mobile이미지
+		FROM t_brand tb
+		WHERE 1 = 1
+		AND tb.SITEID = #{siteid}
+		AND tb.ISTRASH = 'F'
+		<if test='cateidx != null and cateidx !=""'>
+		AND CATEIDX = #{cateidx}
+		</if>
+		ORDER BY enname
+	</select>
+	
+	
+	
+	<!-- Front 프리미엄 브랜드 목록조회(메인전시)
+		(IGT065:PC이미지,IGT066:MO이미지,IGT067:소개PC이미지,IGT068:소개MO이미지)	
+	 -->
+	<select id="selectPreBrandFrontList" parameterType="somap" resultType="somap">
+	SELECT /* BrandMapper.xml - selectFrontBrandList Front ::프리미엄 브랜드 목록조회(메인전시) */
+	       PRBRANDIDX       -- 프리미엄브랜드번호
+	     , BRANDIDX         -- 브랜드일련번호
+	     , EXPBRANDNAME     -- 프리미엄브랜드명
+	     , MAINTITLE        -- 메인 타이틀
+	     , SUBTITLE         -- 서브 타이틀
+	     , ISBRANDLINK      -- 브랜드링크 여부
+	     , LINKURL          -- 브랜드링크 주소
+	     , CONCAT(tf.HOST, tf.IMGPATH, tf.IMGFNAME) AS FULLPATH -- 이미지 경로
+	 FROM t_prbrand tp
+	 -- 만약 어드민에서 브랜드가 삭제되었는데 프리미엄브랜드가 미삭제되었을 경우를 체크하기위해 조인 
+	 LEFT OUTER JOIN t_brand tb ON tp.BRANDIDX  = tb.IDX
+	 AND tp.ISTRASH  = 'F'
+	 LEFT OUTER JOIN T_FILE tf ON tp.PRBRANDIDX  = tf.ORGIDX
+	 AND tf.FILETYPE = 'FLT001'
+	 <choose>
+	  <when test='platform == "MOBILE"'>
+	  	AND tf.IMGTYPE  = 'IGT066'
+	  </when>
+	  <otherwise>
+	  	AND tf.IMGTYPE  = 'IGT065'
+	  </otherwise>
+	 </choose> 
+	 AND tf.ISTRASH  = 'F'
+	 WHERE 1 = 1
+	 AND tp.siteid = #{siteid}
+	 AND tp.ISTRASH = 'F'
+	 AND tp.ISPRDISP = 'T'
+	 ORDER BY tp.REGDATE DESC
+	 LIMIT 3
+	</select>
+	
+	<!--FRONT 브랜드리스트 조회  - 10개노출-->
+	<select id="selectBrandFrontListv1" parameterType="somap" resultType="somap">
+		SELECT tb.idx          -- 브랜드번호
+		     , tb.name         -- 브랜드명
+		     , CONCAT(tf.host, tf.imgpath, tf.imgfname) AS fullpath -- 이미지 경로
+		FROM t_brand tb
+		LEFT OUTER JOIN T_FILE tf ON tb.idx  = tf.ORGIDX
+		AND tf.filetype = 'FLT001'
+		 <choose>
+		  <when test='platform == "MOBILE"'>
+		  	AND tf.imgtype  = 'IGT028'
+		  </when>
+		  <otherwise>
+		  	AND tf.imgtype  = 'IGT027'
+		  </otherwise>
+		 </choose> 
+		 AND tf.istrash  = 'F'
+		WHERE 1 =1
+		AND tb.siteid = #{siteid}
+		AND tb.idx in (
+						SELECT brandidx 
+						FROM t_goods_total tgt
+						JOIN t_goods tg ON tg.goodsno  = tgt.goodsno
+						WHERE tg.siteid=#{siteid}
+						-- AND tg.isdisplay = 't'
+						AND tg.state=#{state}
+					   )
+		AND tb.istrash = 'F'
+		ORDER BY name DESC, idx ASC
+		LIMIT 10
+	</select>
+	
+	<!-- FRONT 매거진 브랜드 상세 조회 -->
+	<select id="selectFrontBrandDetail" parameterType="somap" resultType="somap">
+		SELECT /* BrandMapper.xml - selectFrontBrandDetail FRONT 매거진 브랜드 상세 조회 */
+			CONCAT(name, ' ', enname) as brandname
+			, name
+			, enname
+			, FN_GET_FILE_URL(idx, 'FLT001', #{imgtype}) AS fullpath
+			, detail
+			, ifnull((select 'T' from t_brand_like where bridx = #{brandidx} and userno = #{userno}), 'F') as iswished
+			, (select count(*) from t_brand_like where bridx = #{brandidx}) as wishcnt
+		FROM t_brand
+		<where>
+			AND idx = #{brandidx}
+			AND istrash = 'F'
+		</where>
+	</select>
+	
+	<!--
+	****************************************************************************************************************************
+	**  FRONT 영역 쿼리 종료
+	***************************************************************************************************************************** 
+	-->
+
+	<insert id="insertBrandERPData" parameterType="somap">
+		INSERT INTO T_BRAND (SITEID, NAME, BRCODE, ISTRASH, REGUSERID, REGDATE)
+		VALUES
+		<foreach collection="list" item="item" separator=",">
+			(#{siteid}, #{item.brand_name}, #{item.brand_code}, 'T', 'SYSTEM', CURRENT_TIMESTAMP)
+		</foreach>
+	</insert>
+
+	<update id="updateBrandERPData" parameterType="somap">
+		UPDATE T_BRAND SET NAME = #{brand_name}, MODDATE = CURRENT_TIMESTAMP
+		WHERE BRCODE = #{brand_code}
+	</update>
+
+	<select id="selectBrandCodeList" parameterType="somap" resultType="String">
+		SELECT
+			BRCODE
+		FROM T_BRAND
+		WHERE SITEID = #{siteid}
+	</select>
+
+	<select id="selectBrandListForExcel" parameterType="somap" resultType="HashMap">
+		/* BrandMapper.xml::selectBrandListForExcel 상품 일괄업로드 브랜드 목록 조회 */
+		SELECT a.*
+		FROM (<include refid="selectBrandListSQL"/>) a
+		WHERE a.brcode IS NOT NULL
+		AND a.brcode <![CDATA[<>]]> ''
+		ORDER BY a.brcode
+	</select>
+	
+	<sql id="selectBrandListSQL">
+		SELECT 
+			tb.idx, tb.name, tb.brcode, tc.name as category, tb.enname, tb.headcopy, tb.istrash,
+			date_format(tb.regdate, '%Y-%m-%d') as regdate, tb.regdate as sortregdate, tb.name as brandname,
+			(SELECT count(*) FROM t_banner WHERE istrash='F' AND bntype='BNT005' AND brandidx=tb.idx) as bannercnt
+		FROM t_brand tb
+		LEFT JOIN t_category tc ON tb.cateidx = tc.idx
+		<where>
+			<if test="siteid != null and siteid != ''">
+				AND tb.siteid = #{siteid}
+			</if>
+			<if test="startdate != null and startdate != '' and enddate != null and enddate != ''">
+				<![CDATA[
+					AND tb.regdate >= DATE_FORMAT(CONCAT(#{startdate}, ' ', '00:00:00') , '%Y-%m-%d %H:%i:%s')
+					AND tb.regdate < DATE_FORMAT(CONCAT(#{enddate}, ' ', '23:59:59'), '%Y-%m-%d %H:%i:%s')
+				]]>
+			</if>
+			<if test="sword != null and sword != ''">
+				<choose>
+					<when test="skey == 'brcode'">
+						AND tb.brcode LIKE CONCAT('%',#{sword},'%')
+					</when>
+					<when test="skey == 'brandname'">
+						AND (tb.name LIKE CONCAT('%',#{sword},'%')
+							OR tb.enname LIKE CONCAT('%', #{sword}, '%')
+						)
+					</when>
+					<otherwise>
+						AND (
+							tb.brcode LIKE CONCAT('%',#{sword},'%')
+							OR tb.name LIKE CONCAT('%',#{sword},'%')
+							OR tb.enname LIKE CONCAT('%', #{sword}, '%')
+						)
+					</otherwise>
+				</choose>
+			</if>
+			<if test="istrash != null and istrash != ''">
+				AND tb.istrash = #{istrash}				
+			</if>
+		</where>
+	</sql>
+	
+	<select id="selectSearchBrand" parameterType="somap" resultType="somap">
+		SELECT /*BrandMapper.xml- selectSearchBrand::검색 브랜드 필터 조회*/
+		       tb.idx
+		     , tb.DEALERNO  -- 입점업체 번호
+			 , tb.NAME      -- 브랜드명
+			 , tb.BRCODE    -- 브랜드코드
+			 , tb.CATEIDX   -- 카테고리IDX
+			 , tb.ENNAME    -- 브랜드명_영문
+			 , tb.FRSTNAME  -- 브랜드초성
+			 , if(tb.FRSTNAME BETWEEN 'ㄱ' AND 'ㅎ', tb.FRSTNAME, 'ETC') as filterfrstname -- 필터링용 브랜드명초성
+			 , tb.FRSTENAME -- 브랜드명초성_영문
+			 , if(tb.FRSTENAME BETWEEN 'A' AND 'z', UPPER(tb.frstename), 'ETC') as filterfrstename -- 필터링용 브랜드명초성 영문
+			 , tb.HEADCOPY  -- 헤드카피
+			 , tb.DETAIL    -- 브랜드상세설명
+			 , FN_GET_FILE_URL(tb.IDX, 'FLT001', 'IGT011') AS imgpath -- IGT027::브랜드_PC이미지, IGT028::브랜드_Mobile이미지
+			 , FN_GET_FILE_URL(tb.IDX, 'FLT001', 'IGT011') AS logopath -- IGT027::브랜드_PC이미지, IGT028::브랜드_Mobile이미지
+		FROM t_brand tb
+		WHERE SITEID = #{siteid}
+		<choose>
+	  	<when test="brandlist != null and brandlist.size > 0">
+			AND IDX IN (<foreach collection="brandlist" item="brand" index="index" open="" separator="," close="">#{brand.idx}</foreach>)
+	  	</when>
+	 	</choose>
+	    ORDER BY enname
+	</select>
+</mapper>

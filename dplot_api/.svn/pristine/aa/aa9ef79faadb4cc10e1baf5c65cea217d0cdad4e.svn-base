@@ -1,0 +1,149 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.dplot.mapper.ComOrderCouponMapper">
+	
+	<insert id="insertComOrderCoupon" parameterType="somap" useGeneratedKeys="true" keyProperty="ordcpidx">
+		INSERT   /* ComOrderCouponMapper - insertComOrderCoupon 주문쿠폰 저장*/
+			INTO t_comorder_coupon (
+			  orderidx
+			, ordgdidx
+			, cpnmisidx
+			, comcpntype
+			, istrash
+			, reguserid
+			, regdate
+		) VALUES (
+			  #{orderidx}
+			, #{ordgdidx}
+			, #{cpnmisidx}
+			, #{comcpntype}
+			, 'F'
+			, #{userid}
+			, sysdate()
+		)
+	</insert>
+	
+	<select id="selectOrderCouponList" parameterType="somap" resultType="somap">
+		SELECT	/*ComOrderCouponMapper.xml - selectOrderCouponList:: 주문쿠폰목록 조회*/ 
+		      A.ORDCPIDX
+		    , A.ORDERIDX
+		    , A.ORDGDIDX
+		    , A.CPNMISIDX
+		    , FN_CHECK_DIRECTCOUPON(C.COMCPNIDX) AS ISDIRECT
+		FROM T_COMORDER_COUPON A
+		INNER JOIN T_COMCOUPON_MEMISSUE B
+		ON  A.CPNMISIDX = B.CPNMISIDX
+		INNER JOIN T_COMCOUPON_INFO C
+		ON B.CPNINFOIDX = C.CPNINFOIDX 
+		WHERE A.ORDERIDX = #{orderidx}
+		AND A.ISTRASH = 'F'
+	</select>
+	
+	<select id="selectAdminOrderDiscountList" parameterType="somap" resultType="somap">
+		SELECT	/*ComOrderCouponMapper.xml - selectAdminOrderDiscountList:: 관리자-주문할인내역 조회*/ 
+			  ta.ORDERIDX 
+			, ta.ORDNO 
+			, ta.TYPENAME
+			, ta.GOODSCODE
+			, ta.OPTIONCODE
+			, ta.DISCOUNTNAME
+			, ta.DISCOUNTAMT
+			, ta.ROWSPAN
+			, ta.ROWNO
+		FROM ((
+				SELECT		/* 프로모션할인 */
+					  a.ORDERIDX 
+					, a.ORDNO 
+					, '프로모션할인' AS TYPENAME
+					, c.GOODSCODE
+					, b.OPTIONCODE
+					, d.PROMONAME AS DISCOUNTNAME
+					, b.SALEPROMOAMT*-1 AS DISCOUNTAMT
+					, COUNT(*) OVER() AS ROWSPAN
+					, ROW_NUMBER() OVER() AS ROWNO
+				FROM t_comorder a
+				INNER JOIN t_comorder_goods b 
+					ON a.ORDERIDX = b.ORDERIDX
+				INNER JOIN t_goods c
+					ON b.goodsno = c.goodsno
+				INNER JOIN t_promotion d
+					ON b.SALEPROMOIDX = d.PROMOIDX 
+				WHERE a.SITEID = #{siteid}
+				AND a.ORDNO = #{ordno}
+				ORDER BY c.GOODSCODE, b.OPTIONCODE
+			 ) UNION ALL (
+			 	SELECT		/* 상품,배송비쿠폰 */
+					  a.ORDERIDX 
+					, a.ORDNO 
+					, FN_GET_CODENAME(NULL, 'COMCPNTYPE', g.COMCPNTYPE) AS TYPENAME
+					, c.GOODSCODE
+					, b.OPTIONCODE
+					, g.CPNNAME AS DISCOUNTNAME
+					, (CASE WHEN g.COMCPNTYPE = 'CCT001' THEN b.GOODSCPNAMT*-1
+							WHEN g.COMCPNTYPE = 'CCT003' THEN b.DELIVCPNAMT*-1
+							ELSE 0
+					   END) AS DISCOUNTAMT
+					, count(*) over(PARTITION BY g.COMCPNTYPE) AS ROWSPAN
+					, ROW_NUMBER() OVER (PARTITION BY g.COMCPNTYPE ORDER BY g.COMCPNTYPE, c.GOODSCODE) AS ROWNO
+				FROM t_comorder a
+				INNER JOIN t_comorder_goods b 
+					ON a.ORDERIDX = b.ORDERIDX
+				INNER JOIN t_goods c
+					ON b.goodsno = c.goodsno
+				INNER JOIN t_comorder_coupon d
+					ON a.ORDERIDX = d.ORDERIDX 
+				   AND b.ORDGDIDX = d.ORDGDIDX
+				INNER JOIN t_comcoupon_memissue e
+					ON d.CPNMISIDX = e.CPNMISIDX
+				INNER JOIN t_comcoupon_info f
+					ON e.CPNINFOIDX = f.CPNINFOIDX 
+				INNER JOIN t_comcoupon g 
+					ON f.COMCPNIDX = g.COMCPNIDX 
+				WHERE a.SITEID = #{siteid}
+				AND a.ORDNO = #{ordno}
+				ORDER BY g.COMCPNTYPE, c.GOODSCODE, b.OPTIONCODE
+			) UNION ALL (
+			 	SELECT		/* 장바구니쿠폰 */
+					  a.ORDERIDX 
+					, a.ORDNO 
+					, FN_GET_CODENAME(NULL, 'COMCPNTYPE', g.COMCPNTYPE) AS TYPENAME
+					, '' AS GOODSCODE
+					, '' AS OPTIONCODE
+					, g.CPNNAME AS DISCOUNTNAME
+					, a.BASKETCPNAMT*-1 AS DISCOUNTAMT
+					, 1 AS ROWSPAN
+					, 1 AS ROWNO
+				FROM t_comorder a
+				INNER JOIN t_comorder_coupon b
+					ON a.ORDERIDX = b.ORDERIDX 
+				   AND b.ORDGDIDX IS null
+				INNER JOIN t_comcoupon_memissue e
+					ON b.CPNMISIDX = e.CPNMISIDX
+				INNER JOIN t_comcoupon_info f
+					ON e.CPNINFOIDX = f.CPNINFOIDX 
+				INNER JOIN t_comcoupon g 
+					ON f.COMCPNIDX = g.COMCPNIDX 
+				WHERE a.SITEID = #{siteid}
+				AND a.ORDNO = #{ordno}
+			)) ta
+	</select>
+
+	<select id="selectOrderCouponERPData" parameterType="somap" resultType="somap">
+		/*ComOrderCouponMapper.xml - selectOrderCouponERPData:: 주문 사용쿠폰 정보 조회 (ERP전송용)*/
+		SELECT
+				A.ORDCPIDX,
+				A.ORDERIDX,
+				A.ORDGDIDX,
+				A.CPNMISIDX,
+				C.COMCPNIDX
+		FROM T_COMORDER_COUPON A
+		LEFT JOIN T_COMCOUPON_MEMISSUE B
+		ON		A.CPNMISIDX = B.CPNMISIDX
+		LEFT JOIN T_COMCOUPON_INFO C
+		ON		B.CPNINFOIDX = C.CPNINFOIDX
+		WHERE	A.ORDERIDX = #{orgno}
+		AND		A.ISTRASH = 'F'
+	</select>
+
+</mapper>

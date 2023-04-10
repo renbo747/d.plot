@@ -1,0 +1,88 @@
+.base-input {
+  .input-label {
+    margin-bottom: 10px;
+    font-size: 14px;
+    letter-spacing: -.56px;
+    color: $black;
+    @include media-breakpoint-up(xl) {
+      font-size: 16px;
+      letter-spacing: -.64px;
+    }
+  }
+  .form-control {
+    display: flex;
+    align-items: center;
+    height: 44px;
+    padding: 0 16px;
+    border-color: $border-color;
+    color: $gray-800;
+    box-shadow: none !important;
+    outline: 0;
+    font-size: 14px;
+    letter-spacing: -.56px;
+    border-radius: 0;
+    -webkit-appearance: none;
+    -webkit-border-radius: 0;
+    @include media-breakpoint-up(xl) {
+      height: 48px;
+      font-size: 16px;
+      letter-spacing: -.64px;
+      color: $gray-600;
+    }
+
+    &:focus {
+      border-color: $black;
+      color: $gray-800;
+    }
+
+    &::placeholder {
+      color: $gray-600;
+    }
+
+    &:disabled,
+    &[readonly] {
+      border-color: $gray-400;
+      background: $gray-100;
+      color: $gray-700;
+    }
+  }
+
+  .icon-input-remove {
+    position: absolute;
+    top: 50%;
+    right: 16px;
+    z-index: 2;
+    transform: translateY(-50%);
+    cursor: pointer;
+    width: 18px;
+    height: 18px;
+    background-size: 18px !important;
+  }
+
+  .error-msg {
+    font-size: 12px;
+    letter-spacing: -.24px;
+    color: $danger;
+    margin-top: 8px;
+  }
+
+  &.is-error {
+    .form-control {
+      border-color: $danger;
+    }
+  }
+
+  &.is-success {
+    .form-control {
+      border-color: $success;
+    }
+    .icon-input-success {
+      position: absolute;
+      top: 50%;
+      right: 16px;
+      z-index: 2;
+      transform: translateY(-50%);
+    }
+  }
+
+}

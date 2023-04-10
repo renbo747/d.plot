@@ -1,0 +1,113 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.dplot.mapper.CardBenefitMapper">
+	<!-- 카드혜택 조회 -->
+	<select id="selectCardBenefitList" resultType="somap" parameterType="somap">
+        /* CardBenefitMapper.xml - selectCardBenefit 카드혜택 조회  */
+        SELECT
+        	tcidx
+        	, isdiscount
+        	, cardcompany
+        	, FN_GET_CODENAME(#{siteid}, 'CARDCOMPANY', cardcompany) as cardname
+        	, amount
+        	, ifnull(flatrate,0) as flatrate
+        	, ifnull(fixedrate, 0) as fixedrate
+        	, ifnull(fixedrate, 0) as oldfixedrate
+        	, ifnull(month, 0) as month
+        	, ifnull(discnote, 0) as discnote
+        	, applysttime
+        	, applyedtime
+        FROM t_cardbenefit
+        WHERE istrash = 'F'
+        <if test='istoday == "T"'>
+        AND sysdate() between str_to_date(applysttime, '%Y%m%d%H%i') and str_to_date(applyedtime, '%Y%m%d%H%i')
+        </if>
+        ORDER BY isdiscount, tcidx
+    </select>
+    
+	<!-- 카드혜택 추가 -->
+	<insert id="insertCardBenefit" parameterType="somap">
+        /* CardBenefitMapper.xml - insertCardBenefit 카드혜택 추가  */
+        INSERT INTO t_cardbenefit
+        (isdiscount, cardcompany, amount, flatrate, fixedrate, month, discnote, applysttime, applyedtime, istrash, reguserid, regdate)
+        VALUES
+        <foreach collection="insertlist" item="item" separator=",">
+        	(#{item.isdiscount}, #{item.cardcompany}, #{item.amount}, 
+        	#{item.flatrate}, 
+        	#{item.fixedrate}, 
+        	#{item.month}, 
+        	#{item.discnote}, 
+        	#{item.applysttime}, #{item.applyedtime}, 'F', #{reguserid}, now())
+        </foreach>
+    </insert>
+    
+	<!-- 카드혜택 수정 -->
+	<update id="updateCardBenefit" parameterType="somap">
+        /* "updateCardBenefit".xml - updateCardBenefit 카드혜택 수정  */
+		UPDATE t_cardbenefit
+		<set>
+			cardcompany = 
+			CASE tcidx 
+			<foreach collection="updatelist" item="item">
+				WHEN #{item.tcidx} THEN #{item.cardcompany}
+			</foreach>
+			END,
+			amount = 
+			CASE tcidx 
+			<foreach collection="updatelist" item="item">
+				WHEN #{item.tcidx} THEN #{item.amount}
+			</foreach>
+			END,
+			flatrate = 
+			CASE tcidx 
+			<foreach collection="updatelist" item="item">
+				WHEN #{item.tcidx} THEN #{item.flatrate}
+			</foreach>
+			END,
+			month = 
+			CASE tcidx 
+			<foreach collection="updatelist" item="item">
+				WHEN #{item.tcidx} THEN #{item.month}
+			</foreach>
+			END,
+			discnote = 
+			CASE tcidx 
+			<foreach collection="updatelist" item="item">
+				WHEN #{item.tcidx} THEN #{item.discnote}
+			</foreach>
+			END,
+			applysttime = 
+			CASE tcidx 
+			<foreach collection="updatelist" item="item">
+				WHEN #{item.tcidx} THEN #{item.applysttime}
+			</foreach>
+			END,
+			applyedtime = 
+			CASE tcidx 
+			<foreach collection="updatelist" item="item">
+				WHEN #{item.tcidx} THEN #{item.applyedtime}
+			</foreach>
+			END,
+			moduserid = #{moduserid},
+			moddate = now(),
+		</set>
+		<where>
+			AND tcidx IN
+			<foreach collection="updatelist" item="item" open="(" separator="," close=")">
+				#{item.tcidx}
+			</foreach>
+		</where>
+	</update>
+	
+	<!-- 카드혜택 사용여부 수정 -->
+	<update id="updateCardBenefitUse" parameterType="somap">
+        /* "updateCardBenefit".xml - updateCardBenefit 카드혜택 사용여부 수정  */
+		UPDATE t_cardbenefit
+		SET	istrash = 'T'
+		WHERE tcidx IN 
+		<foreach collection="idxlist" item="item" open="(" separator="," close=")">
+			#{item}
+		</foreach>
+	</update>
+</mapper>

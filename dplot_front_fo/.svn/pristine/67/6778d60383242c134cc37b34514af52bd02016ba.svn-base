@@ -1,0 +1,316 @@
+.my-page-dashboard {
+  .dashboard-assets__header {
+    display: flex;
+    align-items: center;
+    .assets-title {
+      font-size: 18px;
+      font-weight: 500;
+      letter-spacing: -.72px;
+      margin-right: 8px;
+      margin-bottom: 0;
+    }
+  }
+
+  .dashboard-grade {
+    background-color: $gray-100;
+    padding: 30px 20px;
+    .dashboard-grade__circle {
+      margin-right: 16px;
+    }
+    .icon-grade {
+      background-image: url("~@/assets/common/icon/icon-grade-bronze-64px.svg");
+    }
+    .dashboard-grade-btn {
+      background-color: $white;
+    }
+    .dashboard-grade-progress {
+      padding-bottom: 16px;
+      .dp-progress .progress-gauge {
+        background: $gray-600;
+      }
+    }
+  }
+
+  // 적립금, 쿠폰, 포인트 section
+  .dashboard-assets-wrap {
+    .dashboard-assets {
+      align-items: center;
+      justify-content: center;
+    }
+    .dashboard-assets__item__title {
+      margin-bottom: 10px;
+    }
+    .dashboard-assets__item {
+      text-align: center;
+      a {
+        display: flex;
+        .dashboard-assets__item__text {
+          margin-left: 10px;
+        }
+      }
+    }
+    .assets__item__title__p {
+      font-size: 14px;
+      letter-spacing: -.56px;
+    }
+    .assets__item__text__p {
+      font-size: 14px;
+      letter-spacing: -.56px;
+    }
+    .dashboard-assets-bar {
+      height: 42px;
+      margin-left: 30px;
+      margin-right: 30px;
+    }
+
+    .assets-executives__wrap {
+      align-items: center;
+      justify-content: center;
+      padding: 12px 0;
+      border: solid 1px $border-color;
+    }
+    .assets-executives-title__p,
+    .assets-executives-amount__p
+    {
+      font-size: 14px;
+      letter-spacing: -.56px;
+    }
+    .assets-executives-amount__num {
+      font-size: 16px;
+      letter-spacing: -.48px;
+      line-height: 1;
+    }
+    .assets-executives-amount {
+      margin-left: 10px;
+    }
+  }
+
+  //주문/배송 조회 section
+  .dashboard-grade-check {
+    .dashboard-grade-check-header {
+      padding-bottom: 40px;
+    }
+    .dashboard-check-ul {
+      align-items: flex-start;
+      li {
+        width: 20%;
+      }
+    }
+    .dashboard-check-list__item {
+      text-align: center;
+    }
+    .dashboard-check-list__item__num {
+      margin-bottom: 10px;
+    }
+    .dashboard-check-list__item__num-p {
+      font-size: 24px;
+      letter-spacing: -.72px;
+      color: $black;
+      &.active {
+        color:$gray-600;
+      }
+    }
+    .dashboard-check-list__item__state-p {
+      font-size: 12px;
+      letter-spacing: -.48px;
+      color: $gray-700;
+      &.active {
+        color:$gray-600;
+      }
+    }
+    .dashboard-check-state {
+      margin-top: 30px;
+      align-items: center;
+      border: solid 1px $border-color;
+    }
+    .dashboard-check-state-wrap {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      width: 33.33333%;
+      padding: 15px 0;
+    }
+    .dashboard-check-state__item {
+      align-items: center;
+    }
+    .check-state-bar {
+      margin: 0;
+    }
+    .dashboard-check-state__text {
+      font-size: 12px;
+      letter-spacing: -.48px;
+      margin-right: 6px;
+    }
+    .dashboard-check-state__number {
+      font-size: 16px;
+      letter-spacing: -.48px;
+      line-height: 1;
+    }
+
+  }
+
+  //나의 리뷰 section
+  .dashboard-review {
+    .review-bubble-speech {
+      position: relative;
+      padding: 12px 16px;
+      background: #f8f8f8;
+      font-size: 14px;
+      line-height: 22px;
+      letter-spacing: -.56px;
+      margin-top: 6px;
+      &:before {
+        position: absolute;
+        top: 0;
+        left: 24px;
+        transform: translateY(-100%);
+        display: block;
+        width: 0;
+        height: 0;
+        border-left: 6px solid transparent;
+        border-right: 6px solid transparent;
+        border-bottom: 6px solid #f8f8f8;
+        content: '';
+      }
+    }
+    //swiper
+    .dashboard-review-slide {
+      padding-top: 30px;
+      .image-list {
+        width: 100%;
+        .swiper-slide {
+          width: 100px;
+        }
+      }
+      .img__item {
+        width: 100px;
+        height: 100px;
+        figure {
+          margin-bottom: 0;
+          width: 100%;
+          height: 100%;
+
+          &.play {
+            position: relative;
+
+            &:before {
+              position: absolute;
+              top: 50%;
+              left: 50%;
+              transform: translate(-50%, -50%);
+              display: block;
+              content: '';
+              width: 30px;
+              height: 30px;
+              background-image: url("~@/assets/common/icon/icon-play-gray-56px.svg");
+              background-size: cover;
+            }
+          }
+        }
+
+        img {
+          width: 100%;
+        }
+      }
+    }
+    //리뷰 비어있을때
+    .dashboard-review-empty__wrap {
+      border-top: solid 1px $border-color;
+      padding-top: 80px;
+      padding-bottom: 70px;
+      margin-top: 14px;
+    }
+    .dashboard-review__empty__img {
+      width: 100px;
+      height: 100px;
+      border-radius: 50%;
+      background-color: $gray-100;
+      align-items: center;
+      justify-content: center;
+    }
+    .icon-review-empty {
+      background-image: url("~@/assets/common/icon/icon-review-empty-black-64px.svg");
+    }
+  }
+
+  //대시보드 링크 연결
+  .dashboard-menu {
+    .dashboard-menu-list__item {
+      padding: 14px 20px;
+      border-bottom: solid 1px $border-color;
+    }
+    .menu-list__item__wrap {
+      align-items: center;
+      justify-content: space-between;
+    }
+    .menu-list__item__left {
+      align-items: center;
+    }
+    .menu-list__item__icon {
+      width: 26px;
+      height: 26px;
+      margin-right: 6px;
+    }
+    .menu-list__item__title__text {
+      font-size: 14px;
+      letter-spacing: -.56px;
+      line-height: 2;
+    }
+    .menu-log-out__text {
+      font-size: 14px;
+      letter-spacing: -.56px;
+    }
+    //icon background
+    .icon-delivery {
+      background-image: url("~@/assets/common/icon/icon-delivery-black-26px.svg");
+    }
+    .icon-return {
+      background-image: url("~@/assets/common/icon/icon-cancel-refund.svg");
+    }
+    .icon-notice {
+      background-image: url("~@/assets/common/icon/icon-notice-black-26px.svg");
+    }
+    .icon-previous-order {
+      background-image: url("~@/assets/common/icon/icon-order-list-black-64px.svg");
+    }
+    .icon-like {
+      background-image: url("~@/assets/common/icon/icon-like-black-26px.svg");
+    }
+    .icon-clock {
+      background-image: url("~@/assets/common/icon/icon-clock-black-26px.svg");
+    }
+    .icon-alarm {
+      background-image: url("~@/assets/common/icon/icon-alarm-black-26px.svg");
+    }
+    .icon-coupon {
+      background-image: url("~@/assets/common/icon/icon-coupon-black-26px.svg");
+    }
+    .icon-point {
+      background-image: url("~@/assets/common/icon/icon-point-black-26px.svg");
+    }
+    .icon-reward {
+      background-image: url("~@/assets/common/icon/icon-reward-black-26px.svg");
+    }
+    .icon-invite {
+      background-image: url("~@/assets/common/icon/icon-letter-black-26px.svg");
+    }
+    .icon-inquiry {
+      background-image: url("~@/assets/common/icon/icon-phone-black-26px.svg");
+    }
+    .icon-message {
+      background-image: url("~@/assets/common/icon/icon-message-black-26px.svg");
+    }
+    .icon-profile {
+      background-image: url("~@/assets/common/icon/icon-profile-black-26px.svg");
+    }
+    .border-none {
+      border-bottom: none;
+    }
+
+  }
+  .menu-log-out__wrap {
+    display: flex;
+    align-items: center;
+  }
+
+}

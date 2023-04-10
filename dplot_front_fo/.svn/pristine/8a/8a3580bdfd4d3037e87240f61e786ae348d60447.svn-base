@@ -1,0 +1,272 @@
+.dp-modal {
+  // D.PLOT Modal Basic SCSS
+  color: $black;
+  // padding: 0 30px;
+  height: 100vh;
+  .modal-dialog {
+    margin: 0 auto;
+  }
+  .modal-dialog-centered {
+    min-height: 100%;
+  }
+  .modal-content {
+    padding: 30px 45px;
+    border-radius: 0;
+  }
+  .modal-header {
+    padding: 0;
+    border-bottom: 0;
+    justify-content: center;
+    border-radius: 0;
+    .modal-title {
+      font-size: 16px;
+      letter-spacing: -.64px;
+      font-weight: 400;
+      color: $black;
+      @include media-breakpoint-up(xl) {
+        font-size: 22px;
+        letter-spacing: -.88px;
+        font-weight: 500;
+      }
+    }
+  }
+  .modal-body {
+    padding: 10px 0 30px 0;
+    .modal-text {
+      font-size: 14px;
+      letter-spacing: -.6px;
+      line-height: 22px;
+      color: $gray-700;
+      text-align: center;
+      word-break: keep-all;
+    }
+  }
+  .modal-footer {
+    padding: 0;
+    border-top: 0;
+  }
+  .btn-group {
+    width: 100%;
+    margin: 0;
+    .btn {
+      border-radius: 0;
+    }
+    .dp-btn {
+      width: auto;
+    }
+    .btn + .btn {
+      margin-left: 10px;
+    }
+  }
+
+  // 알림용 모달 (Alert, Confirm)
+  &.alarm {
+    .modal-dialog {
+      max-width: 300px;
+      @include media-breakpoint-up(xl) {
+        max-width: 412px;
+      }
+    }
+    .btn-group {
+      justify-content: center;
+      .btn {
+        max-width: 100px;
+        padding-left: 0;
+        padding-right: 0;
+      }
+    }
+  }
+
+  // 페이지 레이어
+  &.page-layer {
+    padding: 0;
+    .modal-dialog {
+      height: 100%;
+      max-height: inherit;
+      @include media-breakpoint-up(xl) {
+        height: auto;
+      }
+    }
+    .modal-content {
+      padding: 0;
+      max-height: initial;
+      border: none;
+      min-height: 100%;
+    }
+    .modal-header {
+      position: sticky;
+      top: 0;
+      left: 0;
+      z-index: 10;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      height: 50px;
+      padding: 0 20px;
+      border-bottom: 1px solid $border-color;
+      background: #fff;
+      @include media-breakpoint-up(xl) {
+        height: 80px;
+        padding: 0 30px;
+      }
+      .modal-close {
+        cursor: pointer;
+        line-height: 1;
+        img {
+          width: 20px;
+        }
+        @include media-breakpoint-up(xl) {
+          img {
+            width: 30px;
+          }
+        }
+      }
+    }
+    .modal-header .modal-title {
+      font-size: 18px;
+      letter-spacing: -.72px;
+      @include media-breakpoint-up(xl) {
+        font-size: 20px;
+        letter-spacing: -.8px;
+      }
+    }
+    .modal-body {
+      padding: 20px 20px 20px 20px;
+      @include media-breakpoint-up(xl) {
+        padding: 30px;
+      }
+      .page-layer__body {
+        display: flex;
+        flex-direction: column;
+      }
+      .btn-group {
+        margin-top: auto;
+      }
+    }
+
+    .modal-footer .btn-group {
+      .btn:first-child {
+        border-top: 1px solid $border-color;
+      }
+      .btn + .btn {
+        margin-left: 0;
+      }
+    }
+  }
+
+  // 팝오버 모달
+  &.pop-over {
+    .modal-dialog {
+      max-width: 320px;
+      margin: 0 auto;
+      @include media-breakpoint-up(xl) {
+        max-width: 456px;
+      }
+    }
+    .modal-content {
+      padding: 0;
+    }
+    .modal-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      height: 50px;
+      padding: 0 20px;
+      border-bottom: 1px solid $border-color;
+      @include media-breakpoint-up(xl) {
+        height: 80px;
+        padding: 0 30px;
+      }
+      .modal-close {
+        cursor: pointer;
+        line-height: 1;
+        img {
+          width: 20px;
+        }
+        @include media-breakpoint-up(xl) {
+          img {
+            width: 30px;
+          }
+        }
+      }
+    }
+    .modal-header .modal-title {
+      font-size: 18px;
+      letter-spacing: -.72px;
+      @include media-breakpoint-up(xl) {
+        font-size: 20px;
+        letter-spacing: -.8px;
+      }
+    }
+    .modal-body {
+      padding: 30px 20px;
+      @include media-breakpoint-up(xl) {
+        padding: 30px;
+      }
+    }
+    .modal-body .modal-text01 {
+      color: $black;
+      font-size: 16px;
+      letter-spacing: -.64px;
+      line-height: 24px;
+      margin-bottom: 20px;
+      word-break: keep-all;
+    }
+    .modal-body .modal-text02 {
+      color: $gray-700;
+      font-size: 14px;
+      letter-spacing: -.56px;
+      line-height: 22px;
+    }
+    .modal-footer {
+      .btn.dp-btn {
+        @include media-breakpoint-up(xl) {
+          font-size: 16px;
+          letter-spacing: -.64px;
+          line-height: 24px;
+        }
+      }
+
+      .btn-white {
+        color: $black;
+        border-top: 1px solid $border-color;
+      }
+    }
+  }
+
+  // 타이틀 없는 모달
+  &.pop-over.none-title {
+    .modal-header {
+      justify-content: flex-end;
+      border-bottom: 0;
+    }
+  }
+}
+
+// Backdrop Opacity 조정
+.modal-backdrop {
+  opacity: 0.6;
+}
+
+// 토스트 모달
+.v-toast {
+  &.v-toast--bottom {
+    padding: 50px 20px;
+    z-index: 3000;
+  }
+  .v-toast__item {
+    width: 100%;
+    max-width: 320px;
+    margin: 0;
+    background: rgba(0, 0, 0, .6);
+    border-radius: 22px;
+    box-shadow: none;
+    justify-content: center;
+  }
+  .v-toast__text {
+    font-size: 16px;
+    letter-spacing: -.64px;
+    line-height: 24px;
+  }
+}
+

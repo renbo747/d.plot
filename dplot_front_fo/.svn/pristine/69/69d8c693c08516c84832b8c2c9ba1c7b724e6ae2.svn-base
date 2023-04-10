@@ -1,0 +1,238 @@
+.dp-mypage-coupon-pc {
+  // 쿠폰 사용안내 section
+  .coupon-list__section {
+    padding-bottom: 50px;
+    .coupon-list__header {
+      padding-bottom: 60px;
+      .coupon-list__header__title {
+        font-size: 26px;
+        letter-spacing: -1.04px;
+        line-height: 37px;
+        font-weight: 700;
+      }
+
+    }
+    .coupon-list__body {
+      .coupon__box__area {
+        display: flex;
+        // box 공통사항
+        .box__title {
+          font-size: 18px;
+          letter-spacing: -.72px;
+          line-height: 26px;
+        }
+        .dp-icon {
+          margin-right: 4px;
+        }
+        .coupon__count {
+          font-size: 28px;
+          letter-spacing: -1.12px;
+          line-height: 34px;
+          font-weight: 600;
+          margin-right: 2px;
+        }
+        .coupon__unit {
+          font-size: 18px;
+          letter-spacing: -.72px;
+          line-height: 26px;
+        }
+        .box__footer {
+          display: flex;
+          justify-content: flex-end;
+        }
+        .coupon__box {
+          width: 50%;
+          height: 120px;
+          padding: 20px 30px ;
+          display: flex;
+          flex-direction: column;
+          justify-content: space-between;
+        }
+        .use-imminent__box {
+          background: #fff5f4;
+          margin-right: 20px;
+        }
+        .use-possible__box {
+          background: $gray-100;
+        }
+      }
+    }
+  }
+
+  // 프로모션 코드 등록
+  .promotion-code__section {
+    padding-bottom: 80px;
+    .promotion-code__header {
+      padding-bottom: 20px;
+      .promotion-code__header__title {
+        font-size: 18px;
+        letter-spacing: -.72px;
+        line-height: 26px;
+        font-weight: 500;
+      }
+    }
+    .promotion-code__body {
+      .input__area {
+        display: flex;
+        align-items: flex-end;
+
+        .base-input .form-control {
+          width: 434px;
+          height: 48px;
+          margin-right: 10px;
+        }
+      }
+
+      .dp-btn {
+        width: 110px;
+        font-size: 16px;
+        letter-spacing: -.64px;
+        line-height: 24px;
+      }
+      .coupon-use__guide__area {
+        width: calc(100% - 544px);
+        display: flex;
+        justify-content: flex-end;
+        .coupon-use__guide__title {
+          font-size: 16px;
+          letter-spacing: -.64px;
+          color: $gray-700;
+          margin-left: 4px;
+        }
+      }
+    }
+  }
+
+  // 쿠폰 가능 탭 section
+  .coupon-use__tab__section {
+    // tab 메뉴
+    .nav-tabs {
+      border-bottom: 2px solid $gray-400;
+      > li {
+        width: 50%;
+        text-align: center;
+      }
+      .nav-link {
+        color: $gray-700;
+        font-size: 18px;
+        letter-spacing: -.72px;
+        padding: 17px 0;
+        border: 0;
+      }
+      .nav-link.active, .nav-tabs .nav-item.show .nav-link {
+        color: $black;
+        font-size: 22px;
+        letter-spacing: -.88px;
+        font-weight: 700;
+        border: none;
+        border-bottom: 2px solid $black;
+        padding: 14px 0;
+      }
+      .nav-link:hover, .nav-tabs .nav-link:focus {
+        border-top: none;
+        border-left: none;
+        border-right: none;
+      }
+    }
+
+    //  쿠폰 비어있을 때 공통 사항
+    .empty__area {
+      .empty__body {
+        padding-top: 170px;
+      }
+      .empty-icon-area {
+        width: 100px;
+        height: 100px;
+        background: $gray-100;
+        border-radius: 50%;
+      }
+      .empty-text__area {
+        padding-top: 30px;
+        .empty-text {
+          font-size: 18px;
+          letter-spacing: -.72px;
+          color: $gray-700;
+        }
+      }
+    }
+    // 쿠폰 있을 때 공통사항
+    .coupon__area {
+      .coupon__ul {
+        padding-top: 50px;
+        padding-bottom: 40px;
+
+        .order-coupon {
+          width: 320px;
+        }
+        li {
+          padding-top: 20px;
+        }
+        li:first-child,
+        li:nth-of-type(2) {
+          padding-top: 0;
+        }
+        li:nth-child(2n-1) {
+          padding-right: 20px;
+          display: flex;
+          justify-content: flex-end;
+        }
+        li:nth-child(2n) {
+          padding-left: 20px;
+          display: flex;
+          justify-content: flex-start;
+        }
+
+
+      }
+    }
+
+    // 사용가능 쿠폰
+    .use-coupon__area {
+
+    }
+    // 추가다운가능 쿠폰
+    .download-coupon__area {
+      .download-icon__area {
+        padding-top: 50px;
+        .dp-btn {
+          width: 320px;
+          font-size: 16px;
+          letter-spacing: -.64px;
+        }
+        .dp-icon {
+          margin-left: 4px;
+          width: 20px;
+          height: 20px;
+          background-size: 20px !important;
+        }
+      }
+    }
+  }
+
+}
+
+// 쿠폰 사용안내 모달
+
+.dp-modal.coupon-use-modal-pc {
+  .modal-body {
+    padding: 30px;
+  }
+  section + section {
+    padding-top: 30px;
+  }
+  .coupon-use__guide__header {
+    padding-bottom: 10px;
+    p {
+      font-size: 18px;
+      letter-spacing: -.72px;
+      font-weight: 500;
+    }
+  }
+  .coupon-use__guide__body {
+    li {
+      font-size: 16px;
+      letter-spacing: -.64px;
+      word-break: keep-all;
+    }
+  }
+}

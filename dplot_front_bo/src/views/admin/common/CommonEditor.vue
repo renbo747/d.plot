@@ -1,0 +1,159 @@
+<!-- By. Jaeho -->
+<!-- Option
+
+    style -
+
+-->
+<template>
+  <trumbowyg v-model="content"
+             :config="config"
+             class="form-control"
+             name="content"
+             :style="styleObject"
+             ref="editor"
+             :disabled="disable"
+  >
+  </trumbowyg>
+</template>
+
+<script>
+import Trumbowyg from 'vue-trumbowyg';
+import 'trumbowyg/dist/ui/trumbowyg.min.css';
+
+// [ Plugin ]
+// - 글꼴 색
+import 'trumbowyg/dist/plugins/colors/trumbowyg.colors.min.js'
+import 'trumbowyg/dist/plugins/colors/ui/trumbowyg.colors.min.css'
+// - 이미지
+import 'trumbowyg/dist/plugins/upload/trumbowyg.upload.min.js'
+// - 폰트
+import 'trumbowyg/dist/plugins/fontsize/trumbowyg.fontsize.min.js'
+import 'trumbowyg/dist/plugins/pasteembed/trumbowyg.pasteembed.min.js'
+
+// - 한글 번역
+import 'trumbowyg/dist/langs/ko.js'
+
+export default {
+  name: "CommonEditor",
+  components: {
+    Trumbowyg,
+  },
+  // computed: {
+  //   getPath(){
+  //     return this.postServerPath;
+  //   }
+  // },
+  // mounted() {
+  //   let protocol = window.location.protocol;
+  //   let hostname = window.location.hostname;
+  //   let port = window.location.port === '' ? '8080' : window.location.port;
+  //   let path = protocol.concat("//", hostname, ":", port, "/image/upload");
+  //   this.postServerPath = path;
+  //
+  //   this.config.plugins.upload.serverPath = this.getPath;
+  // },
+  data() {
+    return {
+      postServerPath: '',
+      content: null,
+      config: {
+        lang: 'ko',
+        btnsDef: {
+          // Create a new dropdown
+          image: {
+            dropdown: ['insertImage', 'upload'],
+            ico: 'insertImage'
+          }
+        },
+        btns: [
+          ['viewHTML'],
+          ['undo', 'redo'], // Only supported in Blink browsers
+          ['fontsize'],
+          ['strong', 'em', 'del', 'foreColor', 'backColor'],
+          ['justifyLeft', 'justifyCenter', 'justifyRight'],
+          ['horizontalRule'],
+          ['upload'],
+          ['fullscreen'],
+        ],
+        tagsToRemove: ['script'],
+        //tagsToKeep: ['hr', 'img', 'embed', 'iframe', 'input'],
+        plugins: {
+          fontsize: {
+            sizeList: [
+              '8px',
+              '10px',
+              '12px',
+              '14px',
+              '16px',
+              '18px',
+              '20px'
+            ]
+          },
+          upload: {
+            // TODO : [재호] host url 사항
+            serverPath: process.env.VUE_APP_SERVER_URL + '/api/image/upload',
+            fileFieldName: 'image',
+            statusPropertyName: 'data',
+            urlPropertyName: 'data.url',
+            xhrFields: true
+          }
+        },
+      }
+    }
+  },
+  props: {
+    styleObject: {},
+    disable: Boolean,
+  },
+  methods: {
+    xssFilter(str) {
+      // 에디터 자체에 대한 escape 처리가 불가능하므로
+      // 이벤트등을 사용하는 경우를 모두 제거
+      // 임시로 만든 상태 추후 변경예정
+      if(this.$util.isNull(str)) {
+        return '';
+      }
+      let result = '';
+
+      result = str;
+      result = result.replaceAll("javascript", "");
+			result = result.replaceAll("vbscript", "");
+			result = result.replaceAll("onload", "");
+			result = result.replaceAll("onclick", "");
+			result = result.replaceAll("onmouseover", "");
+			result = result.replaceAll("onmouseout", "");
+			result = result.replaceAll("onmousedown", "");
+			result = result.replaceAll("document", "");
+			result = result.replaceAll("applet", "");
+			result = result.replaceAll("object", "");
+			//result = result.replaceAll("frame", "");
+			result = result.replaceAll("frameset", "");
+			result = result.replaceAll("layer", "");
+			result = result.replaceAll("bgsoundv", "");
+			result = result.replaceAll("alert", "");
+			result = result.replaceAll("onblur", "");
+			result = result.replaceAll("onchange", "");
+			result = result.replaceAll("ondblclick", "");
+			result = result.replaceAll("enerror", "");
+			result = result.replaceAll("onfocus", "");
+			result = result.replaceAll("onmouse", "");
+			result = result.replaceAll("onscroll", "");
+			result = result.replaceAll("onsubmit", "");
+			result = result.replaceAll("onunload", "");
+
+      return result;
+    },
+  },
+  watch : {
+    'content' : function(value) {
+      this.content = this.xssFilter(value);
+    }
+  }
+}
+</script>
+
+<style>
+.trumbowyg-box, .trumbowyg-editor {
+  min-height: 300px;
+}
+</style>

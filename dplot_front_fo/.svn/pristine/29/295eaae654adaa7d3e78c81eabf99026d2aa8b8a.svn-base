@@ -1,0 +1,208 @@
+.dp-as-detail {
+  .dp-section {
+    padding: 30px 0;
+  }
+  .dp-section + .dp-section {
+    margin-top: 0;
+  }
+  .dp-hr {
+    margin-bottom: 0;
+  }
+  .dp-bar {
+    margin-left: 10px;
+    margin-right: 10px;
+  }
+  // section as-detail__header
+  .as-detail__header {
+    padding: 20px 0;
+    .apply-date {
+      color: $gray-800;
+      padding-left: 6px;
+    }
+    .apply-number {
+      color: $gray-700;
+      margin-top: 1.5px;
+    }
+  }
+
+  // section as-detail__shipping-product
+  .as-detail__shipping-product {
+    .as-product__header {
+      padding-bottom: 14px;
+      .as-product__header__title {
+        color: $gray-700;
+      }
+    }
+    .apply__product-info__area {
+      padding-top: 30px;
+    }
+  }
+
+  // section as-center__guide__area
+  .as-center__guide__area {
+    .as-center__guide__header {
+      padding-bottom: 20px;
+      .as-center__guide__header__title {
+        color: $gray-800;
+      }
+    }
+    .as-center__guide__body {
+      padding-bottom: 14px;
+      line-height: 1;
+      .seller-name__area {
+        padding-bottom: 2px;
+        .seller-name {
+          color: $gray-700;
+        }
+      }
+      .seller-phone__area {
+        .seller-phone {
+          font-size: 20px;
+          letter-spacing: -.6px;
+          line-height: 24px;
+          font-weight: 600;
+        }
+      }
+      .phone-btn {
+        width: 105px;
+      }
+    }
+    .as-center__guide__footer {
+      .dp-caption {
+        position: relative;
+        padding-left: 8px;
+        color: $gray-700;
+        &:before {
+          position: absolute;
+          left: 0;
+          top: 8px;
+          content: "";
+          width: 2px;
+          height: 2px;
+          border-radius: 50%;
+          background-color: #666666;
+        }
+      }
+    }
+  }
+
+  // section as__apply-info__area
+  .as__apply-info__area {
+    .as__apply-info {
+      .as__apply-info__header {
+        padding-bottom: 14px;
+        .dp-p {
+          font-weight: 500;
+        }
+      }
+      .as__apply-info__body {
+        .customer-info__area {
+          .customer-info__ul {
+            line-height: 1;
+            padding-top: 20px;
+          }
+          .customer-info__key {
+            color: $gray-700;
+            display: inline-block;
+            width: 90px;
+          }
+
+          .customer-info__value {
+            color: $gray-700;
+            display: inline-block;
+            width: calc(100% - 90px);
+          }
+        }
+
+        li + li {
+          padding-top: 6px;
+        }
+      }
+    }
+  }
+
+  //section as__content__area
+  .as__content__area {
+    .as__content__header {
+      padding-bottom: 14px;
+    }
+    .as__content__body {
+      padding-top: 20px;
+      .as__content__text__area {
+        padding-bottom: 20px;
+        .as__content__text {
+          color: $gray-700;
+        }
+      }
+      .product-photo__slide__area {
+        margin-left: -20px;
+        margin-right: -20px;
+        padding-bottom: 20px;
+        .product-photo__item {
+          img {
+            width: 100%;
+          }
+        }
+        .dp-touch-slider > li {
+          width: 100px;
+        }
+      }
+      .answer__content__area {
+        padding-top: 20px;
+        .answer__content__header {
+          padding-bottom: 20px;
+          .answer-date {
+            margin-left: 10px;
+            color: $gray-700;
+          }
+        }
+        .answer__content__body {
+          background: $gray-100;
+          .answer__content {
+            padding: 20px;
+            .manager-name {
+              padding-top: 40px;
+              color: $gray-700;
+            }
+          }
+        }
+      }
+    }
+  }
+  //swiper slide
+  .detail-product__info__slide {
+    .swiper-container {
+      // margin-right: -20px;
+    }
+
+    .product__info__slide__info {
+      width: 100%;
+      .swiper-slide {
+        width: 100px;
+      }
+    }
+    .info__slide__img {
+      width: 100px;
+      height: 100px;
+
+      figure {
+        margin-bottom: 0;
+      }
+
+      img {
+        width: 100%;
+      }
+    }
+  }
+
+  //section as-detail__btn__area
+  .as-detail__btn__area {
+    padding-top: 20px;
+    padding-bottom: 60px;
+    .btn-group {
+      .dp-btn:first-child {
+        margin-right: 10px;
+      }
+    }
+  }
+}

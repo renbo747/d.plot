@@ -1,0 +1,213 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.dplot.mapper.RecomRewardMapper">
+	<!-- ADMIN 쿼리 시작 -->
+	
+	<!-- 추천리워드 조회 -->
+	<select id="selectRecomReward" parameterType="somap" resultType="somap">
+		SELECT /* RecomRewardMapper.xml - selectRecomReward 추천리워드 조회 */
+			ifnull(date_format(str_to_date(recomstday, '%Y%m%d%H%i'), '%Y-%m-%d'),'') as startdate
+			, ifnull(date_format(str_to_date(recomstday, '%Y%m%d%H%i'), '%H'),'')      as starthour
+			, ifnull(date_format(str_to_date(recomstday, '%Y%m%d%H%i'), '%i'),'')      as startmi
+			, ifnull(date_format(str_to_date(recomedday, '%Y%m%d%H%i'), '%Y-%m-%d'),'') as enddate
+			, ifnull(date_format(str_to_date(recomedday, '%Y%m%d%H%i'), '%H'),'')       as endhour
+			, ifnull(date_format(str_to_date(recomedday, '%Y%m%d%H%i'), '%i'),'')      as endmi
+			, recomtype as recomtype
+			, ifnull(revpoint,'') as revpoint
+			, isjoingive as isjoingive
+			, iscfmgive as iscfmgive
+			, ifnull(recjoinpoint,'') as recjoinpoint
+			, ifnull(reccfmpoint,'') as reccfmpoint
+			, ifnull(isepointdup,'') as isepointdup
+			, reclimitcnt as reclimitcnt
+			, ifnull(revcpidx,'') as revcpidx
+			, ifnull(recjoincpidx,'') as recjoincpidx
+			, ifnull(reccfmcpidx,'') as reccfmcpidx
+			, istrash as istrash
+		FROM t_recom_reward
+		<where>
+			AND siteid = #{siteid}
+		</where>
+	</select>
+	
+	<select id="selectRewardPayInfo" parameterType="somap" resultType="somap">
+		/*RecomRewardMapper.xml- selectRewardPayInfo :: 회원가입후 지급된 추천인 리워드*/
+		SELECT '쿠폰' AS TYPE
+		     , tci.CPNNAME AS paycontent
+		     ,  date_format(str_to_date(tci.CPNUSEEDDAY, '%Y%m%d%H%i'),'%Y.%m.%d') AS ENDDATE
+		FROM t_recom_reward trr
+		INNER JOIN t_comcoupon tc ON trr.RECJOINCPIDX  = tc.COMCPNIDX
+			AND tc.ISTRASH = 'F'
+		INNER JOIN t_comcoupon_info tci ON tc.COMCPNIDX = tci.COMCPNIDX
+		INNER JOIN t_comcoupon_memissue tcm ON tci.CPNINFOIDX = tcm.CPNINFOIDX
+		WHERE 1 = 1
+		AND tcm.USERNO = #{userno}
+		UNION ALL
+		SELECT '적립금' AS TYPE
+		     , trp.PAYPOINT AS paycontent
+		     , date_format(str_to_date(trp.RESEDDAY, '%Y%m%d%H%i'),'%Y.%m.%d') AS ENDDATE
+		FROM t_reserve_pay trp
+		WHERE 1 = 1
+		AND trp.USERNO = #{userno}
+		AND trp.RESPAYTYPE = 'RPT009'
+		UNION ALL
+		SELECT '포인트' AS TYPE
+		    , tep.PAYPOINT AS paycontent
+		    , date_format(str_to_date(tep.EPOEDDAY, '%Y%m%d%H%i'),'%Y.%m.%d') AS ENDDATE
+		FROM t_epoint_pay tep
+		WHERE 1 = 1
+		AND tep.USERNO  = #{userno}
+		AND tep.EPOPAYTYPE = 'EPT002'
+	</select>
+	
+	
+	<select id="selectUserRewardPayList" parameterType="somap" resultType="somap">
+		SELECT /*RecomReward.xml - selectUserRewardPayList:: 회원번호로 추천리워드 보상이력 조회*/
+			      AA.*
+			    , DATE_FORMAT(AA.REGDATE, '%Y-%m-%d') AS regdateformat
+		FROM (
+	           select 'join' AS TYPE 
+				     , a.NAME
+				     , a.REGDATE        -- 등록일자
+				     , a.FRSTBUYDATE    -- 첫구매일자
+				     , c.RECOMTYPE      -- 지급구분
+				     , c.REVPOINT       -- 피추천인지급포인트
+				     , c.ISJOINGIVE     -- 회원가입시지급여부
+				     , c.ISCFMGIVE      -- 첫구매확정지급
+				     , c.RECJOINPOINT   -- 추천인회원가입지급포인트
+				     , c.RECCFMPOINT    -- 추천인구매확정지급포인트
+				     , c.REVCPIDX
+				     , f.CPNNAME AS REVCPname
+				     , c.RECJOINCPIDX
+				     , d.CPNNAME AS RECJOINCPNNAME
+				     , c.RECCFMCPIDX
+				     , e.CPNNAME AS RECCFMCPNAME
+	          from t_member a
+	          inner join t_member_recom b on a.userno = b.REVUSERNO
+	          inner join t_recom_reward_log c on b.RELOGIDX = c.RELOGIDX
+	          LEFT OUTER JOIN t_comcoupon d ON c.RECJOINCPIDX = d.COMCPNIDX 
+			  LEFT OUTER JOIN t_comcoupon e ON c.RECCFMCPIDX = e.COMCPNIDX 
+			  LEFT OUTER JOIN t_comcoupon f ON c.REVCPIDX = f.COMCPNIDX 
+	          where b.RECUSERNO = #{userno}
+			  and c.ISJOINGIVE = 'T'
+	          UNION ALL
+			  SELECT 
+				       'cfm' AS TYPE
+				     , a.NAME
+				     , a.FRSTBUYDATE as regdate  -- 등록일자
+				     , a.FRSTBUYDATE    -- 첫구매일자
+				     , c.RECOMTYPE      -- 지급구분
+				     , 0 AS REVPOINT       -- 피추천인지급포인트
+				     , c.ISJOINGIVE     -- 회원가입시지급여부
+				     , c.ISCFMGIVE      -- 첫구매확정지급
+				     , 0 AS RECJOINPOINT   -- 추천인회원가입지급포인트
+				     , c.RECCFMPOINT    -- 추천인구매확정지급포인트
+				     , c.REVCPIDX
+				     , f.CPNNAME AS REVCPname
+				     , c.RECJOINCPIDX
+				     , d.CPNNAME AS RECJOINCPNNAME
+				     , c.RECCFMCPIDX
+				     , e.CPNNAME AS RECCFMCPNAME
+			 FROM t_member a
+			 INNER JOIN t_member_recom b ON a.USERNO  = b.REVUSERNO
+			 INNER JOIN t_recom_reward_log c ON b.RELOGIDX = c.RELOGIDX
+			 LEFT OUTER JOIN t_comcoupon d ON c.RECJOINCPIDX = d.COMCPNIDX 
+			 LEFT OUTER JOIN t_comcoupon e ON c.RECCFMCPIDX = e.COMCPNIDX 
+			 LEFT OUTER JOIN t_comcoupon f ON c.REVCPIDX = f.COMCPNIDX 
+			 WHERE c.ISCFMGIVE = 'T'
+			 AND  b.RECUSERNO  = #{userno}
+			 AND date_format(a.FRSTBUYDATE, '%Y%m%d%H%i')  BETWEEN c.RECOMSTDAY AND c.RECOMEDDAY 
+	     ) AA
+		 ORDER BY AA.REGDATE DESC
+		 LIMIT #{startpage}, #{endpage}
+	</select>
+	
+	<select id="selectUserRewardPayListCnt" parameterType="somap" resultType="int">
+		SELECT /*RecomReward.xml - selectUserRewardPayListCnt:: 회원번호로 추천리워드 보상이력 수조회*/
+		      count(*) as COUNT
+		FROM (
+			select 'join' AS TYPE 
+				     , a.NAME
+				     , a.REGDATE        -- 등록일자
+				     , a.FRSTBUYDATE    -- 첫구매일자
+				     , c.RECOMTYPE      -- 지급구분
+				     , c.REVPOINT       -- 피추천인지급포인트
+				     , c.ISJOINGIVE     -- 회원가입시지급여부
+				     , c.ISCFMGIVE      -- 첫구매확정지급
+				     , c.RECJOINPOINT   -- 추천인회원가입지급포인트
+				     , c.RECCFMPOINT    -- 추천인구매확정지급포인트
+				     , c.REVCPIDX
+				     , f.CPNNAME AS REVCPname
+				     , c.RECJOINCPIDX
+				     , d.CPNNAME AS RECJOINCPNNAME
+				     , c.RECCFMCPIDX
+				     , e.CPNNAME AS RECCFMCPNAME
+	          from t_member a
+	          inner join t_member_recom b on a.userno = b.REVUSERNO
+	          inner join t_recom_reward_log c on b.RELOGIDX = c.RELOGIDX
+	          LEFT OUTER JOIN t_comcoupon d ON c.RECJOINCPIDX = d.COMCPNIDX 
+			  LEFT OUTER JOIN t_comcoupon e ON c.RECCFMCPIDX = e.COMCPNIDX 
+			  LEFT OUTER JOIN t_comcoupon f ON c.REVCPIDX = f.COMCPNIDX 
+	          where b.RECUSERNO = #{userno}
+			  and c.ISJOINGIVE = 'T'
+	          UNION ALL
+			  SELECT 
+				       'cfm' AS TYPE
+				     , a.NAME
+				     , a.FRSTBUYDATE as regdate  -- 등록일자
+				     , a.FRSTBUYDATE    -- 첫구매일자
+				     , c.RECOMTYPE      -- 지급구분
+				     , 0 AS REVPOINT       -- 피추천인지급포인트
+				     , c.ISJOINGIVE     -- 회원가입시지급여부
+				     , c.ISCFMGIVE      -- 첫구매확정지급
+				     , 0 AS RECJOINPOINT   -- 추천인회원가입지급포인트
+				     , c.RECCFMPOINT    -- 추천인구매확정지급포인트
+				     , c.REVCPIDX
+				     , f.CPNNAME AS REVCPname
+				     , c.RECJOINCPIDX
+				     , d.CPNNAME AS RECJOINCPNNAME
+				     , c.RECCFMCPIDX
+				     , e.CPNNAME AS RECCFMCPNAME
+			 FROM t_member a
+			 INNER JOIN t_member_recom b ON a.USERNO  = b.REVUSERNO
+			 INNER JOIN t_recom_reward_log c ON b.RELOGIDX = c.RELOGIDX
+			 LEFT OUTER JOIN t_comcoupon d ON c.RECJOINCPIDX = d.COMCPNIDX 
+			 LEFT OUTER JOIN t_comcoupon e ON c.RECCFMCPIDX = e.COMCPNIDX 
+			 LEFT OUTER JOIN t_comcoupon f ON c.REVCPIDX = f.COMCPNIDX 
+			 WHERE c.ISCFMGIVE = 'T'
+			 AND  b.RECUSERNO  = #{userno}
+			 AND date_format(a.FRSTBUYDATE, '%Y%m%d%H%i')  BETWEEN c.RECOMSTDAY AND c.RECOMEDDAY 
+		) AA
+		ORDER BY AA.REGDATE DESC
+	</select>
+	
+	<select id="selectInviteInfo" parameterType="somap" resultType="somap">
+	SELECT /*RecomRewardMapper.xml - selectInviteInfo::초대가능인원 및 초대한 인원수 조회*/
+	        COUNT(*) as membercnt
+		    , (SELECT trr.RECLIMITCNT     -- 피추천인수제한
+			   FROM t_recom_reward trr
+			   WHERE ISTRASH  = 'F' 
+			   AND trr.SITEID  = #{siteid}
+			   AND date_format(now(),'%Y%m%d%H%i') BETWEEN trr.RECOMSTDAY AND trr.RECOMEDDAY) AS RECLIMITCNT
+		FROM t_member_recom a
+		INNER JOIN t_recom_reward_log b ON a.RELOGIDX = b.RELOGIDX
+		WHERE RECUSERNO = #{userno}
+	</select>
+	
+	<!-- 추천리워드 등록 -->
+	<insert id="insertRecomReward" parameterType="somap">
+		INSERT INTO t_recom_reward  /* RecomRewardMapper.xml - insertRecomReward 추천리워드 등록 */
+		(siteid, recomstday, recomedday, recomtype, revpoint, isjoingive, iscfmgive, recjoinpoint, reccfmpoint, reclimitcnt, isepointdup, revcpidx, recjoincpidx, reccfmcpidx, istrash, reguserid, regdate)
+		VALUES(#{siteid}, #{recomstday}, #{recomedday}, #{recomtype}, #{revpoint}, #{isjoingive}, #{iscfmgive}, #{recjoinpoint}, #{reccfmpoint}, #{reclimitcnt}, #{isepointdup}, #{revcpidx}, #{recjoincpidx}, #{reccfmcpidx}, #{istrash}, #{userid}, now())
+	</insert>
+	
+	<!-- 추천리워드 수정 -->
+	<update id="updateRecomReward" parameterType="somap">
+		UPDATE t_recom_reward /* RecomRewardMapper.xml - updateRecomReward 추천리워드 등록 */
+		SET recomstday = #{recomstday}, recomedday = #{recomedday}, recomtype = #{recomtype}, revpoint = #{revpoint}, isjoingive = #{isjoingive}, iscfmgive = #{iscfmgive}, recjoinpoint = #{recjoinpoint}, reccfmpoint = #{reccfmpoint}, reclimitcnt = #{reclimitcnt}, isepointdup = #{isepointdup}, revcpidx = #{revcpidx}, recjoincpidx = #{recjoincpidx}, reccfmcpidx = #{reccfmcpidx}, istrash = #{istrash}, moduserid = #{userid}, moddate = now()
+		WHERE siteid = #{siteid}
+	</update>
+	
+	<!-- ADMIN 쿼리 끝 -->
+</mapper>

@@ -1,0 +1,286 @@
+package com.dplot.admin.controller.operation;
+
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
+import java.util.Map;
+
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.core.io.ByteArrayResource;
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestMethod;
+import org.springframework.web.bind.annotation.RequestPart;
+import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.multipart.MultipartFile;
+import org.springframework.web.multipart.MultipartHttpServletRequest;
+
+import com.dplot.admin.service.operation.ShoppingPromotionService;
+import com.dplot.common.Response;
+import com.dplot.common.SOMap;
+import com.dplot.common.Status;
+import com.dplot.common.controller.ExcelDownController;
+
+/**
+ * @author : LKW
+ * @discription : 프로모션 Controller
+ * @fileName : ShoppingPromotionController.java
+ * @date : 2022-04-07
+ * =================================================================
+ * DATE			AUTHOR		NOTE
+ * -----------------------------------------------------------------
+ * 2022-04-07	LKW		최초생성
+ * -----------------------------------------------------------------
+ */
+@RestController
+@RequestMapping("/admin/operation/shopping/promotion")
+public class ShoppingPromotionController extends ExcelDownController {
+
+    @Autowired
+    ShoppingPromotionService shoppingPromotionService;
+
+    /**
+     * 프로모션 리스트 조회
+     *
+     * @param params
+     * @return
+     * @throws Exception
+     */
+    @RequestMapping(value = "/search", method = RequestMethod.POST)
+    public Response page(@RequestBody SOMap params) throws Exception {
+        return new Response(shoppingPromotionService.selectPromotionList(params));
+    }
+
+    /**
+     * 프로모션 상세 조회
+     *
+     * @param params
+     * @return
+     * @throws Exception
+     */
+    @RequestMapping(value = "/detail", method = RequestMethod.POST)
+    public Response detail(@RequestBody SOMap params) throws Exception {
+        return new Response(shoppingPromotionService.selectPromotionDetail(params));
+    }
+
+    /**
+     * 프로모션 댓글 조회
+     *
+     * @param params
+     * @return
+     * @throws Exception
+     */
+    @RequestMapping(value = "/comment", method = RequestMethod.POST)
+    public Response searchComment(@RequestBody SOMap params) throws Exception {
+        return new Response(shoppingPromotionService.selectCommentList(params));
+    }
+
+    /**
+     * 프로모션 저장
+     *
+     * @param params
+     * @param fileParams
+     * @return
+     * @throws Exception
+     */
+    @RequestMapping(value = "/save", method = RequestMethod.POST)
+    public Response save(@RequestPart("params") SOMap params, MultipartHttpServletRequest fileParams) throws Exception {
+        Response result = null;
+
+        try {
+            Map<String, MultipartFile> uploadFile = fileParams.getFileMap();
+            shoppingPromotionService.insertPromotion(params, uploadFile);
+            result = new Response(Status.OK);
+        } catch (Exception e) {
+            e.printStackTrace();
+            result = new Response(Status.FAIL, e.getMessage());
+        }
+
+        return result;
+    }
+
+    /**
+     * 프로모션 상세 내역 수정
+     *
+     * @param params
+     * @param fileParams
+     * @return
+     * @throws Exception
+     */
+    @RequestMapping(value = "/update/detail", method = RequestMethod.POST)
+    public Response updateDetail(@RequestPart("params") SOMap params, MultipartHttpServletRequest fileParams) throws Exception {
+        Response result = null;
+
+        try {
+            Map<String, MultipartFile> uploadFile = fileParams.getFileMap();
+            shoppingPromotionService.updatePromotionDetail(params, uploadFile);
+            result = new Response(Status.OK);
+        } catch (Exception e) {
+            e.printStackTrace();
+            result = new Response(Status.FAIL, e.getMessage());
+        }
+
+        return result;
+    }
+
+    /**
+     * 사용, 미사용 변경
+     *
+     * @param params
+     * @return
+     * @throws Exception
+     */
+    @RequestMapping(value = "/update/use", method = RequestMethod.POST)
+    public Response updateUse(@RequestBody SOMap params) throws Exception {
+        Response result = null;
+
+        try {
+        	shoppingPromotionService.updatePromotionUse(params);
+            result = new Response(Status.OK);
+        } catch (Exception e) {
+            e.printStackTrace();
+            result = new Response(Status.FAIL, e.getMessage());
+        }
+
+        return result;
+    }
+
+    /**
+     * 댓글 블라인드 수정
+     *
+     * @param params
+     * @return
+     * @throws Exception
+     */
+    @RequestMapping(value = "/update/comment/blind", method = RequestMethod.POST)
+    public Response updateCommentBlind(@RequestBody SOMap params) throws Exception {
+        Response result = null;
+
+        try {
+        	shoppingPromotionService.updatePromotionCommentBlind(params);
+            result = new Response(Status.OK);
+        } catch (Exception e) {
+            e.printStackTrace();
+            result = new Response(Status.FAIL, e.getMessage());
+        }
+
+        return result;
+    }
+
+    /**
+     * 댓글 삭제
+     *
+     * @param params
+     * @return
+     * @throws Exception
+     */
+    @RequestMapping(value = "/update/comment/delete", method = RequestMethod.POST)
+    public Response updateComment(@RequestBody SOMap params) throws Exception {
+        Response result = null;
+
+        try {
+        	shoppingPromotionService.deletePromotionComment(params);
+            result = new Response(Status.OK);
+        } catch (Exception e) {
+            e.printStackTrace();
+            result = new Response(Status.FAIL, e.getMessage());
+        }
+
+        return result;
+    }
+
+    /**
+     * 엑셀 다운로드
+     *
+     * @param params
+     * @return
+     * @throws Exception
+     */
+    @RequestMapping(value = "/excel", method = RequestMethod.POST)
+    public ResponseEntity<ByteArrayResource> excelDownload(@RequestBody SOMap params) throws Exception {
+
+        List<Map<String, Object>> list = params.getArrayList("list");
+
+        // 헤더 이름
+        String[] header = {
+                "이벤트명",  "적용채널", "유형",
+                "등급", "조회", "댓글",
+                "시작일자", "종료일자", "발표일자", "등록일자",
+                "전시여부", "노출여부", "진행상태", "이벤트 발표"
+        };
+
+        // 컬럼 이름
+        String[] column = {
+                "subject","muappcode", "mumembercode",
+                "mumemlvcode", "hits", "commentcount", 
+                "evsttime", "evedtime", "pubtime", "regdate",
+                "isdisplay", "disptype", "iscomplete", "isannounce"
+        };
+
+        // 컬럼 너비 지정
+        int[] columnSize = {
+                (35 * 256), (35 * 256), (35 * 256),
+                (35 * 256), (10 * 256), (10 * 256), 
+                (15 * 256), (15 * 256), (15 * 256), (15 * 256),
+                (15 * 256), (15 * 256), (15 * 256), (15 * 256)
+        };
+
+        return makeExcelFile(header, column, columnSize, list, "프로모션목록.xlsx");
+    }
+
+    /**
+     * 엑셀 다운로드 - 댓글
+     *
+     * @param params
+     * @return
+     * @throws Exception
+     */
+    @RequestMapping(value = "/excel/comment", method = RequestMethod.POST)
+    public ResponseEntity<ByteArrayResource> commentExcelDownload(@RequestBody SOMap params) throws Exception {
+
+        List<Map<String, Object>> list = shoppingPromotionService.selectPromotionCommentExcelDownload(params);
+
+        // 헤더 이름
+        ArrayList<String> header = new ArrayList<>(Arrays.asList(
+                "No", "블라인드", "댓글", "좋아요",
+                "첨부", "댓글구분", "답글수", "아이디",
+                "이름", "신고", "등록/수정일자"
+        ));
+        ArrayList<String> headerList = params.getArrayList("headerlist");
+        header.addAll(headerList);
+
+        // 컬럼 이름
+        ArrayList<String> column = new ArrayList<>(Arrays.asList(
+                "rn", "isblind", "comment", "likecount",
+                "fullpath", "issecret", "commentcount", "userid",
+                "username", "reportcount", "regdate"
+        ));
+        ArrayList<String> columnlist = params.getArrayList("columnlist");
+        column.addAll(columnlist);
+
+        // 컬럼 사이즈
+        ArrayList<Integer> columnSize = new ArrayList<>(Arrays.asList(
+                (10 * 256), (10 * 256), (35 * 256), (10 * 256),
+                (35 * 256), (10 * 256), (10 * 256), (10 * 256),
+                (15 * 256), (10 * 256), (15 * 256)
+        ));
+        for (int i = 0; i < headerList.size(); i++) {
+            columnSize.add((15 * 256));
+        }
+
+        return makeExcelFile(header.toArray(new String[0]), column.toArray(new String[0]), columnSize.stream().mapToInt(Integer::intValue).toArray(), list, "이벤트_댓글.xlsx");
+    }
+    
+    /**
+	 * 프로모션 변경 체크
+	 *
+	 * @param params
+	 * @return
+	 * @throws Exception
+	 */
+	@RequestMapping(value = "/check", method = RequestMethod.POST)
+	public Response check(@RequestBody SOMap params) throws Exception {
+		return new Response(shoppingPromotionService.checkChange(params));
+	}
+}

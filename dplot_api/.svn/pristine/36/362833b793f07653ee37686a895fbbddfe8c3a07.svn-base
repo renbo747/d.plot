@@ -1,0 +1,349 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.dplot.mapper.EPointMapper">
+
+	<!-- e포인트 등록 -->
+	<insert id="insertEpoint" parameterType="somap" keyProperty="epoidx" useGeneratedKeys="true">
+		INSERT INTO t_epoint
+		( eponame, isepointdup, eporeason, isnowpay
+		, epopayday, epousedaydnt, epovalidday, ismemtype
+		, mumembertype, mumemlvtype, payepoint, uselimitordamt
+		, uselimitpoint, reguserid, regdate)
+		VALUES
+		( #{eponame}, #{isepointdup}, #{eporeason}, #{isnowpay}
+		, #{epopayday}, #{epousedaydnt}, #{epovalidday}, #{ismemtype}
+		, #{mumembertype}, #{mumemlvtype}, #{payepoint}, #{uselimitordamt}
+		, #{uselimitpoint}, #{reguserid}, now())
+	</insert>
+
+	<!-- e포인트 내역 수정 -->
+	<update id="updateEpoint" parameterType="somap">
+		UPDATE t_epoint
+		<set >
+			<if test="eponame != null" >
+				eponame = #{eponame},
+			</if>
+			<if test="isepointdup != null" >
+				isepointdup = #{isepointdup},
+			</if>
+			<if test="eporeason != null" >
+				eporeason = #{eporeason},
+			</if>
+			<if test="isepointdup != null" >
+				isepointdup = #{isepointdup},
+			</if>
+			<if test="isnowpay != null" >
+				isnowpay = #{isnowpay},
+			</if>
+			<if test="epopayday != null" >
+				epopayday = #{epopayday},
+			</if>
+			<if test="epousedaydnt != null" >
+				epousedaydnt = #{epousedaydnt},
+			</if>
+			<if test="epovalidday != null" >
+				epovalidday = #{epovalidday},
+			</if>
+			<if test="ismemtype != null" >
+				ismemtype = #{ismemtype},
+			</if>
+			<if test="mumembertype != null" >
+				mumembertype = #{mumembertype},
+			</if>
+			<if test="mumemlvtype != null" >
+				mumemlvtype = #{mumemlvtype},
+			</if>
+			<if test="payepoint != null" >
+				payepoint = #{payepoint},
+			</if>
+			<if test="uselimitordamt != null" >
+				uselimitordamt = #{uselimitordamt},
+			</if>
+			<if test="moduserid != null" >
+				moduserid = #{moduserid},
+			</if>
+			moddate = now(),
+		</set>
+		WHERE epoidx = #{epoidx}
+	</update>
+
+	<!-- e포인트 리스트 조회 -->
+	<select id="selectAdminEpointList" parameterType="somap" resultType="somap">
+		SELECT a.eponame
+			 , if(a.mumembertype = '전체' and a.mumemlvtype = '전체'
+					, '전체'
+					, if(a.ismemtype = 'T', '유형/등급', '특정회원')) AS ismemtype
+			 , a.payepoint
+			 , a.epovalidday
+			 , a.isepointdup
+			 , a.eporeason
+			 , a.epopayday
+			 , a.epoidx
+			 , @ROWNUM := @ROWNUM + 1  as rn
+			 , if(paycnt is null, if(usercnt is null, memcnt, usercnt), paycnt) as count
+		FROM (
+				 SELECT a.eponame -- 관리제목
+					  , FN_GET_CODENAME_STR(mumembertype, 'mumembertype') AS mumembertype
+					  , FN_GET_CODENAME_STR(mumemlvtype, 'mumemlvtype')  AS mumemlvtype
+					  , a.payepoint
+					  , str_to_date(a.epovalidday, '%Y%m%d')             AS epovalidday
+					  , if(a.isepointdup = 'T', '허용', '미허용')             AS isepointdup
+					  , str_to_date(a.epopayday, '%Y%m%d')               AS epopayday
+					  , a.ismemtype
+					  , a.eporeason
+					  , a.epoidx
+					  , (
+					  	SELECT count(*)
+					  	FROM t_member aa
+					  	WHERE 1 = 1
+					  	AND a.mumembertype LIKE CONCAT('%', aa.dadamembertype, '%')
+					  	AND a.mumemlvtype LIKE CONCAT('%', aa.memlvtype, '%')
+					  	AND aa.state = 'MST001'  
+					  ) as memcnt
+				 FROM t_epoint a
+				 WHERE 1 = 1
+				 <if test="sword != null and sword != ''">
+				 	<choose>
+				 		<when test="skey == 'eponame'">
+				 			AND a.eponame LIKE concat('%',#{sword}, '%') -- 관리제목
+				 		</when>
+				 		<when test="skey == 'eporeason'">
+				 			AND a.eporeason LIKE concat('%', #{sword}, '%') -- 지급사유
+				 		</when>
+				 		<otherwise>
+				 			AND (
+							a.eponame LIKE concat('%',#{sword}, '%') -- 관리제목
+				 			OR a.eporeason LIKE concat('%', #{sword}, '%') -- 지급사유
+				 			)
+				 		</otherwise>
+				 	</choose>
+				 </if>
+				 <if test="sdate != null">
+				 	<choose>
+				 		<when test="sdate == 'epovalidday'">
+				 			AND date_format(str_to_date(a.epovalidday, '%Y%m%d'), '%Y-%m-%d') BETWEEN #{startdate} AND #{enddate}
+				 		</when>
+				 		<when test="sdate == 'epopayday'">
+				 			AND date_format(str_to_date(a.epopayday, '%Y%m%d'), '%Y-%m-%d') BETWEEN #{startdate} AND #{enddate}
+				 		</when>
+						<otherwise>
+				   			AND (
+							date_format(str_to_date(a.epovalidday, '%Y%m%d'), '%Y-%m-%d') BETWEEN #{startdate} AND #{enddate}
+				   			    OR date_format(str_to_date(a.epopayday, '%Y%m%d'), '%Y-%m-%d') BETWEEN #{startdate} AND #{enddate}
+							)
+						</otherwise>
+				 	</choose>
+				 </if>
+				 <if test="isepointdup != null and isepointdup != ''">
+					 AND a.isepointdup = #{isepointdup}
+				 </if>
+				 <if test="ismemtype != null and ismemtype != ''">
+					 AND a.ismemtype = #{ismemtype}
+				 </if>
+			 ) a
+			 LEFT JOIN (
+			 	SELECT epoidx
+			 		, count(*) as paycnt
+			 	FROM t_epoint_pay
+			 	GROUP BY epoidx
+			 ) b ON a.epoidx = b.epoidx
+			 LEFT JOIN (
+			 	SELECT epoidx
+			 		, count(*) as usercnt
+			 	FROM t_epoint_user
+			 	GROUP BY epoidx
+			 ) c ON a.epoidx = c.epoidx
+			 , (SELECT @ROWNUM := #{startpage}) AS d
+		WHERE 1 = 1
+		<choose>
+			<when test="psort == 'count_desc'">
+				ORDER BY a.count DESC
+			</when>
+			<when test="psort == 'count_asc'">
+				ORDER BY a.count ASC
+			</when>
+			<when test="psort == 'point_desc'">
+				ORDER BY a.payepoint DESC
+			</when>
+			<when test="psort == 'point_asc'">
+				ORDER BY a.payepoint ASC
+			</when>
+			<when test="psort == 'epovalidday_desc'">
+				ORDER BY a.epovalidday DESC
+			</when>
+			<when test="psort == 'epovalidday_asc'">
+				ORDER BY a.epovalidday ASC
+			</when>
+			<when test="psort == 'epopayday_desc'">
+				ORDER BY a.epopayday DESC
+			</when>
+			<when test="psort == 'epopayday_asc'">
+				ORDER BY a.epopayday ASC
+			</when>
+			<otherwise>
+				ORDER BY a.epoidx DESC
+			</otherwise>
+		</choose>
+		LIMIT #{startpage}, #{endpage} -- 페이징
+	</select>
+
+	<!-- e포인트 상세 조회 -->
+	<select id="selectAdminEpointDetail" parameterType="somap" resultType="somap">
+		SELECT a.*
+			 , date_format(a.epopaydayDate, '%Y-%m-%d') AS toYYYYMMDD
+			 , date_format(a.epopaydayDate, '%H')       AS toHH
+			 , date_format(a.epopaydayDate, '%i')       AS toMM
+		FROM (
+				 SELECT a.eponame                                           -- 관리제목
+					  , a.isepointdup                                       -- 중복사용여부
+					  , a.eporeason                                         -- 지급사유
+					  , a.isnowpay                                          -- 즉시지급여부
+					  , a.epopayday                                         -- 지급일
+					  , str_to_date(a.epopayday, '%Y%m%d%H%i')   AS epopaydayDate
+					  , a.epousedaydnt                                      -- 사용가능일수
+					  , a.epovalidday                                       -- 유효일자
+					  , str_to_date(a.epovalidday, '%Y%m%d') AS epovaliddayformat
+					  , a.ismemtype                                         -- 특정/유형
+					  , a.mumembertype                                      -- 회원유형
+					  , a.mumemlvtype                                       -- 회원등급
+					  , a.payepoint                                         -- 지급포인트
+					  , a.uselimitpoint                                     -- 사용제한포인트
+					  , a.uselimitordamt                                    -- 사용제한주문금액
+					  , str_to_date(a.regdate, '%Y-%m-%d')       AS regdate -- 등록일
+					  , str_to_date(a.moddate, '%Y-%m-%d')       AS moddate -- 수정일
+					  , if(a.epousedaydnt is null, 'F', 'T')     AS isday   -- 유효기간 유형(일자,날짜)
+					  , group_concat(b.userno) AS userno
+				 	  , a.epoidx
+				 FROM t_epoint a
+						  LEFT JOIN t_epoint_user b ON a.epoidx = b.epoidx
+				 WHERE 1 = 1
+				   AND a.epoidx = #{epoidx}
+			 ) a
+		WHERE 1 = 1
+	</select>
+
+	<!-- e포인트 리스트 상태값 -->
+	<select id="selectAdminEpointStateList" parameterType="HashMap" resultType="HashMap">
+	SELECT count(*) AS total
+	FROM (
+			SELECT a.epoidx
+			FROM t_epoint a
+				LEFT JOIN t_epoint_pay b ON a.epoidx = b.epoidx
+			WHERE 1 = 1
+			<if test="sword != null and sword != ''">
+				<choose>
+					<when test="skey == 'eponame'">
+						AND a.eponame LIKE concat('%',#{sword}, '%') -- 관리제목
+					</when>
+					<when test="skey == 'eporeason'">
+						AND a.eporeason LIKE concat('%', #{sword}, '%') -- 지급사유
+					</when>
+					<otherwise>
+						AND (
+						a.eponame LIKE concat('%',#{sword}, '%') -- 관리제목
+						OR a.eporeason LIKE concat('%', #{sword}, '%') -- 지급사유
+						)
+					</otherwise>
+				</choose>
+			</if>
+			<if test="sdate != null">
+				<choose>
+					<when test="sdate == 'epovalidday'"> -- 소멸일자
+						AND date_format(str_to_date(a.epovalidday, '%Y%m%d'), '%Y-%m-%d') BETWEEN #{startdate} AND #{enddate}
+					</when>
+					<when test="sdate == 'epopayday'"> -- 지급일자
+						AND date_format(str_to_date(a.epopayday, '%Y%m%d'), '%Y-%m-%d') BETWEEN #{startdate} AND #{enddate}
+					</when>
+					<otherwise>
+						AND (
+						date_format(str_to_date(a.epovalidday, '%Y%m%d'), '%Y-%m-%d') BETWEEN #{startdate} AND #{enddate}
+						OR date_format(str_to_date(a.epopayday, '%Y%m%d'), '%Y-%m-%d') BETWEEN #{startdate} AND #{enddate}
+						)
+					</otherwise>
+				</choose>
+			</if>
+			<if test="isepointdup != null and isepointdup != ''"> -- 중복사용여부
+				AND a.isepointdup = #{isepointdup}
+			</if>
+			<if test="ismemtype != null and ismemtype != ''"> -- 지급대상범위
+				AND a.ismemtype = #{ismemtype}
+			</if>
+			GROUP BY a.epoidx
+		) a
+	</select>
+
+	<!-- e포인트 저장 여부 판별 -->
+	<select id="isAdminCanUpdateCheck" parameterType="somap" resultType="somap">
+		SELECT if(str_to_date(epopayday, '%Y%m%d%H%i') > now(), true, false) AS `check`
+		FROM t_epoint
+		WHERE epoidx = #{epoidx}
+	</select>
+
+	<!-- e포인트 중복기간 체크 -->
+	<select id="checkDuplEpoint" parameterType="somap" resultType="somap">
+		SELECT /* EPointMapper.xml - checkEPointDupDate e포인트 중복기간 체크 */
+			SUM(ta.checkcnt) AS 'check'
+		FROM (
+		<![CDATA[
+			  SELECT count(*) AS checkcnt
+		      FROM t_epoint e
+		      WHERE (
+			      (e.epopayday <= #{epopayday} AND e.epovalidday >= #{epopayday})
+			      OR (e.epopayday <= #{epovalidday} AND e.epovalidday >= #{epovalidday})
+			      OR (e.epopayday >= #{epopayday} AND e.epovalidday <= #{epovalidday})
+		      )
+	 	]]>
+		<if test="epoidx != null and epoidx != ''">
+			AND e.epoidx != #{epoidx}
+		</if>
+		<![CDATA[
+		        /* 프로모션 */
+		        UNION ALL
+		        SELECT count(*) AS checkcnt
+		        FROM t_promotion p
+		        WHERE p.siteid = #{siteid}
+		        AND p.promodivtype = 'PDT003'	-- 적립금구분: 적립금(PDT003)
+		        AND p.isreserve = 'F'         	-- 적립금여부: E포인트(F)
+		        AND 
+			      ((p.promostday <= #{epopayday} AND p.promoedday >= #{epopayday})
+			      OR (p.promostday <= #{epovalidday} AND p.promoedday >= #{epovalidday})
+			      OR (p.promostday >= #{epopayday} AND p.promoedday <= #{epovalidday}))
+		        AND p.istrash = 'F'	
+		]]>
+		<if test="promoidx != null and promoidx != ''">/* 수정시 체크 */
+			AND p.promoidx != #{promoidx}
+		</if>
+		<![CDATA[
+		        /* 추천리워드 */
+		        UNION ALL
+		        SELECT count(*) AS checkcnt
+		        FROM t_recom_reward rr
+		        WHERE rr.recomtype = 'RCT002'	-- 추천리워드혜택구분: E포인트(RCT002)
+		        AND 
+			      ((rr.recomstday <= #{epopayday} AND rr.recomedday >= #{epopayday})
+			      OR (rr.recomstday <= #{epovalidday} AND rr.recomedday >= #{epovalidday})
+			      OR (rr.recomstday >= #{epopayday} AND rr.recomedday <= #{epovalidday}))
+		        AND rr.istrash = 'F'
+		]]>
+		<if test="siteid != null and siteid != ''">
+			AND rr.siteid != #{siteid}
+		</if>
+		<![CDATA[
+		        /* 시리얼프로모션 */
+		        UNION ALL
+		        SELECT count(*) AS checkcnt
+		        FROM t_serial_promo sp
+		        WHERE sp.srptype = 'SRT002'		-- 시리얼프로모션혜택구분: E포인트(SRT002)
+		        AND 
+		        ((sp.srpstday <= #{epopayday} AND sp.srpedday >= #{epopayday})
+			      OR (sp.srpstday <= #{epovalidday} AND sp.srpedday >= #{epovalidday})
+			      OR (sp.srpstday >= #{epopayday} AND sp.srpedday <= #{epovalidday}))
+		        AND sp.istrash = 'F'
+		]]>
+		<if test="srpidx != null and srpidx != ''">
+			AND srpidx != #{srpidx}
+		</if>
+		) ta
+	</select>
+</mapper>

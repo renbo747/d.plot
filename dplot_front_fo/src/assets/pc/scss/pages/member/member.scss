@@ -1,0 +1,17 @@
+//공통 scss
+@import 'common';
+
+//로그인 페이지
+@import 'login';
+
+//회원가입 페이지
+@import 'sign-up';
+
+//아이디 관련
+@import 'id-find';
+
+//비밀번호 관련
+@import 'password';
+
+//휴면계정
+@import 'dormant-account';

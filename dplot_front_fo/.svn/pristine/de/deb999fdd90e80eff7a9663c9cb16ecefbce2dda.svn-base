@@ -1,0 +1,90 @@
+.password-find {
+  color: $black;
+  .modal-title {
+    font-weight: 400;
+  }
+  .password-find__description {
+    font-size: 18px;
+    letter-spacing: -.72px;
+    line-height: 28px;
+    margin-bottom: 32px;
+    word-break: keep-all;
+  }
+  .password-find__title {
+    font-size: 16px;
+    letter-spacing: -.64px;
+    line-height: 24px;
+    font-weight: 500;
+    margin-bottom: 20px;
+  }
+  .form-group {
+    margin-bottom: 10px;
+  }
+  .password-find__email-phone {
+    margin-bottom: 10px;
+  }
+  .password-find__label {
+    font-size: 14px;
+    letter-spacing: -.56px;
+    line-height: 20px;
+    margin-bottom: 10px;
+  }
+  .password-find__p {
+    word-break: keep-all;
+  }
+  .email-phone-find {
+    display: flex;
+    .base-select {
+      width: 118px;
+      margin-right: 10px;
+    }
+    .base-input {
+      width: 100%;
+    }
+  }
+  .auth-btn {
+    margin-bottom: 20px;
+  }
+  .auth-number {
+    position: relative;
+    margin-bottom: 10px;
+    .icon-input-remove {
+      display: none !important;
+    }
+    &::after {
+      content: attr(data-timer);
+      position: absolute;
+      top: 50%;
+      right: 16px;
+      transform: translateY(-50%);
+      font-size: 14px;
+      letter-spacing: -.56px;
+      line-height: 20px;
+    }
+  }
+  .auth-number-button {
+    margin-bottom: 50px;
+  }
+  .dp-btn__gray-800 {
+    color: $gray-800;
+  }
+}
+
+.password-find__new-password {
+  color: $black;
+  .modal-title {
+    font-weight: 400;
+  }
+  .password-find__description {
+    font-size: 18px;
+    letter-spacing: -.72px;
+    line-height: 26px;
+    margin-bottom: 32px;
+  }
+  .form-group {
+    margin-bottom: 10px;
+  }
+  .new-password-repeat {
+    margin-bottom: 50px;
+  }
+}

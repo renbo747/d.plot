@@ -1,0 +1,32 @@
+.base-wish {
+  width: 32px;
+  height: 32px;
+  background: rgba(17,17,17,.2);
+  border-radius: 50%;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+
+  @include media-breakpoint-up(xl) {
+    width: 42px;
+    height: 42px;
+  }
+
+  .heart-icon {
+    display: block;
+    width: 18px;
+    height: 18px;
+    background: url('~@/assets/common/icon/icon-heart-white-24px.svg') no-repeat 0;
+    line-height: 0;
+    background-size: 18px !important;
+    cursor: pointer;
+    @include media-breakpoint-up(xl) {
+      width: 24px;
+      height: 24px;
+      background-size: 24px !important;
+    }
+    &.on {
+      background: url('~@/assets/common/icon/icon-heart-red-24px.svg') no-repeat 0;
+    }
+  }
+}

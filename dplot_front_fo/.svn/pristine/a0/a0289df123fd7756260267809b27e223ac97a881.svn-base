@@ -1,0 +1,129 @@
+<template>
+  <main class="service">
+    <div class="service-top">
+      <div class="container">
+        <div class="service__header">
+          <p class="header-text01 atten-new">Discover the Plot!</p>
+          <figure class="service-logo">
+            <img src="@/assets/common/service-logo.svg" alt="로고" />
+          </figure>
+
+          <p class="header-text02 atten-new">About&nbsp;&nbsp;D.PLOT</p>
+        </div>
+
+        <div class="service-middle">
+          <p class="service-line atten-new">
+            <span>EVERY BRAND</span><br />
+            <span>HAS ITS</span><br />
+            <span>PLOT.</span>
+          </p>
+
+          <p class="service-text">
+            디플롯은 특별한 혹은 소소한, 진중한 때론 재미난 브랜드와 제품
+            이야기가 있는 프리미엄 라이프스타일 쇼핑 플랫폼입니다.<br />
+            이야기 즉 플롯은 브랜드와 디자이너의 철학, 제품의 쓸모와 아름다움,
+            나아가 사용자의 삶 속에서 함께 만들어가는 이야기까지 아우르죠.<br />
+            모든 사람이 제품 이면의 이야기를 궁금해하는 것은 아니겠지만 디플롯은
+            단지 숫자로만 제품의 가치를 논하고 싶지 않았어요.<br />
+            이 제품이 왜 좋은 지, 누구를 위한 것인지, 어떻게 사용해야 하는 지에
+            대한 구체적이고 친절한 정보를 전달해야겠다고 생각했어요.<br />
+            다양한 제품의 플롯을 탐색하며 자신의 취향을 발견하고, 쇼핑을 통해 그
+            개성을 실현시키길 바라요.<br />
+            디플롯이 들려주는 형형색색 갖가지 플롯으로 지식과 감성을, 그리고
+            나만의 시간과 공간을 채워가는 즐거움을 경험해보세요.
+          </p>
+        </div>
+      </div>
+    </div>
+    <div class="service-bottom">
+      <div class="container">
+        <p class="service-bottom__title atten-new">Why D.PLOT ?</p>
+
+        <ul class="service__ul list-style-none">
+          <li>
+            <div class="service-item">
+              <figure class="item__figure">
+                <img src="@/assets/common/img/img-service01.jpg" />
+              </figure>
+
+              <p class="item__title">
+                진정성 있는<br />
+                프리미엄
+              </p>
+
+              <p class="item__text">
+                '아름답고 쓸모 있는 제품' 이라는 큰 틀 아래 만든 이의 진정성과
+                고유의 개성이 담긴 상품만 선별해 선보입니다. 복제품을 원칙적으로
+                배제하는 만큼 믿고 살 수 있는 디플롯이라는 든든한 신뢰를
+                쌓아가고자 합니다.
+              </p>
+
+              <p class="item__tag-group">
+                <span>#No 레플리카!</span>
+                <span>#진짜가 무엇인지 알려드릴게요</span>
+              </p>
+            </div>
+          </li>
+
+          <li>
+            <div class="service-item">
+              <figure class="item__figure">
+                <img src="@/assets/common/img/img-service02.jpg" />
+              </figure>
+
+              <p class="item__title">
+                서사로 채워가는<br />
+                즐거운 쇼핑
+              </p>
+
+              <p class="item__text">
+                디플롯은 전문적이면서도 친근한 설명을 더해 제품의 서사를
+                완성합니다. 브랜드와 제품에 대해 알면 알수록 내가 이 제품을 왜
+                소유해야하는 지가 더욱 명확해질 거예요. 좋아하는 것을 좋아하는
+                이유를 깨닫고, 온전히 소유하는 기쁨을 경험할 수 있습니다.
+              </p>
+
+              <p class="item__tag-group">
+                <span>#지금까지 없었던 라이프스타일 상품 백과사전</span>
+                <span>#위키만큼 친절해요</span>
+              </p>
+            </div>
+          </li>
+
+          <li>
+            <div class="service-item">
+              <figure class="item__figure">
+                <img src="@/assets/common/img/img-service03.jpg" />
+              </figure>
+
+              <p class="item__title">
+                가치소비를 경험하는<br />
+                공간
+              </p>
+
+              <p class="item__text">
+                디플롯에서는 반영구적 생명력을 가진 타임리스 디자인과 재생
+                에너지와 지속가능성 메시지를 담은 디자인을 모두 만날 수 있어요.
+                프리미엄 라이프 신에선 가격보다 가치가 더 중요합니다. 가치
+                충만한 상품으로 쇼핑 만족도를 높여드릴게요.
+              </p>
+
+              <p class="item__tag-group">
+                <span>#프리미엄을 사야할 이유</span>
+                <span>#가치소비야말로 진정한 트렌드죠</span>
+              </p>
+            </div>
+          </li>
+        </ul>
+      </div>
+    </div>
+  </main>
+</template>
+
+<script>
+export default {
+  nav: {
+    isSubPage: false,
+  },
+};
+</script>

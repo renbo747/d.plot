@@ -1,0 +1,244 @@
+.promotion-detail {
+  .promotion__header {
+    margin-bottom: 20px;
+  }
+  // 프로모션 타이틀
+  .promotion-detail__header {
+    position: sticky;
+    top: 79px;
+    left: 0;
+    z-index: 10;
+    background: #ffffff;
+    padding-top: 20px;
+    padding-bottom: 30px;
+    border-bottom: 1px solid $border-color;
+  }
+  .promotion-detail__description-title {
+    font-weight: 400;
+    padding-bottom: 10px;
+    font-size: 22px;
+    letter-spacing: -.88px;
+    line-height: 34px;
+  }
+  .promotion__title {
+    font-weight: 700;
+  }
+  .promotion__date {
+    color: $gray-700;
+  }
+
+  // 프로모션 상세 영역
+  .promotion__detail-area {
+    padding-top: 50px;
+    padding-bottom: 100px;
+    img {
+      max-width: 100%;
+    }
+  }
+
+  // 배너
+  .add-info__brand {
+    display: flex;
+    align-items: center;
+    padding: 45px 70px;
+    background: $gray-100;
+    margin-top: 130px;
+    margin-bottom: 130px;
+
+    .brand__box {
+      align-items: center;
+      .dp-btn {
+        width: 190px;
+        padding-left: 0;
+        padding-right: 0;
+      }
+    }
+
+    .brand__figure {
+      width: 206px;
+      height: 68px;
+      text-align: center;
+      margin-right: 40px;
+      margin-bottom: 0;
+      img {
+        height: 100%;
+      }
+    }
+
+    .brand__slogan {
+      width: calc(100% - 491px);
+      margin-right: 55px;
+    }
+
+    .icon-more {
+      background-image: url("~@/assets/common/icon/icon-arrow-right-black-20px.svg");
+    }
+
+
+  }
+
+  // 프로모션 상품
+  .promotion__product-area {
+    .swiper-container {
+      padding-bottom: 50px;
+    }
+    .swiper-pagination {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 0 20px;
+      bottom: 0;
+    }
+
+    .swiper-slide {
+      display: flex;
+      height: auto;
+    }
+
+    .swiper-pagination-bullet {
+      width: 10px;
+      height: 10px;
+      opacity: 1;
+      background: $gray-400;
+      margin: 0 10px;
+    }
+
+    .swiper-pagination-bullet-active {
+      width: 10px;
+      height: 10px;
+      background: $black;
+    }
+  }
+  .dp-product .product__ctg {
+    line-height: 1;
+  }
+  .dp-product .product__title {
+    line-height: 1;
+  }
+  .dp-product .product__price-number {
+    line-height: 1;
+  }
+  .dp-product .product__discount-percentage {
+    line-height: 1;
+  }
+  .dp-product .product__discount-area {
+    line-height: 1;
+  }
+  // 상품 썸네일 수정 끝
+
+  .comment-list__ul {
+    li {
+      padding-top: 30px;
+      padding-bottom: 30px;
+      border-top: 1px solid $gray-400;
+    }
+  }
+
+  // 프로모션 댓글
+  .comment-btn-area {
+    max-width: 320px;
+    margin-left: auto;
+  }
+  .promotion__comment-area {
+    padding-bottom: 40px;
+    .comment__title {
+      font-size: 20px;
+      letter-spacing: -.8px;
+      font-weight: 500;
+      padding-bottom: 30px;
+    }
+  }
+  .comment__box {
+    .base-textarea .form-control {
+      min-height: 120px;
+    }
+  }
+  .comment-list__header {
+    font-weight: 500;
+    padding-top: 40px;
+    padding-bottom: 30px;
+    font-size: 18px;
+    letter-spacing: -.72px;
+    line-height: 24px;
+  }
+  .promotion__comment__hr {
+    width: 100%;
+    border-bottom: 1px solid $gray-400;
+  }
+  .comment-list__area {
+    .comment-header {
+      padding-bottom: 20px;
+    }
+    .comment-header-left {
+      font-size: 16px;
+      letter-spacing: -.64px;
+      color:$gray-700;
+    }
+    .comment-date {
+      padding-right: 10px;
+    }
+    .comment-edit {
+      font-size: 16px;
+      letter-spacing: -.64px;
+      color: $gray-800;
+      cursor: pointer;
+    }
+    .dp-bar {
+      margin-right: 10px;
+      margin-left: 10px;
+    }
+    .comment-text {
+      font-size: 18px;
+      letter-spacing: -.72px;
+      color:$gray-700;
+      margin-bottom: 0;
+      word-break: break-all;
+    }
+    .comment-footer {
+      display: flex;
+      align-items: center;
+      padding-top: 20px;
+      padding-bottom: 20px;
+    }
+    .comment-report {
+      font-size: 14px;
+      letter-spacing: -.56px;
+      color: #333;
+      margin-left: 20px;
+      cursor: pointer;
+    }
+    .comment-write {
+      width: 100px;
+      height: 32px;
+      font-size: 14px;
+      letter-spacing: -.56px;
+    }
+  }
+  .base-input .form-control {
+    height: 75px;
+  }
+  .comment-reply-btn-area {
+    .btn.dp-btn.btn-h32 {
+      font-size: 14px;
+      letter-spacing: -.56px;
+      line-height: 16;
+    }
+    .reply-cancel-btn {
+      width: 192px;
+      margin-right: 10px;
+    }
+    .reply-registration-btn {
+      width: 192px;
+    }
+  }
+
+  .reply {
+    margin-top: 30px;
+    padding: 30px;
+    background: $gray-100;
+  }
+
+  .dp-hr {
+    margin-bottom: 60px;
+  }
+}

@@ -1,0 +1,43 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.dplot.mapper.ConfigTermHistoryMapper">
+
+	<!-- 이용약관 수정 -->
+	<insert id="insertTermsHistory" parameterType="somap">
+		INSERT INTO t_config_terms_history /* ConfigTermHistoryMapper.xml - insertTermsHistory 이용약관이력 추가 */
+		(termsidx, version, iscurrent, content, regdate, reguserid)
+		VALUES(#{termsidx}, (select max(version) + 0.1 from t_config_terms_history a left join t_config_terms b on a.termsidx = b.idx where b.termstype = #{termstype} ), 'T', #{content}, now(), #{authuserid})	
+	</insert>
+	
+	<!-- 이용약관이력 수정 -->
+	<update id="updateTermsHistory" parameterType="somap">
+		UPDATE t_config_terms_history  /* ConfigTermHistoryMapper.xml - updateTermsHistory 이용약관이력 수정(현재버전 F로) */	
+		<set>
+		<choose>
+			<when test='versionup == "T"'>
+				iscurrent = 'F',			
+			</when>
+			<otherwise>
+				content = #{content},
+			</otherwise>
+		</choose>
+		moddate = now(),
+		</set>
+		WHERE idx = #{idx} AND termsidx = #{termsidx}
+	</update>
+	
+	<select id="selectTermsHistoryList" parameterType="somap" resultType="somap">
+	    select  /*ConfigTermHistoryMapper.xml - selectTermsHistoryList:: 이용약관이력조회*/
+	            b.idx
+              , a.REGDATE
+              , date_format(b.regdate, '%Y.%m.%d') as regdatestr
+              , b.version
+              , b.CONTENT
+        from t_config_terms a
+        inner join t_config_terms_history b on a.idx = b.TERMSIDX
+        where a.TERMSTYPE = #{termstype}
+        and a.siteid = #{siteid}
+        ORDER BY b.idx DESC
+	</select>
+</mapper>

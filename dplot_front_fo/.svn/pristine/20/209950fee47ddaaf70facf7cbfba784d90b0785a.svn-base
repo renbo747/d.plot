@@ -1,0 +1,174 @@
+import util from '../../../../../js/util'
+
+let isMobile = util.isMobile()
+
+export default {
+    data (){
+        return {
+            mobileCheck : false,
+            menus: ['어드벤트캘린더', '경품이벤트', '신규회원혜택', '쇼핑기획전'],
+            menuclassList : ['prom01_tab','prom02_tab','prom03_tab','prom04_tab'],
+            stampitem: [
+                {
+                    id: 1,
+                    activeimg: require('@/assets/common/img/promotion/holiyday/01.png'),
+                    disableimg: require('@/assets/common/img/promotion/holiyday/dim_01.png'),
+                    status: false
+                },{
+                    id: 2,
+                    activeimg: require('@/assets/common/img/promotion/holiyday/02.png'),
+                    disableimg: require('@/assets/common/img/promotion/holiyday/dim_02.png'),
+                    status: false
+                },{
+                    id: 3,
+                    activeimg: require('@/assets/common/img/promotion/holiyday/03.png'),
+                    disableimg: require('@/assets/common/img/promotion/holiyday/dim_03.png'),
+                    status: false
+                },{
+                    id: 4,
+                    activeimg: require('@/assets/common/img/promotion/holiyday/04.png'),
+                    disableimg: require('@/assets/common/img/promotion/holiyday/dim_04.png'),
+                    status: false
+                },{
+                    id: 5,
+                    activeimg: require('@/assets/common/img/promotion/holiyday/05.png'),
+                    disableimg: require('@/assets/common/img/promotion/holiyday/dim_05.png'),
+                    status: false
+                },{
+                    id: 6,
+                    activeimg: require('@/assets/common/img/promotion/holiyday/06.png'),
+                    disableimg: require('@/assets/common/img/promotion/holiyday/dim_06.png'),
+                    status: false
+                },{
+                    id: 7,
+                    activeimg: require('@/assets/common/img/promotion/holiyday/07.png'),
+                    disableimg: require('@/assets/common/img/promotion/holiyday/dim_07.png'),
+                    status: false
+                }
+            ]
+        }
+    },
+    mounted (){
+        this.mobileCheck = isMobile;
+        setTimeout(()=>{
+            this.getPromHeight()
+        },1000)
+        setInterval(()=>{
+            this.getPromHeight()
+        },5000)
+    },
+    methods: {
+        /***************************
+         * 스탬프 선택 이벤트 
+         ***************************/
+        stampAction(id){
+            this.stampitem.forEach((item, idx) => {
+                if(item.id === id){
+                    if(!item.status){
+                        /***************************
+                         * [D] 해당 id 스탬프 이벤트 코드 삽입
+                         ***************************/
+                        alert(`${id}번 스탬프를 찍었습니다. \n'xx'가 당첨되었습니다.`)
+                        this.stampitem[idx].status = true
+                    }
+                }
+            })
+        },
+        /***************************
+         * 카카오 공유하기
+         * [D] /src/views/front/common/components/ui/modal/SnsContentsModal.vue
+         * 파일 참고하여 붙여넣기 해두었습니다. 후속 개발 부탁드립니다.
+         ***************************/
+        shareKakao() {
+            alert(`카카오톡 공유하기`)
+
+            this.serverCallbackArgs.id = "testid";
+            this.serverCallbackArgs.key = "testkey";
+            this.param.kakao.serverCallbackArgs = this.serverCallbackArgs;
+            
+            //alert("ggggg:"+this.param.kakao.serverCallbackArgs.id);
+            Kakao.Link.sendDefault(this.param.kakao);
+        },
+        /***************************
+         * URL 공유하기
+         * [D] /src/views/front/common/components/ui/modal/SnsContentsModal.vue
+         * 파일 참고하여 붙여넣기 해두었습니다. 후속 개발 부탁드립니다.
+         ***************************/
+        getUrlBtn() {
+            alert(`URL 공유하기`)
+
+            this.$refs.urlinput.select();
+            let isCopy = document.execCommand("copy");
+            this.$refs.urlinput.blur();
+            if (isCopy) {
+                this.$toast.clear();
+                this.$toast.open(
+                "주소가 복사되었습니다. </br> 입력하실 곳에 붙여넣기 해주세요."
+                );
+            }
+        },
+        scrollToTargetAdjusted(element){
+            element = document.querySelector(`${element}`)
+            let headerOffset = 0;
+            let elementPosition = element.getBoundingClientRect().top;
+            let offsetPosition = elementPosition + window.pageYOffset - headerOffset - (isMobile ? 93 : 164);
+        
+            window.scrollTo({
+                top: offsetPosition,
+                behavior: "smooth"
+            });
+        },
+        getAbsoluteTop(element) {
+            return element.getBoundingClientRect().top;
+        },
+        getPromHeight() {
+            const promTab = this.$scrollmagic.scene({
+                triggerElement: '#prom01',
+                duration: $('#prom01').outerHeight(true)+$('#prom02').outerHeight(true)+$('#prom03').outerHeight(true)+$('#prom04').outerHeight(true),
+                triggerHook: 0,
+                offset: isMobile ? -94 : -165,
+            })
+            .setClassToggle('#prom_tab_menu','active')
+    
+            const prom01 = this.$scrollmagic.scene({
+                triggerElement: '#prom01',
+                duration:$('#prom01').outerHeight(true),
+                triggerHook: 0,
+                offset: isMobile ? -94 : -165,
+            })
+            // .addIndicators()
+            .setClassToggle('.prom01_tab','active')
+    
+            const prom02 = this.$scrollmagic.scene({
+                triggerElement: '#prom02',
+                duration:$('#prom02').outerHeight(true),
+                triggerHook: 0,
+                offset: isMobile ? -94 : -165,
+            })
+            // .addIndicators()
+            .setClassToggle('.prom02_tab','active')
+            const prom03 = this.$scrollmagic.scene({
+                triggerElement: '#prom03',
+                duration:$('#prom03').outerHeight(true),
+                triggerHook: 0,
+                offset: isMobile ? -94 : -165,
+            })
+            // .addIndicators()
+            .setClassToggle('.prom03_tab','active')
+            const prom04 = this.$scrollmagic.scene({
+                triggerElement: '#prom04',
+                duration:$('#prom04').outerHeight(true),
+                triggerHook: 0,
+                offset: isMobile ? -94 : -165,
+            })
+            // .addIndicators()
+            .setClassToggle('.prom04_tab','active')
+    
+            this.$scrollmagic.addScene(promTab)
+            this.$scrollmagic.addScene(prom01)
+            this.$scrollmagic.addScene(prom02)
+            this.$scrollmagic.addScene(prom03)
+            this.$scrollmagic.addScene(prom04)
+        }
+    }
+}

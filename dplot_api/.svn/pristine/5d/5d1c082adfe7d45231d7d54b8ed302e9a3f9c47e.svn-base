@@ -1,0 +1,234 @@
+package com.dplot.front.service;
+
+import java.util.ArrayList;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Set;
+
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Propagation;
+import org.springframework.transaction.annotation.Transactional;
+
+import com.dplot.common.CMConst;
+import com.dplot.common.SOMap;
+import com.dplot.common.service.util.MallBaseService;
+import com.dplot.mapper.BannerMapper;
+import com.dplot.mapper.BrandContentsMapper;
+import com.dplot.mapper.BrandLikeMapper;
+import com.dplot.mapper.BrandMapper;
+import com.dplot.mapper.CategoryMapper;
+import com.dplot.mapper.GoodsMapper;
+import com.dplot.util.Util;
+
+@Service
+public class BrandServiceImpl extends MallBaseService implements BrandService {
+
+	@Autowired
+	private BrandMapper brandMapper;
+
+	@Autowired
+	private CategoryMapper categoryMapper;
+
+	@Autowired
+	private GoodsMapper goodsMapper;
+
+	@Autowired
+	private BannerMapper bannerMapper;
+
+	@Autowired
+	private BrandLikeMapper brandLikeMapper;
+
+	@Autowired
+	private BrandContentsMapper brandContentsMapper;
+
+	/**
+	 * 브랜드 목록 조회
+	 */
+	@Override
+	public SOMap selectBrandList(SOMap param) throws Exception {
+		SOMap resultMap = new SOMap();
+		param.put("siteid", cs.getStr("siteid"));
+		/**************************************
+		 * 브랜드 조회
+		 **************************************/
+		List<SOMap> brandList = brandMapper.selectBrandFrontList(param);
+		resultMap.put("brandlist", brandList);
+		return resultMap;
+	}
+
+	@Override
+	public SOMap selectMzBrandList(SOMap param) throws Exception {
+		SOMap resultMap = new SOMap();
+		param.put("siteid", cs.getStr("siteid"));
+		param.put("imgtype", CMConst.IMG_TYPE_BRAND_LOGO);
+		param.put("idx", 0);
+
+		List<SOMap> categoryList = categoryMapper.selectCategoryList(param);
+		SOMap allCate = new SOMap();
+		allCate.put("idx", 0);
+		allCate.put("value", "ALL");
+		categoryList.add(0, allCate);
+		resultMap.put("catelist", categoryList);
+
+		List<SOMap> brandList = brandMapper.selectBrandFrontList(param);
+
+		Set<String> filterSet = new HashSet();
+		for (SOMap map : brandList) {
+			filterSet.add(map.getStr("filterfrstname"));
+			filterSet.add(map.getStr("filterfrstename"));
+		}
+
+		List<SOMap> alphabetList = new ArrayList<>();
+		List<SOMap> letterList = new ArrayList<>();
+
+		for (String str : filterSet) {
+			SOMap tempMap = new SOMap();
+			tempMap.put("id", "letter" + str);
+			tempMap.put("label", str);
+			if (str.compareTo("A") >= 0 && str.compareTo("z") <= 0) {
+				alphabetList.add(tempMap);
+			} else {
+				letterList.add(tempMap);
+			}
+		}
+
+		resultMap.put("brandlist", brandList);
+		resultMap.put("alphabetdata", alphabetList);
+		resultMap.put("letterdata", letterList);
+
+		return resultMap;
+	}
+
+	/********************************
+	 * 매거진 브랜드 상세 조회
+	 * 
+	 * @throws Exception
+	 *********************************/
+	@Override
+	public SOMap selectMzBrandDetail(SOMap param) throws Exception {
+		SOMap result = new SOMap();
+
+		param.put("siteid", cs.getStr("siteid"));
+		param.put("platform", cs.getStr("platform"));
+		param.put("muappchtype", cs.getStr("platform"));
+		param.put("userno", cs.getInt("authmemberno"));
+
+		if (param.getInt("userno") == 0) {
+			param.put("mumembertype", "DMT001");
+			param.put("mumemlvtype", CMConst.MEMLVTYPE_BRONZE);
+		} else {
+			param.put("mumembertype", cs.getStr("authmembertype"));
+			param.put("mumemlvtype", cs.getStr("authmemlvtype"));
+		}
+
+		param.put("isnopaging", "T");
+		if (Util.flag2Bool(cs.getStr("ismobile"))) {
+			param.put("imgtype", CMConst.IMG_TYPE_GOODS_IMG_MO_M);
+		} else {
+			param.put("imgtype", CMConst.IMG_TYPE_GOODS_IMG_PC_M);
+		}
+		List<SOMap> goodsList = goodsMapper.selectFrontGoodsList(param);
+
+		result.put("goodslist", goodsList);
+
+		// 상품목록 정렬만 변경 시 상품리스트 리턴
+		if (param.containsKey("sortgoods")) {
+			return result;
+		}
+
+		if (Util.flag2Bool(cs.getStr("ismobile"))) {
+			param.put("imgtype", CMConst.IMG_TYPE_BRAND_IMG_MO);
+		} else {
+			param.put("imgtype", CMConst.IMG_TYPE_BRAND_IMG_PC);
+		}
+		SOMap brandInfo = brandMapper.selectFrontBrandDetail(param);
+
+		if (Util.flag2Bool(cs.getStr("ismobile"))) {
+			param.put("imgtype", CMConst.IMG_TYPE_BRAND_BANNER_MO);
+		} else {
+			param.put("imgtype", CMConst.IMG_TYPE_BRAND_BANNER_PC);
+		}
+
+		param.put("idx", param.getStr("brandidx"));
+		List<SOMap> contentList = brandContentsMapper.selectBrandContentsList(param);
+
+		param.put("bntype", "BNT005");
+		List<SOMap> bannerList = bannerMapper.selectFrontMainBanner(param);
+
+		result.put("bannerlist", bannerList);
+		result.put("contentslist", contentList);
+		result.put("info", brandInfo);
+
+		return result;
+	}
+
+	@Override
+	@Transactional(propagation = Propagation.REQUIRED, rollbackFor = { Throwable.class })
+	public SOMap changeWish(SOMap param) throws Exception {
+		SOMap resultMap = new SOMap();
+		param.put("siteid", cs.getStr("siteid"));
+		param.put("platform", cs.getStr("platform"));
+		param.put("muappchtype", cs.getStr("platform"));
+		param.put("userno", cs.getInt("authmemberno"));
+
+		if ("T".equals(param.getStr("iswished"))) {
+			brandLikeMapper.deleteBrandLike(param);
+		} else {
+			brandLikeMapper.insertBrandLike(param);
+		}
+
+		resultMap.put("wishcnt", brandLikeMapper.selectLikeCnt(param));
+
+		return resultMap;
+	}
+
+	@Override
+	public SOMap selectFilterBrandList(SOMap param) throws Exception {
+		SOMap resultMap = new SOMap();
+		param.put("siteid", cs.getStr("siteid"));
+		param.put("imgtype", CMConst.IMG_TYPE_BRAND_LOGO);
+		param.put("muappchtype", cs.getStr("platform"));
+
+		if (param.getInt("userno") == 0) {
+			param.put("mumembertype", "DMT001"); // 일반회원
+			param.put("mumemlvtype", "MDL001"); // 브론즈
+		} else {
+			param.put("mumembertype", cs.getStr("authmembertype"));
+			param.put("mumemlvtype", cs.getStr("authmemlvtype"));
+		}
+		List<SOMap> brandList = new ArrayList<>();
+		
+		param.put("brandlist", param.getArrayList("brandlist"));
+		if (param.getArrayList("brandlist").size() > 0) {
+			brandList =brandMapper.selectSearchBrand(param);
+		}
+		// List<SOMap> brandList = brandMapper.selectBrandFrontList(param);
+
+		Set<String> filterSet = new HashSet();
+		for (SOMap map : brandList) {
+			filterSet.add(map.getStr("filterfrstname"));
+			filterSet.add(map.getStr("filterfrstename"));
+		}
+
+		List<SOMap> alphabetList = new ArrayList<>();
+		List<SOMap> letterList = new ArrayList<>();
+
+		for (String str : filterSet) {
+			SOMap tempMap = new SOMap();
+			tempMap.put("id", "letter" + str);
+			tempMap.put("label", str);
+			if (str.compareTo("A") >= 0 && str.compareTo("z") <= 0) {
+				alphabetList.add(tempMap);
+			} else {
+				letterList.add(tempMap);
+			}
+		}
+
+		resultMap.put("brandlist", brandList);
+		resultMap.put("alphabetdata", alphabetList);
+		resultMap.put("letterdata", letterList);
+
+		return resultMap;
+	}
+}

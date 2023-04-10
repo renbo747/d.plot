@@ -1,0 +1,41 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.dplot.mapper.BestGoodsMapper">
+	<select id="selectBestGoodsList" parameterType="somap" resultType="somap">
+	   SELECT /*BestGoodsMapper.xml - selectBestGoodsList:: 베스트 상품 조회*/     
+	           tbg.bestidx
+		     , tbg.goodsno
+		     , tg.goodscode
+		     , tbg.cateidx
+		     , tg.GOODSNAME
+		     , fn_get_file_url(tbg.goodsno,'FLT001',#{imgtype}) as fullpath
+		     , fn_get_goods_stock(#{siteid}, tbg.goodsno) as stockcnt
+		     , ifnull((select 'T' from t_wish where goodsno = tbg.goodsno and userno = #{userno} and istrash = 'F'), 'F') as iswished
+		     , FN_GET_GOODS_MARKETPRICE(#{siteid}, tbg.goodsno) as marketprice -- 대표상품공급가
+		     , FN_GET_GOODS_PRICE(#{siteid}, tbg.goodsno) as price -- 대표상품판매가
+		     , FN_GET_GOODS_SALEPROMOAMT(#{siteid}, tbg.goodsno, null, 0, #{platform}) as saleamt -- 프로모션할인적용가(할인가)
+		     , FN_GET_GOODS_SALECOUPONAMT(#{siteid}, tbg.goodsno, null, 0, #{platform}) as goodscpnamt -- 즉시할인쿠폰할인가
+		     , ifnull(tb.enname, '') as brandname -- 브랜드명
+		FROM t_bestgoods tbg
+		INNER JOIN t_goods tg ON tbg.goodsno = tg.GOODSNO
+		LEFT OUTER JOIN t_brand tb on tb.idx = tg.brandidx
+		WHERE  1 = 1
+		<if test='mainyn != "T"'>
+			<choose>
+			<when test="cateidx != null">
+			AND tbg.cateidx = #{cateidx}
+			</when>
+			<otherwise>
+			AND tbg.cateidx IS NULL
+			</otherwise>
+			</choose>
+		</if>
+		ORDER BY tbg.sort
+		<if test="limit != null and limit != ''">
+		LIMIT 6
+		</if>
+		
+		
+	</select>
+</mapper>

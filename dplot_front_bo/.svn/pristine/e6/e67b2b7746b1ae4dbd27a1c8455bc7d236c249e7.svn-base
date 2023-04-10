@@ -1,0 +1,407 @@
+import store from "@js/store.js";
+import DelivIsolListPopup from '@views.admin/goods/popup/DelivIsolListPopup.vue';
+
+export default {
+    name: 'DelivTempDetailPopup',
+    props : {
+        params: Object,
+        callbackFn: Function
+    },
+    mounted() {
+        // 초기값세팅
+        this.onInit();
+    },
+    data :function(){
+        return {
+            commonCode: {
+                delivtype: [],      // 배송방법
+                logistype: [],      // 택배사
+                delivschtype: [],   // 배송일정
+                delivfaretype: [],  // 배송비종류
+            },
+            data: {
+                type: '',           //유형: 신규등록(NEW), 상세(DETAIL)
+                dealerno: null,     //파트너사 회원번호(직매입인경우 null)
+                delividx: '',       //배송일련번호
+                istrash: 'F',       //삭제여부
+                iscombdeliv: 'F',   //배송유형
+                delivbname: '',     //배송정보명
+                delivtype: '',      //배송방법
+                logistype: '',      //택배사
+                delivschtype: '',   //배송일정
+                delivfaretype: '',  //배송비종류
+                delivfare: null,    //배송비
+                delivfreefare: null,//무료금액
+                isnationdeliv: 'T', //전국배송여부
+                rtndelivtype: '',   //반품배송방법
+                rtnlogistype: '',   //반품택배사
+                exowfare: null,     //교환편도배송비
+                exrtnfare: null,    //교환왕복배송비
+                rfowfare: null,     //반품편도배송비
+                rfrtnfare: null,    //반품왕복배송비
+                relpost: '',        //출고지우편번호
+                reladdr: '',        //출고지주소
+                reladdrdetail: '',  //출고지상세주소
+                reladdrtypename: '',//출고지주소타입명(지번, 도로명)
+                rfpost: '',         //교환/반품우편번호
+                rfaddr: '',         //교환/반품주소
+                rfaddrdetail: '',   //교환/반품상세주소
+                rfaddrtypename: '', //교환/반품주소타입명(지번, 도로명)
+                isSameAsBizaddr: false, //사업자주소동일여부
+                isSameAsReladdr: false, //출고지주소동일여부
+                ispbgoods: 'T',     //판매구분
+                ordrtndelivtype: '', // db값 반품배송방법
+                ordrtnlogistype: '', // db값 반품택배사
+                isPartner: 'false',
+            },
+            rtnLogisList: [],   //반품택배사 목록
+            rtnManlogisList: [], //개별반품택배사 목록
+            // 모달팝업에서 store 가져오지 못해서 별도 세팅
+            constants: store.getters['ADMIN']
+        }
+    },
+    methods : {
+        // 초기값 세팅
+        onInit: function() {
+            this.data.type = this.params.type;
+            this.data.dealerno = this.params.dealerno;
+            this.data.ispbgoods = this.params.ispbgoods;
+            this.data.isPartner = this.params.isPartner;
+            this.data.delivtype = this.constants.DELIV_TYPE_DLT001; //배송방법 (default: 택배배송)
+            this.data.delivschtype = this.constants.DELIV_SCH_TYPE_DSC001; //배송일정 (default: 당일배송)
+            this.data.delivfaretype = this.constants.DELIV_FARE_DCT001; //배송비종류 (default: 무료)
+            this.data.rtndelivtype = this.constants.DELIV_TYPE_DLT001; //반품배송방법 (default: 택배배송)
+            // 반품택배사 조회
+            this.getRtnLogisList();
+            // 개별반품택배사 조회
+            this.getRtnManLogisList();
+            // 상세 화면이동인경우 데이터 조회
+            if (this.params.type == "DETAIL") {
+                this.data.delividx = this.params.delividx;
+                this.getDelivTempDetail();
+            }
+            // 공통코드 조회
+            this.getCommonCodeList();
+        },
+        // 공통코드 조회
+        getCommonCodeList: function() {
+            let cmclassArr = ['DELIVTYPE', 'RTNDELIVTYPE', 'LOGISTYPE', 'DELIVSCHTYPE', 'DELIVFARETYPE'];
+            this.$http.post('/common/code/map/list', {cmclass : cmclassArr, isloading: false})
+                .then(result =>{
+                    let data = result.data;
+                    for (const [key] of Object.entries(data)) {
+                        this.commonCode[key] = data[key];
+                    }
+                    // 직매입인 경우 직배송 안보이도록 수정
+                    if (this.data.dealerno == null) {
+                        let findIndex = this.commonCode.delivtype.findIndex(obj => {
+                            return obj.cmcode == store.getters['ADMIN'].DELIV_DIRECT;
+                        })
+                        this.commonCode.delivtype.splice(findIndex, 1);
+                    }
+                    if (this.data.iscombdeliv == 'T') {
+                        let findIndex = this.commonCode.delivfaretype.findIndex(obj => {
+                            return obj.cmcode == this.constants.DELIV_FARE_DCT005;
+                        })
+                        this.commonCode.delivfaretype.splice(findIndex, 1);
+                    }
+                })
+                .catch(error => {
+                    this.$util.debug(error);
+                });
+        },
+        // 배송템플릿 상세 조회
+        getDelivTempDetail: function() {
+            let params = {delividx: this.data.delividx, dealerno: this.data.dealerno, isPartner: this.data.isPartner};
+            this.$http.post('/admin/goods/regist/delivtemp/detail', params)
+                .then(result => {
+                    this.$util.debug(result);
+                    this.data = result.data;
+                    this.data.ordrtndelivtype = result.data.rtndelivtype;
+                    this.data.ordrtnlogistype = result.data.rtnlogistype;
+                    this.data.isPartner = params.isPartner;
+                })
+                .catch(error => {
+                    this.$util.debug(error);
+                });
+        },
+        // 반품택배사 조회
+        getRtnLogisList: function() {
+            let params = {delividx: this.data.delividx, dealerno: this.data.dealerno};
+            this.$http.post('/admin/goods/regist/rtnlogis/list', params)
+                .then(result => {
+                    this.$util.debug(result);
+                    this.rtnLogisList = result.data.list;
+                })
+                .catch(error => {
+                    this.$util.debug(error);
+                });
+        },
+        // 반품택배사 조회
+        getRtnManLogisList: function() {
+            let params = {delividx: this.data.delividx, dealerno: this.data.dealerno};
+            this.$http.post('/admin/goods/regist/rtnManlogis/list', params)
+                .then(result => {
+                    this.$util.debug(result);
+                    this.rtnManlogisList = result.data.list;
+                })
+                .catch(error => {
+                    this.$util.debug(error);
+                });
+        },
+        // 배송비 초기화
+        initDelivfare: function(obj) {
+            if (obj.delivfaretype != this.data.delivfaretype) {
+                this.data.delivfare = null;
+            }
+        },
+        openDelivIsolListPopup: function() {
+            this.$modal.show(
+                DelivIsolListPopup, {}, {
+                    name: "delivIsolListPopup"
+                })
+        },
+        // 주소검색
+        searchAddress: function(type) {
+            new window.daum.Postcode({
+                oncomplete: (data) => {
+                    this.$util.debug(data);
+                    this.data[type+'post'] = data.zonecode;
+                    this.data[type+'addr'] = data.address;
+                    this.data[type+'addrdetail'] = this.$util.isNull(data.buildingName)? '':data.buildingName+' ';
+                }
+            }).open();
+        },
+        // 사업자주소와 동일
+        setSameAsBizAddr: function() {
+            if (this.data.isSameAsBizaddr) {
+                let params = {dealerno: this.data.dealerno};
+                this.$http.post('/admin/goods/regist/bizaddr', params)
+                    .then(result => {
+                        this.$util.debug(result);
+                        let data = result.data;
+                        this.data.relpost = data.post;
+                        this.data.reladdr = data.addr;
+                        this.data.reladdrdetail = data.addrdetail;
+                    })
+                    .catch(error => {
+                        this.$util.debug(error);
+                    });
+            } else {
+                this.data.relpost = '';
+                this.data.reladdr = '';
+                this.data.reladdrdetail = '';
+            }
+        },
+        // 출고지주소와 동일
+        setSameAsRelAddr: function() {
+            if (this.data.isSameAsReladdr) {
+                this.data.rfpost = this.data.relpost;
+                this.data.rfaddr = this.data.reladdr;
+                this.data.rfaddrdetail = this.data.reladdrdetail;
+            } else {
+                this.data.rfpost = '';
+                this.data.rfaddr = '';
+                this.data.rfaddrdetail = '';
+            }
+        },
+        // 배송템플릿 저장
+        saveDelivTemp: function() {
+            // 기본정보 필수값 체크
+            let valid = [
+                {field: 'data.delivbname', type: 'I', name:'[기본정보] 배송정보명', required: true},
+                {field: 'data.delivtype',  type: 'S', name:'[기본정보] 배송정보', required: true}
+            ];
+            let msg = this.$util.validMsg(this.$data, valid);
+            if(!this.$util.isNull(msg)){
+                alert(msg);
+                return;
+            }
+            // 배송비종류가 유료인 경우 배송비 필수입력
+            if (this.$util.isNull(this.data.delivfare) && this.data.delivfaretype == this.constants.DELIV_FARE_DCT002) {
+                alert('배송비를 입력해주세요.');
+                return;
+            }
+            // 배송비종류가 조건부무료인 경우 배송비, 무료금액 필수입력
+            if (this.data.delivfaretype == this.constants.DELIV_FARE_DCT003) {
+                if (this.$util.isNull(this.data.delivfare)) {
+                    alert('배송비를 입력해주세요.');
+                    return;
+                } else if (this.$util.isNull(this.data.delivfreefare)) {
+                    alert('배송비 조건부무료금액을 입력해주세요.');
+                    return;
+                }
+            }
+            // 교환/반품주소 필수값 체크
+            valid = [
+                {field: 'data.exowfare', type: 'I', name:'[교환/반품주소] 편도 교환배송비', required: true},
+                {field: 'data.exrtnfare', type: 'I', name:'[교환/반품주소] 왕복 교환배송비', required: true},
+                {field: 'data.rfowfare', type: 'I', name:'[교환/반품주소] 편도 반품배송비', required: true},
+                {field: 'data.rfrtnfare', type: 'I', name:'[교환/반품주소] 왕복 반품배송비', required: true},
+                {field: 'data.rtndelivtype', type: 'I', name:'[교환/반품주소] 반품택배사', required: true},
+                {field: 'data.reladdr', type: 'I', name:'[교환/반품주소] 출고지주소', required: true},
+                {field: 'data.rfaddr', type: 'I', name:'[교환/반품주소] 교환반품주소', required: true}
+            ];
+            msg = this.$util.validMsg(this.$data, valid);
+            if(!this.$util.isNull(msg)){
+                alert(msg);
+                return;
+            }
+            // 반품방법이 택배배송인 경우 택배사 선택 필수
+            if (this.data.rtndelivtype == this.constants.DELIV_TYPE_DLT001
+                && this.$util.isNull(this.data.rtnlogistype)) {
+                    alert('반품택배사를 선택해주세요.');
+                    return;
+            }
+
+            if (this.data.rtndelivtype == this.constants.DELIV_TYPE_DLT004
+                && this.$util.isNull(this.data.rtnlogistype)) {
+                    alert('개별반품택배사를 선택해주세요.');
+                    return;
+            }
+
+            if(confirm("저장하시겠습니까?")) {
+            this.$http.post('/admin/goods/regist/delivtemp/save', this.data)
+                .then(result => {
+                    this.$util.debug(result);
+                    if (result.statusCode == '200') {
+                        alert("저장이 완료되었습니다.");
+                        if( typeof(this.callbackFn) == 'function') {
+                            this.callbackFn();
+                            if (this.data.type == 'NEW') {
+                                this.$modal.hide('delivTempDetail');
+                            } else {
+                                this.$refs.bodytop.scrollIntoView();
+                            }
+                        }
+                    } else {
+                        alert(result.message);
+                    }
+                })
+                .catch(error => {
+                    this.$util.debug(error);
+                });
+            }
+        },
+        applyDeliveryService() {
+            this.$http.post('/admin/partners/apply/otp/code', {userno : this.data.dealerno}).then(result => {
+              if(result.data.status === 200){
+      
+                let applyUrl = result.data.url;
+                /*if(this.deliveryList.length > 0){
+                  applyUrl = applyUrl.replace(/detail/gi, 'list');
+                }*/
+      
+                window.open(applyUrl, '_blank');
+      
+              } else {
+                alert(result.data.message);
+              }
+      
+              this.$util.debug(result);
+            }).catch(error => {
+              this.$util.debug(error);
+            });
+          },
+          imageView(url) {
+            this.$viewerApi({
+              images : [url]
+            });
+      
+          },
+          applyDeliveryServiceRefresh(){
+            this.$http.post('/admin/partners/apply/goodsflow/refresh', {}).then(result => {
+              if(result.statusCode === 200){
+                alert('갱신 처리가 완료 되었습니다.');
+              }
+            }).catch(error =>{
+              this.$util.debug(error);
+            });
+          }
+    },
+    watch: {
+        // 배송방법
+        'data.delivtype': function(value) {
+            // 택배배송이 아닌경우
+            if (value != this.constants.DELIV_TYPE_DLT001) {
+                return this.data.logistype = '';
+            }
+        },
+        // 반품배송방법
+        'data.rtndelivtype': function(value) {
+            this.ordrtnlogistype = this.data.ordrtnlogistype;
+            this.ordrtndelivtype = this.data.ordrtndelivtype;
+
+            // 택배배송이 아닌경우
+            if (value != this.constants.DELIV_TYPE_DLT001 && value != this.constants.DELIV_TYPE_DLT004) {
+                return this.data.rtnlogistype = '';
+            }
+
+            if(this.data.rtndelivtype != this.ordrtndelivtype) {
+                return this.data.rtnlogistype = '';
+            } else {
+                return this.data.rtnlogistype = this.ordrtnlogistype;
+            }
+            
+        },
+        // 배송가능지역
+        'data.isnationdeliv': function() {
+            this.data.chejufare = null;
+            this.data.isolfare = null;
+        },
+        // 숫자만입력
+        'data.delivfare': function(value) {
+            if (this.$util.isNull(value)) return;
+            value = value+"";
+            return this.data.delivfare = value.replace(/(^0[0-9]|[^0-9])/gi, '');
+        },
+        'data.delivfreefare': function(value) {
+            if (this.$util.isNull(value)) return;
+            value = value+"";
+            return this.data.delivfreefare = value.replace(/(^0[0-9]|[^0-9])/gi, '');
+        },
+        'data.isolfare': function(value) {
+            if (this.$util.isNull(value)) return;
+            value = value+"";
+            return this.data.isolfare = value.replace(/(^0[0-9]|[^0-9])/gi, '');
+        },
+        'data.chejufare': function(value) {
+            if (this.$util.isNull(value)) return;
+            value = value+"";
+            return this.data.chejufare = value.replace(/(^0[0-9]|[^0-9])/gi, '');
+        },
+        'data.exowfare': function(value) {
+            if (this.$util.isNull(value)) return;
+            value = value+"";
+            return this.data.exowfare = value.replace(/(^0[0-9]|[^0-9])/gi, '');
+        },
+        'data.exrtnfare': function(value) {
+            if (this.$util.isNull(value)) return;
+            value = value+"";
+            return this.data.exrtnfare = value.replace(/(^0[0-9]|[^0-9])/gi, '');
+        },
+        'data.rfowfare': function(value) {
+            if (this.$util.isNull(value)) return;
+            value = value+"";
+            return this.data.rfowfare = value.replace(/(^0[0-9]|[^0-9])/gi, '');
+        },
+        'data.rfrtnfare': function(value) {
+            if (this.$util.isNull(value)) return;
+            value = value+"";
+            return this.data.rfrtnfare = value.replace(/(^0[0-9]|[^0-9])/gi, '');
+        },
+        'data.iscombdeliv': function(value) {
+            if (value == 'T') {
+                let findIndex = this.commonCode.delivfaretype.findIndex(obj => {
+                    return obj.cmcode == this.constants.DELIV_FARE_DCT005;
+                })
+                this.commonCode.delivfaretype.splice(findIndex, 1);
+            } else {
+                this.getCommonCodeList();
+            }
+            this.data.delivfaretype = this.constants.DELIV_FARE_DCT001;
+            this.data.delivfreefare = '';
+            this.data.delivfare = '';
+        }
+    }
+}

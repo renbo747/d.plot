@@ -1,0 +1,163 @@
+<template>
+    <main class="service">
+        <h1 class="key_title">
+            <img src="@assets.pc/img/service/title_pc.png" alt="EVERY BR@ND HAS IT's OWN PLOT" />
+        </h1>
+        <div class="main_desc">
+            <h2>
+                <img src="@assets.pc/img/service/about_dplot.png" alt="About D.PLOT">
+            </h2>
+            <p>
+                디플롯은 특별한 혹은 소소한, 진중한 때론 재미난 브랜드와 제품 이야기가 있는 프리미엄 라이프스타일 쇼핑 플랫폼입니다.<br />
+                이야기 즉 플롯은 브랜드와 디자이너의 철학, 제품의 쓸모와 아름다움, 나아가 사용자의 삶 속에서 함께 만들어가는 이야기까지 아우르죠.<br />
+                다양한 제품의 플롯을 탐색하며 자신의 취향을 발견하고, 쇼핑을 통해 그 개성을 실현시키길 바라요.<br />
+                디플롯이 들려주는 형형색색 갖가지 플롯으로 지식과 감성을, 그리고 나만의 시간과 공간을 채워가는 즐거움을 경험해보세요.
+            </p>
+        </div>
+        <div class="content01">
+            <h2>
+                <img src="@assets.pc/img/service/why_dplot.png" alt="Why D.PLOT">
+            </h2>
+            <div class="content_wrap">
+                <div class="content_card">
+                    <div class="card_left">
+                        <span class="atten-new">01</span>
+                        <h3>진성성 있는 <br />상품 셀렉션</h3>
+                        <p>
+                            '아름답고 쓸모 있는 제품' 이라는 큰 틀 아래 만든 이의 진정성과 고유의 개성이 담긴 <br />
+                            상품만 선별해 선보입니다. 복제품을 원칙적으로 배제하는 만큼 믿고 살 수 있는 <br />
+                            디플롯이라는 든든한 신뢰를 쌓아가고자 합니다.
+                        </p>
+                        <div class="hash">
+                            <span>#No 레플리카!</span>
+                            <span>#진짜가 무엇인지 알려드릴게요</span>
+                        </div>
+                    </div>
+                    <div class="card_right">
+                        <img src="@assets.pc/img/service/why_dplot01.png" alt="진성성 있는 상품 셀렉션" />
+                    </div>
+                </div>
+                <div class="content_card">
+                    <div class="card_left">
+                        <span class="atten-new">02</span>
+                        <h3>서사로 채워가는 <br />즐거운 쇼핑</h3>
+                        <p>
+                            디플롯은 전문적이면서도 친근한 설명을 더해 제품의 서사를 완성합니다. <br />
+                            브랜드와 제품에 대해 알면 알수록 제품의 가치와 <br />
+                            내가 이 제품을 왜 소유해야하는 지가 더욱 명확해질 거예요. 
+                        </p>
+                        <div class="hash">
+                            <span>#지금까지 없었던 라이프스타일 상품 백과사전</span>
+                            <span>#위키만큼 친절해요</span>
+                        </div>
+                    </div>
+                    <div class="card_right">
+                        <img src="@assets.pc/img/service/why_dplot02.png" alt="서사로 채워가는 즐겨운 쇼핑" />
+                    </div>
+                </div>
+                <div class="content_card">
+                    <div class="card_left">
+                        <span class="atten-new">03</span>
+                        <h3>가치소비를 <br />경험하는 공간</h3>
+                        <p>
+                            디플롯에서는 반영구적 생명력을 가진 타임리스 디자인과 친환경적 지속가능한 <br />
+                            디자인을 모두 만날 수 있어요. 소비 지향이 아닌 가치 지향을 제안하죠. <br />
+                            가치 충만한 상품으로 쇼핑 만족도를 높여드릴게요.
+                        </p>
+                        <div class="hash">
+                            <span>#지속가능한 쇼핑</span>
+                            <span>#가치소비야말로 진정한 트렌드죠</span>
+                        </div>
+                    </div>
+                    <div class="card_right">
+                        <img src="@assets.pc/img/service/why_dplot03.png" alt="가치소비를 경험하는 공간" />
+                    </div>
+                </div>
+            </div>
+        </div>
+    </main>
+</template>
+
+<script>
+export default {
+    nav: {
+        isSubPage: false,
+    },
+};
+</script>
+
+<style scoped lang="scss">
+main.service {
+    padding-top: 100px;
+    text-align: center;
+    font-family: 'AppleSDGothicNeo', sans-serif;
+    .key_title {
+        margin-bottom: 100px;
+    }
+    .main_desc {
+        text-align: center;
+        margin-bottom: 100px;
+        h2 {margin-bottom: 30px;}
+        p {
+            font-size: 20px;
+            letter-spacing: -0.8px;
+            line-height: 1.6;
+        }
+    }
+    .content01 {
+        text-align: center;
+        max-width: 1240px;
+        margin:0 auto;
+        h2 {margin-bottom: 50px;}
+        .content_wrap {
+            border-top:1px solid #222;
+            border-bottom:1px solid #222;
+            .content_card {
+                display: flex;
+                justify-content: space-between;
+                padding:66px 0;
+                & + .content_card {
+                    border-top:1px solid #222;
+                }
+                .card_left {
+                    text-align:left;
+                    & > span {
+                        font-size: 22px;
+                        font-weight: 700;
+                        color:#222;
+                        margin-bottom: 30px;
+                        display: block;
+                    }
+                    & > h3 {
+                        font-size: 36px;
+                        font-weight: 700;
+                        color:#222;
+                        letter-spacing: -0.4px;
+                        margin-bottom: 40px;
+                    }
+                    & > p {
+                        color: #666;
+                        font-size: 20px;
+                        letter-spacing: -0.8px;
+                        margin-bottom: 40px;
+                    }
+                    .hash {
+                        span {
+                            font-size: 20px;
+                            color:#222;
+                            letter-spacing: -0.8px;
+                            display: block;
+                            & + span {
+                                margin-top: 10px;
+                            }
+                        }
+                    }
+                }
+                .card_right {
+                    display: flex;
+                }
+            }
+        }
+    }
+}
+</style>

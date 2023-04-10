@@ -1,0 +1,204 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.dplot.mapper.AdminMenuMapper">
+
+	<!-- 상단메뉴 조회 -->
+	<select id="selectAdminMenu" parameterType="somap" resultType="somap" >
+		SELECT
+			a.code, a.name, a.url, a.description
+		FROM (<include refid="selectFnGetAdminMenuSQL"/>) a
+		WHERE a.depth = 1
+		ORDER BY a.sort
+	</select>
+
+	<!-- 서브메뉴 조회 -->
+	<select id="selectAdminSubMenu" parameterType="somap" resultType="somap">
+		SELECT
+			a.code, a.name, a.url, a.attribute, a.depth, a.description
+		FROM (<include refid="selectFnGetAdminMenuSQL"/>) a
+		WHERE a.depth > 1
+		ORDER BY a.sort ASC
+	</select>
+
+	<!-- url로 메뉴정보 조회 -->
+	<select id="selectAdminMenuInfoByUrl" parameterType="somap" resultType="somap">
+		SELECT
+			tam.code, tam.name, tam.url, tam.depth, tam.description
+		FROM t_admin_menu tam
+		WHERE tam.url= #{path}
+		AND tam.ismaster = #{ismaster}
+	</select>
+
+	<!-- 메뉴 네비게이터 조회 -->
+	<select id="selectAdminMenuNav" parameterType="somap" resultType="somap">
+		WITH tam AS (
+			SELECT
+				tam.code, tam.name, tam.url, tam.depth, tam.description,
+				substr(tam.code, 1, 1) AS depth1code,
+				(CASE WHEN tam.depth = 1 THEN NULL
+				 	  WHEN tam.depth = 2 THEN substr(tam.code, 1, 4)
+					  WHEN tam.depth = 3 THEN substr(tam.code, 1, 4)
+				 END) AS depth2Code,
+				(CASE WHEN tam.depth = 1 THEN NULL
+					  WHEN tam.depth = 2 THEN NULL
+					  WHEN tam.depth = 3 THEN tam.code
+				 END) AS depth3Code
+			FROM t_admin_menu tam	/* 관리자_메뉴 */
+			WHERE tam.code LIKE CONCAT(IFNULL(#{parentcode},'') , '%')
+			AND ismaster = #{ismaster}
+		)
+		SELECT
+			tam.code AS pageCode, tam.name AS pageName, tam.url AS pageUrl, tam.description AS description,
+			a.code AS depth1Code, b.code AS depth2Code, c.code AS depth3Code,
+			a.name AS depth1Name, b.name AS depth2Name, c.name AS depth3Name,
+			a.url AS depth1Url, (CASE WHEN c.code IS NULL THEN b.url ELSE '' END) AS depth2Url, c.url AS depth3Url
+		FROM tam
+		LEFT OUTER JOIN tam a ON tam.depth1Code = a.code
+		LEFT OUTER JOIN tam b ON tam.depth2Code = b.code
+		LEFT OUTER JOIN tam c ON tam.depth3Code = c.code
+		WHERE tam.code = #{code}
+		ORDER BY a.code, b.code, c.code
+	</select>
+
+	<!-- 메뉴 조회 -->
+	<sql id="selectFnGetAdminMenuSQL">
+		SELECT
+			t.code, t.name, t.url, t.description, t.attribute, t.depth, t.sort, t.permission, t.adminno
+	  	FROM (
+	  		SELECT
+				a.code, a.name, a.url, a.description, a.attribute, a.depth, a.sort, 1 as permission,
+				(	SELECT MIN(no)
+				 	FROM t_user
+				 	WHERE siteid IN (SELECT siteid FROM t_user WHERE no = #{authadminno})
+				 	AND userkind = 1 LIMIT 1
+				) 	AS adminno
+		  	FROM t_admin_menu a
+		  	WHERE a.code LIKE CONCAT(IFNULL(#{pagecd},'') , '%')
+			AND ismaster = 'T'
+	  		AND isuse = 'T'
+			UNION
+		  	SELECT
+				b.code, b.name, b.url, b.description, b.attribute, b.depth, b.sort,
+				(	SELECT IFNULL(COUNT(*),0)
+				  	FROM t_admin_permission
+				  	WHERE adminno=#{authadminno}
+				  	AND code = b.code
+				  	AND isread = 'T'
+				) 	AS permission,
+				#{authadminno} AS adminno
+		  	FROM t_admin_menu b
+		  	WHERE b.code LIKE CONCAT(IFNULL(#{pagecd},''),'%')
+		  	AND (SELECT MIN(no) FROM t_user WHERE siteid IN (SELECT siteid FROM t_user WHERE no = #{authadminno}) AND userkind = 1 LIMIT 1) != #{authadminno}
+		) t
+		WHERE adminno=#{authadminno} AND permission > 0
+		AND (t.attribute NOT LIKE '%hide%' OR t.attribute IS NULL)
+	</sql>
+
+	<select id="selectAdminPageAuth" parameterType="somap" resultType="somap">
+		SELECT
+			A.code, A.name, A.url, B.isread, B.iswrite
+		FROM T_ADMIN_MENU A,  T_ADMIN_PERMISSION B
+		WHERE A.CODE = B.CODE
+		  AND B.ADMINNO = #{authadminno}
+		  AND A.URL = #{url}
+		  AND A.ISUSE = 'T'
+		  AND A.ISMASTER = 'T'
+	</select>
+
+	<select id="selectPartnersSubMenu" parameterType="somap" resultType="somap">
+		SELECT
+			CODE, NAME, URL, ATTRIBUTE, DEPTH, DESCRIPTION
+			, IF(DEPTH != 1, SUBSTR(CODE, 1, 1), '') AS UPPERCODE
+		FROM T_ADMIN_MENU
+		WHERE (ATTRIBUTE NOT LIKE '%hide%' OR ATTRIBUTE IS NULL)
+		AND ISMASTER = 'F'
+		ORDER BY SORT
+	</select>
+
+	<!-- 즐겨찾기용 모든메뉴 조회(권한 미보유 및 hide 제외) -->
+	<select id="selectAdminAllMenu" parameterType="somap" resultType="somap" >
+		SELECT /* AdminMenuMapper.xml - selectAdminAllMenu  즐겨찾기용 모든메뉴 조회(권한 미보유 및 hide 제외) */
+			a.code, a.name, a.url, a.attribute, a.depth, a.description, IFNULL(a.isbookmark, 'F') as isbookmark
+		FROM (
+			SELECT
+				t.code, t.name, t.url, t.description, t.attribute, t.depth, t.sort, t.permission, t.isbookmark
+		  	FROM (
+			  	SELECT
+					b.code, b.name, b.url, b.description, b.attribute, b.depth, b.sort,
+					(	SELECT if(#{authadminno} = 1, 1, IFNULL(COUNT(*),0))
+					  	FROM t_admin_permission
+					  	WHERE adminno=#{authadminno}
+					  	AND code = b.code
+					  	and isread = 'T'
+					) 	AS permission,
+					(
+						SELECT isbookmark
+						FROM t_admin_permission
+						WHERE adminno=#{authadminno}
+						AND code = b.code
+ 					) as isbookmark
+			  	FROM t_admin_menu b
+			  	WHERE b.code LIKE CONCAT(IFNULL(#{pagecd},''),'%')
+				AND b.ISMASTER = 'T'
+				AND b.isuse = 'T'
+			) t
+			WHERE permission > 0
+			AND (t.attribute NOT LIKE '%hide%' OR t.attribute IS NULL)
+		) a
+		WHERE 1=1
+		ORDER BY a.sort ASC
+	</select>
+
+	<!-- 사용자별 메뉴 권한  -->
+	<select id="selectAdminMenuAuth" parameterType="somap" resultType="somap">
+		SELECT /* AdminMenuMapper.xml - selectAdminMenuAuth  사용자별 메뉴 권한 */
+			a.code
+			, a.name
+			, depth
+			, IFNULL(isread, 'F') as isread
+			, IFNULL(iswrite, 'F') as iswrite
+			, IFNULL(dep1span, 0) as dep1span
+			, IFNULL(dep2span, 0) as dep2span
+			, allread
+			, allwrite
+		FROM t_admin_menu a
+		LEFT JOIN t_admin_permission b ON a.code = b.code and adminno = #{authuserno}
+		LEFT JOIN (
+			SELECT SUBSTRING(a.code,1,1) AS code, MIN(IFNULL(isread,'F')) AS allread, MIN(IFNULL(iswrite,'F')) AS allwrite
+			FROM t_admin_menu a
+			LEFT JOIN t_admin_permission b ON b.code = a.code AND adminno = #{authuserno}
+			WHERE isuse = 'T'
+			GROUP BY SUBSTRING(a.code,1,1)
+		) c ON c.code = a.code
+		LEFT JOIN (
+			SELECT SUBSTRING(code,1,1) AS code, COUNT(*) + 1 AS dep1span
+			FROM t_admin_menu
+			WHERE ISUSE = 'T'
+			GROUP BY SUBSTRING(code,1,1)
+		) d on d.code = a.code
+		left join (
+			SELECT SUBSTRING(code,1,4) AS code, COUNT(*) AS dep2span
+			FROM t_admin_menu
+			WHERE ISUSE = 'T' AND depth > 1
+			GROUP BY SUBSTRING(code,1,4)
+		) e ON e.code = a.code
+		<where>
+			AND NOT EXISTS (SELECT 1 FROM t_admin_menu WHERE isuse ='F' AND a.code LIKE CONCAT(code,'%'))
+			AND ISMASTER = 'T'
+		</where>
+	</select>
+	
+	<!-- 즐겨찾기 메뉴조회  -->
+	<select id="selectAdminFavoriteMenu" parameterType="somap" resultType="somap">
+		SELECT /* AdminMenuMapper.xml - selectAdminFavoriteMenu 즐겨찾기 메뉴조회 */
+			a.code, a.name, a.url, a.attribute, a.depth, a.description, false as isactive
+		FROM t_admin_menu a
+		LEFT JOIN t_admin_permission b ON a.code = b.code
+		<where>
+			AND adminno = #{authadminno}
+			AND isbookmark = 'T'
+			AND ISMASTER = 'T'
+		</where>
+	</select>
+</mapper>

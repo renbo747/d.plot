@@ -1,0 +1,118 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.dplot.mapper.MztrendLikeMapper">
+	<select id="selectMzLikeList" parameterType="somap" resultType="somap">
+		SELECT /*MztrendLikeMapper.xml - selectMzLikeList ::brand및 trend 좋아요 목록 조회*/
+		       A.TYPE  
+		     , A.IDX
+		     , A.SUBJECT
+		     , A.CONTENTS
+		     , A.FULLPATH
+		FROM (
+			SELECT 'megazine'      AS type
+			     , tml.TRIDX    AS idx
+			     , tm2.SUBJECT   AS subject
+			     , tm.`DESC`    AS contents
+			     , FN_GET_FILE_URL(tml.tridx, 'FLT001', #{imgtype}) AS FULLPATH -- IGT111
+			     , tml.REGDATE
+			     , tml.USERNO 
+			FROM t_mztrend_like tml
+			INNER JOIN t_mztrend tm ON tml.TRIDX = tm.TRIDX
+				AND tm.ISDISPLAY  = 'T'
+				AND tm.ISTRASH = 'F'
+			INNER JOIN t_mzcate tm2 ON tm.MZCATEIDX  = tm2.MZCATEIDX
+				AND tm2.ISDISPLAY = 'T'
+				AND tm2.ISTRASH = 'F'
+			WHERE 1 = 1
+			AND date_format(now(),'%Y%m%d%H%i') between tm.TRSTTIME and tm.TREDTIME
+			AND tml.USERNO = #{userno}
+			UNION ALL 
+			SELECT 'brand' AS type
+			     , tbl.BRIDX    AS idx
+			     , tb.NAME     AS subject
+			     , tb.headcopy AS contents
+			     , FN_GET_FILE_URL(tb.IDX,'FLT001', 'IGT011') AS FULLPATH
+			     , tbl.REGDATE 
+			     , tbl.USERNO
+			FROM t_brand_like tbl
+			INNER JOIN t_brand tb ON tbl.BRIDX  = tb.idx
+			WHERE 1 = 1
+			AND ISTRASH = 'F'
+			AND tbl.USERNO = #{userno}
+			)A
+		WHERE 1 = 1
+		<if test='type != null and type != "" and type !="all"'>
+		AND TYPE = #{type}
+		</if>
+		ORDER BY REGDATE DESC
+		<if test='isnopaging != "T"'>
+		LIMIT #{startpage}, #{endpage}
+	    </if>
+   	</select>
+   	
+   	<select id="selectMzLikeListCnt" parameterType="somap" resultType="int">
+   	SELECT /*MzCateMapper.xml - selectMzLikeListCnt brand및 trend 좋아요 목록 조회수*/
+		       count(*)
+		FROM (
+			SELECT 'megazine'      AS type
+			     , tml.TRIDX    AS idx
+			     , tm2.SUBJECT   AS subject
+			     , tm.`DESC`    AS contents
+			     , FN_GET_FILE_URL(tml.tridx, 'FLT001', #{imgtype}) AS FULLPATH -- IGT111
+			     , tml.REGDATE
+			     , tml.USERNO 
+			FROM t_mztrend_like tml
+			INNER JOIN t_mztrend tm ON tml.TRIDX = tm.TRIDX
+				AND tm.ISDISPLAY  = 'T'
+				AND tm.ISTRASH = 'F'
+			INNER JOIN t_mzcate tm2 ON tm.MZCATEIDX  = tm2.MZCATEIDX
+				AND tm2.ISDISPLAY = 'T'
+				AND tm2.ISTRASH = 'F'
+			WHERE 1 = 1
+			AND date_format(now(),'%Y%m%d%H%i') between tm.TRSTTIME and tm.TREDTIME
+			AND tml.USERNO = #{userno}
+			UNION ALL 
+			SELECT 'brand' AS type
+			     , tbl.BRIDX    AS idx
+			     , tb.NAME     AS subject
+			     , tb.headcopy AS contents
+			     , FN_GET_FILE_URL(tb.IDX,'FLT001', 'IGT011') AS FULLPATH
+			     , tbl.REGDATE 
+			     , tbl.USERNO
+			FROM t_brand_like tbl
+			INNER JOIN t_brand tb ON tbl.BRIDX  = tb.idx
+			WHERE 1 = 1
+			AND ISTRASH = 'F'
+			AND tbl.USERNO = #{userno}
+			)A
+		WHERE 1 = 1
+		<if test='type != null and type != "" and type !="all"'>
+		AND TYPE = #{type}
+		</if>
+   	</select>
+   	
+   	
+   	<delete id="deleteMztrendLike" parameterType="somap">
+		DELETE /*MzCateMapper.xml - deleteMztrendLike:: 브랜드좋아요 삭제*/
+		FROM t_mztrend_like
+		WHERE USERNO = #{userno}
+		<if test='tridx != null and tridx != ""'>
+		AND TRIDX = #{tridx}
+		</if>
+	</delete>
+	
+	<insert id="insertMzTrendLike" parameterType="somap">
+		INSERT INTO t_mztrend_like 
+		(userno, tridx, regdate)
+		VALUES(#{userno}, #{tridx}, now())
+	</insert>
+	
+	<select id="selectMzTrendLikeCnt" parameterType="somap" resultType="Integer">
+		SELECT 
+			count(*)
+		FROM t_mztrend_like
+		WHERE TRIDX = #{tridx}
+	</select>
+</mapper>
+ 

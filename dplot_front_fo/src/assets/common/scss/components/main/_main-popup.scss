@@ -1,0 +1,131 @@
+.main-popup-modal {
+  position: fixed;
+  left: 0;
+  bottom: 0;
+  z-index: 4000;
+  width: 100%;
+  height: 69.5vh;
+  margin-top: auto;
+  border-radius: 20px 20px 0 0;
+  background: #fff;
+  overflow: hidden;
+  @include media-breakpoint-up(xl) {
+    border-radius: 0;
+    top: 50%;
+    left: 50%;
+    bottom: inherit;
+    transform: translate(-50%, -50%);
+    width: 500px;
+    height: 678px;
+  }
+  .bottom-sheet__body {
+    position: relative;
+    height: calc(100% - 44px);
+    @include media-breakpoint-up(xl) {
+      height: calc(100% - 58px);
+    }
+    .swiper-container {
+      height: 100%;
+    }
+    .swiper-slide {
+      width: 100%;
+    }
+    .popup-thumbnail__image{
+      width: 100%;
+      height: 100%;
+      background-repeat: no-repeat;
+      background-position: center top;
+      background-size: cover;
+    }
+    .swiper-btn__area {
+      .swiper-btn {
+        position: absolute;
+        top: 50%;
+        transform: translateY(-50%);
+        z-index: 100;
+        width: 36px;
+        height: 36px;
+        background: #000;
+        opacity: 0.2;
+        @include media-breakpoint-up(xl) {
+          width: 50px;
+          height: 50px;
+        }
+      }
+      .main-popup-btn-next {
+        right: 0;
+      }
+    }
+    .dp-icon {
+      background-position: 0 0;
+      @include media-breakpoint-up(xl) {
+        width: 50px;
+        height: 50px;
+        background-size: cover !important;
+        background-position: 0 0;
+      }
+    }
+
+    .swiper-container-horizontal > .swiper-pagination-bullets {
+      bottom: 20px;
+      line-height: 1;
+    }
+
+    .swiper-container-horizontal > .swiper-pagination-bullets .swiper-pagination-bullet {
+      margin: 0 5px;
+      @include media-breakpoint-up(xl) {
+        margin: 0 10px;
+      }
+    }
+
+    .swiper-pagination-bullet {
+      opacity: 1;
+      background: #ddd;
+      box-shadow: 0 2px 2px 0 rgba(0, 0, 0, 0.2);
+      @include media-breakpoint-up(xl) {
+        width: 10px;
+        height: 10px;
+      }
+    }
+
+    .swiper-pagination-bullet-active {
+      background: $primary;
+    }
+  }
+
+  .bottom-sheet__footer {
+    .btn-group {
+      width: 100%;
+    }
+    .btn + .btn {
+      position: relative;
+      &:after {
+        position: absolute;
+        top: 0;
+        left: 0;
+        content: '';
+        width: 1px;
+        height: 100%;
+        background: #ddd;
+      }
+    }
+    @include media-breakpoint-up(xl) {
+      .dp-btn {
+        height: 58px;
+        &:hover {
+          color: #666 !important;
+        }
+      }
+    }
+  }
+
+}
+.bottom-sheet__backdrop {
+  position: fixed;
+  top: 0;
+  left: 0;
+  z-index: 2000;
+  width: 100%;
+  height: 100%;
+  background: rgba(0,0,0,.2);
+}

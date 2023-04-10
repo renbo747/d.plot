@@ -1,0 +1,16 @@
+.raffle-modal-container {
+    .modal-dialog{
+        max-width:700px;
+    }
+    .raffle-modal-container_winner {
+        max-width: 500px;
+    }
+    @media (max-width: 500px){
+        .modal-dialog{
+            max-width:100%;
+        }
+        .raffle-modal-container_winner {
+            max-width: 100%;
+        }   
+    }
+}

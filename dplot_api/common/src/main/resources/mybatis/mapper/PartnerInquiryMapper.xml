@@ -1,0 +1,298 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.dplot.mapper.PartnerInquiryMapper">
+
+    <!-- 파트너사 문의 조회 -->
+    <select id="selectPartnerInquiryList" parameterType="somap" resultType="somap">
+    	/* PartnerInquiryMapper.xml - selectPartnerInquiryList */
+        SELECT
+            @ROWNUM := @ROWNUM + 1 AS rn,
+            a.*
+        FROM (
+            SELECT a.idx,
+                   a.ordno,                                                             -- 주문번호
+                   a.subject,                                                           -- 제목
+                   a.writer,                                                            -- 작성자
+                   a.content,                                                           -- 내용
+                   date_format(a.regdate, '%Y-%m-%d %H:%i:%s')    AS regdate,           -- 등록일
+                   c.name               AS dealername,                                  -- 업체이름
+                   b.chargename,                                                        -- 담당자 이름
+                   date_format(a.repregdate, '%Y-%m-%d %H:%i:%s')    AS repregdate,     -- 답변일시
+                   if(a.isreply = 'T', '완료', '대기') AS isreply,                      -- 상태
+                   if(a.isreply = 'T', 'bg', '') AS style                               -- 스타일
+            FROM t_partner_inquiry a
+                     LEFT JOIN t_dealer_charge b ON a.partchargeidx = b.idx
+                     LEFT JOIN t_dealer c ON a.dealerno = c.userno
+            WHERE 1 = 1
+              AND siteid = #{siteid}
+              AND istrash = 'F'
+              -- 검색조건
+              <if test="sword != null and sword != ''">
+                  <choose>
+                      <when test="skey == 'dealername'">
+                          AND c.name LIKE concat('%',#{sword}, '%') -- 업체 이름
+                      </when>
+                      <when test="skey == 'charge'">
+                          AND b.chargename LIKE concat('%', #{sword}, '%') -- 담당자 이름
+                      </when>
+                      <when test="skey == 'subject'">
+                          AND a.subject LIKE concat('%', #{sword}, '%') -- 질문제목
+                      </when>
+                      <when test="skey == 'ordno'">
+                          AND a.ordno LIKE concat('%', #{sword}, '%') -- 주문번호
+                      </when>
+                      <when test="skey == 'writer'">
+                          AND a.writer LIKE concat('%', #{sword}, '%') -- 질문자
+                      </when>
+                      <otherwise>
+                          AND (
+                          a.subject LIKE concat('%', #{sword}, '%') -- 제목
+						  <if test="isadmin == true">
+                          OR b.chargename LIKE concat('%', #{sword}, '%') -- 담당자 이름
+                          OR c.name LIKE concat('%',#{sword}, '%') -- 업체 이름
+                          </if>
+						  <if test="isadmin == false">
+                          OR a.ordno LIKE concat('%', #{sword}, '%') -- 주문번호
+                          OR a.writer LIKE concat('%',#{sword}, '%') -- 질문자
+                          </if>
+                          )
+                      </otherwise>
+                  </choose>
+              </if>
+              <if test="sword == null or sword == ''">
+              <if test="sdate !=null and sdate !='' ">
+                  <choose>
+                      <when test="sdate == 'start'">
+                          AND str_to_date(a.regdate, '%Y-%m-%d') BETWEEN #{startdate} AND #{enddate}
+                      </when>
+                      <when test="sdate == 'end'">
+                          AND str_to_date(a.repregdate, '%Y-%m-%d') BETWEEN #{startdate} AND #{enddate}
+                      </when>
+                  </choose>
+              </if>
+              </if>
+              <if test="isreply != null and isreply != ''">
+                  AND a.isreply = #{isreply}
+              </if>
+              <if test="dealerno != null and dealerno != ''">
+                  AND a.dealerno = #{dealerno}
+              </if>
+              -- /검색조건
+             ) a, (SELECT @ROWNUM := #{startpage}) AS b
+        <choose>
+            <when test="psort == 'ordno_desc'">
+                ORDER BY a.ordno DESC
+            </when>
+            <when test="psort == 'ordno_asc'">
+                ORDER BY a.ordno ASC
+            </when>
+            <when test="psort == 'subject_desc'">
+                ORDER BY a.subject DESC
+            </when>
+            <when test="psort == 'subject_asc'">
+                ORDER BY a.subject ASC
+            </when>
+            <when test="psort == 'regdate_desc'">
+                ORDER BY a.regdate DESC
+            </when>
+            <when test="psort == 'regdate_asc'">
+                ORDER BY a.regdate ASC
+            </when>
+            <when test="psort == 'dealername_desc'">
+                ORDER BY a.dealername DESC
+            </when>
+            <when test="psort == 'dealername_asc'">
+                ORDER BY a.dealername ASC
+            </when>
+            <when test="psort == 'repregdate_desc'">
+                ORDER BY a.repregdate DESC
+            </when>
+            <when test="psort == 'repregdate_asc'">
+                ORDER BY a.repregdate ASC
+            </when>
+            <when test="psort == 'isreply_desc'">
+                ORDER BY a.isreply DESC
+            </when>
+            <when test="psort == 'isreply_asc'">
+                ORDER BY a.isreply ASC
+            </when>
+            <otherwise>
+                ORDER BY a.regdate DESC
+            </otherwise>
+        </choose>
+        LIMIT #{startpage}, #{endpage} -- 페이징
+    </select>
+
+    <!-- 파트너사 문의 상세 -->
+    <select id="selectPartnerInquiryDtl" parameterType="somap" resultType="somap">
+        SELECT a.writer                                                         -- 작성자
+             , date_format(a.regdate, '%Y-%m-%d %H:%i:%s')        AS regdate    -- 등록일
+             , if(a.isreply = 'T', '완료', '대기')                AS isreply    -- 상태
+             , c.name                                             AS dealername -- 파트너사 이름
+             , a.subject                                                        -- 제목
+             , a.partchargeidx                                                  -- 담장자 no
+             , a.ordno                                                          -- 주문번호
+             , a.content                                                        -- 질문 내용
+             , a.repuserno														-- 답변자번호
+             , d.name AS repname                                                -- 답변자 이름
+             , date_format(a.repregdate, '%Y-%m-%d %H:%i:%s') AS repregdate -- 답변일시
+             , a.repcontent
+             , a.dealerno
+             , a.idx
+        FROM t_partner_inquiry a
+                 LEFT JOIN t_dealer_charge b ON a.partchargeidx = b.idx
+                 LEFT JOIN t_dealer c ON b.userno = c.userno
+                 LEFT JOIN t_dealer d ON a.repuserno = d.userno
+        WHERE 1 = 1
+          AND a.siteid = #{siteid}
+          AND a.idx = #{idx}
+    </select>
+
+    <!-- 파트너사 문의 상태 값 (전체, 대기, 완료) -->
+    <select id="selectPartnerInquiryListState" parameterType="somap" resultType="somap">
+        SELECT
+             count(*) AS total
+             ,  ifnull(sum(a.comp), 0) AS comp
+             , ifnull(sum(a.stay), 0) AS stay
+        FROM (
+                 SELECT if(a.isreply = 'T', 1, 0) AS comp
+                      , if(a.isreply = 'F', 1, 0) AS stay
+                 FROM t_partner_inquiry a
+                          LEFT JOIN t_dealer_charge b ON a.partchargeidx = b.idx
+                          LEFT JOIN t_dealer c ON b.userno = c.userno
+                          WHERE 1 = 1
+                          AND siteid = #{siteid}
+                          -- 검색조건
+                          <if test="sword != null and sword != ''">
+                              <choose>
+                                  <when test="skey == 'dealername'">
+                                      AND c.name LIKE concat('%',#{sword}, '%') -- 업체 이름
+                                  </when>
+                                  <when test="skey == 'charge'">
+                                      AND b.chargename LIKE concat('%', #{sword}, '%') -- 담당자 이름
+                                  </when>
+                                  <when test="skey == 'subject'">
+			                          AND a.subject LIKE concat('%', #{sword}, '%') -- 질문제목
+			                      </when>
+			                      <when test="skey == 'ordno'">
+			                          AND a.ordno LIKE concat('%', #{sword}, '%') -- 주문번호
+			                      </when>
+			                      <when test="skey == 'writer'">
+			                          AND a.writer LIKE concat('%', #{sword}, '%') -- 질문자
+			                      </when>
+			                      <otherwise>
+			                          AND (
+			                          a.subject LIKE concat('%', #{sword}, '%') -- 제목
+									  <if test="isadmin == true">
+			                          OR b.chargename LIKE concat('%', #{sword}, '%') -- 담당자 이름
+			                          OR c.name LIKE concat('%',#{sword}, '%') -- 업체 이름
+			                          </if>
+									  <if test="isadmin == false">
+			                          OR a.ordno LIKE concat('%', #{sword}, '%') -- 주문번호
+			                          OR a.writer LIKE concat('%',#{sword}, '%') -- 질문자
+			                          </if>
+			                          )
+			                      </otherwise>
+                              </choose>
+                          </if>
+                          <if test="sdate !=null and sdate !='' ">
+                              <choose>
+                                  <when test="sdate == 'start'">
+                                      AND str_to_date(a.regdate, '%Y-%m-%d') BETWEEN #{startdate} AND #{enddate}
+                                  </when>
+                                  <when test="sdate == 'end'">
+                                      AND str_to_date(a.repregdate, '%Y-%m-%d') BETWEEN #{startdate} AND #{enddate}
+                                  </when>
+                              </choose>
+                          </if>
+                          <if test="isreply != null and isreply != ''">
+                              AND a.isreply = #{isreply}
+                          </if>
+                          <if test="dealerno != null and dealerno != ''">
+			                  AND a.dealerno = #{dealerno}
+			              </if>
+                          -- /검색조건
+             ) a
+    </select>
+
+    <!-- 파트너사 문의 저장 -->
+    <insert id="insertPartnerInquiry" parameterType="somap">
+        INSERT INTO t_partner_inquiry
+        VALUES (
+                null
+                , #{siteid}
+                , #{userno}
+                , #{writer}
+                , #{subject}
+                , #{content}
+                , #{dealerno, jdbcType=INTEGER}
+                , #{partchargeidx, jdbcType=INTEGER}
+                , #{ordno, jdbcType=VARCHAR}
+                , #{repuserno, jdbcType=INTEGER}
+                , #{repcontent, jdbcType=VARCHAR}
+                , #{isreply}
+                , #{repregdate, jdbcType=DATE}
+                , now()
+                , #{istrash}
+                )
+    </insert>
+
+    <!-- 파트너사 문의 수정 -->
+    <update id="updatePartnerInquiry" parameterType="somap">
+        UPDATE t_partner_inquiry
+        <set>
+            <if test="isreply != null">
+                isreply = #{isreply},
+            </if>
+            <if test="partchargeidx != null">
+                partchargeidx = if(#{partchargeidx}='', null, #{partchargeidx}),
+            </if>
+            <if test="subject != null">
+                subject = #{subject},
+            </if>
+            <if test="content != null">
+                content = #{content},
+            </if>
+            <if test="dealerno != null">
+                dealerno = if(#{dealerno}='', null, #{dealerno}),
+            </if>
+            <if test="ordno != null">
+                ordno = #{ordno},
+            </if>
+            <if test="repuserno != null">
+                repuserno = if(#{repuserno}='', null, #{repuserno}),
+            </if>
+            <if test="repcontent != null">
+                repcontent = #{repcontent},
+            </if>
+            <if test="repregdate != null">
+                repregdate = now()
+            </if>
+            <if test="istrash != null">
+                istrash = #{istrash}
+            </if>
+        </set>
+        WHERE 1 = 1
+        <if test="idx != null and idx != ''">
+            AND idx = #{idx}
+        </if>
+        <if test="idxlist != null and idxlist.size > 0">
+            AND idx IN
+            <foreach collection="idxlist" open="(" separator="," close=")" item="item">
+                #{item}
+            </foreach>
+        </if>
+    </update>
+
+    <select id="selectPartnerInquiryDashBoard" parameterType="somap" resultType="somap">
+        SELECT
+            COUNT(*) AS INQUIRY
+        FROM T_PARTNER_INQUIRY
+        WHERE SITEID = #{siteid}
+          AND ISTRASH = 'F'
+          AND ISREPLY = 'F'
+          AND DEALERNO = #{userno}
+    </select>
+
+</mapper>

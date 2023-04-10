@@ -1,0 +1,64 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.dplot.mapper.NotifyTplItemMapper">
+	<!-- 정보고시항목 목록 조회 -->
+	<select id="selectNotifyTplItemList" parameterType="somap" resultType="somap">
+		SELECT	/* NotifyTplItemMapper.xml - selectNotifyTplItemList 정보고시항목 목록 조회 */
+			tnti.notifytplidx, tnti.no AS notifyitemidx, tnt.title AS notifytpltitle, tnti.notifyname, tnti.notifydata
+		FROM t_notify_tpl_item tnti
+		INNER JOIN t_notify_tpl tnt ON tnti.notifytplidx = tnt.idx
+		WHERE tnti.notifytplidx = #{notifytplidx}
+    </select>
+    
+    <!-- 상품정보고시항목 저장 -->
+	<insert id="saveNotifyTplItem" parameterType="somap">
+		<selectKey keyProperty="no" resultType="int" order="BEFORE">
+			SELECT IFNULL(MAX(no), 0) + 1	/* 상품정보고시템플릿아이템 번호 채번 */
+			FROM t_notify_tpl_item
+			WHERE notifytplidx = #{idx}
+		</selectKey>
+		INSERT INTO t_notify_tpl_item /* NotifyTplItemMapper.xml - saveNotifyTplItem 상품정보고시항목 저장 */
+		(notifytplidx, no, notifyname, notifydata)
+		VALUES
+		<foreach collection="itemlist" item="item" index="index" separator="," close="">
+		    (	  #{idx}
+		    	, #{no} + #{index}
+		    	, #{item.notifyname}
+		    	, #{item.notifydata}
+		    )
+	    </foreach>
+	</insert>
+	
+	
+    <!-- 상품정보고시항목 삭제 -->
+	<delete id="removeNotifyTplItem" parameterType="somap">
+		DELETE FROM t_notify_tpl_item  /* NotifyTplItemMapper.xml - removeNotifyTplItem 상품정보고시항목 저장 */
+		WHERE notifytplidx = #{idx}
+		AND no IN
+		<foreach collection="removeitemlist" item="item" open="(" separator="," close=")">
+			#{item}
+	    </foreach>
+	</delete>
+	
+	<!-- 상품정보고시항목 수정 -->
+	<update id="modifyNotifyTplItem" parameterType="somap">
+		UPDATE t_notify_tpl_item /* NotifyTplItemMapper.xml - modifyNotifyTplItem 상품정보고시항목 수정 */
+		SET 
+		notifyname = CASE no  
+		<foreach collection="itemlist" item="item">
+        	WHEN #{item.notifyitemidx} THEN #{item.notifyname}
+        </foreach>
+        END,
+        notifydata = CASE no  
+		<foreach collection="itemlist" item="item">
+        	WHEN #{item.notifyitemidx} THEN #{item.notifydata}
+        </foreach>
+        END
+		WHERE notifytplidx = #{idx} 
+		AND no IN
+		<foreach collection="itemlist" item="item" open="(" separator="," close=")">
+        	#{item.notifyitemidx}
+        </foreach>
+	</update>
+</mapper>

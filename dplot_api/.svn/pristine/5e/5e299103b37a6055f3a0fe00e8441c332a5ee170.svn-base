@@ -1,0 +1,603 @@
+package com.dplot.security.model;
+
+import java.io.Serializable;
+import java.sql.Date;
+import java.util.Collection;
+import java.util.List;
+
+import org.springframework.security.core.GrantedAuthority;
+import org.springframework.security.core.userdetails.UserDetails;
+
+import com.dplot.security.domain.Role;
+
+/**
+ * 	T_DEALER(입점업체) TABLE.
+ */
+public class Dealer implements Serializable, UserDetails {
+
+	/** The Constant serialVersionUID. */
+	private static final long serialVersionUID = 1L;
+
+	/** The userno. */
+	private Integer userno; 							// userno INTEGER(22) 사용자_번호
+
+	/** The userno. */
+	private String userid; 							// userno VARCHAR(22) 아이디
+
+	/** The name. */
+	private String name; 							// name NVARCHAR2(300) 입점업체명
+
+	/** The dealertype. */
+	private Integer dealertype; 						// dealertype INTEGER(22) 입점업체유형
+
+	/** The accountcycle. */
+	private Integer accountcycle; 						// accountcycle INTEGER(22) 정산주기
+
+	/** The cmstype. */
+	private String cmstype; 						// cmstype NVARCHAR2(60) 수수료설정구분
+
+	/** The cmsrate. */
+	private double cmsrate; 							// cmsrate INTEGER(22) 입점업체당_수수료율
+
+	/** The deliverymethod. */
+	private String deliverymethod; 					// deliverymethod NVARCHAR2(60) 배송비구분
+
+	/** The deliveryfee. */
+	private Integer deliveryfee; 						// deliveryfee INTEGER(22) 배송료
+
+	/** The deliverylimit. */
+	private Integer deliverylimit; 						// deliverylimit INTEGER(22) 배송료_무료한도
+
+	/** The deliverycontent. */
+	private String deliverycontent; 				// deliverycontent NCLOB(4000) 배송정책
+
+	/** The refundcontent. */
+	private String refundcontent; 					// refundcontent NCLOB(4000) 교환환불정책
+
+	/** The state. */
+	private String state; 							// state NVARCHAR2(60) 입점업체_상태
+
+	/** The state2. */
+	private String state2; 							// state for UPDATE
+
+	/** The confirmdate. */
+	private Date confirmdate; 						// confirmdate DATE(7) 승인일자
+
+	/** The isconvert. */
+	private String isconvert; 						// isconvert NCHAR(3) 사업자_전환신청상태
+
+	/** The convertdate. */
+	private Date convertdate; 						// convertdate DATE(7) 사업자_전환신청일
+
+	/** The cmoneypolicy. */
+	private Integer cmoneypolicy; 						// cmoneypolicy INTEGER(22) 적립금_지급정책
+
+	/** The cmoneyvalue. */
+	private double cmoneyvalue; 						// cmoneyvalue INTEGER(22) 적립금_지급폭
+
+
+	private String refundPost;						//판품/교환 수령 주소지 우편번호
+
+	private String refundAddr;						//판품/교환 수령 주소지 주소
+
+	private String refundAddrDetail;				//판품/교환 수령 주소지 주소 상세
+
+	private String usertype;
+
+	private String dealerst;
+	private String reqDealst;
+	private int templateCnt;
+	private Long pwfailcnt;
+
+	/** 스프링 시큐리티용 */
+	private List<Role> authorities;
+	private boolean accountNonExpired = true;
+	private boolean accountNonLocked = true;
+	private boolean credentialsNonExpired = true;
+	private boolean enabled = true;
+	private String username;
+	private String password;
+	private String chargename;
+	private String chargemobile;
+	/** 중복 로그인 체크용*/
+	private String securecode;
+
+	public String getRefundPost() {
+		return refundPost;
+	}
+
+	public void setRefundPost(String refundPost) {
+		this.refundPost = refundPost;
+	}
+
+	public String getRefundAddr() {
+		return refundAddr;
+	}
+
+	public void setRefundAddr(String refundAddr) {
+		this.refundAddr = refundAddr;
+	}
+
+	public String getRefundAddrDetail() {
+		return refundAddrDetail;
+	}
+
+	public void setRefundAddrDetail(String refundAddrDetail) {
+		this.refundAddrDetail = refundAddrDetail;
+	}
+
+	/**
+	 * Gets the userno.
+	 *
+	 * @return the userno
+	 */
+	public Integer getUserno() {
+		return userno;
+	}
+
+	/**
+	 * Sets the userno.
+	 *
+	 * @param userno the new userno
+	 */
+	public void setUserno(Integer userno) {
+		this.userno = userno;
+	}
+
+
+	/**
+	 * @return the userid
+	 */
+	public String getUserid() {
+		return userid;
+	}
+
+	/**
+	 * @param userid the userid to set
+	 */
+	public void setUserid(String userid) {
+		this.userid = userid;
+	}
+
+	/**
+	 * Gets the name.
+	 *
+	 * @return the name
+	 */
+	public String getName() {
+		return name;
+	}
+
+	/**
+	 * Sets the name.
+	 *
+	 * @param name the new name
+	 */
+	public void setName(String name) {
+		this.name = name;
+	}
+
+	/**
+	 * Gets the dealertype.
+	 *
+	 * @return the dealertype
+	 */
+	public Integer getDealertype() {
+		return dealertype;
+	}
+
+	/**
+	 * Sets the dealertype.
+	 *
+	 * @param dealertype the new dealertype
+	 */
+	public void setDealertype(Integer dealertype) {
+		this.dealertype = dealertype;
+	}
+
+	/**
+	 * Gets the accountcycle.
+	 *
+	 * @return the accountcycle
+	 */
+	public Integer getAccountcycle() {
+		return accountcycle;
+	}
+
+	/**
+	 * Sets the accountcycle.
+	 *
+	 * @param accountcycle the new accountcycle
+	 */
+	public void setAccountcycle(Integer accountcycle) {
+		this.accountcycle = accountcycle;
+	}
+
+	/**
+	 * Gets the cmstype.
+	 *
+	 * @return the cmstype
+	 */
+	public String getCmstype() {
+		return cmstype;
+	}
+
+	/**
+	 * Sets the cmstype.
+	 *
+	 * @param cmstype the new cmstype
+	 */
+	public void setCmstype(String cmstype) {
+		this.cmstype = cmstype;
+	}
+
+	/**
+	 * Gets the cmsrate.
+	 *
+	 * @return the cmsrate
+	 */
+	public double getCmsrate() {
+		return cmsrate;
+	}
+
+	/**
+	 * Sets the cmsrate.
+	 *
+	 * @param cmsrate the new cmsrate
+	 */
+	public void setCmsrate(double cmsrate) {
+		this.cmsrate = cmsrate;
+	}
+
+	/**
+	 * Gets the deliverymethod.
+	 *
+	 * @return the deliverymethod
+	 */
+	public String getDeliverymethod() {
+		return deliverymethod;
+	}
+
+	/**
+	 * Sets the deliverymethod.
+	 *
+	 * @param deliverymethod the new deliverymethod
+	 */
+	public void setDeliverymethod(String deliverymethod) {
+		this.deliverymethod = deliverymethod;
+	}
+
+	/**
+	 * Gets the deliveryfee.
+	 *
+	 * @return the deliveryfee
+	 */
+	public Integer getDeliveryfee() {
+		return deliveryfee;
+	}
+
+	/**
+	 * Sets the deliveryfee.
+	 *
+	 * @param deliveryfee the new deliveryfee
+	 */
+	public void setDeliveryfee(Integer deliveryfee) {
+		this.deliveryfee = deliveryfee;
+	}
+
+	/**
+	 * Gets the deliverylimit.
+	 *
+	 * @return the deliverylimit
+	 */
+	public Integer getDeliverylimit() {
+		return deliverylimit;
+	}
+
+	/**
+	 * Sets the deliverylimit.
+	 *
+	 * @param deliverylimit the new deliverylimit
+	 */
+	public void setDeliverylimit(Integer deliverylimit) {
+		this.deliverylimit = deliverylimit;
+	}
+
+	/**
+	 * Gets the deliverycontent.
+	 *
+	 * @return the deliverycontent
+	 */
+	public String getDeliverycontent() {
+		return deliverycontent;
+	}
+
+	/**
+	 * Sets the deliverycontent.
+	 *
+	 * @param deliverycontent the new deliverycontent
+	 */
+	public void setDeliverycontent(String deliverycontent) {
+		this.deliverycontent = deliverycontent;
+	}
+
+	/**
+	 * Gets the refundcontent.
+	 *
+	 * @return the refundcontent
+	 */
+	public String getRefundcontent() {
+		return refundcontent;
+	}
+
+	/**
+	 * Sets the refundcontent.
+	 *
+	 * @param refundcontent the new refundcontent
+	 */
+	public void setRefundcontent(String refundcontent) {
+		this.refundcontent = refundcontent;
+	}
+
+	/**
+	 * Gets the state.
+	 *
+	 * @return the state
+	 */
+	public String getState() {
+		return state;
+	}
+
+	/**
+	 * Sets the state.
+	 *
+	 * @param state the new state
+	 */
+	public void setState(String state) {
+		this.state = state;
+	}
+
+	public String getState2() {
+		return state2;
+	}
+
+	public void setState2(String state2) {
+		this.state2 = state2;
+	}
+
+	/**
+	 * Gets the confirmdate.
+	 *
+	 * @return the confirmdate
+	 */
+	public Date getConfirmdate() {
+		return confirmdate;
+	}
+
+	/**
+	 * Sets the confirmdate.
+	 *
+	 * @param confirmdate the new confirmdate
+	 */
+	public void setConfirmdate(Date confirmdate) {
+		this.confirmdate = confirmdate;
+	}
+
+	/**
+	 * Gets the isconvert.
+	 *
+	 * @return the isconvert
+	 */
+	public String getIsconvert() {
+		return isconvert;
+	}
+
+	/**
+	 * Sets the isconvert.
+	 *
+	 * @param isconvert the new isconvert
+	 */
+	public void setIsconvert(String isconvert) {
+		this.isconvert = isconvert;
+	}
+
+	/**
+	 * Gets the convertdate.
+	 *
+	 * @return the convertdate
+	 */
+	public Date getConvertdate() {
+		return convertdate;
+	}
+
+	/**
+	 * Sets the convertdate.
+	 *
+	 * @param convertdate the new convertdate
+	 */
+	public void setConvertdate(Date convertdate) {
+		this.convertdate = convertdate;
+	}
+
+	/**
+	 * Gets the cmoneypolicy.
+	 *
+	 * @return the cmoneypolicy
+	 */
+	public Integer getCmoneypolicy() {
+		return cmoneypolicy;
+	}
+
+	/**
+	 * Sets the cmoneypolicy.
+	 *
+	 * @param cmoneypolicy the new cmoneypolicy
+	 */
+	public void setCmoneypolicy(Integer cmoneypolicy) {
+		this.cmoneypolicy = cmoneypolicy;
+	}
+
+	/**
+	 * Gets the cmoneyvalue.
+	 *
+	 * @return the cmoneyvalue
+	 */
+	public double getCmoneyvalue() {
+		return cmoneyvalue;
+	}
+
+	/**
+	 * Sets the cmoneyvalue.
+	 *
+	 * @param cmoneyvalue the new cmoneyvalue
+	 */
+	public void setCmoneyvalue(double cmoneyvalue) {
+		this.cmoneyvalue = cmoneyvalue;
+	}
+
+	@Override
+	public String toString() {
+		return "Dealer [userno=" + userno + ", userid=" + userid + ", name=" + name + ", dealertype=" + dealertype + ", accountcycle="
+				+ accountcycle + ", cmstype=" + cmstype + ", cmsrate=" + cmsrate + ", deliverymethod=" + deliverymethod
+				+ ", deliveryfee=" + deliveryfee + ", deliverylimit=" + deliverylimit + ", deliverycontent="
+				+ deliverycontent + ", refundcontent=" + refundcontent + ", state=" + state + ", state2=" + state2
+				+ ", confirmdate=" + confirmdate + ", isconvert=" + isconvert + ", convertdate=" + convertdate
+				+ ", cmoneypolicy=" + cmoneypolicy + ", cmoneyvalue=" + cmoneyvalue + ", refundPost=" + refundPost
+				+ ", refundAddr=" + refundAddr + ", refundAddrDetail=" + refundAddrDetail + "]";
+	}
+
+	//스프링 시큐리티 추가
+	@Override
+	public Collection<? extends GrantedAuthority> getAuthorities() {
+		// TODO Auto-generated method stub
+		return this.authorities;
+	}
+
+	@Override
+	public String getPassword() {
+		// TODO Auto-generated method stub
+		return this.password;
+	}
+
+	@Override
+	public String getUsername() {
+		// TODO Auto-generated method stub
+		return this.username;
+	}
+
+	@Override
+	public boolean isAccountNonExpired() {
+		// TODO Auto-generated method stub
+		return this.accountNonExpired;
+	}
+
+	@Override
+	public boolean isAccountNonLocked() {
+		// TODO Auto-generated method stub
+		return this.accountNonLocked;
+	}
+
+	@Override
+	public boolean isCredentialsNonExpired() {
+		// TODO Auto-generated method stub
+		return this.credentialsNonExpired;
+	}
+
+	@Override
+	public boolean isEnabled() {
+		// TODO Auto-generated method stub
+		return this.enabled;
+	}
+
+	public void setAuthorities(List<Role> authorities) {
+		this.authorities = authorities;
+	}
+
+	public void setAccountNonExpired(boolean accountNonExpired) {
+		this.accountNonExpired = accountNonExpired;
+	}
+
+	public void setAccountNonLocked(boolean accountNonLocked) {
+		this.accountNonLocked = accountNonLocked;
+	}
+
+	public void setCredentialsNonExpired(boolean credentialsNonExpired) {
+		this.credentialsNonExpired = credentialsNonExpired;
+	}
+
+	public void setEnabled(boolean enabled) {
+		this.enabled = enabled;
+	}
+
+	public void setUsername(String username) {
+		this.username = username;
+	}
+
+	public void setPassword(String password) {
+		this.password = password;
+	}
+
+	public String getSecurecode() {
+		return securecode;
+	}
+
+	public void setSecurecode(String securecode) {
+		this.securecode = securecode;
+	}
+
+	public String getUsertype() {
+		return usertype;
+	}
+
+	public void setUsertype(String usertype) {
+		this.usertype = usertype;
+	}
+
+	public String getDealerst() {
+		return dealerst;
+	}
+
+	public void setDealerst(String dealerst) {
+		this.dealerst = dealerst;
+	}
+
+	public String getReqDealst() {
+		return reqDealst;
+	}
+
+	public void setReqDealst(String reqDealst) {
+		this.reqDealst = reqDealst;
+	}
+
+	public int getTemplateCnt() {
+		return templateCnt;
+	}
+
+	public void setTemplateCnt(int templateCnt) {
+		this.templateCnt = templateCnt;
+	}
+
+	public String getChargename() {
+		return chargename;
+	}
+
+	public void setChargename(String chargename) {
+		this.chargename = chargename;
+	}
+
+	public String getChargemobile() {
+		return chargemobile;
+	}
+
+	public void setChargemobile(String chargemobile) {
+		this.chargemobile = chargemobile;
+	}
+
+	public Long getPwfailcnt() {
+		return pwfailcnt;
+	}
+
+	public void setPwfailcnt(Long pwfailcnt) {
+		this.pwfailcnt = pwfailcnt;
+	}
+}

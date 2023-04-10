@@ -1,0 +1,40 @@
+.dp-withdraw-complete-pc {
+  width: 400px;
+  padding-top: 100px;
+  margin: 0 auto;
+  .withdraw-complete_title__area {
+    padding-bottom: 56px;
+    .withdraw-complete_title {
+      text-align: center;
+      font-size: 26px;
+      letter-spacing: -1.04px;
+      line-height: 22px;
+      font-weight: 700;
+      padding-bottom: 40px;
+    }
+  }
+  .withdraw-complete__body {
+    .dp-logo_-area {
+      padding-bottom: 28px;
+      .dp-logo {
+        width: 230px;
+        height: 51px;
+        display: inline-flex;
+        background-size: 230px 51px !important;
+        background: url('~@/assets/mobile/img/footer-logo.svg') no-repeat 0;
+      }
+    }
+    .withdraw-complete__text-area {
+      .withdraw-complete__text {
+        font-size: 18px;
+        letter-spacing: -.72px;
+        line-height: 28px;
+        text-align: center;
+        color: $gray-700;
+      }
+    }
+  }
+  .withdraw-complete__footer {
+    padding-top: 50px;
+  }
+}

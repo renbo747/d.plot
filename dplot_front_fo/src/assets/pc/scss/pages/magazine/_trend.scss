@@ -1,0 +1,66 @@
+.dp-magazine-trend-pc {
+  .magazine-trend__header {
+    padding-top: 100px;
+    .trend__header__title__area {
+      padding-bottom: 40px;
+      .trend__header__title {
+        font-size: 42px;
+        letter-spacing: -1.26px;
+        line-height: 40px;
+        font-weight: 600;
+
+      }
+    }
+
+    .trend-sort__ul__wrap {
+      padding-bottom: 60px;
+    }
+  }
+  .magazine__trend__contents__section {
+    .trend__contents__wrap {
+      li {
+        padding: 0;
+      }
+      li:nth-child(2) {
+        margin-top: 0;
+      }
+      li:nth-child(2n) {
+        padding-left: 10px;
+      }
+      li:nth-child(2n-1) {
+        padding-right: 10px;
+      }
+      li + li {
+        margin-top: 120px;
+      }
+      .card__img {
+        cursor: pointer;
+        width: 100%;
+
+        img {
+          height: 450px;
+          object-fit: cover;
+        }
+      }
+
+      .card__label {
+        min-width: 100px;
+        height: 70px;
+        font-size: 16px;
+        letter-spacing: -.64px;
+      }
+      .card__contents {
+        margin-top: 16px;
+      }
+      .card__title {
+        margin-bottom: 0;
+        font-size: 26px;
+        letter-spacing: -1.04px;
+        line-height: 36px;
+        font-weight: 700;
+      }
+    }
+  }
+
+
+}

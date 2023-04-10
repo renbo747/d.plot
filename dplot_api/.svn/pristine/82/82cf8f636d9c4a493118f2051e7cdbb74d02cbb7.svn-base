@@ -1,0 +1,606 @@
+package com.dplot.admin.service.member;
+
+import com.dplot.common.CMConst;
+import com.dplot.common.SOMap;
+import com.dplot.common.service.CJMessageService;
+import com.dplot.common.service.ERPService;
+import com.dplot.common.service.util.MallBaseService;
+import com.dplot.mapper.*;
+import com.dplot.util.CryptHash;
+import com.dplot.util.ServletRequestInfoUtil;
+import com.dplot.util.Util;
+import org.apache.commons.lang3.RandomStringUtils;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Propagation;
+import org.springframework.transaction.annotation.Transactional;
+import org.springframework.transaction.interceptor.TransactionAspectSupport;
+
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.stream.Collectors;
+
+@Service
+public class AdminMemberServiceImpl extends MallBaseService implements AdminMemberService{
+
+    @Autowired
+    private MemberMapper memberMapper;
+
+    @Autowired
+    private MemberSnsMapper memberSnsMapper;
+
+    @Autowired
+    private MemberSleepMapper memberSleepMapper;
+
+    @Autowired
+    private MemberMemoMapper memberMemoMapper;
+
+    @Autowired
+    private UserLogMapper userLogMapper;
+
+    @Autowired
+    private InquiryMapper inquiryMapper;
+
+    @Autowired
+    private UserMapper userMapper;
+
+    @Autowired
+    private MemberAddressMapper memberAddressMapper;
+
+    @Autowired
+    private MemberHistoryMapper memberHistoryMapper;
+
+    @Autowired
+    private ReservePayMapper reservePayMapper;
+
+    @Autowired
+    private EpointPayMapper epointPayMapper;
+
+    @Autowired
+    private WishMapper wishMapper;
+
+    @Autowired
+    private ComCartMapper comCartMapper;
+
+    @Autowired
+    private CouponMemissueMapper couponMemissueMapper;
+
+    @Autowired
+    private GoodsReviewMapper goodsReviewMapper;
+
+    @Autowired
+    private CJMessageService cjMessageService;
+
+    @Autowired
+    private ComOrderMapper comOrderMapper;
+
+    @Autowired
+    private ERPService erpService;
+
+    @Override
+    public SOMap selectMemberList(SOMap param) throws Exception {
+        SOMap result = new SOMap();
+
+        //페이징 데이터
+        int page = Integer.parseInt(param.get("page").toString());
+        int pageCount = Integer.parseInt(param.get("pagecount").toString());
+        int startPage = (page > 1) ? ((page-1) * pageCount) : 0;
+
+        //기본 사항 SITE ID
+        param.put("siteid", cs.getStr("siteid"));
+        param.put("startpage", startPage);
+        param.put("endpage", pageCount);
+
+        SOMap countInfo = memberMapper.selectAdminMemberManageListCount(param);
+
+        result.put("list", memberMapper.selectAdminMemberManageList(param));
+        result.put("listcount", countInfo.get("total"));
+        result.put("today", countInfo.get("today"));
+        return result;
+    }
+
+    @Override
+    public List<Map<String, Object>> selectMemberExcelList(SOMap params) throws Exception {
+        params.put("siteid", cs.getStr("siteid"));
+    	params.put("startpage", 0);
+    	params.put("endpage", CMConst.EXCEL_LIMIT_ROWS);
+        List<SOMap> list = memberMapper.selectAdminMemberManageList(params);
+        return list.stream().map(a-> (Map<String, Object>) new HashMap<>(a)).collect(Collectors.toList());
+    }
+
+    @Override
+    public SOMap selectDormancyMemberList(SOMap param) throws Exception {
+        SOMap result = new SOMap();
+
+        int page = Integer.parseInt(param.get("page").toString());
+        int pageCount = Integer.parseInt(param.get("pagecount").toString());
+        int startPage = (page > 1) ? ((page-1) * pageCount) : 0;
+
+        param.put("startpage", startPage);
+        param.put("endpage", pageCount);
+        param.put("siteid", cs.getStr("siteid"));
+
+        result.put("list", memberSleepMapper.selectMemberSleepList(param));
+
+        SOMap countInfo = memberSleepMapper.selectMemberSleepListCount(param);
+        result.put("listcount", countInfo.get("total"));
+        result.put("today", countInfo.get("today"));
+
+        return result;
+    }
+
+    @Override
+    @Transactional(propagation = Propagation.REQUIRED, rollbackFor = {Exception.class})
+    public SOMap memberResignRestore(SOMap params) throws Exception {
+        SOMap result = new SOMap();
+        params.put("siteid", cs.getStr("siteid"));
+        params.put("ip", ServletRequestInfoUtil.getRequestIp());
+
+        int restoreCnt = memberSleepMapper.memberSleepRestore(params);
+        int deleteCnt = memberSleepMapper.deleteMemberSleepArray(params);
+        int insertUserLogCnt = userLogMapper.insertUserLogArray(params);
+
+        SOMap erpParam = new SOMap();
+        erpParam.put("siteid", cs.getStr("siteid"));
+        erpParam.put("userno", params.getStr("userno"));
+        erpParam.put("aud", "U");
+        erpService.insertMemberERPData(erpParam);
+
+        result.put("restore", restoreCnt);
+        result.put("delete", deleteCnt);
+        result.put("log", insertUserLogCnt);
+
+        return result;
+    }
+
+    @Override
+    @Transactional(propagation = Propagation.REQUIRED, rollbackFor = {Exception.class})
+    public SOMap memberSleepResign(SOMap params) throws Exception {
+        SOMap result = new SOMap();
+        String[] userNoArr = params.getStr("user_no_arr_str").split(",");
+        params.put("siteid", cs.getStr("siteid"));
+        params.put("user_no_arr", userNoArr);
+
+//        int resignCnt = memberSleepMapper.memberSleepResign(params);
+        int resignStateUpdateCnt = memberSleepMapper.memberStateUpdateForResign(params);
+//        int deleteSnsCnt = memberSnsMapper.deleteMemberSnsArr(params);
+//        result.put("resign", resignCnt);
+        result.put("state", resignStateUpdateCnt);
+//        result.put("deleteSnsCnt", deleteSnsCnt);
+
+        for(String userNo : userNoArr){
+            SOMap erpParam = new SOMap();
+            erpParam.put("siteid", cs.getStr("siteid"));
+            erpParam.put("userno", userNo);
+            erpParam.put("aud", "A");
+            erpService.insertResignMemberERPData(erpParam);
+        }
+
+
+        return result;
+    }
+
+    @Override
+    public SOMap selectResignMemberList(SOMap params) throws Exception {
+        SOMap result = new SOMap();
+        params.put("siteid", cs.getStr("siteid"));
+        
+        int page = params.getInt("page");
+    	int pageCount = params.getInt("pagecount");
+    	int startPage = (page > 1) ? ((page-1) * pageCount) : 0;
+    	params.put("startpage", startPage);
+    	params.put("endpage", pageCount);  
+
+        result.put("list", memberMapper.selectMemberResignList(params));
+        SOMap countInfo = memberMapper.selectMemberResignListCount(params);
+
+        result.put("listcount", countInfo.get("total"));
+        result.put("today", countInfo.get("today"));
+        return result;
+    }
+
+    @Override
+    @Transactional(propagation = Propagation.REQUIRED, rollbackFor = {Exception.class})
+    public SOMap updateBlackAndMemo(SOMap params) throws Exception{
+        SOMap result = new SOMap();
+        int updateCnt = memberMapper.updateBlackMemberArr(params);
+        params.put("reguserid", cs.getStr("authuserid"));
+        int insertCnt = memberMemoMapper.adminInsertMemberMemoArr(params);
+        result.put("updateCnt", updateCnt);
+        result.put("insertCnt", insertCnt);
+        result.put("code", "success");
+
+        List<Integer> userNoArrList = params.getArrayList("usernoarr");
+        for(Integer userNo : userNoArrList){
+            SOMap erpParam = new SOMap();
+            erpParam.put("siteid", cs.getStr("siteid"));
+            erpParam.put("userno", userNo);
+            erpParam.put("aud", "U");
+            erpService.insertMemberERPData(erpParam);
+        }
+
+        return result;
+    }
+
+    @Override
+    @Transactional(propagation = Propagation.REQUIRED, rollbackFor = {Exception.class})
+    public SOMap memberResign(SOMap params) throws Exception {
+        SOMap result = new SOMap();
+        
+        params.putDb("withdrawtype", CMConst.CM_WITHDRAW_TYPE_ADMIN);
+        params.putDb("withdrawreason", params.getStr("memo"));
+
+        int sleepCnt = memberSleepMapper.insertMemberToSleep(params);
+        int updateCnt = memberMapper.updateMemberWithdraw(params);
+        params.put("reguserid", cs.getStr("authuserid"));
+        int insertCnt = memberMemoMapper.adminInsertMemberMemoArr(params);
+        result.put("sleepCnt", sleepCnt);
+        result.put("updateCnt", updateCnt);
+        result.put("insertCnt", insertCnt);
+        result.put("code", "success");
+
+        List<Integer> userNoList = params.getArrayList("usernoarr");
+
+        for(int userNo : userNoList){
+            SOMap erpParam = new SOMap();
+            erpParam.put("siteid", cs.getStr("siteid"));
+            erpParam.put("userno", userNo);
+            erpParam.put("aud", "A");
+            erpService.insertResignMemberERPData(erpParam);
+        }
+
+        return result;
+    }
+
+    @Override
+    public SOMap selectMemberDetail(SOMap params) throws Exception {
+        return memberMapper.selectMemberDetailForAdmin(params);
+    }
+
+    @Override
+    public List<SOMap> selectMyInquiryList(SOMap params) throws Exception {
+        params.put("siteid", cs.getStr("siteid"));
+        return inquiryMapper.selectInquiryListForMemberInfo(params);
+    }
+
+    @Override
+    public SOMap updateMemberPasswordTemp(SOMap params) throws Exception {
+        SOMap result = new SOMap();
+
+        //휴대폰으로 패스워드 문자 발송 처리 해주어야 함.
+        String tempPw = String.format("%s%s", RandomStringUtils.randomAlphanumeric(6), RandomStringUtils.randomNumeric(2)).toLowerCase();
+        String cryptPw = CryptHash.hash(tempPw);
+        params.put("userpw", cryptPw);
+
+        int updateCnt = userMapper.updateUserPasswordTemp(params);
+        result.put("code", (updateCnt > 0) ? "success" : "fail");
+        if(updateCnt > 0){
+
+            SOMap messageParam = new SOMap();
+            messageParam.put("msg_type", "SMS");
+            messageParam.put("receiver_number", params.get("mobile"));
+
+            messageParam.put("msg", String.format("[D.PLOT] 임시비밀번호는 \n[%s]입니다.", tempPw));
+            SOMap sendResult = cjMessageService.sendMessage(messageParam);
+        }
+        return result;
+    }
+
+    @Override
+    @Transactional(propagation = Propagation.REQUIRED, rollbackFor = {Exception.class})
+    public SOMap updateMemberInfo(SOMap params) throws Exception {
+        SOMap result = new SOMap();
+        try {
+
+            SOMap memberInfo = memberMapper.selectMemberDetailForAdmin(params);
+
+            SOMap historyInfo = new SOMap();
+            if( (!"".equals(params.getStr("dadamembertype"))) && !memberInfo.getStr("dadamembertype").equals(params.getStr("dadamembertype"))) {
+                historyInfo.put("userno", memberInfo.get("userno"));
+                historyInfo.put("mhistype", "MHT001");
+                historyInfo.put("dadamembertype", memberInfo.get("dadamembertype"));
+                historyInfo.put("memlvtype", memberInfo.get("memlvtype"));
+                historyInfo.put("preval", memberInfo.get("dadamembertype"));
+                historyInfo.put("aftval", params.get("dadamembertype"));
+                historyInfo.put("reguserid", cs.getStr("authuserid"));
+
+                memberHistoryMapper.insertMemberHistory(historyInfo);
+            }
+
+            if( (!"".equals(params.getStr("memlvtype"))) && !memberInfo.getStr("memlvtype").equals(params.getStr("memlvtype"))) {
+                historyInfo.put("userno", memberInfo.get("userno"));
+                historyInfo.put("mhistype", "MHT002");
+                historyInfo.put("dadamembertype", memberInfo.get("dadamembertype"));
+                historyInfo.put("memlvtype", memberInfo.get("memlvtype"));
+                historyInfo.put("preval", memberInfo.get("memlvtype"));
+                historyInfo.put("aftval", params.get("memlvtype"));
+                historyInfo.put("reguserid", cs.getStr("authuserid"));
+
+                memberHistoryMapper.insertMemberHistory(historyInfo);
+            }
+
+            if((!"".equals(params.getStr("isadmailing"))) && !memberInfo.getStr("isadmailing").equals(params.getStr("isadmailing"))){
+                historyInfo.put("userno", memberInfo.get("userno"));
+                historyInfo.put("mhistype", "MHT003");
+                historyInfo.put("dadamembertype", memberInfo.get("dadamembertype"));
+                historyInfo.put("memlvtype", memberInfo.get("memlvtype"));
+                historyInfo.put("preval", memberInfo.get("isadmailing"));
+                historyInfo.put("aftval", params.get("isadmailing"));
+                historyInfo.put("reguserid", cs.getStr("authuserid"));
+
+                memberHistoryMapper.insertMemberHistory(historyInfo);
+            }
+
+            if( (!"".equals(params.getStr("isadsms"))) && !memberInfo.getStr("isadsms").equals(params.getStr("isadsms"))){
+                historyInfo.put("userno", memberInfo.get("userno"));
+                historyInfo.put("mhistype", "MHT004");
+                historyInfo.put("dadamembertype", memberInfo.get("dadamembertype"));
+                historyInfo.put("memlvtype", memberInfo.get("memlvtype"));
+                historyInfo.put("preval", memberInfo.get("isadsms"));
+                historyInfo.put("aftval", params.get("isadsms"));
+                historyInfo.put("reguserid", cs.getStr("authuserid"));
+
+                memberHistoryMapper.insertMemberHistory(historyInfo);
+            }
+
+            if( (!"".equals(params.getStr("isadpush"))) && !memberInfo.getStr("isadpush").equals(params.getStr("isadpush"))){
+                historyInfo.put("userno", memberInfo.get("userno"));
+                historyInfo.put("mhistype", "MHT005");
+                historyInfo.put("dadamembertype", memberInfo.get("dadamembertype"));
+                historyInfo.put("memlvtype", memberInfo.get("memlvtype"));
+                historyInfo.put("preval", memberInfo.get("isadpush"));
+                historyInfo.put("aftval", params.get("isadpush"));
+                historyInfo.put("reguserid", cs.getStr("authuserid"));
+
+                memberHistoryMapper.insertMemberHistory(historyInfo);
+            }
+
+            String birthDate = params.getStr("birthdate").replaceAll("-", "");
+            params.put("birthdate", birthDate);
+
+            int memberUpdateCnt = memberMapper.updateMember(params);
+            int addressInsertOrUpdateCnt = memberAddressMapper.mergeMemberAddressByKey(params);
+
+
+            SOMap erpParam = new SOMap();
+            erpParam.put("siteid", cs.getStr("siteid"));
+            erpParam.put("userno", params.get("userno"));
+            erpParam.put("aud", "U");
+            erpService.insertMemberERPData(erpParam);
+
+            result.put("memberUpdateCnt", memberUpdateCnt);
+            result.put("addressInsertOrUpdateCnt", addressInsertOrUpdateCnt);
+            result.put("code", "success");
+        } catch(Exception e){
+            result.put("code", "fail");
+            e.printStackTrace();
+            TransactionAspectSupport.currentTransactionStatus().setRollbackOnly();
+        }
+        return result;
+    }
+
+    @Override
+    public SOMap selectMemberMemoList(SOMap params) throws Exception {
+        SOMap result = new SOMap();
+        result.put("list", memberMemoMapper.selectMemberMemoList(params));
+        return result;
+    }
+
+    @Override
+    public SOMap insertMemberMemo(SOMap params) throws Exception {
+        SOMap result = new SOMap();
+
+        params.put("userid", cs.getStr("authuserid"));
+        int insertCnt = memberMemoMapper.insertMemberMemo(params);
+        result.put("code", (insertCnt > 0) ? "success" : "fail");
+
+        return result;
+    }
+
+    @Override
+    public SOMap deleteMemberMemo(SOMap params) throws Exception {
+        SOMap result = new SOMap();
+        int deleteCnt = memberMemoMapper.deleteMemberMemo(params);
+        result.put("code", (deleteCnt > 0) ? "success" : "fail");
+        return result;
+    }
+
+    @Override
+    public SOMap selectMemberReserveInfo(SOMap params) throws Exception {
+        SOMap result = new SOMap();
+
+        int page = Integer.parseInt(params.get("page").toString());
+        int pageCount = Integer.parseInt(params.get("pagecount").toString());
+        int startPage = (page > 1) ? ((page - 1) * pageCount) : 0;
+        params.put("startpage", startPage);
+        params.put("endpage", pageCount);
+        params.put("siteid", cs.getStr("siteid"));
+
+        result.put("list", reservePayMapper.selectMemberReserveList(params));
+
+        SOMap count = reservePayMapper.selectMemberReserveCountInfo(params);
+        result.put("totalcnt", (count != null) ? count.get("totalcnt") : 0);
+        result.put("paycnt", (count != null) ? count.get("paycnt") : 0);
+        result.put("usecnt", (count != null) ? count.get("usecnt") : 0);
+        result.put("extinctcnt", (count != null) ? count.get("extinctcnt") : 0);
+
+        SOMap cMoneyInfo = reservePayMapper.getMemberCMoneyInfo(params);
+        result.put("pay", (cMoneyInfo != null) ? cMoneyInfo.get("pay") : 0);
+        result.put("used", (cMoneyInfo != null) ? cMoneyInfo.get("used") : 0);
+        result.put("pos", (cMoneyInfo != null) ? cMoneyInfo.get("pos") : 0);
+        result.put("extinct", (cMoneyInfo != null) ? cMoneyInfo.get("extinct") : 0);
+        result.put("expected", (cMoneyInfo != null) ? cMoneyInfo.get("expected") : 0);
+        result.put("tomorrow", (cMoneyInfo != null) ? cMoneyInfo.get("tomorrow") : 0);
+        return result;
+    }
+
+    @Override
+    public List<Map<String, Object>> selectMemberReserveListForExcel(SOMap params) throws Exception {
+        params.put("siteid", cs.getStr("siteid"));
+        params.put("startpage", 0);
+        params.put("endpage", CMConst.EXCEL_LIMIT_ROWS);
+        List<SOMap> list = reservePayMapper.selectMemberReserveList(params);
+        return list.stream().map(a-> (Map<String, Object>) new HashMap<>(a)).collect(Collectors.toList());
+    }
+
+    @Override
+    public SOMap getMemberCMoneyInfo(SOMap params) throws Exception {
+        return reservePayMapper.getMemberCMoneyInfo(params);
+    }
+
+    @Override
+    public SOMap selectMemberCmoney(SOMap params) throws Exception {
+        SOMap result = new SOMap();
+        params.put("isempreserve", "F");
+        SOMap reserveNotEmp = reservePayMapper.getMemberCMoneyInfo(params);
+        params.put("isempreserve", "T");
+        SOMap reserveEmp = reservePayMapper.getMemberCMoneyInfo(params);
+        SOMap epointInfo = epointPayMapper.getMemberEpointInfo(params);
+
+        result.put("cmoney", (reserveNotEmp != null) ? reserveNotEmp.get("pos") : 0);
+        result.put("empCmoney", (reserveEmp != null) ? reserveEmp.get("pos") : 0);
+        result.put("epoint", (epointInfo != null) ? epointInfo.get("pos") : 0);
+
+        return result;
+    }
+
+    @Override
+    public SOMap updateBlack(SOMap params) throws Exception {
+        SOMap result = new SOMap();
+        int updateCnt = memberMapper.updateBlackMember(params);
+
+        SOMap erpParam = new SOMap();
+        erpParam.put("siteid", cs.getStr("siteid"));
+        erpParam.put("userno", params.get("userno"));
+        erpParam.put("aud", "U");
+        erpService.insertMemberERPData(erpParam);
+
+        result.put("updateCnt", updateCnt);
+        return result;
+    }
+
+    @Override
+    public SOMap selectMemberEPointInfo(SOMap params) throws Exception {
+        SOMap result = new SOMap();
+
+        int page = Integer.parseInt(params.get("page").toString());
+        int pageCount = Integer.parseInt(params.get("pagecount").toString());
+        int startPage = (page > 1) ? ((page - 1) * pageCount) : 0;
+        params.put("startpage", startPage);
+        params.put("endpage", pageCount);
+        params.put("siteid", cs.getStr("siteid"));
+        result.put("list", epointPayMapper.selectMemberEPointList(params));
+
+        SOMap count = epointPayMapper.selectMemberEPointCountInfo(params);
+        result.put("totalcnt", (count != null) ? count.get("totalcnt") : 0);
+        result.put("paycnt", (count != null) ? count.get("paycnt") : 0);
+        result.put("usecnt", (count != null) ? count.get("usecnt") : 0);
+        result.put("extinctcnt", (count != null) ? count.get("extinctcnt") : 0);
+
+        SOMap ePointInfo = epointPayMapper.getMemberEpointInfo(params);
+        result.put("pay", (ePointInfo != null) ? ePointInfo.get("pay") : 0);
+        result.put("used", (ePointInfo != null) ? ePointInfo.get("used") : 0);
+        result.put("pos", (ePointInfo != null) ? ePointInfo.get("pos") : 0);
+        result.put("extinct", (ePointInfo != null) ? ePointInfo.get("extinct") : 0);
+        result.put("expected", (ePointInfo != null) ? ePointInfo.get("expected") : 0);
+        result.put("tomorrow", (ePointInfo != null) ? ePointInfo.get("tomorrow") : 0);
+        return result;
+    }
+
+    @Override
+    public List<Map<String, Object>> selectMemberEPointListForExcel(SOMap params) throws Exception {
+        return epointPayMapper.selectMemberEPointExcelList(params);
+    }
+
+    @Override
+    public SOMap selectMemberWishList(SOMap params) throws Exception {
+        SOMap result = new SOMap();
+
+        int page = Integer.parseInt(params.get("page").toString());
+        int pageCount = Integer.parseInt(params.get("pagecount").toString());
+        int startPage = (page > 1) ? ((page - 1) * pageCount) : 0;
+        params.put("startpage", startPage);
+        params.put("endpage", pageCount);
+
+        result.put("list", wishMapper.selectMemberWishListForAdmin(params));
+        result.put("count", wishMapper.selectMemberWishListCountForAdmin(params));
+
+        return result;
+    }
+
+    @Override
+    public SOMap selectMemberCartList(SOMap params) throws Exception {
+        SOMap result = new SOMap();
+
+        int page = Integer.parseInt(params.get("page").toString());
+        int pageCount = Integer.parseInt(params.get("pagecount").toString());
+        int startPage = (page > 1) ? ((page - 1) * pageCount) : 0;
+        params.put("startpage", startPage);
+        params.put("endpage", pageCount);
+        params.put("siteid", cs.getStr("siteid"));
+
+        result.put("list", comCartMapper.selectCartListByAdmin(params));
+        result.put("count", comCartMapper.selectCartListByAdminCount(params));
+
+        return result;
+    }
+
+    @Override
+    public SOMap selectMemberCouponList(SOMap params) throws Exception {
+        SOMap result = new SOMap();
+
+        int page = Integer.parseInt(params.get("page").toString());
+        int pageCount = Integer.parseInt(params.get("pagecount").toString());
+        int startPage = (page > 1) ? ((page - 1) * pageCount) : 0;
+        params.put("startpage", startPage);
+        params.put("endpage", pageCount);
+        params.put("siteid", cs.getStr("siteid"));
+
+        SOMap count = couponMemissueMapper.selectCouponListCountForAdmin(params);
+
+        result.put("list", couponMemissueMapper.selectCouponListForAdmin(params));
+        result.put("total", count.get("total"));
+        result.put("pay", count.get("pay"));
+        result.put("used", count.get("used"));
+
+        return result;
+    }
+
+    @Override
+    public SOMap selectMyCouponInfo(SOMap params) throws Exception {
+        SOMap lastUsed = couponMemissueMapper.selectLastUsedCoupon(params);
+        SOMap lastIssued = couponMemissueMapper.selectLastIssuedCoupon(params);
+        SOMap count = couponMemissueMapper.selectCouponListCountForAdmin(params);
+
+        SOMap result = new SOMap();
+        result.put("use", lastUsed);
+        result.put("issue", lastIssued);
+        result.put("total", count.get("pos"));
+
+        return result;
+    }
+
+    @Override
+    public SOMap selectMemberReviewList(SOMap params) throws Exception {
+        SOMap result = new SOMap();
+
+        int page = Integer.parseInt(params.get("page").toString());
+        int pageCount = Integer.parseInt(params.get("pagecount").toString());
+        int startPage = (page > 1) ? ((page - 1) * pageCount) : 0;
+        params.put("startpage", startPage);
+        params.put("endpage", pageCount);
+        params.put("siteid", cs.getStr("siteid"));
+
+        result.put("list", goodsReviewMapper.selectOperationReviewList(params));
+        result.put("count", goodsReviewMapper.selectOperationReviewCnt(params));
+
+        return result;
+    }
+
+    @Override
+    public List<SOMap> selectMemberOrder(SOMap params) throws Exception {
+        List<SOMap> orderList = comOrderMapper.selectAdminMemberOrderList(params);
+        return orderList;
+    }
+}

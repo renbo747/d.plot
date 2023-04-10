@@ -1,0 +1,293 @@
+package com.dplot.front.controller;
+
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.web.bind.annotation.*;
+
+import com.dplot.common.Response;
+import com.dplot.common.SOMap;
+import com.dplot.front.service.ShopService;
+import com.dplot.util.Util;
+
+import javax.annotation.Resource;
+import javax.servlet.http.HttpServletResponse;
+import java.io.PrintWriter;
+import java.util.Properties;
+
+@RestController
+@RequestMapping("/shop")
+public class ShopController {
+
+	@Resource(name="propertiesFactory")
+	private Properties prop;
+	
+	@Autowired
+	private ShopService shopService;
+	
+	/**
+	 * SHOP 메인 목록 조회
+	 * @param param
+	 * @return
+	 * @throws Exception
+	 */
+	@RequestMapping(value = "/list", method = RequestMethod.POST)
+	public Response selectShopList(@RequestBody SOMap param) throws Exception{
+		return new Response(shopService.selectShopList(param));
+	}
+	
+	/**
+	 * SHOP 메인 베스트상품 조회
+	 * @param param
+	 * @return
+	 * @throws Exception
+	 */
+	@RequestMapping(value = "/bestlist", method = RequestMethod.POST)
+	public Response selectShopBestList(@RequestBody SOMap param) throws Exception{
+		return new Response(shopService.selectShopBestList(param));
+	}
+	
+	/**
+	 * 신상품 목록 조회
+	 * @param param
+	 * @return
+	 * @throws Exception
+	 */
+	@RequestMapping(value = "/newlist", method = RequestMethod.POST)
+	public Response selectShopNewList(@RequestBody SOMap param) throws Exception{
+		return new Response(shopService.selectShopNewList(param));
+	}
+	
+	/**
+	 * 신상품 목록 이름조회
+	 * @param param
+	 * @return
+	 * @throws Exception
+	 */
+	@RequestMapping(value = "/newlistname", method = RequestMethod.POST)
+	public Response selectShopName(@RequestBody SOMap param) throws Exception{
+		return new Response(shopService.selectShopName(param));
+	}
+	
+	
+	
+	/**
+	 * Filter 항목 목록 조회
+	 * @param param
+	 * @return
+	 * @throws Exception
+	 */
+	@RequestMapping(value = "/filter/info", method = RequestMethod.POST)
+	public Response selectFilterCateList(@RequestBody SOMap param) throws Exception {
+		return new Response(shopService.selectFilterCateList(param));
+	}
+	
+	/**
+	 * Filter 관련 정보 조회
+	 * @param param
+	 * @return
+	 * @throws Exception
+	 */
+	@RequestMapping(value = "/filter/list", method = RequestMethod.POST)
+	public Response selectFilterList(@RequestBody SOMap param) throws Exception {
+		return new Response(shopService.selectFilterList(param));
+	}
+	
+	/**
+	 * 검색필터 목록 조회
+	 * @param param
+	 * @return
+	 * @throws Exception
+	 */
+	@RequestMapping(value = "/search/filter", method = RequestMethod.POST)
+	public Response selectSearchFilterList(@RequestBody SOMap param) throws Exception {
+		return new Response(shopService.selectSearchFilterList(param));
+	}
+	
+	/**
+	 * 프로모션 리스트 조회
+	 * @param param
+	 * @return
+	 * @throws Exception
+	 */
+	@RequestMapping(value = "/promotion", method = RequestMethod.POST)
+	public Response selectPromotion(@RequestBody SOMap param) throws Exception {
+		SOMap result = new SOMap();
+		result.put("list", shopService.selectEventList(param));	
+		result.put("listcount", shopService.selectEventListCount(param));
+		return new Response(result);
+	}
+	
+	/**
+	 * 프로모션 - 당첨자 발표
+	 * @param param
+	 * @return
+	 * @throws Exception
+	 */
+	@RequestMapping(value = "/winnerant", method = RequestMethod.POST)
+	public Response selectWinnerAnnouncement(@RequestBody SOMap param) throws Exception {
+		SOMap result = new SOMap();
+		result.put("list", shopService.winnerAnnouncement(param));
+		result.put("winnerlist", shopService.winnerList(param));
+		return new Response(result);
+	}
+	
+	/**
+	 * 프로모션 - 당첨자 발표
+	 * @param param
+	 * @return
+	 * @throws Exception
+	 */
+	@RequestMapping(value = "/promotiondtl", method = RequestMethod.POST)
+	public Response selectPromotionDetail(@RequestBody SOMap param) throws Exception {
+		return new Response(shopService.promotionDetail(param));
+	}
+	
+	/**
+	 * 프로모션 - 댓글 등록
+	 * @param param
+	 * @return
+	 * @throws Exception
+	 */
+	@RequestMapping(value = "/savecomment", method = RequestMethod.POST)
+	public Response insertComment(@RequestBody SOMap param) throws Exception {
+		SOMap result = new SOMap();
+		int resultData = shopService.insertComment(param);
+		if(resultData > 0) {
+			result.put("msg", "success");	
+		}else{
+			result.put("msg", "fail");
+		}
+		return new Response(result);
+	}
+	
+	/**
+	 * 프로모션 - 댓글 리스트
+	 * @param param
+	 * @return
+	 * @throws Exception
+	 */
+	@RequestMapping(value = "/commentlist", method = RequestMethod.POST)
+	public Response selectCommentList(@RequestBody SOMap param) throws Exception {
+		return new Response(shopService.selectCommentList(param));
+	}
+	
+	/**
+	 * 프로모션 - 댓글 삭제
+	 * @param param
+	 * @return
+	 * @throws Exception
+	 */
+	@RequestMapping(value = "/deletecmt", method = RequestMethod.POST)
+	public Response deleteComment(@RequestBody SOMap param) throws Exception {
+		SOMap result = new SOMap();
+		int delete = shopService.deleteComment(param);
+		if(delete > 0){
+			result.put("msg", "success");
+		}else{
+			result.put("msg", "fail");			
+		}
+		
+		return new Response(result);
+	}
+	
+	/**
+	 * 프로모션 - 댓글 수정
+	 * @param param
+	 * @return
+	 * @throws Exception
+	 */
+	@RequestMapping(value = "/updatecmt", method = RequestMethod.POST)
+	public Response updateComment(@RequestBody SOMap param) throws Exception {
+		SOMap result = new SOMap();
+		int delete = shopService.updateComment(param);
+		if(delete > 0){
+			result.put("msg", "success");
+		}else{
+			result.put("msg", "fail");			
+		}
+		
+		Util util = new Util();
+		
+		
+		return new Response(result);
+	}
+	
+	/**
+	 * 프로모션 댓글 신고하기
+	 * @param param
+	 * @return
+	 * @throws Exception
+	 */
+	@RequestMapping(value = "/repreport", method = RequestMethod.POST)
+	public Response repReport(@RequestBody SOMap param) throws Exception{
+		SOMap result = new SOMap();
+		int update = shopService.repReport(param);
+		if(update > 0){
+			result.put("msg", "success");
+		}else{
+			result.put("msg", "fail");			
+		}
+		return new Response(result);
+	}
+
+	@RequestMapping(value = "/share/{type}/{code}", method = RequestMethod.GET)
+	public void shareGoodsDetail(@PathVariable("type") String type, @PathVariable("code") String code, HttpServletResponse res) throws Exception {
+
+		SOMap param = new SOMap();
+		SOMap detail = new SOMap();
+		String frontDomain = "";
+		String name = "";
+		String imgPath = "";
+		String keyword = "";
+
+		if(type.equals("brand")){
+			param.put("brandidx", code);
+			detail = shopService.simpleBrandDetail(param);
+
+			frontDomain = String.format("%s/magazine/brand/detail/%s", prop.getProperty("front.domain"), code);
+			name = detail.getStr("name");
+			imgPath = detail.getStr("fullpath");
+			keyword = detail.getStr("detail");
+
+		} else if(type.equals("promotion")){
+			param.put("eventidx", code);
+			detail = shopService.simplePromotionDetail(param);
+
+			frontDomain = String.format("%s/shop/promotion/detail/%s", prop.getProperty("front.domain"), code);
+			name = detail.getStr("name");
+			imgPath = detail.getStr("fullpath");
+			keyword = detail.getStr("evdesc");
+
+		} else if(type.equals("goods")){
+			param.put("goodscode", code);
+			detail = shopService.simpleGoodsDetail(param);
+
+			frontDomain = String.format("%s/shop/detail/%s", prop.getProperty("front.domain"), code);
+			name = detail.getStr("goodsname");
+			imgPath = detail.getStr("fullpath");
+			keyword = detail.getStr("keyword");
+		}
+
+
+		//상품 조회 한번 해야 함.
+		res.setContentType("text/html;charset=UTF-8");
+		PrintWriter writer = res.getWriter();
+
+		String builder = String.format("<!DOCTYPE html>" +
+				"<html>" +
+				"<head>" +
+				"<meta charset=\"utf-8\">" +
+				"<meta property=\"og:title\" content=\"%s\">" +
+				"<meta property=\"og:description\" content=\"%s\">" +
+				"<meta property=\"og:image\" content=\"%s\">" +
+				"</head>" +
+				"<script>" +
+				"location.href='%s'" +
+				"</script>" +
+				"</html>", name, keyword, imgPath, frontDomain);
+
+		writer.write(builder);
+		writer.flush();
+		writer.close();
+	}
+	
+}

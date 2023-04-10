@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.dplot.mapper.MzKeywordListMapper">
+	<!-- 매거진키워드 저장 -->
+	<insert id="insertMzKeyword" parameterType="somap">
+        /* MzKeywordListMapper.xml - insertMzKeyword 매거진키워드 저장  */
+        INSERT INTO t_mzkeywordlist
+        (mzwdidx, keyword, isemp, sort, pclinkurl, ispcnwindow, molinkurl, ismonwindow, reguserid, regdate)
+        VALUES
+        <foreach collection="keywordlist" index="index" item="item" separator=",">
+        	(#{mzwdidx}, #{item.keyword}, #{item.isemp}, #{index}, #{item.pclinkurl}, #{item.ispcnwindow}, #{item.molinkurl}, #{item.ismonwindow}, #{reguserid}, now())
+        </foreach>
+    </insert>
+    
+    <!-- 매거진키워드 조회 -->
+	<select id="selectMzKeywordList" resultType="somap" parameterType="somap">
+        /* MzKeywordListMapper.xml - selectMzKeywordList 매거진키워드 조회  */
+        SELECT mzwdlidx, mzwdlidx as idx, sort as sortnum,  keyword, isemp, pclinkurl, ispcnwindow, molinkurl, ismonwindow
+        FROM t_mzkeywordlist
+        WHERE mzwdidx = #{mzwdidx}
+        ORDER BY sort
+    </select>
+    
+    <!-- 매거진키워드 삭제 -->
+	<delete id="deleteMzKeyword" parameterType="somap">
+        /* MzKeywordListMapper.xml - deleteMzKeyword 매거진키워드 삭제  */
+        DELETE FROM t_mzkeywordlist
+        WHERE mzwdidx = #{mzwdidx}
+    </delete>
+</mapper>

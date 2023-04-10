@@ -1,0 +1,22 @@
+.dormant-account {
+  height: calc((var(--vh, 1vh) * 100) - 110px);
+
+  .dp-panel {
+    padding-bottom: 50px;
+  }
+
+  .dp-p-sm + .dp-p-sm{
+    margin-top: 20px;
+    margin-bottom: 0;
+  }
+
+  .btn {
+    height: 44px;
+    font-size: 16px;
+    letter-spacing: -.64px;
+  }
+
+  .member__footer-group {
+    margin-bottom: 30px;
+  }
+}

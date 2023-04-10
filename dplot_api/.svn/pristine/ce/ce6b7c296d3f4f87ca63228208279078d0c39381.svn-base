@@ -1,0 +1,767 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.dplot.mapper.AsInquiryMapper">
+
+    <!-- A/S문의 목록조회 -->
+    <select id="selectAsInquiryList" parameterType="somap" resultType="somap">
+        /* AsInquiryMapper - selectAsInquiryList A/S문의 목록조회 */
+        SELECT ta.*
+		FROM (<include refid="selectAsInquirySQL"/>) ta
+		<choose>
+			<when test="psort == 'ispbgoods_asc'">
+			ORDER BY ta.ISPBGOODSNAME ASC, ta.REGDATE DESC, ta.ASIDX DESC
+			</when>
+			<when test="psort == 'ispbgoods_desc'">
+			ORDER BY ta.ISPBGOODSNAME DESC, ta.REGDATE DESC, ta.ASIDX DESC
+			</when>
+			<when test="psort == 'dealername_asc'">
+			ORDER BY ta.DEALERNAME ASC, ta.REGDATE DESC, ta.ASIDX DESC
+			</when>
+			<when test="psort == 'dealername_desc'">
+			ORDER BY ta.DEALERNAME DESC, ta.REGDATE DESC, ta.ASIDX DESC
+			</when>
+			<when test="psort == 'userid_asc'">
+			ORDER BY ta.USERID ASC, ta.REGDATE DESC, ta.ASIDX DESC
+			</when>
+			<when test="psort == 'userid_desc'">
+			ORDER BY ta.USERID DESC, ta.REGDATE DESC, ta.ASIDX DESC
+			</when>
+			<when test="psort == 'username_asc'">
+			ORDER BY ta.USERNAME ASC, ta.REGDATE DESC, ta.ASIDX DESC
+			</when>
+			<when test="psort == 'username_desc'">
+			ORDER BY ta.USERNAME DESC, ta.REGDATE DESC, ta.ASIDX DESC
+			</when>
+			<when test="psort == 'usermobile_asc'">
+			ORDER BY ta.USERMOBILE ASC, ta.REGDATE DESC, ta.ASIDX DESC
+			</when>
+			<when test="psort == 'usermobile_desc'">
+			ORDER BY ta.USERMOBILE DESC, ta.REGDATE DESC, ta.ASIDX DESC
+			</when>
+			<when test="psort == 'useremail_asc'">
+			ORDER BY ta.USEREMAIL ASC, ta.REGDATE DESC, ta.ASIDX DESC
+			</when>
+			<when test="psort == 'useremail_desc'">
+			ORDER BY ta.USEREMAIL DESC, ta.REGDATE DESC, ta.ASIDX DESC
+			</when>
+			<when test="psort == 'ordno_asc'">
+			ORDER BY ta.ORDNO ASC, ta.REGDATE DESC, ta.ASIDX DESC
+			</when>
+			<when test="psort == 'ordno_desc'">
+			ORDER BY ta.ORDNO DESC, ta.REGDATE DESC, ta.ASIDX DESC
+			</when>
+			<when test="psort == 'invoiceno_asc'">
+			ORDER BY ta.INVOICENO ASC, ta.REGDATE DESC, ta.ASIDX DESC
+			</when>
+			<when test="psort == 'invoiceno_desc'">
+			ORDER BY ta.INVOICENO DESC, ta.REGDATE DESC, ta.ASIDX DESC
+			</when>
+			<when test="psort == 'goodsname_asc'">
+			ORDER BY ta.GOODSNAME ASC, ta.OPTIONCONTS ASC, ta.REGDATE DESC, ta.ASIDX DESC
+			</when>
+			<when test="psort == 'goodsname_desc'">
+			ORDER BY ta.GOODSNAME DESC, ta.OPTIONCONTS DESC, ta.REGDATE DESC, ta.ASIDX DESC
+			</when>
+			<when test="psort == 'writer_asc'">
+			ORDER BY ta.WRITER ASC, ta.REGDATE DESC, ta.ASIDX DESC
+			</when>
+			<when test="psort == 'writer_desc'">
+			ORDER BY ta.WRITER DESC, ta.REGDATE DESC, ta.ASIDX DESC
+			</when>
+			<when test="psort == 'tel_asc'">
+			ORDER BY ta.TEL ASC, ta.REGDATE DESC, ta.ASIDX DESC
+			</when>
+			<when test="psort == 'tel_desc'">
+			ORDER BY ta.TEL DESC, ta.REGDATE DESC, ta.ASIDX DESC
+			</when>
+			<when test="psort == 'content_asc'">
+			ORDER BY ta.CONTENT ASC, ta.REGDATE DESC, ta.ASIDX DESC
+			</when>
+			<when test="psort == 'content_desc'">
+			ORDER BY ta.CONTENT DESC, ta.REGDATE DESC, ta.ASIDX DESC
+			</when>
+			<when test="psort == 'regdate_asc'">
+			ORDER BY ta.REGDATE ASC, ta.ASIDX DESC
+			</when>
+			<when test="psort == 'regdate_desc'">
+			ORDER BY ta.REGDATE DESC, ta.ASIDX DESC
+			</when>
+			<when test="psort == 'repname_asc'">
+			ORDER BY ta.REPNAME ASC, ta.REGDATE DESC, ta.ASIDX DESC
+			</when>
+			<when test="psort == 'repname_desc'">
+			ORDER BY ta.REPNAME DESC, ta.REGDATE DESC, ta.ASIDX DESC
+			</when>
+			<when test="psort == 'repregdate_asc'">
+			ORDER BY ta.REPREGDATE ASC, ta.REGDATE DESC, ta.ASIDX DESC
+			</when>
+			<when test="psort == 'repregdate_desc'">
+			ORDER BY ta.REPREGDATE DESC, ta.REGDATE DESC, ta.ASIDX DESC
+			</when>
+			<when test="psort == 'ispass_asc'">
+			ORDER BY ta.ISPASSNAME ASC, ta.REGDATE DESC, ta.ASIDX DESC
+			</when>
+			<when test="psort == 'ispass_desc'">
+			ORDER BY ta.ISPASSNAME DESC, ta.REGDATE DESC, ta.ASIDX DESC
+			</when>
+			<when test="psort == 'asstatus_asc'">
+			ORDER BY ta.ASSTATUSNAME ASC, ta.REGDATE DESC, ta.ASIDX DESC
+			</when>
+			<when test="psort == 'asstatus_desc'">
+			ORDER BY ta.ASSTATUSNAME DESC, ta.REGDATE DESC, ta.ASIDX DESC
+			</when>
+			<when test="psort == 'subject_asc'">
+			ORDER BY ta.SUBJECT ASC, ta.REGDATE DESC, ta.ASIDX DESC
+			</when>
+			<when test="psort == 'subject_desc'">
+			ORDER BY ta.SUBJECT DESC, ta.REGDATE DESC, ta.ASIDX DESC
+			</when>
+			<when test="psort == 'isreply_asc'">
+			ORDER BY ta.ISREPLYNAME ASC, ta.REGDATE DESC, ta.ASIDX DESC
+			</when>
+			<when test="psort == 'isreply_desc'">
+			ORDER BY ta.ISREPLYNAME DESC, ta.REGDATE DESC, ta.ASIDX DESC
+			</when>
+			<otherwise>
+			ORDER BY ta.REGDATE DESC, ta.ASIDX DESC
+			</otherwise>
+		</choose>
+		<if test="startpage != null and !startpage.equals('') and endpage != null and !endpage.equals('')">
+		LIMIT #{startpage}, #{endpage}
+		</if>
+    </select>
+    
+    <!-- A/S문의 상태별 건수 조회 -->
+    <select id="selectAsInquiryListCount" parameterType="somap" resultType="somap">
+        /* AsInquiryMapper - selectAsInquiryListCount A/S문의 상태별 건수 조회 */
+        SELECT
+			  COUNT(*) AS totalcnt
+			, IFNULL(SUM(t.receiptcnt), 0) AS receiptcnt
+			, IFNULL(SUM(t.cancelcnt), 0) AS cancelcnt
+			, IFNULL(SUM(t.compcnt), 0) AS compcnt
+		FROM (	SELECT
+					  (CASE WHEN ta.ASSTATUS = 'AST001' THEN 1 ELSE 0 END) AS receiptcnt	/* AS상태-접수완료 */
+					, (CASE WHEN ta.ASSTATUS = 'AST002' THEN 1 ELSE 0 END) AS cancelcnt		/* AS상태-신청취소 */
+					, (CASE WHEN ta.ASSTATUS = 'AST003' THEN 1 ELSE 0 END) AS compcnt		/* AS상태-A/S완료 */
+				FROM (<include refid="selectAsInquirySQL"/>) ta
+		) t
+    </select>
+    
+    <!-- A/S문의 상세조회-->
+    <select id="selectAsInquiryDetail" parameterType="somap" resultType="somap">
+        /* AsInquiryMapper - selectAsInquiryDetail A/S문의 상세조회 */
+        <include refid="selectAsInquirySQL"/>
+    </select>
+    
+    <!-- A/S문의 조회 쿼리 -->
+    <sql id="selectAsInquirySQL">
+    	SELECT
+    		  a.ASIDX 
+			, a.GOODSNO 
+			, b.GOODSCODE
+			, b.ISPBGOODS 
+			, if(b.ISPBGOODS='T', '직매입', '위탁') AS ISPBGOODSNAME
+			, a.DEALERNO 
+			, (CASE WHEN a.DEALERNO IS NOT NULL AND a.DEALERNO != 0 THEN (SELECT NAME FROM t_dealer WHERE USERNO = a.DEALERNO) ELSE '-' END) AS DEALERNAME
+			, a.USERNO
+			, f.USERID
+			, f.NAME AS USERNAME
+			, f.MOBILE AS USERMOBILE
+			, f.EMAIL AS USEREMAIL
+			, a.ORDNO 
+			, e.INVOICENO
+			, b.GOODSNAME 
+			, FN_GET_OPTION_DETAIL(a.GOODSNO, a.OPTIONCODE, '|') AS OPTIONCONTS
+			, a.ASCNT 
+			, a.WRITER 
+			, a.TEL
+			, a.POST
+			, a.ADDRROAD
+			, a.ADDRDETAILROAD
+			, a.ADDR
+			, a.ADDRDETAIL
+			, a.SIGUNGUCODE
+			, a.BUILDINGCODE
+			, a.ROADNAMECODE
+			, if(a.ADDRROAD IS NOT NULL, concat(a.ADDRROAD, ' ', ifnull(a.ADDRDETAILROAD, '')), concat(a.ADDR, ' ', ifnull(a.ADDRDETAIL, ''))) AS WRITERADDR 
+			, a.SUBJECT
+			, substr(a.CONTENT,1,15) as LISTCONTENT
+			, a.CONTENT
+			, date_format(a.REGDATE, '%Y-%m-%d %H:%i:%s') AS REGDATE
+			, a.REPUSERNO
+			, IFNULL(g.NAME, h.NAME) AS REPNAME
+			, IFNULL(g.USERID, h.USERID) AS REPID
+			, (SELECT count(*) FROM t_file WHERE ORGIDX=a.ASIDX AND IMGTYPE='IGT101' AND PARENTIDX IS NULL AND ISTRASH='F') AS ATTACHCNT
+			, date_format(a.REPREGDATE, '%Y-%m-%d %H:%i:%s') AS REPREGDATE
+			, a.ISPASS
+			, (CASE WHEN b.ISPBGOODS='T' THEN '-'
+					ELSE IF(a.ISPASS='T', '전송완료', '미전송')
+			   END) AS ISPASSNAME
+			, a.ASSTATUS 
+			, FN_GET_CODENAME(NULL, 'ASSTATUS', a.ASSTATUS) AS ASSTATUSNAME
+			, FN_GET_CODENAME(NULL, 'DADAMEMBERTYPE', a.DADAMEMBERTYPE) AS MEMBERTYPENAME
+			, FN_GET_CODENAME(NULL, 'MEMLVTYPE', a.MEMLVTYPE) AS MEMLVTYPENAME
+			, IFNULL(a.TPLIDX, '') AS TPLIDX
+			, a.REPCONTENT
+			, a.ISREPLY
+			, if(a.ISREPLY='T', '완료', '대기') AS ISREPLYNAME
+		FROM t_asinquiry a 
+		INNER JOIN t_goods b 
+				ON a.GOODSNO = b.GOODSNO
+		INNER JOIN t_comorder c 
+				ON a.ORDNO = c.ORDNO 
+		INNER JOIN t_comorder_goods d 
+				ON c.ORDERIDX = d.ORDERIDX 
+				AND a.GOODSNO = d.GOODSNO 
+				AND a.OPTIONCODE = d.OPTIONCODE 
+		LEFT OUTER JOIN (
+			SELECT a.ORDGDIDX, GROUP_CONCAT(INVOICENO SEPARATOR ',') as INVOICENO
+			FROM t_comorder_goods_deliv a
+			WHERE a.ISTRASH = 'F'
+			GROUP BY ORDGDIDX
+		) e ON d.ORDGDIDX = e.ORDGDIDX
+		LEFT OUTER JOIN (
+			SELECT tm.USERNO, tu.USERID, tm.NAME, tm.MOBILE, tm.EMAIL
+			FROM t_user tu 
+			INNER JOIN t_member tm ON tu.NO = tm.USERNO
+		) f ON a.USERNO = f.USERNO 			/* 고객정보 */
+		LEFT OUTER JOIN (
+			SELECT ta.USERNO, tu.USERID, ta.NAME
+			FROM t_user tu 
+			INNER JOIN t_admin ta ON tu.NO = ta.USERNO
+		) g ON a.REPUSERNO = g.USERNO 	/* 답변자정보(관리자인경우) */
+		LEFT OUTER JOIN (
+			SELECT td.USERNO, tu.USERID, td.NAME
+			FROM t_user tu 
+			INNER JOIN t_dealer td ON tu.NO = td.USERNO
+		) h ON a.REPUSERNO = h.USERNO 	/* 답변자정보(파트너사인경우) */
+		WHERE a.SITEID = #{siteid}
+		<if test="asidx != null and asidx != ''">
+		AND a.ASIDX = #{asidx}
+		</if>
+		<if test="isadmin == false">
+		AND a.ISPASS = 'T'
+		</if>
+		<if test="sword != null and sword != '' ">
+			<choose>
+				<when test="skey == 'userid'">
+				AND f.USERID LIKE CONCAT('%', #{sword}, '%')
+				</when>
+				<when test="skey == 'username'">
+				AND f.NAME LIKE CONCAT('%', #{sword}, '%')
+				</when>
+				<when test="skey == 'ordno'">
+				AND a.ORDNO LIKE CONCAT('%', #{sword}, '%')
+				</when>
+				<when test="skey == 'invoiceno'">
+				AND e.INVOICENO LIKE CONCAT('%', #{sword}, '%')
+				</when>
+				<when test="skey == 'goodsname'">
+				AND b.GOODSNAME LIKE CONCAT('%', #{sword}, '%')
+				</when>
+				<when test="skey == 'writer'">
+				AND a.WRITER LIKE CONCAT('%', #{sword}, '%')
+				</when>
+				<when test="skey == 'content'">
+				AND a.CONTENT LIKE CONCAT('%', #{sword}, '%')
+				</when>
+				<when test="skey == 'subject'">
+				AND a.SUBJECT LIKE CONCAT('%', #{sword}, '%')
+				</when>
+				<otherwise>
+					<if test="skeyarr != null and skeyarr.size > 0">
+					AND
+					<foreach index="index" collection="skeyarr" item="item" open="(" close=")" separator="OR" >
+						<if test="item.key == 'userid'">
+						f.USERID LIKE CONCAT('%', #{sword}, '%')
+						</if>
+						<if test="item.key == 'username'">
+						f.NAME LIKE CONCAT('%', #{sword}, '%')
+						</if>
+						<if test="item.key == 'ordno'">
+						a.ORDNO LIKE CONCAT('%', #{sword}, '%')
+						</if>
+						<if test="item.key == 'invoiceno'">
+						e.INVOICENO LIKE CONCAT('%', #{sword}, '%')
+						</if>
+						<if test="item.key == 'goodsname'">
+						b.GOODSNAME LIKE CONCAT('%', #{sword}, '%')
+						</if>
+						<if test="item.key == 'writer'">
+						a.WRITER LIKE CONCAT('%', #{sword}, '%')
+						</if>
+						<if test="item.key == 'content'">
+						a.CONTENT LIKE CONCAT('%', #{sword}, '%')
+						</if>
+						<if test="item.key == 'subject'">
+						a.SUBJECT LIKE CONCAT('%', #{sword}, '%')
+						</if>
+					</foreach>
+					</if>
+				</otherwise>
+			</choose>
+		</if>
+        <choose>
+        	<when test="dtkey != null and dtkey == 'regdate'">
+				<if test="(startdate != null and startdate != '') and (enddate == null or enddate == '') ">
+				AND a.REGDATE <![CDATA[>=]]> STR_TO_DATE(CONCAT(#{startdate},'000000'), '%Y-%m-%d%H%i%s')
+				</if>
+				<if test="(startdate == null or startdate == '') and (enddate != null and enddate != '') ">
+				AND a.REGDATE <![CDATA[<=]]> STR_TO_DATE(CONCAT(#{enddate},'235959'), '%Y-%m-%d%H%i%s')
+				</if>
+				<if test="(startdate != null and startdate != '') and (enddate != null and enddate != '') ">
+				AND a.REGDATE BETWEEN STR_TO_DATE(CONCAT(#{startdate},'000000'), '%Y-%m-%d%H%i%s') AND STR_TO_DATE(CONCAT(#{enddate},'235959'), '%Y-%m-%d%H%i%s')
+				</if>
+			</when>
+			<when test="dtkey != null and dtkey == 'repregdate'">
+				<if test="(startdate != null and startdate != '') and (enddate == null or enddate == '') ">
+				AND a.REPREGDATE <![CDATA[>=]]> STR_TO_DATE(CONCAT(#{startdate},'000000'), '%Y-%m-%d%H%i%s')
+				</if>
+				<if test="(startdate == null or startdate == '') and (enddate != null and enddate != '') ">
+				AND a.REPREGDATE <![CDATA[<=]]> STR_TO_DATE(CONCAT(#{enddate},'235959'), '%Y-%m-%d%H%i%s')
+				</if>
+				<if test="(startdate != null and startdate != '') and (enddate != null and enddate != '') ">
+				AND a.REPREGDATE BETWEEN STR_TO_DATE(CONCAT(#{startdate},'000000'), '%Y-%m-%d%H%i%s') AND STR_TO_DATE(CONCAT(#{enddate},'235959'), '%Y-%m-%d%H%i%s')
+				</if>
+			</when>
+            <otherwise></otherwise>
+        </choose>
+        <if test="ispbgoods != null and ispbgoods != ''">
+        	AND b.ISPBGOODS = #{ispbgoods}
+        </if>
+        <if test="dealerno != null and dealerno != ''">
+        	AND a.DEALERNO = #{dealerno}
+        </if>
+		<if test='asstatusarr != null and asstatusarr.size > 0'>
+		AND
+			<foreach index="index" collection="asstatusarr" item="_item" open="(" close=")" separator="OR" >
+			a.ASSTATUS = #{_item}
+			</foreach>
+		</if>
+        <if test="isreply != null and isreply != ''">
+        	AND a.ISREPLY = #{isreply}
+        </if>
+    </sql>
+    
+    <!-- A/S문의 접수완료가 아닌 건수 조회 -->
+    <select id="selectNonReceiptAsCount" parameterType="somap" resultType="Integer">
+        /* AsInquiryMapper - selectNonReceiptAsCount A/S문의 접수완료가 아닌 건수 조회 */
+        SELECT
+        	  COUNT(*)
+        FROM t_asinquiry
+        WHERE SITEID = #{siteid}
+        AND ASSTATUS <![CDATA[<>]]> 'AST001'	/* 접수완료가 아닌 내역 */
+        <choose>
+			<when test="asidxlist != null and asidxlist.size > 0">
+			AND ASIDX IN
+			<foreach collection="asidxlist" item="_asidx" index="index" open="(" separator="," close=")">
+				#{_asidx}
+			</foreach>
+			</when>
+			<otherwise>
+			AND ASIDX = #{asidx}
+			</otherwise>
+		</choose>
+    </select>
+    
+    <!-- A/S상태 갱신 -->
+    <update id="updateAsStatus" parameterType="somap">
+        UPDATE t_asinquiry SET	/* AsInquiryMapper - updateAsStatus A/S상태 갱신 */
+			  ASSTATUS = #{asstatus}
+		WHERE SITEID = #{siteid}
+		<choose>
+			<when test="asidxlist != null and asidxlist.size > 0">
+			AND ASIDX IN
+			<foreach collection="asidxlist" item="_asidx" index="index" open="(" separator="," close=")">
+				#{_asidx}
+			</foreach>
+			</when>
+			<otherwise>
+			AND ASIDX = #{asidx}
+			</otherwise>
+		</choose>
+	</update>
+    
+    <!-- A/S문의내용 수정 -->
+    <update id="updateAsInquiry" parameterType="somap">
+        UPDATE t_asinquiry SET	/* AsInquiryMapper - updateAsInquiry A/S문의내용 수정 */
+       	<choose>
+       		<when test='ispass != null and ispass != ""'>
+	        	ISPASS = #{ispass}
+       		</when>
+       		<otherwise>
+	        	<if test='isreply != null and isreply != ""'>
+	       		ISREPLY = #{isreply},
+	       		</if>
+	        	<if test='isreply != null and isreply == "T"'>
+	       		REPREGDATE = NOW(),
+	       		REPUSERNO = #{repuserno},
+	       		</if>
+	       		<if test='isreply != null and isreply == "F"'>
+	       		REPREGDATE = NULL,
+	       		REPUSERNO = NULL,
+	       		</if>
+	        	TPLIDX = IF(#{tplidx}='', null, #{tplidx}),
+	        	REPCONTENT = #{repcontent},
+	        	ASSTATUS = #{asstatus},
+	        	WRITER = #{writer},
+	        	TEL = #{tel},
+	        	POST = #{post},
+	        	ADDR = #{addr},
+	        	ADDRDETAIL = #{addrdetail},
+	        	ADDRROAD = #{addrroad},
+	        	ADDRDETAILROAD = #{addrdetail},
+	        	SIGUNGUCODE = #{sigungucode},
+	        	BUILDINGCODE = #{buildingcode},
+	        	ROADNAMECODE = #{roadnamecode}
+       		</otherwise>
+       	</choose>
+		WHERE SITEID = #{siteid}
+		<choose>
+			<when test="asidxlist != null and asidxlist.size > 0">
+			AND ASIDX IN
+			<foreach collection="asidxlist" item="_asidx" index="index" open="(" separator="," close=")">
+				#{_asidx}
+			</foreach>
+			</when>
+			<otherwise>
+			AND ASIDX = #{asidx}
+			</otherwise>
+		</choose>
+	</update>
+	
+	<insert id="insertAsApplySave" parameterType="somap" useGeneratedKeys="true" keyProperty="asidx">
+		INSERT INTO 
+			t_asinquiry 
+			(
+			SITEID
+			, SUBJECT 
+			, CONTENT 
+			, ASCNT 
+			, USERNO 
+			, WRITER 
+			, TEL 
+			, POST 
+			<if test='addrdetail != null and addrdetail != ""'>
+			, ADDRDETAIL 
+			</if>
+			<if test='addrdetailroad != null and addrdetailroad != ""'>
+			, ADDRDETAILROAD 
+			</if>
+			, ADDR
+			, ADDRROAD 
+			, SIGUNGUCODE 
+			, BUILDINGCODE 
+			, ROADNAMECODE 
+			, ASSTATUS 
+			, ORDNO 
+			, GOODSNO 
+			, OPTIONCODE 
+			, DADAMEMBERTYPE 
+			, MEMLVTYPE 
+			<if test='dealerno != null and dealerno != ""'>
+			, DEALERNO
+			</if>
+			) 
+		VALUES (
+			#{siteid}
+			, #{subject}
+			, #{content}
+			, #{ascnt}
+			, #{userno}
+			, #{writer}
+			, #{tel}
+			, #{post}
+			<if test='addrdetail != null and addrdetail != ""'>
+			, #{addrdetail}
+			</if>
+			<if test='addrdetailroad != null and addrdetailroad != ""'>
+			, #{addrdetailroad}
+			</if>
+			, #{addr}
+			, #{addrroad}
+			, #{sigungucode}
+			, #{buildingcode}
+			, #{roadnamecode}
+			, 'AST001'
+			, #{ordno}
+			, #{goodsno}
+			, #{optioncode}
+			, #{membertype}
+			, #{memlvtype}
+			<if test='dealerno != null and dealerno != ""'>
+			, #{dealerno}
+			</if>
+			)
+	</insert>
+	
+	<select id="selectAsApplyList" parameterType="somap" resultType="somap">
+		SELECT /* AsInquiryMapper.xml - selectAsApplyList A/S신청목록 리스트 */
+			  A.*
+			, COUNT(*) OVER() as totcnt
+		FROM (
+			SELECT
+				  a.ASIDX
+				, a.SITEID
+				, a.SUBJECT
+				, a.CONTENT
+				, a.ASCNT
+				, a.ASCNT AS ordcnt
+				, a.USERNO
+				, a.WRITER
+				, a.TEL
+				, a.POST
+				, a.ADDRDETAIL
+				, a.ADDR
+				, a.ADDRROAD
+				, a.ADDRDETAILROAD
+				, a.SIGUNGUCODE
+				, a.BUILDINGCODE
+				, a.ROADNAMECODE
+				, a.ASSTATUS
+				, if(a.ASSTATUS = 'AST001', 'AS 문의 접수', 'A/S완료') as statusnm
+				, a.DADAMEMBERTYPE
+				, a.MEMLVTYPE		
+				, date_format(a.REGDATE, '%Y.%m.%d') as REGDATE 
+				, a.ORDNO
+				, a.GOODSNO
+				, d.GOODSCODE
+				, a.OPTIONCODE
+				, d.goodsname
+				, (SELECT name from t_brand where idx = d.brandidx) as brandname		
+				, FN_GET_OPTION_CONCAT(a.goodsno, a.optioncode, ' | ') as optionname
+				, b.ORDERIDX
+				, c.REALGOODSAMT 
+				, c.ORDGDIDX
+				, FN_GET_FILE_URL(a.goodsno, 'FLT001', #{imgtype}) as fullpath 
+			FROM t_asinquiry a
+			INNER JOIN t_comorder b
+			ON a.ORDNO = b.ORDNO
+			INNER JOIN t_comorder_goods c
+			ON b.ORDERIDX = c.ORDERIDX
+			AND a.GOODSNO = c.GOODSNO 
+			AND a.OPTIONCODE = c.OPTIONCODE 			
+			INNER JOIN t_goods d 
+			ON a.GOODSNO = d.GOODSNO
+			WHERE 1=1 
+			AND a.SITEID = #{siteid}
+			AND a.ISTRASH = 'F'
+		    <choose>
+		    	<when test='userno != null and userno !="" and userno != 0'>
+		    	AND a.userno = #{userno}
+		    	</when>
+		    	<otherwise>
+		    	AND a.ordno = #{ordno}
+		    	</otherwise>
+		    </choose>
+			<choose>
+				<when test='asstatus != null and asstatus != "" and asstatus != "all"'>
+					AND a.ASSTATUS = #{asstatus}
+				</when>
+				<when test='asstatus == "all"'>
+					AND a.ASSTATUS in ('AST001','AST003')
+				</when>
+			</choose>
+			<if test='lastmonth != null and lastmonth != ""'>
+			AND a.REGDATE BETWEEN DATE_ADD(NOW(),INTERVAL -#{lastmonth} MONTH ) AND NOW()
+			</if>
+			ORDER BY a.REGDATE DESC
+		) A
+		<if test='startpage != null and endpage != null'>
+		LIMIT #{startpage}, #{endpage}
+		</if>
+	</select>
+	
+	<select id="selectNoneMemberAsApplyList" parameterType="somap" resultType="somap">
+		SELECT /* AsInquiryMapper.xml - selectNoneMemberAsApplyList 비회원 A/S신청목록 리스트 */
+			  COUNT(*) OVER() as totcnt
+			, a.ASIDX
+			, a.SITEID
+			, a.SUBJECT
+			, a.CONTENT
+			, a.ASCNT
+			, a.ASCNT AS ordcnt
+			, a.USERNO
+			, a.WRITER
+			, a.TEL
+			, a.POST
+			, a.ADDRDETAIL
+			, a.ADDR
+			, a.ADDRROAD
+			, a.ADDRDETAILROAD
+			, a.SIGUNGUCODE
+			, a.BUILDINGCODE
+			, a.ROADNAMECODE
+			, a.ASSTATUS
+			, if(a.ASSTATUS = 'AST001', 'AS 문의 접수', 'A/S완료') as statusnm
+			, a.DADAMEMBERTYPE
+			, a.MEMLVTYPE		
+			, date_format(a.REGDATE, '%Y.%m.%d') as REGDATE 
+			, a.ORDNO
+			, a.GOODSNO
+			, d.GOODSCODE
+			, a.OPTIONCODE
+			, d.goodsname
+			, (SELECT name from t_brand where idx = d.brandidx) as brandname
+			, FN_GET_OPTION_CONCAT(a.goodsno, a.optioncode) as optionname
+			, b.ORDERIDX
+			, c.REALGOODSAMT 
+			, c.ORDGDIDX
+			, c.DEALERNO 
+			, FN_GET_FILE_URL(a.goodsno, 'FLT001', #{imgtype}) as fullpath 
+		FROM t_asinquiry a
+		INNER JOIN t_comorder b
+		ON a.ORDNO = b.ORDNO
+		INNER JOIN t_comorder_goods c
+		ON b.ORDERIDX = c.ORDERIDX
+		INNER JOIN t_goods d 
+		ON a.GOODSNO = d.GOODSNO
+		WHERE b.orderidx = #{orderidx}
+		AND a.ISTRASH = 'F'
+		ORDER BY a.REGDATE DESC		
+		<if test='startpage != null and endpage != null'>
+		LIMIT #{startpage}, #{endpage}
+		</if>
+	</select>
+	
+	<select id="selectAsApplyListCount" parameterType="somap" resultType="Integer">
+		SELECT count(*) /* AsInquiryMapper.xml - selectAsApplyListCount A/S신청목록 리스트 총 갯수*/
+				FROM (SELECT FLOOR((rnum-1) / #{perpage}+1) as PAGENUMBER, A.*
+			FROM (SELECT
+				@rownum:=@rownum+1 as rnum				
+			FROM t_asinquiry a
+			INNER JOIN t_comorder b
+			ON a.ORDNO = b.ORDNO
+			INNER JOIN t_comorder_goods c
+			ON b.ORDERIDX = c.ORDERIDX
+			AND a.GOODSNO = c.GOODSNO 
+			AND a.OPTIONCODE = c.OPTIONCODE 					
+			INNER JOIN t_goods d 
+			ON a.GOODSNO = d.GOODSNO
+			WHERE 1=1 
+			AND	(@rownum:=0)=0	
+		    <choose>
+		    	<when test='userno != null and userno !="" and userno != 0'>
+		    	AND a.userno = #{userno}
+		    	</when>
+		    	<otherwise>
+		    	AND a.ordno = #{ordno}
+		    	</otherwise>
+		    </choose>			
+			AND a.SITEID = #{siteid}
+			AND a.ISTRASH = 'F'
+			AND a.DADAMEMBERTYPE = #{membertype}
+			AND a.MEMLVTYPE = #{memlvtype}
+			<choose>
+				<when test='asstatus != null and asstatus != "" and asstatus != "all"'>
+					AND a.ASSTATUS = #{asstatus}
+				</when>
+				<when test='asstatus == "all"'>
+					AND a.ASSTATUS in ('AST001','AST003')
+				</when>
+			</choose>			
+			<if test='lastmonth != null and lastmonth != ""'>
+			AND a.REGDATE BETWEEN DATE_ADD(NOW(),INTERVAL -#{lastmonth} MONTH ) AND NOW()
+			</if>
+			ORDER BY a.REGDATE DESC) A) AA
+	</select>
+	
+	<select id="selectAsApplyDetail" parameterType="somap" resultType="somap">
+	SELECT /* AsInquiryMapper.xml - selectAsApplyDetail A/S신청목록 상세 */
+		AA.* 
+		, (SELECT name FROM t_dealer WHERE userno = dealerno) as dealernm
+		, (SELECT tel FROM t_dealer_info WHERE aa.dealerno = dealerno) as dealertel
+	FROM
+		(SELECT 
+			A.* 
+			, (select dealerno from t_comorder_goods where ordgdidx = a.ordgdidx and orderidx = a.orderidx) as dealerno	
+		FROM
+			(SELECT 
+				a.ASIDX
+				, a.SITEID
+				, a.SUBJECT
+				, a.CONTENT
+				, a.ASCNT
+				, a.USERNO
+				, a.WRITER
+				, a.TEL
+				, a.POST
+				, a.ADDRDETAIL
+				, a.ADDR
+				, a.ADDRROAD
+				, a.ADDRDETAILROAD
+				, a.SIGUNGUCODE
+				, a.BUILDINGCODE
+				, a.ROADNAMECODE
+				, a.ASSTATUS
+				, if(a.ASSTATUS = 'AST001', 'AS 문의 접수', 'A/S완료') as statusnm
+				, a.DADAMEMBERTYPE
+				, a.MEMLVTYPE		
+				, date_format(a.REGDATE, '%Y.%m.%d') as REGDATE 
+				, a.ORDNO
+				, a.GOODSNO
+				, d.GOODSCODE
+				, a.OPTIONCODE
+				, d.goodsname
+				, (SELECT name from t_brand where idx = d.brandidx) as brandname		
+				,FN_GET_OPTION_CONCAT(a.goodsno, a.optioncode, ' | ') as optionname
+				, b.ORDERIDX
+				, c.REALGOODSAMT 
+				, c.ORDGDIDX
+				, c.FRSTORDCNT 			
+				, (select name from t_member where userno = a.REPUSERNO) as REPUSERNO
+				, a.REPCONTENT
+				, a.ISREPLY
+				, date_format(a.REPREGDATE, '%Y.%m.%d') as REPREGDATE 
+				,FN_GET_FILE_URL(a.goodsno, 'FLT001', #{imgtype}) as fullpath
+			FROM t_asinquiry a
+			INNER JOIN t_comorder b
+			ON a.ORDNO = b.ORDNO
+			INNER JOIN t_comorder_goods c
+			ON b.ORDERIDX = c.ORDERIDX
+			AND a.GOODSNO = c.GOODSNO
+			AND a.OPTIONCODE = c.OPTIONCODE 				
+			INNER JOIN t_goods d 
+			ON a.GOODSNO = d.GOODSNO
+			WHERE 
+			a.asidx = #{asidx}
+		    <choose>
+		    	<when test='userno != null and userno !="" and userno != 0'>
+		    	AND a.userno = #{userno}
+		    	</when>
+		    	<otherwise>
+		    	AND a.ordno = #{ordno}
+		    	</otherwise>
+		    </choose>
+			and a.siteid = #{siteid}
+			and a.istrash = 'F'
+			and a.asstatus != 'AST002'
+		) A ) AA
+	</select>
+	
+	<update id="deleteAsApply" parameterType="somap">
+		UPDATE t_asinquiry 
+		SET ISTRASH = 'T',
+			ASSTATUS = #{asstatus}
+		WHERE ASIDX = #{asidx}	
+	</update>
+	
+	<update id="updateAsApply" parameterType="somap">
+		UPDATE t_asinquiry 
+		SET 
+			content = #{content}
+			, WRITER = #{writer}
+			, tel = #{tel}
+			, post = #{post}
+			, ADDRDETAIL = #{addrdetail}
+			, ADDR = #{addr}
+			, ADDRROAD = #{addrroad}
+			, SIGUNGUCODE = #{sigungucode}
+			, BUILDINGCODE = #{buildingcode}
+			, ROADNAMECODE = #{roadnamecode}
+			, ascnt = #{ascnt}
+		WHERE ASIDX = #{asidx}	
+	</update>
+	
+</mapper>

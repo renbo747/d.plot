@@ -1,0 +1,57 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.dplot.mapper.CateTemplateMapper">
+	
+	<!-- 카테고리 템플릿 목록 조회 -->
+	<select id="selectCateTemplateList" parameterType="somap" resultType="somap">
+		WITH tc AS (
+		    SELECT 
+				tc.idx, tc.name, tc.depth, tc.parent
+			FROM t_category tc
+			WHERE siteid = #{siteid}
+			AND hidden = 0
+		)
+		SELECT 
+			tct.idx AS cateidx,
+			concat_ws(' > ', d.name, c.name, b.name, a.name) AS fullcategoryname
+		FROM t_cate_template tct
+		LEFT OUTER JOIN tc a ON a.idx = tct.idx
+		LEFT OUTER JOIN tc b ON a.parent = b.idx 
+		LEFT OUTER JOIN tc c ON b.parent = c.idx 
+		LEFT OUTER JOIN tc d ON c.parent = d.idx
+		<where>
+			AND tct.no = #{userno}
+		</where>
+		ORDER BY tct.idx
+	</select>
+	
+	<!-- 카테고리 템플릿 중복건수 조회 -->
+	<select id="selectCateTamplateDupCnt" parameterType="somap" resultType="int" >
+		SELECT
+			COUNT(*) AS dupcnt
+		FROM t_cate_template
+		<where>
+			AND idx = #{cateidx}
+			AND NO = #{userno}
+		</where>
+	</select>
+	
+	<!-- 카테고리 템플릿 추가 -->
+	<insert id="insertCateTemplate" parameterType="somap">
+		INSERT INTO t_cate_template (
+			idx, no
+		) VALUES (
+			#{cateidx}, #{userno}
+		)
+	</insert>
+	
+	<!-- 카테고리 템플릿 삭제 -->
+	<delete id="deleteCateTemplate" parameterType="somap">
+		DELETE FROM t_cate_template
+		<where>
+			AND idx = #{cateidx}
+			AND NO = #{userno}
+		</where>
+	</delete>
+</mapper>

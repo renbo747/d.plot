@@ -1,0 +1,438 @@
+//메뉴 선택
+.new-layout_list {
+  .dp-product {
+    
+  }
+}
+.shop-list {
+  .shop-list-ctg {
+    padding-left:20px;
+    align-items: center;
+    border-top: 1px solid #000;
+    border-bottom: 1px solid #000;
+
+    li + li {
+      margin-left: 40px;
+    }
+  }
+
+  .ctg-list {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: auto;
+    height: 50px;
+    text-align: center;
+    border: 0;
+    cursor: pointer;
+
+    &.active {
+      border-bottom: 0;
+      .list-default {
+        font-size: 20px;
+        letter-spacing: -1.04px;
+        line-height: 37px;
+        font-weight: 600;
+        color: $black;
+      }
+    }
+  }
+
+  .list-default {
+    display: block;
+    font-size: 20px;
+    letter-spacing: -.88px;
+    line-height: 32px;
+    font-weight: 500;
+    color: $gray-600;
+  }
+
+  //shop list section
+  .shop-list__header {
+    .header__top {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      height: auto;
+      padding: 60px 0 30px;
+      margin-bottom: 0;
+    }
+    .header__bottom {
+      position: relative;
+      .bottom__icon {
+        position: absolute;
+        top: 0;
+        right: 0;
+        display: none;
+        align-items: center;
+        justify-content: center;
+        border-radius: 50%;
+        border: 1px solid $black;
+        background: #fff;
+        width: 40px;
+        height: 40px;
+        cursor: pointer;
+      }
+    }
+  }
+
+  .header-right {
+    align-items: center;
+  }
+
+  .list-icon-box {
+    width: 20px;
+    height: 20px;
+    margin-right: 8px;
+  }
+
+  .icon-sort {
+    background-image: url("~@/assets/common/icon/icon-sort-black-20px.svg");
+  }
+
+  .list-select-box {
+    margin-right: 30px;
+  }
+
+  .list-filter-box {
+    width: auto;
+    height: auto;
+    li {
+      color: $gray-600;
+      cursor: pointer;
+      &.active {
+        color: $black;
+        font-weight: 500;
+      }
+    }
+    li:last-child .dp-bar {
+      display: none;
+    }
+    .dp-bar {
+      margin-left: 10px;
+      margin-right: 10px;
+    }
+  }
+
+  .icon-filter {
+    background-image: url("~@/assets/common/icon/icon-filter-black-20px.svg");
+  }
+
+  //select box scss
+  .form-select.select-list {
+    padding: 0 38px 0 0;
+  }
+
+  .header-filter__ul {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    overflow-x: auto;
+    margin-bottom: 50px;
+    width: calc(100% - 60px);
+    &.dplot_v2 {
+      width: 100%;
+      max-width: 610px;
+      margin: 20px auto 60px;
+      & li {
+        &:first-child {
+          margin-right: 10px !important;
+          margin-left:10px !important;
+        }
+        &:last-child {
+          margin-right: 10px !important;
+          margin-left:10px !important;
+        }
+      }
+    }
+    li {
+      margin-right: 10px;
+      margin-bottom: 10px;
+    }
+    li:first-child {
+      margin-left: 0;
+    }
+    li:last-child {
+      margin-right: 74px;
+    }
+
+    .icon-close {
+      cursor: pointer;
+    }
+  }
+
+  .shop-list__body {
+    padding-bottom: 80px;
+  }
+
+  .product-list {
+    width: calc(100% - 255px);
+    align-content: baseline;
+    margin-left: 60px;
+    .row {
+      padding-left: 0;
+    }
+  }
+}
+
+.dp-filter {
+  display: flex;
+  align-items: center;
+  white-space: nowrap;
+  padding: 0 16px;
+  border: 1px solid $border-color;
+  color: $gray-600;
+  height: 40px;
+  border-radius: 20px;
+  font-size: 16px;
+  letter-spacing: -.64px;
+  i {
+    margin-left: 8px;
+  }
+}
+
+.aside-filter.new-aside-filter {
+  .filter__title {
+    margin-bottom: 20px;
+  }
+  .price_range {
+    margin-bottom: 0;
+  }
+  .vue-slider-rail {
+    background: $gray-200;
+    .vue-slider-dot {
+      .filter__dot {
+        .dot-box {
+          display: flex;
+          justify-content: center;
+          align-items: center;
+          &::before {content:'Min'; white-space: nowrap; background: transparent; position: relative; width: auto; height: auto; color: #666; font-size: 9px;}
+          &::after {display: none;}
+        }
+      }
+      &:last-child {
+        .filter__dot {
+          .dot-box {
+            &::before {content:'Max';}
+          }
+        }
+      }
+    }
+  }
+  .filter__ul {
+    li {
+      label {width: 100%;}
+    }
+    &.border_radius_ul {
+      padding: 0;
+      display: flex;
+      flex-wrap: wrap;
+      li {
+        .magic-checkbox {
+          & + label {
+            border-radius: 100px;
+            font-size: 15px;
+            padding:8px 17px;
+            height: auto;
+            width: auto;
+            display: inline-block;
+            line-height: 1;
+            margin-right: 5px;
+            margin-bottom: 7px;
+          }
+        }
+      }
+    }
+  }
+  .brand__ul, .benefit__ul, .price__ul {
+    padding: 0;
+  }
+  .magic-checkbox{
+    & + label {
+      width: 100%;
+      height: 40px;
+      display: flex;
+      justify-content: flex-start;
+      align-items: center;
+      padding-left: 25px;
+      background: #f9f9f9;
+      font-size: 16px;
+      color: #000;
+      &::before {display: none;}
+    }
+    &:checked {
+      & + label{
+        background: #fff;
+        border:1px solid #000;
+      }
+    }
+  }
+}
+
+// pc 버전 aside filter
+.aside-filter {
+  width: 255px;
+  flex: 0 0 255px;
+  .filter__box  + .filter__box {
+    margin-top: 60px;
+  }
+  .filter__title {
+    margin-bottom: 30px;
+    font-size: 20px;
+    letter-spacing: -.8px;
+    line-height: 29px;
+    font-weight: 500;
+  }
+  .magic-checkbox + label {
+    padding-left: 34px;
+    font-size: 18px;
+    letter-spacing: -.72px;
+  }
+  .magic-checkbox + label:before {
+    width: 24px;
+    height: 24px;
+  }
+  .brand__ul,
+  .benefit__ul{
+    padding: 0 16px;
+    li + li {
+      margin-top: 10px;
+    }
+  }
+  .color__ul {
+    display: flex;
+    flex-wrap: wrap;
+    padding-left: 15px;
+    li {
+      width: 16.6%;
+      padding: 8px;
+      line-height: 0;
+    }
+    .color__label {
+      position: relative;
+      width: 100%;
+      padding-bottom: 100%;
+    }
+    .label__item {
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      display: block;
+      content: '';
+      width: 24px;
+      height: 24px;
+      border: 1px solid #000;
+      border-radius: 50%;
+      background: #000;
+    }
+    input:checked + .label__item {
+      border-width: 2px;
+      border-color: #000 !important;
+    }
+  }
+  .filter__range-slider {
+    .vue-slider-rail {
+      background: $gray-200;
+    }
+
+    .vue-slider-process {
+      background: #99cc00;
+    }
+
+    .filter__dot {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      width: 30px;
+      height: 30px;
+      border-radius: 50%;
+      background: #fff;
+      border: 1px solid $border-color;
+      box-shadow: 0 2px 2px 0 rgba(0,0,0,.16);
+      .dot-box {
+        position: relative;
+        width: 10px;
+        height: 10px;
+        &:before, &:after {
+          position: absolute;
+          top: 0;
+          left: 0;
+          display: block;
+          content: '';
+          width: 2px;
+          height: 100%;
+          background: $border-color;
+        }
+        &:after {
+          left: inherit;
+          right: 0;
+        }
+      }
+    }
+  }
+  .price__ul {
+    padding: 0 16px;
+    li {
+      font-size: 18px;
+      letter-spacing: -.54px;
+      line-height: 21px;
+    }
+    li + li {
+      margin-top: 10px;
+    }
+  }
+  .rating__ul {
+    padding: 0 16px;
+    li + li {
+      margin-top: 10px;
+    }
+    label {
+      line-height: 1;
+    }
+  }
+}
+
+.list__empty-items {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding-top: 200px;
+}
+.list__icon {
+  width: 94px;
+  height: 94px;
+  margin-bottom: 20px;
+  border-radius: 50%;
+  background-color: $gray-100;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.empty-list-icon {
+  width: 64px;
+  height: 64px;
+  background: url("~@/assets/common/icon/icon-exclamation-mark-64px.svg") no-repeat 0;
+}
+.empty-list__text {
+  color: $gray-700;
+  font-size: 16px;
+  letter-spacing: -.56px;
+  line-height: 20px;
+  text-align: center;
+}
+.shop-list__empty__btn {
+  max-width: 100px;
+}
+.empyt__btn__text {
+  font-size: 16px;
+}
+
+.dp-modal.pop-over.brand-plus-modal {
+  .modal-dialog {
+    max-width: 1200px;
+  }
+  .brand-plus-filter {
+    padding: 0 123px;
+  }
+}

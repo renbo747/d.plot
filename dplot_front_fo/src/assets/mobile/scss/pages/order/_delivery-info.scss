@@ -1,0 +1,69 @@
+.delivery-info {
+  padding-bottom: 240px;
+  .delivery-info-header {
+    padding-bottom: 30px;
+  }
+  .delivery-info__list__wrap {
+    padding-bottom: 20px;
+  }
+  .delivery-info__address {
+    .delivery-info__adderss__input {
+      width: calc(100% - 110px);
+      .base-input-horizon .form-control {
+        background-color: $gray-100;
+      }
+    }
+    .delivery-info__address__btn {
+      padding-left: 10px;
+      .dp-btn {
+        padding: 0 10px;
+      }
+    }
+    .delivery-info__address__plus {
+      .base-input .form-control {
+        background-color: $gray-100;
+      }
+    }
+  }
+}
+.order-success {
+  color: $black;
+
+  .modal-title {
+    font-weight: 400;
+  }
+  .order-success-message-body {
+    padding: 30px 0 60px 0;
+  }
+  .order-success-message {
+    font-size: 26px;
+    letter-spacing: -1.04px;
+    padding-bottom: 8px;
+  }
+  .order-success__pay {
+    padding: 0 10px;
+    li + li {
+      margin-top: 6px;
+    }
+  }
+  .order-success__pay__list {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+  }
+  .pay__list__title-text {
+    width: calc(100% - 80px);
+  }
+
+  .order-success__buttons {
+    display: flex;
+    align-items: center;
+  }
+
+}
+
+.dplot_v2 {
+  .pay__list__title-text {
+    width: auto;
+  }
+}

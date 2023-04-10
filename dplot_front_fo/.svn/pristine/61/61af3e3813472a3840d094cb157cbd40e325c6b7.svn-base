@@ -1,0 +1,62 @@
+#로컬환경변수 설정(변수선언시 VUE_APP으로 시작 ex. VUE_APP_PORT = 4000 )
+
+NODE_ENV = "local"
+BASE_URL = "/"
+
+# 서버설정
+#VUE_APP_SERVER_URL = "http://dev-www.dplot.co.kr:8080"
+VUE_APP_SERVER_URL = "http://dev-www.dplot.co.kr:8080"
+#VUE_APP_SERVER_URL = "http://local.mobilefactory.co.kr:8082"
+VUE_APP_LOG_LEVEL = "DEBUG"
+VUE_APP_SEARCH_URL = "http://3.35.165.108:7800"
+
+# 카카오 API KEY
+VUE_APP_KAKAO_ADMIN_KEY = "adc4185b11f0f05f7ed25e2fd81237d8"
+VUE_APP_KAKAO_API_KEY = "23dd0bc31d243d575c302f5a6b66f24e"
+VUE_APP_KAKAO_SCRIPT_KEY = "465f49e55a889d962c0f3ef8f276aa28"
+VUE_APP_KAKAO_REDIRECT_URI = "/kakao-auth"
+
+#다른쪽 사이트 apikey 다른 플렛폼의 sns 계정 확인용
+# VUE_APP_KAKAO_ADMIN_KEY = "65e846533572edc7d2b4b98cffddf45c"
+# VUE_APP_KAKAO_API_KEY = "531b4ca06f1b28b93b11de636774f7ee"
+# VUE_APP_KAKAO_SCRIPT_KEY = "bc2a8a36113c2e889066d1c608a9c223"
+# VUE_APP_KAKAO_REDIRECT_URI = "/kakao-auth"
+
+# 카카오 다다픽 계정 API KEY
+#VUE_APP_KAKAO_ADMIN_KEY = "416178142f66349563c4eeaace03b23d"
+#VUE_APP_KAKAO_API_KEY = "57e5f8cdaffa75ef1b5d7321621f81dd"
+#VUE_APP_KAKAO_SCRIPT_KEY = "3d2a541639e3ba9b84e455973ba4fe24"
+#VUE_APP_NAVER_REDIRECT_URI = "/kakao-auth"
+
+# 네이버 API KEY
+VUE_APP_NAVER_CLIENT_KEY = "pgVAnq0a21SfcerZdvb6"
+VUE_APP_NAVER_REDIRECT_URI = "/naver-auth"
+
+# APPLE API KEY
+VUE_APP_APPLE_CLIENT_KEY = "dadapick.signin-local"
+VUE_APP_APPLE_REDIRECT_URI = "/apple-auth"
+VUE_APP_APPLE_NONCE = "dplot.apple.login"
+
+# 토스 결제
+VUE_APP_TOSS_CLIENT_KEY = "test_ck_ODnyRpQWGrNW62Dqa778Kwv1M9EN"
+
+# NAVER PAY 결제
+VUE_APP_NAVER_PAY_CLIENT_KEY = "e3Y07DxqZHdywWv5et7b"
+VUE_APP_NAVER_PAY_MODE = "development"
+
+# KMC 본인인증
+VUE_APP_KMC_CERT_CPID = "DNCM1001"
+VUE_APP_KMC_CERT_REDIRECT__FULL_URI = "http://local.mobilefactory.co.kr/api/common/kmcResult"
+VUE_APP_KMC_CERT_REDIRECT_URI = "/api/common/kmcResult"
+VUE_APP_KMC_CERT_REDIRECT__FULL_URI_PUPUP = "http://local.mobilefactory.co.kr:8082/api/common/kmcResult/popup"
+VUE_APP_KMC_CERT_REDIRECT_URI_POPUP = "/api/common/kmcResult/popup"
+VUE_APP_KMC_CERT_SIGN_UP_MO = "003002"
+VUE_APP_KMC_CERT_SIGN_UP_PC = "003002"
+
+# RECOPICK
+VUE_APP_RECOPICK_DOMAIN = "dev.dplot.co.kr"
+VUE_APP_RECOPICK_SHOP = "ycoR5kT5"
+VUE_APP_RECOPICK_CART = "jTGye9iX"
+
+# 인스타계정 메인화면 주소
+VUE_APP_INSTA_MAIN_URL = "https://www.instagram.com/pick_dada/"

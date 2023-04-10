@@ -1,0 +1,85 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.dplot.mapper.SplashImgMapper">
+	<!-- 스플래시이미지 조회 -->
+	<select id="selectSplashImgList" resultType="somap" parameterType="somap">
+        /* SplashImgMapper.xml - selectSplashImgList 스플래시이미지 조회  */
+        SELECT 
+        	splidx
+        	, isdisplay
+        FROM t_splashimg
+        <where>
+        	AND siteid = #{siteid}
+        </where>
+        ORDER BY splidx DESC
+    </select>
+    
+    <!-- 스플래시이미지 추가 -->
+    <insert id="insertSplashImg" parameterType="somap" useGeneratedKeys="true" keyProperty="splidx">
+        /* SplashImgMapper.xml - insertSplashImg 스플래시이미지 추가  */
+    	INSERT INTO t_splashimg
+    	(siteid, isdisplay, reguserid, regdate)
+    	VALUES
+    	<foreach collection="addlist" item="item" separator=",">
+    	(#{siteid}, #{item.isdisplay}, #{reguserid}, now())
+    	</foreach>
+    </insert>
+    
+	<!-- 스플래시이미지 추가 및 수정 -->
+    <insert id="insertOrUpdateSplashImg" parameterType="somap" useGeneratedKeys="true" keyProperty="splidx">
+        /* SplashImgMapper.xml - insertOrUpdateSplashImg 스플래시이미지 추가 및 수정  */
+    	INSERT INTO t_splashimg
+    	(splidx, siteid, isdisplay, reguserid, regdate)
+    	VALUES
+    	<foreach collection="list" item="item" separator=",">
+    	(#{item.splidx}, #{siteid}, #{item.isdisplay}, #{reguserid}, now())
+    	</foreach>
+    	ON DUPLICATE KEY UPDATE isdisplay = CASE
+    	<foreach collection="list" item="item" separator="">
+    		 WHEN splidx = #{item.splidx} THEN #{item.isdisplay}
+    	</foreach>
+    	END
+    </insert>
+    
+    <!-- 스플래시이미지 수정 -->
+	<update id="updateSplashImg" parameterType="somap">
+        /* SplashImgMapper.xml - upateSplashImg 스플래시이미지 삭제  */
+        UPDATE t_splashimg
+        SET isdisplay = CASE 
+        <foreach collection="updatelist" index="index" item="item" separator="" open="" close="">
+           WHEN splidx = #{item.splidx} THEN #{item.isdisplay}
+       	</foreach>
+       	END
+        <where>
+        	AND splidx IN
+        	<foreach collection="updatelist" index="index" item="item" separator="," open="(" close=")">
+	            #{item.splidx}
+	       	</foreach>
+        </where>
+    </update>
+  
+    <!-- 스플래시이미지 삭제 -->
+	<delete id="deleteSplashImg" parameterType="somap">
+        /* SplashImgMapper.xml - deleteSplashImg 스플래시이미지 삭제  */
+        DELETE FROM t_splashimg
+        <where>
+        	AND splidx IN
+        	<foreach collection="removelist" index="index" item="item" separator="," open="(" close=")">
+	            #{item}
+	       	</foreach>
+        </where>
+    </delete>
+    
+    <select id="selectFrontSplashImgList" parameterType="somap" resultType="somap">
+		select /*SplashImgMapper.xml - selectFrontSplashImgList:: 스플래쉬 이미지 목록 조회*/
+		      CONCAT(HOST, IMGPATH, IMGFNAME) as fullpath
+		from t_splashimg a
+		inner join t_file b 
+		on a.siteid = #{siteid}
+		and a.splidx = b.orgidx
+		and a.isdisplay = 'T'
+		and b.imgtype = 'IGT102'
+		and b.istrash = 'F'
+    </select>
+</mapper>

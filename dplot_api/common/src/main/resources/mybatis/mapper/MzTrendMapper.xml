@@ -1,0 +1,649 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.dplot.mapper.MzTrendMapper">
+	<!-- 매거진트렌드 목록 조회 -->
+	<select id="selectTrendList" resultType="somap" parameterType="somap">
+        /* MzTrendMapper.xml - selectTrendList 매거진트렌드 목록 조회  */
+        SELECT
+        	a.*
+        	, RANK() OVER(ORDER BY CASE WHEN a.sortnum IS NULL THEN 1 ELSE 0 END, a.sortnum asc, a.tridx asc) as sortno
+        FROM (
+                 SELECT
+                 	a.subject
+                 	, a.tridx as idx
+                 	, a.tridx
+                 	, fn_get_file_url(a.tridx,'FLT001','IGT111') as pcimgurl
+                 	, fn_get_file_url(a.tridx,'FLT001','IGT112') as mobileimgurl
+                 	, fn_get_codename_str(a.muappchtype, 'MUAPPCHTYPE') as muappchtype
+                 	, fn_get_codename_str(a.mumembertype, 'MUMEMBERTYPE') as mumembertype
+                 	, fn_get_codename_str(a.mumemlvtype, 'MUMEMLVTYPE') as mumemlvtype
+                 	, a.isdisplay
+                 	, a.isdispshop
+                 	, sort as sortnum
+                 	, c.name as regusername
+                 	, <![CDATA[
+        				if((a.trsttime <= date_format(now(),'%Y%m%d%H%i') and a.tredtime >= date_format(now(),'%Y%m%d%H%i') and a.isdisplay = 'T'), '전시', '미전시') as nowdisplay
+        			 ]]>
+                 	, date_format(str_to_date(a.trsttime, '%Y%m%d'), '%Y-%m-%d') as trsttime
+                 	, a.trsttime as sorttrsttime
+                 	, date_format(str_to_date(a.tredtime, '%Y%m%d'), '%Y-%m-%d') as tredtime
+                 	, a.tredtime as sorttredtime
+                 	, date_format(a.regdate, '%Y-%m-%d') as regdate
+                 	, a.regdate as sortregdate
+                 	, d.subject as catesubject
+                 	, ifnull(likecnt, 0) as likecnt
+                 FROM t_mztrend a
+                 LEFT JOIN t_mzcate d ON a.mzcateidx = d.mzcateidx
+                 LEFT JOIN t_user b ON a.reguserid = b.userid
+                 LEFT JOIN t_admin c ON b.no = c.userno
+                 LEFT JOIN (
+                 	SELECT
+                 		tridx
+                 		, count(*) as likecnt
+                 	FROM t_mztrend_like
+                 	GROUP BY tridx
+                 ) e ON a.tridx = e.tridx
+                 <where>
+                 	AND a.siteid = #{siteid}
+                 	AND a.istrash = 'F'
+                 	<if test="isdisplay != null and isdisplay != ''">
+			            AND a.isdisplay = #{isdisplay}
+					</if>
+			        <if test="sword != null and sword != ''">
+			            <choose>
+			                <when test="skey == 'subject'">
+			                    AND a.subject LIKE concat('%',#{sword}, '%')
+			                </when>
+			                <when test="skey == 'regusername'">
+			                    AND c.name LIKE concat('%', #{sword}, '%')
+			                </when>
+			                <otherwise>
+			                    AND (
+			                    a.subject LIKE concat('%',#{sword}, '%')
+			                    OR c.name LIKE concat('%', #{sword}, '%')
+			                    )
+			                </otherwise>
+			            </choose>
+			        </if>
+			        <choose>
+			            <when test="stype == 'trsttime'">
+			                AND date_format(str_to_date(a.trsttime, '%Y%m%d'), '%Y-%m-%d') BETWEEN #{startdate} AND #{enddate}
+			            </when>
+			            <when test="stype == 'tredtime'">
+			                AND date_format(str_to_date(a.tredtime, '%Y%m%d'), '%Y-%m-%d') BETWEEN #{startdate} AND #{enddate}
+			            </when>
+			            <when test="stype == 'regdate'">
+			                AND date_format(a.regdate, '%Y-%m-%d') BETWEEN #{startdate} AND #{enddate}
+			            </when>
+			            <otherwise>
+			                AND (
+			                    date_format(str_to_date(a.trsttime, '%Y%m%d'), '%Y-%m-%d') BETWEEN #{startdate} AND #{enddate}
+			                	OR date_format(str_to_date(a.tredtime, '%Y%m%d'), '%Y-%m-%d') BETWEEN #{startdate} AND #{enddate}
+			                    OR date_format(a.regdate, '%Y-%m-%d') BETWEEN #{startdate} AND #{enddate}
+			                )
+			            </otherwise>
+			        </choose>
+			        <if test='isallmuappch != "T"'>
+				        <if test='muappchtypearr != null and muappchtypearr.size > 0'>
+							AND
+							<foreach index="index" collection="muappchtypearr" item="_item" open="(" close=")" separator="OR" >
+								a.muappchtype LIKE CONCAT('%', #{_item}, '%')
+							</foreach>
+						</if>
+					</if>
+					<if test='isallmumember != "T"'>
+						<if test='mumembertypearr != null and mumembertypearr.size > 0'>
+							AND
+							<foreach index="index" collection="mumembertypearr" item="_item" open="(" close=")" separator="OR" >
+								a.mumembertype LIKE CONCAT('%', #{_item}, '%')
+							</foreach>
+						</if>
+					</if>
+					<if test='isallmumemlv != "T"'>
+						<if test='mumemlvtypearr != null and mumemlvtypearr.size > 0'>
+							AND
+							<foreach index="index" collection="mumemlvtypearr" item="_item" open="(" close=")" separator="OR" >
+								a.mumemlvtype LIKE CONCAT('%', #{_item}, '%')
+							</foreach>
+						</if>
+					</if>
+			        </where>
+        ) a, (SELECT @rownum := 0) temp
+        <choose>
+            <when test="psort == 'trsttime_desc'">
+                ORDER BY a.isdisplay DESC, a.sorttrsttime DESC
+            </when>
+            <when test="psort == 'trsttime_asc'">
+                ORDER BY a.isdisplay DESC, a.sorttrsttime ASC
+            </when>
+            <when test="psort == 'tredtime_desc'">
+                ORDER BY a.isdisplay DESC, a.sorttredtime DESC
+            </when>
+            <when test="psort == 'tredtime_asc'">
+                ORDER BY a.isdisplay DESC, a.sorttredtime ASC
+            </when>
+            <when test="psort == 'regdate_desc'">
+                ORDER BY a.isdisplay DESC, a.sortregdate DESC
+            </when>
+            <when test="psort == 'regdate_asc'">
+                ORDER BY a.isdisplay DESC, a.sortregdate ASC
+            </when>
+            <otherwise>
+                ORDER BY a.isdisplay DESC, isdispshop desc, (CASE a.isdisplay WHEN 'T' THEN a.sortnum END), (CASE a.isdisplay WHEN 'F' THEN a.sorttrsttime END)
+            </otherwise>
+        </choose>
+    </select>
+
+	<!-- 매거진트렌드 엑셀 목록 조회 -->
+	<select id="selectTrendExcelList" resultType="somap" parameterType="somap">
+        /* MzTrendMapper.xml - selectTrendExcelList 매거진트렌드 엑셀 목록 조회  */
+        SELECT
+               a.*
+               , if(a.sortnum is not null, RANK() OVER(ORDER BY CASE WHEN a.sortnum IS NULL THEN 1 ELSE 0 END, a.sortnum asc, a.tridx asc), '-') as sortno
+        FROM (
+                 SELECT
+                 	a.subject
+                 	, a.tridx as idx
+                 	, a.tridx
+                 	, fn_get_file_url(a.tridx,'FLT001','IGT111') as pcimgurl
+                 	, fn_get_file_url(a.tridx,'FLT001','IGT112') as mobileimgurl
+                 	, fn_get_codename_str(a.muappchtype, 'MUAPPCHTYPE') as muappchtype
+                 	, fn_get_codename_str(a.mumembertype, 'MUMEMBERTYPE') as mumembertype
+                 	, fn_get_codename_str(a.mumemlvtype, 'MUMEMLVTYPE') as mumemlvtype
+                 	, if(a.isdisplay = 'T','노출','미노출') as isdisplay
+                 	, a.isdisplay as sortdisplay
+                 	, if(a.isdispshop = 'T','●','-') as isdispshop
+                 	, a.isdispshop as sortdispshop
+                 	, if(a.sort is not null ,a.sort,'-') as sortnum
+                 	, c.name as regusername
+                 	, <![CDATA[
+        				if((a.trsttime <= date_format(now(),'%Y%m%d%H%i') and a.tredtime >= date_format(now(),'%Y%m%d%H%i') and a.isdisplay = 'T'), '전시', '미전시') as nowdisplay
+        			 ]]>
+                 	, date_format(str_to_date(a.trsttime, '%Y%m%d'), '%Y-%m-%d') as trsttime
+                 	, a.trsttime as sorttrsttime
+                 	, date_format(str_to_date(a.tredtime, '%Y%m%d'), '%Y-%m-%d') as tredtime
+                 	, a.tredtime as sorttredtime
+                 	, date_format(a.regdate, '%Y-%m-%d') as regdate
+                 	, a.regdate as sortregdate
+                 	, d.subject as catesubject
+                 	, ifnull(likecnt, 0) as likecnt
+                 FROM t_mztrend a
+                 LEFT JOIN t_mzcate d ON a.mzcateidx = d.mzcateidx
+                 LEFT JOIN t_user b ON a.reguserid = b.userid
+                 LEFT JOIN t_admin c ON b.no = c.userno
+                 LEFT JOIN (
+                 	SELECT
+                 		tridx
+                 		, count(*) as likecnt
+                 	FROM t_mztrend_like
+                 	GROUP BY tridx
+                 ) e ON a.tridx = e.tridx
+                 <where>
+                 	AND a.siteid = #{siteid}
+                 	AND a.istrash = 'F'
+                 	<if test="isdisplay != null and isdisplay != ''">
+			            AND a.isdisplay = #{isdisplay}
+					</if>
+			        <if test="sword != null and sword != ''">
+			            <choose>
+			                <when test="skey == 'subject'">
+			                    AND a.subject LIKE concat('%',#{sword}, '%')
+			                </when>
+			                <when test="skey == 'regusername'">
+			                    AND c.name LIKE concat('%', #{sword}, '%')
+			                </when>
+			                <otherwise>
+			                    AND (
+			                    a.subject LIKE concat('%',#{sword}, '%')
+			                    OR c.name LIKE concat('%', #{sword}, '%')
+			                    )
+			                </otherwise>
+			            </choose>
+			        </if>
+			        <choose>
+			            <when test="stype == 'trsttime'">
+			                AND date_format(str_to_date(a.trsttime, '%Y%m%d'), '%Y-%m-%d') BETWEEN #{startdate} AND #{enddate}
+			            </when>
+			            <when test="stype == 'tredtime'">
+			                AND date_format(str_to_date(a.tredtime, '%Y%m%d'), '%Y-%m-%d') BETWEEN #{startdate} AND #{enddate}
+			            </when>
+			            <when test="stype == 'regdate'">
+			                AND date_format(a.regdate, '%Y-%m-%d') BETWEEN #{startdate} AND #{enddate}
+			            </when>
+			            <otherwise>
+			                AND (
+			                    date_format(str_to_date(a.trsttime, '%Y%m%d'), '%Y-%m-%d') BETWEEN #{startdate} AND #{enddate}
+			                	OR date_format(str_to_date(a.tredtime, '%Y%m%d'), '%Y-%m-%d') BETWEEN #{startdate} AND #{enddate}
+			                    OR date_format(a.regdate, '%Y-%m-%d') BETWEEN #{startdate} AND #{enddate}
+			                )
+			            </otherwise>
+			        </choose>
+			        <if test='isallmuappch != "T"'>
+				        <if test='muappchtypearr != null and muappchtypearr.size > 0'>
+							AND
+							<foreach index="index" collection="muappchtypearr" item="_item" open="(" close=")" separator="OR" >
+								a.muappchtype LIKE CONCAT('%', #{_item}, '%')
+							</foreach>
+						</if>
+					</if>
+					<if test='isallmumember != "T"'>
+						<if test='mumembertypearr != null and mumembertypearr.size > 0'>
+							AND
+							<foreach index="index" collection="mumembertypearr" item="_item" open="(" close=")" separator="OR" >
+								a.mumembertype LIKE CONCAT('%', #{_item}, '%')
+							</foreach>
+						</if>
+					</if>
+					<if test='isallmumemlv != "T"'>
+						<if test='mumemlvtypearr != null and mumemlvtypearr.size > 0'>
+							AND
+							<foreach index="index" collection="mumemlvtypearr" item="_item" open="(" close=")" separator="OR" >
+								a.mumemlvtype LIKE CONCAT('%', #{_item}, '%')
+							</foreach>
+						</if>
+					</if>
+			        </where>
+        ) a, (SELECT @rownum := 0) temp
+        <choose>
+            <when test="psort == 'trsttime_desc'">
+                ORDER BY a.sortdisplay DESC, a.sorttrsttime DESC
+            </when>
+            <when test="psort == 'trsttime_asc'">
+                ORDER BY a.sortdisplay DESC, a.sorttrsttime ASC
+            </when>
+            <when test="psort == 'tredtime_desc'">
+                ORDER BY a.sortdisplay DESC, a.sorttredtime DESC
+            </when>
+            <when test="psort == 'tredtime_asc'">
+                ORDER BY a.sortdisplay DESC, a.sorttredtime ASC
+            </when>
+            <when test="psort == 'regdate_desc'">
+                ORDER BY a.sortdisplay DESC, a.sortregdate DESC
+            </when>
+            <when test="psort == 'regdate_asc'">
+                ORDER BY a.sortdisplay DESC, a.sortregdate ASC
+            </when>
+            <otherwise>
+                ORDER BY a.sortdisplay DESC, a.sortdispshop desc, (CASE a.sortdisplay WHEN 'T' THEN a.sortnum END), (CASE a.sortdisplay WHEN 'F' THEN a.sorttrsttime END)
+            </otherwise>
+        </choose>
+    </select>
+
+	 <!-- 매거진트렌드 전시여부 별 수량 조회 -->
+	<select id="selectTrendShowCnt" resultType="somap" parameterType="somap">
+        /* MzTrendMapper.xml - selectTrendShowCnt 매거진트렌드 전시여부 별 수량 조회  */
+        SELECT
+    		count(*) AS totalcnt
+			,IFNULL(SUM(CASE a.isdisplay WHEN 'T' THEN 1 ELSE 0 END), 0) AS showcnt
+			,IFNULL(SUM(CASE a.isdisplay WHEN 'F' THEN 1 ELSE 0 END), 0) AS hidecnt
+		FROM t_mztrend a
+        LEFT JOIN t_mzcate d ON a.mzcateidx = d.mzcateidx
+        LEFT JOIN t_user b ON a.reguserid = b.userid
+        LEFT JOIN t_admin c ON b.no = c.userno
+        <where>
+        	AND a.siteid = #{siteid}
+        	AND a.istrash = 'F'
+        	<if test="isdisplay != null and isdisplay != ''">
+            AND a.isdisplay = #{isdisplay}
+		</if>
+        <if test="sword != null and sword != ''">
+            <choose>
+                <when test="skey == 'subject'">
+                    AND a.subject LIKE concat('%',#{sword}, '%')
+                </when>
+                <when test="skey == 'regusername'">
+                    AND c.name LIKE concat('%', #{sword}, '%')
+                </when>
+                <otherwise>
+                    AND (
+                    a.subject LIKE concat('%',#{sword}, '%')
+                    OR c.name LIKE concat('%', #{sword}, '%')
+                    )
+                </otherwise>
+            </choose>
+        </if>
+        <choose>
+            <when test="stype == 'trsttime'">
+                AND date_format(str_to_date(a.trsttime, '%Y%m%d'), '%Y-%m-%d') BETWEEN #{startdate} AND #{enddate}
+            </when>
+            <when test="stype == 'tredtime'">
+                AND date_format(str_to_date(a.tredtime, '%Y%m%d'), '%Y-%m-%d') BETWEEN #{startdate} AND #{enddate}
+            </when>
+            <when test="stype == 'regdate'">
+                AND date_format(a.regdate, '%Y-%m-%d') BETWEEN #{startdate} AND #{enddate}
+            </when>
+            <otherwise>
+                AND (
+                    date_format(str_to_date(a.trsttime, '%Y%m%d'), '%Y-%m-%d') BETWEEN #{startdate} AND #{enddate}
+                	OR date_format(str_to_date(a.tredtime, '%Y%m%d'), '%Y-%m-%d') BETWEEN #{startdate} AND #{enddate}
+                    OR date_format(a.regdate, '%Y-%m-%d') BETWEEN #{startdate} AND #{enddate}
+                )
+            </otherwise>
+        </choose>
+        <if test='isallmuappch != "T"'>
+	        <if test='muappchtypearr != null and muappchtypearr.size > 0'>
+				AND
+				<foreach index="index" collection="muappchtypearr" item="_item" open="(" close=")" separator="OR" >
+					a.muappchtype LIKE CONCAT('%', #{_item}, '%')
+				</foreach>
+			</if>
+		</if>
+		<if test='isallmumember != "T"'>
+			<if test='mumembertypearr != null and mumembertypearr.size > 0'>
+				AND
+				<foreach index="index" collection="mumembertypearr" item="_item" open="(" close=")" separator="OR" >
+					a.mumembertype LIKE CONCAT('%', #{_item}, '%')
+				</foreach>
+			</if>
+		</if>
+		<if test='isallmumemlv != "T"'>
+			<if test='mumemlvtypearr != null and mumemlvtypearr.size > 0'>
+				AND
+				<foreach index="index" collection="mumemlvtypearr" item="_item" open="(" close=")" separator="OR" >
+					a.mumemlvtype LIKE CONCAT('%', #{_item}, '%')
+				</foreach>
+			</if>
+		</if>
+        </where>
+    </select>
+
+    <!-- 매거진트렌드 저장 -->
+	<insert id="insertTrend" parameterType="somap" useGeneratedKeys="true" keyProperty="tridx">
+        /* MzTrendMapper.xml - insertTrend 매거진트렌드 저장  */
+        INSERT INTO t_mztrend
+        (siteid, subject, sort, `desc`, muappchtype, mumembertype, mumemlvtype, contents, trsttime, tredtime, isdisplay, mzcateidx, isdispshop, reguserid, regdate, mobile_content)
+        VALUES(#{siteid}, #{subject},
+		<choose>
+			<when test='isdisplay == "T"'>
+	            (
+	                SELECT a.sortnum
+	                FROM (
+	                SELECT ifnull(max(sort) + 1, 1) AS sortnum
+	                FROM t_mztrend
+	                WHERE istrash = 'F'
+	                ) a
+	            ),
+	        </when>
+	        <otherwise>
+	        	null,
+	        </otherwise>
+		</choose>
+	    #{desc}, #{muappchtype}, #{mumembertype}, #{mumemlvtype}, #{contents}, #{trsttime}, #{tredtime}, #{isdisplay}, #{mzcateidx}, #{isdispshop}, #{reguserid}, now(), #{mobile_content})
+    </insert>
+
+
+    <!-- 매거진트렌드 상세 조회 -->
+	<select id="selectTrendDetail" resultType="somap" parameterType="somap">
+        /* MzTrendMapper.xml - selectTrendDetail 매거진트렌드 상세 조회  */
+        SELECT
+        	a.tridx
+        	, a.isdisplay
+        	, a.subject
+        	, a.desc
+        	, a.trsttime
+        	, a.tredtime
+        	, a.contents
+        	, a.mobile_content
+        	, a.muappchtype
+        	, a.mumembertype
+        	, a.mumemlvtype
+        	, a.mzcateidx
+        	, a.isdispshop
+        	, a.reguserid
+        	, date_format(a.regdate, '%Y-%m-%d') as regdate
+        	, date_format(a.moddate, '%Y-%m-%d') as moddate
+        FROM t_mztrend a
+        <where>
+        	AND tridx = #{tridx}
+        </where>
+    </select>
+
+    <!-- 매거진트렌드 수정 -->
+	<update id="updateTrend" parameterType="somap">
+        /* MzexhibitMapper.xml - updateTrend 매거진트렌드 수정  */
+        UPDATE t_mztrend tm
+        <set >
+	      <if test="subject != null" >
+	        subject = #{subject},
+	      </if>
+	      <if test="desc != null" >
+	        `desc` = #{desc},
+	      </if>
+	      <if test="trsttime != null" >
+	        trsttime = #{trsttime},
+	      </if>
+	      <if test="tredtime != null" >
+	        tredtime = #{tredtime},
+	      </if>
+	      <if test="muappchtype != null" >
+	        muappchtype = #{muappchtype},
+	      </if>
+	      <if test="mumembertype != null" >
+	        mumembertype = #{mumembertype},
+	      </if>
+	      <if test="mumemlvtype != null" >
+	        mumemlvtype = #{mumemlvtype},
+	      </if>
+	      <if test="contents != null" >
+	        contents = #{contents},
+	      </if>
+	      <if test="mobile_content != null" >
+	        mobile_content = #{mobile_content},
+	      </if>
+	      <if test="isdispshop != null" >
+	        isdispshop = #{isdispshop},
+	      </if>
+	      <if test="isdisplay != null" >
+	        isdisplay = #{isdisplay},
+	      </if>
+	      <if test="mzcateidx != null">
+	      	mzcateidx = #{mzcateidx},
+	      </if>
+	      <choose>
+	      	<when test='isdisplay == "F"'>
+	      		sort = null,
+	      	</when>
+	      	<otherwise>
+	      		sort =
+	      		CASE
+	            WHEN ifnull(tm.sort,'') = '' THEN
+	      		(
+	                SELECT a.sortnum
+	                FROM (
+	                SELECT ifnull(max(sort) + 1, 1) AS sortnum
+	                FROM t_mztrend
+	                WHERE istrash = 'F'
+	                ) a
+	            )
+	            ELSE tm.sort END,
+	      	</otherwise>
+	      </choose>
+	      <if test="istrash != null" >
+	        istrash = #{istrash},
+	      </if>
+	      moduserid = #{moduserid},
+	      moddate =  now(),
+	    </set>
+        <where>
+        	<choose>
+        		<when test="idxlist == null or idxlist.size == 0">
+	                <if test="tridx != null and tridx != ''">
+	                    AND tridx = #{tridx}
+	                </if>
+	            </when>
+        		<otherwise>
+        			AND tridx IN
+        			<foreach collection="idxlist" index="index" item="item" separator="," open="(" close=")">
+			            #{item}
+			       	</foreach>
+        		</otherwise>
+        	</choose>
+        </where>
+    </update>
+
+    <!-- 노출중인 매거진트렌드 수량 조회  -->
+	<select id="checkCondition" resultType="somap" parameterType="somap">
+        /* MzTrendMapper.xml - checkCondition 노출중인 매거진트렌드 수량 조회  */
+       	SELECT count(*) as count
+       		   , IFNULL(SUM(CASE isdispshop WHEN 'T' THEN 1 ELSE 0 END), 0) AS maincnt
+       	FROM t_mztrend
+       	<where>
+       		AND siteid = #{siteid}
+	       	<choose>
+	            <when test="idxlist == null or idxlist.size == 0">
+	                <if test="idx != null and idx != ''">
+	                    AND tridx != #{idx}
+	                </if>
+	            </when>
+	            <otherwise>
+	                AND tridx NOT IN
+	                <foreach collection="idxlist" index="index" item="item" separator="," open="(" close=")">
+	                    #{item}
+	                </foreach>
+	            </otherwise>
+	        </choose>
+	        AND DATE_FORMAT(now(), '%Y%m%d%H%i') between trsttime and tredtime
+	        AND istrash = 'F'
+	        AND isdisplay = 'T'
+       	</where>
+    </select>
+
+    <!-- 매거진트렌드 리스트로 노출조건 수정 시 최대 수량체크 -->
+    <select id="selectDispShopCntList" resultType="Integer" parameterType="somap">
+        /* MzKeywordMapper.xml - selectDispShopCntList 매거진트렌드 리스트로 노출조건 수정 시 최대 수량체크   */
+        SELECT ifnull(max(cnt), 0)
+        FROM (
+        	SELECT (
+        		SELECT COUNT(*)
+        		FROM t_mztrend b
+        		WHERE siteid = #{siteid}
+        		AND (
+        			b.trsttime between a.trsttime and a.tredtime
+        			OR b.tredtime between a.trsttime and a.tredtime
+        			<![CDATA[
+        			OR (b.trsttime <= a.trsttime and b.tredtime >=  a.tredtime)
+        			]]>
+        		)
+        		AND isdispshop = 'T'
+        		AND (
+        			isdisplay = 'T'
+       			 	<if test="idxlist != null or idxlist.size != 0">
+       					OR tridx IN
+			        	<foreach collection="idxlist" index="index" item="item" separator="," open="(" close=")">
+			                #{item}
+			            </foreach>
+       				</if>
+		        )
+        		AND istrash = 'F'
+        	) as cnt
+        	FROM t_mztrend a
+        	WHERE
+			<if test="idxlist != null or idxlist.size != 0">
+    			tridx IN
+	        	<foreach collection="idxlist" index="index" item="item" separator="," open="(" close=")">
+	                #{item}
+	            </foreach>
+    		</if>
+        ) a
+    </select>
+
+    <!-- 매거진트렌드 노출조건 수정 시 최대 수량체크 -->
+    <select id="selectDispShopCnt" resultType="Integer" parameterType="somap">
+        /* MzKeywordMapper.xml - selectDispShopCnt 매거진트렌드 노출조건 수정 시 최대 수량체크   */
+        SELECT count(*)
+        FROM t_mztrend
+        <where>
+        	AND siteid = #{siteid}
+        	<if test="idx != null or idx != ''">
+        		AND tridx != #{idx}
+        	</if>
+        	AND isdisplay = 'T'
+        	AND isdispshop = 'T'
+        	AND (
+        		trsttime between #{trsttime} and #{tredtime}
+        		OR tredtime between #{trsttime} and #{tredtime}
+        		<![CDATA[
+       			OR (trsttime <= #{trsttime} and tredtime >= #{tredtime})
+       			]]>
+        	)
+        </where>
+
+    </select>
+
+    <!-- 매거진트렌드 순서 변경 -->
+    <update id="updateTrendSortNum" parameterType="somap">
+        /* MzTrendMapper.xml - updateTrendSortNum 매거진트렌드 순서 변경  */
+        UPDATE t_mztrend
+        SET sort =
+            CASE tridx
+            <foreach collection="list" index="index" item="item">
+                WHEN #{item.idx} THEN #{item.sortnum}
+            </foreach>
+            END
+        WHERE 1 = 1
+        AND tridx in
+        <foreach collection="list" index="index" item="item" separator="," open="(" close=")">
+            #{item.idx}
+        </foreach>
+    </update>
+
+    <!-- 매거진트렌드 순서 전체 변경 -->
+    <update id="updateAllSortNum" parameterType="somap">
+        /* MzTrendMapper.xml - updateMainBannerSortNum 매거진트렌드 순서 변경  */
+    	 UPDATE t_mztrend a inner join (SELECT tridx, @cnt:=@cnt+1 cnt from t_mztrend,(select @cnt:=0) b where siteid=#{siteid} AND istrash='F' AND isdisplay='T' ORDER BY sort) b on a.tridx = b.tridx
+    	 SET sort = cnt
+    	 where siteid=#{siteid} AND istrash='F' AND isdisplay='T'
+    </update>
+
+
+    <select id="selectFrontMzTrendList" parameterType="somap" resultType="somap">
+	     SELECT tm.MZCATEIDX
+	         , tm.SUBJECT AS catesubject
+	         , tm.`DESC` AS catedesc
+	         , tm2.TRIDX
+	         , tm2.SUBJECT
+	         , tm2.`DESC`
+	         , tm2.ISDISPSHOP
+	         , fn_get_file_url(tm2.TRIDX ,'FLT001',#{imgtype}) as fullpath
+	         , tm.subject as label
+	         , tm2.subject as title
+	         , tm2.contents
+	         , b.keywords
+	    FROM t_mzcate tm
+	    INNER JOIN t_mztrend tm2 ON tm.MZCATEIDX  = tm2.MZCATEIDX
+	    	AND tm2.SITEID  = #{siteid}
+	    	AND tm2.ISDISPLAY  = 'T'
+	    	AND tm2.ISTRASH = 'F'
+	    LEFT JOIN (
+    		SELECT tridx
+    			, group_concat(keyword) as keywords
+    		FROM t_mztrend_keword tmk
+    		GROUP BY tridx
+    	) b ON tm2.tridx = b.tridx
+	    WHERE tm.SITEID  = #{siteid}
+	    AND tm.ISDISPLAY = 'T'
+	    AND tm.ISTRASH  = 'F'
+	    <if test="mztrend == null or mztrend == ''">
+	    	AND tm2.ISDISPSHOP = 'T'
+	    </if>
+	    AND tm2.MUAPPCHTYPE LIKE CONCAT('%', #{muappchtype}, '%')
+		AND tm2.MUMEMBERTYPE LIKE CONCAT('%', #{mumembertype}, '%')
+		AND tm2.MUMEMLVTYPE LIKE CONCAT('%', #{mumemlvtype}, '%')
+		AND date_format(now(), '%Y%m%d%H%i') BETWEEN tm2.TRSTTIME  AND tm2.TREDTIME
+		ORDER BY sort
+    </select>
+
+    <select id="selectFrontTrendDetail" parameterType="somap" resultType="somap">
+    	SELECT a.tridx
+    		, a.subject
+	        , fn_get_file_url(a.tridx ,'FLT001',#{imgtype}) as fullpath
+	        , a.contents
+	        , a.mobile_content
+	        , a.`DESC`
+	        , ifnull((select 'T' from t_mztrend_like where userno = #{userno} and tridx = #{tridx}), 'F') as iswished
+	        , (SELECT count(*) FROM t_mztrend_like WHERE tridx = #{tridx}) as wishcnt
+	   	FROM t_mztrend a
+	   	WHERE tridx = #{tridx}
+    </select>
+</mapper>

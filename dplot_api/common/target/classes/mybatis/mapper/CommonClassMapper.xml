@@ -1,0 +1,100 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.dplot.mapper.CommonClassMapper">
+	
+	<!-- 공통코드그룹 목록 조회 -->
+	<select id="selectCodeClassList" parameterType="somap" resultType="somap" >
+		SELECT /* CommonClassMapper.xml - selectCodeClassList 공통코드그룹 목록 조회 */
+			a.*, FORMAT(@ROWNUM := @ROWNUM+1,0) AS no
+		FROM (
+			SELECT 
+				tcc.cmclass
+				, tcc.classname
+				, tcc.detail
+				, CASE tcc.istrash WHEN 'F' THEN '사용' ELSE '미사용' END AS istrash
+			FROM t_common_class tcc
+			<where>
+			<if test="istrash != null and istrash != ''">
+				AND tcc.istrash = #{istrash}
+			</if>
+			<if test="sword != null and sword != ''">
+				AND (tcc.classname like concat('%',#{sword},'%')
+				OR tcc.cmclass like concat('%',#{sword},'%'))
+			</if>
+			</where>
+		) a, (select @ROWNUM := #{startpage}) as b
+		limit #{startpage}, #{endpage}
+	</select>
+	
+	<!-- 공통코드그룹 수량 조회 -->
+	<select id="selectCodeClassCnt" parameterType="somap" resultType="Integer" >
+		SELECT /* CommonClassMapper.xml - selectCodeClassCnt 공통코드그룹 수량 조회 */
+			count(*)
+		FROM t_common_class tcc
+		<where>
+		<if test="istrash != null and istrash != ''">
+			AND tcc.istrash = #{istrash}
+		</if>
+		<if test="sword != null and sword != ''">
+			AND (tcc.classname like concat('%',#{sword},'%')
+			OR tcc.cmclass like concat('%',#{sword},'%'))
+		</if>
+		</where>
+	</select>
+	
+	<!-- 공통코드그룹 엑셀 목록 조회 -->
+	<select id="selectCodeClassExcelList" parameterType="somap" resultType="HashMap" >
+		SELECT /* CommonClassMapper.xml - selectCodeClassExcelList 공통코드그룹 엑셀 목록 조회 */
+			a.*, FORMAT(@ROWNUM := @ROWNUM+1,0) AS no
+		FROM (
+			SELECT 
+				tcc.cmclass
+				, tcc.classname
+				, tcc.detail
+				, CASE tcc.istrash WHEN 'F' THEN '사용' ELSE '미사용' END AS istrash
+			FROM t_common_class tcc
+			<where>
+			<if test="istrash != null and istrash != ''">
+				AND tcc.istrash = #{istrash}
+			</if>
+			<if test="sword != null and sword != ''">
+				AND (tcc.classname like concat('%',#{sword},'%')
+				OR tcc.cmclass like concat('%',#{sword},'%'))
+			</if>
+			</where>
+		) a, (select @ROWNUM := 0) as b
+	</select>
+	
+	<!-- 공통코드그룹 사용여부 변경 -->
+	<update id="updateCodeClassUse" parameterType="somap">
+		UPDATE t_common_class  /* CommonClassMapper.xml - updateCodeClassUse 공통코드그룹 사용여부 변경 */
+		SET istrash = #{istrash}
+		WHERE cmclass= #{cmclass}
+	</update>
+	
+	<!-- 공통코드그룹 저장 -->
+	<insert id="saveCodeClass" parameterType="somap">
+		INSERT INTO t_common_class  /* CommonClassMapper.xml - saveCodeClass 공통코드그룹 저장 */
+		(cmclass, classname, istrash, regdate, detail)
+		VALUES(#{cmclass},#{classname}, #{istrash}, now(),#{detail})
+	</insert>
+	
+	<!-- 공통코드그룹 상세조회 -->
+	<select id="selectCodeClassDetail" parameterType="somap" resultType="somap" >
+		SELECT /* CommonClassMapper.xml - selectCodeClassDetail 공통코드그룹 상세조회 */
+			cmclass
+			, classname
+			, detail
+			, istrash
+		FROM t_common_class
+		WHERE cmclass = #{cmclass} 
+	</select>
+	
+	<!-- 공통코드그룹 수정 -->
+	<update id="modifyCodeClass" parameterType="somap">
+		UPDATE t_common_class  /* CommonClassMapper.xml - modifyCodeClass 공통코드그룹 수정*/
+		SET istrash = #{istrash}, classname = #{classname}, detail = #{detail}
+		WHERE cmclass= #{cmclass}
+	</update>
+</mapper>

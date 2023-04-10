@@ -1,0 +1,263 @@
+package com.dplot.mapper;
+
+import java.util.List;
+import java.util.Map;
+
+import com.dplot.annontation.MapperInterface;
+import com.dplot.common.SOMap;
+
+/**
+ * @discription	: 상품 Mapper (T_GOODS)
+ * @fileName	: GoodsMapper.java
+ * @author		: KTH
+ * @date		: 2021.11.22
+ * =================================================================
+ * DATE			AUTHOR		NOTE
+ * -----------------------------------------------------------------
+ * 2021.11.22	KTH			최초생성
+ * -----------------------------------------------------------------
+ */
+@MapperInterface
+public interface GoodsMapper {
+
+	/**
+	 * 상품 상세 조회(v_goods 아님)
+	 * @param params
+	 * @return List<SOMap>
+	 */
+	SOMap selectGoodsJoinGoodsContent(SOMap params);
+
+	/**
+	 * 상품 전시상태 변경
+	 * @param param
+	 * @return
+	 */
+	int updateGoodsDisplay(SOMap param);
+
+	/**
+	 * 상품 판매상태 변경
+	 * @param params
+	 * @return int
+	 */
+	int updateGoodsSellType(SOMap params);
+
+	/**
+	 * 상품 승인상태 변경
+	 * @param params
+	 * @return int
+	 */
+	int updateGoodsApprType(SOMap params);
+	
+	/**
+	 * 상품 view 조회
+	 * @param params
+	 * @return
+	 */
+	SOMap selectVGoods(SOMap params);
+	
+	/**
+	 * 상품 개수 조회
+	 * @param params
+	 * @return
+	 */
+	int selectGoodsCount(SOMap params);
+
+	/**
+	 * 상품코드 채번
+	 * @param params
+	 * @return String
+	 */
+	String selectGoodsCode();
+	
+	/**
+	 * 상품등록
+	 * @param params
+	 * @return int
+	 */
+	int insertGoods(SOMap params);
+	
+	/**
+	 * 상품정보 수정
+	 * @param params
+	 * @return int
+	 */
+	int updateGoods(SOMap params);
+	
+	/**
+	 * 상품정보 일괄수정
+	 * @param params
+	 * @return int
+	 */
+	int updateGoodsAll(SOMap params);
+	
+	/**
+	 * 관리자공통 상품목록 조회
+	 * @param params
+	 * @return List<SOMap>
+	 */
+	List<SOMap> selectCommonGoodsList(SOMap params);
+	
+	/**
+	 * 관리자 상품목록 조회
+	 * @param params
+	 * @return List<SOMap>
+	 */
+	List<SOMap> selectAdminGoodsList(SOMap params);
+	
+	/**
+	 * 관리자 상품목록 조회(엑셀다운로드용)
+	 * @param params
+	 * @return List<SOMap>
+	 */
+	List<Map<String, Object>> selectAdminGoodsListForExcel(SOMap params);
+	
+	/**
+	 * 상품판매유형별 건수 조회 
+	 * @param params
+	 * @return SOMap
+	 */
+	SOMap selectAdminGoodsSellTypeCount(SOMap params);
+	
+	/**
+	 * 관리자 상품상세 조회(카테고리, 파일포함)
+	 * @param params
+	 * @return
+	 */
+	SOMap selectAdminGoodsDetailAll(SOMap params);
+	
+	/**
+	 * 관리자 상품상세 조회
+	 * @param params
+	 * @return SOMap
+	 */
+	SOMap selectAdminGoodsDetail(SOMap params);
+	
+	/**
+	 * 이력저장용 상품상세 조회
+	 * @param params
+	 * @return SOMap
+	 */
+	SOMap selectAdminGoodsDetailForHist(SOMap params);
+	
+	/**
+	 * 관리자 딜구성상품 팝업 목록 조회
+	 * @param params
+	 * @return List<SOMap>
+	 */
+	List<SOMap> selectAdminConstGoodsList(SOMap params);
+	
+	/**
+	 * 프론트 상품목록 조회
+	 * @param params
+	 * @return
+	 */
+	List<SOMap> selectFrontGoodsList(SOMap params);
+	
+	/**
+	 * 프론트 상품상세 조회
+	 * @param params
+	 * @return
+	 */
+	SOMap selectFrontGoodsDetail(SOMap params);
+
+	/**
+	 * 카테고리별 노출 상품 브랜드 리스트
+	 * @param param
+	 * @return
+	 */
+	List<SOMap> selectGoodsBrandListByCateIdx(SOMap param);
+
+	/**
+	 * 프론트 상품 목록 전체수 조회
+	 * @param param
+	 * @return
+	 */
+	int selectFrontGoodsCnt(SOMap param);
+
+	/**
+	 * 프론트 상품 최대가격 &최소가격 조회
+	 * @param param
+	 * @return
+	 */
+	SOMap selectGoodsPrice(SOMap param);
+
+	/**
+	 * 상품 ERP전송 데이터 조회
+	 */
+	List<SOMap> selectGoodsERPData(SOMap param);
+	
+	/**
+	 * 상품 조회수 증가
+	 * @param param
+	 * @return
+	 */
+	int updateGoodsHits(SOMap param);
+
+	/**
+	 * 판매 상품의 색상목록 조회
+	 * @param param
+	 * @return
+	 */
+	List<SOMap> selectColorList(SOMap param);
+
+	/**
+	 * 대시보드 상품 상태 현황
+	 */
+	SOMap selectGoodsDashBoard(SOMap param);
+
+	/**
+	 * 최근본상품 목록 조회
+	 * @param param
+	 * @return
+	 */
+	List<SOMap> selectRecentGoodList(SOMap param);
+
+	/**
+	 * 평점목록 조회
+	 * @param param
+	 * @return
+	 */
+	List<SOMap> selectRatingList(SOMap param);
+
+	/**
+	 * 혜택정보 조회
+	 * @param param
+	 * @return
+	 */
+	SOMap selectBenefitList(SOMap param);
+
+	/**
+	 * 직매입상품 목록 조회
+	 * @param param
+	 * @return
+	 */
+	List<SOMap> selectPBGoodsList(SOMap param);
+	
+	/**
+	 * 이미지 업로드 후 상품정보 수정
+	 * @param param
+	 * @return int
+	 */
+	int updateStatusImageUpload(SOMap param);
+
+	/**
+	 * 검색 필터 브랜드 목록 조회
+	 * @param param
+	 * @return
+	 */
+	List<SOMap> selectSearchBrand(SOMap param);
+
+	/**
+	 * 임시저장 상품 건수 조회
+	 * @param param
+	 * @return int
+	 */
+	int selectTempSaveGoodsCountByGoodsno(SOMap param);
+
+	/**
+	 * EP연동상품 조회
+	 * @param param
+	 * @return
+	 */
+	List<SOMap> selectEpGoodsList(SOMap param);
+}

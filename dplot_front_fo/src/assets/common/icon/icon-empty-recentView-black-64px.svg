@@ -1,0 +1,30 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="64" height="64" viewBox="0 0 64 64">
+    <defs>
+        <clipPath id="8fr1n5f91a">
+            <path data-name="사각형 6654" style="fill:none" d="M0 0h50v45H0z"/>
+        </clipPath>
+    </defs>
+    <g data-name="그룹 23316">
+        <g data-name="그룹 21812">
+            <path data-name="사각형 6472" style="fill:none" d="M0 0h64v64H0z"/>
+        </g>
+        <g data-name="그룹 20988" transform="translate(-927 -511.729)">
+            <path data-name="빼기 3" d="M5264.458 6030.957h0L5246 6020.145v-21.612l18.458-10.8 18.457 10.8v15.942a6.944 6.944 0 0 0-3.182-.762 7.013 7.013 0 0 0-5.417 11.468l-9.857 5.774h0z" transform="translate(-4305.95 -5465.114)" style="stroke-width:1.5px;stroke-linejoin:round;stroke-linecap:round;stroke:#111;fill:none"/>
+            <g data-name="그룹 20999">
+                <path data-name="패스 18008" d="m24.348 6.543 6.152 8.086-5.8-1.24" transform="translate(952.618 526.906)" style="stroke-width:1.5px;stroke-linejoin:round;stroke-linecap:round;stroke:#111;fill:none"/>
+                <path data-name="패스 18011" d="M40.329 6.543 21.872 17.251 3.415 6.543" transform="translate(936.635 526.916)" style="stroke-width:1.5px;stroke-linejoin:round;stroke-linecap:round;stroke:#111;fill:none"/>
+                <g data-name="그룹 20993">
+                    <g data-name="그룹 20992" style="clip-path:url(#8fr1n5f91a)" transform="translate(934 521.73)">
+                        <path data-name="선 900" transform="translate(24.511 22.5)" style="stroke:#181818;stroke-width:1.5px;stroke-linejoin:round;stroke-linecap:round;fill:none" d="M0 21.606V0"/>
+                        <path data-name="선 901" transform="translate(24.511 .894)" style="stroke:#181818;stroke-width:1.5px;stroke-linejoin:round;stroke-linecap:round;fill:none" d="M0 0v17"/>
+                    </g>
+                </g>
+                <path data-name="사각형 6656" transform="rotate(-60.005 937.224 -538.298)" style="stroke-width:1.5px;stroke-linejoin:round;stroke-linecap:round;stroke:#111;fill:none" d="M0 0h10.331v21.313H0z"/>
+            </g>
+            <g data-name="그룹 23444">
+                <path data-name="선 840" transform="translate(979 560.729)" style="stroke-width:1.5px;stroke-linecap:round;stroke:#111;fill:none" d="m0 0 4 4"/>
+            </g>
+            <circle data-name="타원 1399" cx="7.014" cy="7.014" r="7.014" transform="translate(966.771 548.599)" style="stroke-width:1.5px;stroke-linejoin:round;stroke:#111;fill:none"/>
+        </g>
+    </g>
+</svg>

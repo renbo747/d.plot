@@ -1,0 +1,143 @@
+.my-review-write {
+  padding: 20px 20px 40px 20px;
+
+  .info-icon {
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+
+    i {
+      margin-right: 4px;
+      background: url("~@/assets/common/icon/icon-circle-info-20px.svg") no-repeat 0;
+    }
+    span {
+      color: $gray-700;
+      font-size: 12px;
+      letter-spacing: -.48px;
+      line-height: 17px;
+    }
+  }
+
+  .review-item {
+    display: flex;
+    padding-top: 20px;
+    padding-bottom: 28px;
+    border-bottom: 1px solid $gray-400;
+  }
+
+  .item-text__header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
+
+  .review-edit {
+    display: none;
+  }
+
+  .item-text-p {
+    margin-top: 6px;
+  }
+
+  .product-thumbnail {
+    margin-right: 16px;
+  }
+
+  .thumbnail__img {
+    width: 100px;
+    background:#f9f9f9;
+  }
+
+  .item-text {
+    width: calc(100% - 116px);
+    color: $gray-700;
+    font-size: 12px;
+    letter-spacing: -.48px;
+    line-height: 17px;
+
+    p {
+      @include text-truncate;
+    }
+
+    .dp-bar {
+      margin-right: 6px;
+      margin-left: 6px;
+    }
+  }
+
+  i + i {
+    margin-left: 8px;
+  }
+
+  .write-review__body {
+    .dp-p {
+      margin-bottom: 14px;
+    }
+  }
+
+  .form-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 8px;
+
+    p {
+      letter-spacing: -.64px;
+      line-height: 24px;
+      font-weight: 500;
+    }
+  }
+
+  .review-write__img {
+
+    .image-upload__title {
+      font-size: 14px;
+      letter-spacing: -.56px;
+      line-height: 20px;
+      font-weight: 500;
+      margin-bottom: 14px;
+    }
+
+    .image-upload__label {
+      margin-left: 0;
+    }
+
+    .image-upload__list {
+      width: calc(100% - 90px);
+      padding-right: 0;
+    }
+
+    .image-upload__p {
+      color: $gray-700;
+      font-size: 14px;
+      letter-spacing: -.56px;
+      line-height: 22px;
+    }
+  }
+
+  .review-write__button {
+    margin-top: 35px;
+  }
+}
+
+// 모달 css
+.reward-modal {
+  padding: 0 20px;
+
+  .reward-modal__text {
+    font-size: 14px;
+    letter-spacing: -.56px;
+    line-height: 20px;
+  }
+}
+
+.write-caution-modal {
+  padding: 0 20px;
+
+  .caution-modal__text {
+    color: $gray-700;
+    font-size: 14px;
+    letter-spacing: -.56px;
+    line-height: 22px;
+  }
+}

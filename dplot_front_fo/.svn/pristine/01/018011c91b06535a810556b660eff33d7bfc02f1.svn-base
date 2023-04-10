@@ -1,0 +1,291 @@
+.dp-as {
+
+  .justify-margin {
+    height: 6px;
+    background-color: $gray-100;
+    margin-left: 0;
+    margin-right: 0;
+  }
+
+  .as-section {
+    padding: 30px 0;
+
+    &.section01 {
+      padding-top: 0;
+    }
+
+    .product-cart__ul {
+      display: none;
+    }
+  }
+
+  .product-item {
+    display: flex;
+    align-items: center;
+
+    .item-box {
+      display: flex;
+      align-items: center;
+      width: calc(100% - 400px);
+    }
+
+
+    .item-thumbnail {
+      width: 150px;
+      height: 150px;
+      margin-right: 16px;
+
+      img {
+        width: 100%;
+      }
+    }
+
+    .item-info {
+      width: calc(100% - 166px);
+    }
+
+    .item-status {
+      color: $primary;
+      font-size: 16px;
+      letter-spacing: -.64px;
+      line-height: 20px;
+      font-weight: 500;
+      margin-bottom: 8px;
+    }
+
+    .item-ctg {
+      margin-bottom: 4px;
+      font-size: 14px;
+      letter-spacing: -.42px;
+      line-height: 17px;
+      font-weight: 700;
+      //text-transform: uppercase;
+      font-family: 'AttenNew', sans-serif;
+    }
+
+    .item__p {
+      color: $gray-700;
+      font-size: 16px;
+      letter-spacing: -.64px;
+      line-height: 24px;
+      margin-bottom: 0;
+
+      &.option {
+        margin-top: 4px;
+        @include text-truncate;
+      }
+    }
+
+    .item-count {
+      width: 40px;
+      margin-left: 30px;
+      margin-right: 30px;
+    }
+
+    .item-price {
+      width: 100px;
+      margin-right: 50px;
+      margin-left: 50px;
+    }
+
+    .item-select {
+      width: 100px;
+    }
+
+    .price__p {
+      font-size: 14px;
+      letter-spacing: -.56px;
+      line-height: 20px;
+    }
+
+    .price__span {
+      font-size: 18px;
+      letter-spacing: -.54px;
+      line-height: 21px;
+      font-weight: 600;
+      margin-right: 2px;
+    }
+
+    .item-select {
+      //width: 120px;
+      //margin-left: 30px;
+    }
+  }
+
+  // section as-center__guide
+  .as-center__guide {
+
+    .info-title {
+      margin-bottom: 14px;
+      color: $gray-800;
+      font-size: 16px;
+      letter-spacing: -.64px;
+      line-height: 24px;
+    }
+
+    .brand-name {
+      font-size: 14px;
+      letter-spacing: -.56px;
+      line-height: 20px;
+      margin-bottom: 4px;
+    }
+
+    .call-center {
+      margin-bottom: 12px;
+      font-size: 22px;
+      letter-spacing: -.66px;
+      line-height: 26px;
+      font-weight: 600;
+      font-family: 'AttenNew', sans-serif;
+    }
+
+    .ul-dot {
+      font-size: 14px;
+      letter-spacing: -.56px;
+    }
+  }
+
+  .as-form {
+
+    .address-form {
+      width: 527px;
+      margin-bottom: 40px;
+    }
+
+    .as-form__info {
+      font-size: 16px;
+      letter-spacing: -.64px;
+      line-height: 24px;
+      color: $gray-700;
+      margin-bottom: 30px;
+    }
+
+    .as-info__list__wrap {
+      li + li {
+        margin-top: 10px;
+      }
+    }
+
+    .form-group {
+      margin-bottom: 0;
+    }
+
+    .base-input-horizon {
+      flex-direction: column;
+    }
+
+    .position-relative {
+      width: 100%;
+    }
+
+    .input-label {
+      margin-bottom: 10px;
+      font-size: 16px;
+      letter-spacing: -.64px;
+      line-height: 24px;
+      font-weight: 500;
+    }
+
+    .as-info__adderss__input {
+      width: 100%;
+      margin-right: 10px;
+    }
+
+    .as-info__address__btn button {
+      width: 130px;
+    }
+
+    .as-section__title {
+      font-size: 18px;
+      letter-spacing: -.72px;
+      line-height: 26px;
+      font-weight: 500;
+      margin-bottom: 20px;
+    }
+
+    .as-textarea {
+      textarea {
+        height: 250px;
+      }
+    }
+
+    .image-upload__label {
+      margin-left: 0;
+    }
+
+    .image-upload__list {
+      padding-right: 0;
+    }
+  }
+
+  .as-footer__btn {
+    display: flex;
+    justify-content: center;
+    margin-top: 50px;
+    width: 100%;
+
+    .dp-btn {
+      max-width: 320px;
+      font-size: 16px;
+      letter-spacing: -.64px;
+    }
+
+    .back-btn {
+      margin-right: 10px;
+    }
+  }
+
+
+  .textarea-h-320 {
+    textarea {
+      height: 320px !important;
+    }
+  }
+
+}
+
+// as신청완료 모달
+.dp-modal.as-apply-success-modal {
+  .pop-over__body {
+    padding: 80px 60px;
+  }
+
+  .icon-section {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 100px;
+    height: 100px;
+    border-radius: 50%;
+    background: $gray-100;
+    margin-bottom: 20px;
+    .check-circle-icon {
+      position: absolute;
+      background: url("~@/assets/common/icon/icon-check-circle-64px.svg") no-repeat 0;
+    }
+  }
+
+  .as-modal__h2 {
+    margin-bottom: 20px;
+    font-size: 16px;
+    letter-spacing: -.64px;
+    line-height: 24px;
+    text-align: center;
+  }
+
+  .as-modal__p {
+    margin-bottom: 50px;
+    font-size: 14px;
+    letter-spacing: -.56px;
+    line-height: 22px;
+    color: $gray-700;
+    text-align: center;
+  }
+
+  .as-ok-btn {
+    width: 136px;
+    cursor: pointer;
+    font-size: 16px;
+    letter-spacing: -.64px;
+  }
+}

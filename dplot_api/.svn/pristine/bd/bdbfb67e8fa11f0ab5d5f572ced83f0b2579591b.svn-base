@@ -1,0 +1,330 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.dplot.mapper.UserMapper">
+	<select id="selectUser" parameterType="somap" resultType="somap" >
+		SELECT  /* UserMapper.xml - selectUser 사용자 정보조회 */
+			tu.no,
+			tu.userpw,
+			tu.userid,
+			tu.usertype,
+			ta.name,
+			ta.mobile,
+			IFNULL(PWFAILCNT,0) AS pwfailcnt
+		FROM t_user tu
+		JOIN t_admin ta ON tu.no = ta.userno
+		WHERE tu.siteid = #{siteid}
+		AND ta.istrash = 'F'
+		<choose>
+			<when test="userid != null and userid != ''">
+			AND tu.userid = #{userid}
+			</when>
+			<when test="userno != null and userno != ''">
+			AND tu.no = #{userno}
+			</when>
+			<otherwise>
+			AND tu.userid = ' '
+			</otherwise>
+		</choose>
+	</select>
+
+	<update id="updateUser" parameterType="somap" >
+		UPDATE  /* UserMapper.xml - updateUser 사용자 정보수정 */
+			T_USER
+		<set>
+			<if test="userid !=null and userid !='' ">
+				UserID=#{userid},
+			</if>
+			<if test="userpw !=null and userpw !='' ">
+				UserPw=#{userpw},
+				PwModDate=NOW(),
+				pwfailcnt = null,
+			</if>
+			<if test="authuserid != null and authuserid != ''">
+				moduserid = #{authuserid},
+			</if>
+				moddate = NOW(),
+				istemppw = 'N',
+		</set>
+		<where>
+			AND No= #{no}
+		</where>
+	</update>
+
+	<select id="selectUserCount" parameterType="somap" resultType="int" >
+		SELECT /* UserMapper.xml - selectUserCount 사용자 ID중복 체크 */
+			COUNT(*)
+		FROM T_USER
+		<where>
+			AND SITEID = #{siteid}
+			<if test="userid != null and userid != ''">
+				AND UserID = #{userid}
+			</if>
+			<if test="userno != null and userno != ''">
+				AND no != #{userno}
+			</if>
+			<if test='usertype != null and usertype != ""'>
+			AND USERTYPE = #{usertype}
+			</if>
+		</where>
+	</select>
+
+
+	<!-- selectUserCnt 회원 사용자 정보 체크(비밀번호 인증) -->
+	<select id="selectUserCnt" parameterType="somap" resultType="int">
+		SELECT  /* UserMapper.xml - selectUserCnt 회원 사용자 정보 체크(비밀번호 인증)*/
+				COUNT(*)
+		FROM T_USER
+		WHERE 1 = 1
+		-- AND USERTYPE = 'URT004'-- 회원(관리자 및 사용자 구별 정책에 따라 추후 수정)
+		AND SITEID = #{siteid}
+		AND USERID = #{userid}
+		AND USERPW = #{userpw}
+	</select>
+
+	<insert id="insertUser" parameterType="somap" useGeneratedKeys="true" keyProperty="no">
+		INSERT INTO T_USER /* UserMapper.xml - insertUser 사용자정보 등록 */
+		(
+			SITEID, USERID, USERPW, USERTYPE, ISTEMPPW, PWMODDATE, REGDATE, REGUSERID
+		) VALUES (
+			#{siteid}, #{userid}, #{userpw}, #{usertype}, 'F', sysdate(), sysdate(), #{reguserid}
+		)
+	</insert>
+
+	<select id="selectUserJoinUserTotal" parameterType="somap" resultType="somap" >
+		SELECT  /* UserMapper.xml - selectUserJoinUserTotal 사용자 정보조회 */
+			U.NO, U.USERID, U.USERPW, U.USERTYPE
+		FROM T_USER U
+		WHERE U.SITEID = #{siteid}
+		AND U.USERID = #{userid}
+	</select>
+
+	<update id="updateUserUserPw" parameterType="somap">
+		UPDATE  /* UserMapper.xml - updateUserUserPw 사용자 비밀번호변경 */
+			T_USER
+		SET UserPw=#{userpw}
+		WHERE No=#{no}
+	</update>
+
+	<select id="selectUserFront" parameterType="somap" resultType="somap" >
+		SELECT  /* UserMapper.xml - selectUserFront 사용자 비밀번호 조회 */
+			USERPW
+		FROM T_USER
+		WHERE No=#{no}
+	</select>
+
+	<select id="selectUserJoinDealer" parameterType="somap" resultType="somap" >
+		SELECT  /* UserMapper.xml - selectUserJoinDealer 사용자 딜러 조회 */
+			U.USERPW, D.DEALERTYPE
+		FROM T_USER U JOIN T_DEALER D ON U.No=D.UserNo
+		WHERE U.No=#{no}
+		  AND U.SiteID=#{siteid}
+		  AND D.State=#{state}
+	</select>
+
+	<delete id="deleteUserByNo" parameterType="somap">
+		DELETE  /* UserMapper.xml - deleteUserByNo 사용자 삭제 */
+			FROM T_USER
+		WHERE No = #{no}
+	</delete>
+
+
+	<update id="updateUserRegDate" parameterType="somap">
+		UPDATE   /* UserMapper.xml - updateUserRegDate 사용자 등록일시 수정 */
+			T_USER
+		SET REGDATE = #{regdate}
+		WHERE NO = #{no}
+	</update>
+
+	<update id="updateUserForSecession" parameterType="somap">
+		UPDATE  /* UserMapper.xml - updateUserForSecession 사용자 세션초기화 */
+			T_USER
+		SET UserPw = NULL
+		  , RegDate = NOW()
+		WHERE NO = #{no}
+	</update>
+
+	<select id="selectUserJoinMemberCount" parameterType="somap" resultType="int" >
+		SELECT  /* UserMapper.xml - selectUserJoinMemberCount 사용자회원 체크 */
+			COUNT(*)
+		FROM T_USER U JOIN T_MEMBER M ON U.NO=M.USERNO
+		<where>
+			AND U.NO=#{no}
+			AND U.SITEID=#{siteid}
+			AND M.STATE=#{state}
+		</where>
+	</select>
+
+	<select id="selectPartnersList" parameterType="somap" resultType="somap">
+		SELECT  /* UserMapper.xml - selectPartnersList 사용자 파트너목록 조회 */
+			a.userid 		-- 유저 아이디
+			, b.name   		-- 업체 이름
+			, a.no     		-- 유저 번호
+			, b.commrate	-- 수수료율
+		FROM t_user a
+		JOIN t_dealer b ON a.no = b.userno
+		WHERE 1 = 1
+		AND a.siteid = #{siteid}
+		AND b.dealerst = 'DST001' -- 운영중
+		AND b.reqdealst = 'RDS002' -- 승인
+		<choose>
+			<when test="psort == 'userid_desc'">
+				ORDER BY a.userid DESC
+			</when>
+			<when test="psort == 'userid_asc'">
+				ORDER BY a.userid ASC
+			</when>
+			<when test="psort == 'name_desc'">
+				ORDER BY b.name DESC
+			</when>
+			<when test="psort == 'name_asc'">
+				ORDER BY b.name ASC
+			</when>
+			<otherwise>
+				ORDER BY a.userid DESC
+			</otherwise>
+		</choose>
+	</select>
+
+	<update id="updateUserAuthNumAndAuLimitDate" parameterType="somap">
+		UPDATE  /* UserMapper.xml - updateUserAuthNumAndAuLimitDate 사용자 인증번호 수정 */
+			T_USER
+		SET
+			AuthNum = #{authnum},
+			AuLimitDate = #{aulimitdate}
+		where No= #{no}
+	</update>
+
+	<select id="selectUserAuthNum" parameterType="somap" resultType="somap">
+		SELECT  /* UserMapper.xml - selectUserAuthNum 사용자 인증번호 조회 */
+			authnum, aulimitdate, no
+		FROM t_user
+		WHERE no = #{no}
+	</select>
+
+	<select id="selectUserPwByNo" parameterType="somap" resultType="somap">
+		SELECT  /* UserMapper.xml - selectUserAuthNum 사용자 비밀번호 조회(By 사용자번호) */
+			userpw
+		FROM t_user
+		WHERE no = #{no}
+	</select>
+
+	<select id="selectUserAll" parameterType="somap" resultType="somap">
+		SELECT   /* UserMapper.xml - selectUserAll 사용자 정보 조회 */
+			no
+			, siteid
+			, userid
+			, userpw
+			, plainpw
+			, regdate
+			, date_format(pwmoddate, '%Y-%m-%d %H:%i:%s') as pwmoddate
+			, date_format(aulimitdate, '%Y-%m-%d %H:%i:%s') as aulimitdate
+			, authnum
+		FROM t_user
+		WHERE no = #{no}
+	</select>
+
+	<select id="selectUserByIdList" parameterType="somap" resultType="somap">
+	<![CDATA[
+		SELECT a.userid
+			 , b.name
+			 , fn_get_codename('base', 'DADAMEMBERTYPE', b.dadamembertype) AS dadamembertype
+			 , fn_get_codename('base', 'MEMLVTYPE', b.memlvtype) AS memlvtype
+			 , str_to_date(b.regdate, '%Y-%d-%m') AS regdate
+			 , b.userno
+		FROM t_user a
+				 JOIN t_member b ON a.no = b.userno
+		, (SELECT @rownum := 0) temp
+	]]>
+		WHERE 1 = 1
+			AND userid IN
+		  	<foreach collection="list" item="item" open="(" separator="," close=")">
+				#{item}
+		  	</foreach>
+		ORDER BY b.name
+	</select>
+
+	<update id="updateUserPasswordByNo" parameterType="somap">
+		UPDATE   /* UserMapper.xml - updateUserPasswordByNo 사용자 비밀번호 수정(By 사용자번호) */
+			T_USER
+		SET USERPW = #{userpw}
+		WHERE NO = #{userno}
+	</update>
+
+	<update id="updatePwChangeDateNowByNo" parameterType="somap">
+		UPDATE   /* UserMapper.xml - updatePwChangeDateNowByNo 사용자 비밀번호 수정일시(By 사용자번호) */
+			T_USER
+		SET PWMODDATE = now()
+		WHERE NO = #{userno}
+	</update>
+
+	<update id="increasePwFailCnt" parameterType="com.dplot.common.SOMap">
+		UPDATE   /* UserMapper.xml - increasePwFailCnt 사용자 비밀번호 실패횟수증가 */
+			T_USER
+		SET pwfailcnt = IFNULL(pwfailcnt, 0)+1
+		WHERE USERID = #{userid}
+	</update>
+
+	<update id="resetPwFailCnt" parameterType="com.dplot.common.SOMap">
+		UPDATE   /* UserMapper.xml - resetPwFailCnt 사용자 비밀번호 실패횟수 초기화 */
+			T_USER SET pwfailcnt = null
+		WHERE 1=1
+		<if test="userid != null and userid != ''">
+			and userid = #{userid}
+		</if>
+		<if test="no != null and no != ''">
+			and no = #{no}
+		</if>
+	</update>
+
+	<select id="selectPwFailCnt" parameterType="com.dplot.common.SOMap" resultType="int">
+		SELECT   /* UserMapper.xml - resetPwFailCnt 사용자 비밀번호 실패횟수 조회 */
+			IFNULL(pwfailcnt, 0) as pwfailcnt
+		FROM T_USER
+		WHERE userid = #{userid}
+	</select>
+
+	<select id="selectUserIdSeq" resultType="string">
+		SELECT /* UserMapper.xml - selectUserIdSeq 사용자 SNS회원가입 ID SEQ 조회 */
+			FN_GET_USERID_SEQ()
+	</select>
+
+	<update id="updateUserPasswordTemp" parameterType="somap">
+		/* UserMapper.xml - updateUserPasswordTemp */
+		UPDATE T_USER SET
+			USERPW = #{userpw},
+		    ISTEMPPW = 'T'
+		WHERE NO = #{userno}
+	</update>
+
+	<select id="selectCheckSnsBioInfo" parameterType="somap" resultType="int">
+		/* UserMapper.xml - selectCheckSnsBioInfo */
+		SELECT COUNT(*)
+		FROM T_USER a
+		INNER JOIN T_MEMBER b
+		ON a.NO = b.USERNO
+		LEFT JOIN T_MEMBER_SNS c
+		ON b.USERNO = c.USERNO
+		WHERE a.USERID  = #{userid}
+		<choose>
+			<when test='mode == "bio"'>
+			AND b.ENCBIO = #{otherid}
+			</when>
+			<otherwise>
+			AND c.SNSMEMBERNO  = #{otherid}
+			</otherwise>
+		</choose>
+	</select>
+
+	<select id="selectMigUserPwCk" parameterType="somap" resultType="int">
+		/* UserMapper.xml - selectMigUserPwCk */
+	   SELECT COUNT(*)
+       FROM T_USER a
+       inner join t_member b on a.no = b.userno
+       WHERE 1= 1
+       AND a.ISTEMPPW  = 'T'
+       -- AND b.ISMIGRATION = 'T'
+       AND userno = #{userno}
+       ORDER BY a.REGDATE DESC
+	</select>
+</mapper>

@@ -1,0 +1,261 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.dplot.mapper.ClaimCouponMapper">
+    <select id="selectAdminClaimDiscountList" parameterType="somap" resultType="somap">
+        SELECT	/* ClaimCouponMapper.xml - selectAdminClaimDiscountList:: 관리자-클레임상품 할인내역 조회 */
+			  ta.ORDERIDX 
+			, ta.TYPENAME
+			, ta.GOODSCODE
+			, ta.OPTIONCODE
+			, ta.DISCOUNTNAME
+			, ta.DISCOUNTAMT
+			, ta.ROWSPAN
+			, ta.ROWNO
+		FROM ((
+				SELECT		/* 프로모션할인 */
+					  a.ORDERIDX 
+					, '프로모션할인' AS TYPENAME
+					, c.GOODSCODE
+					, b.OPTIONCODE
+					, d.PROMONAME AS DISCOUNTNAME
+					, b.SALEPROMOAMT*-1 AS DISCOUNTAMT
+					, COUNT(*) OVER() AS ROWSPAN
+					, ROW_NUMBER() OVER() AS ROWNO
+				FROM (
+						SELECT ORDERIDX, CLMIDX
+						FROM t_claim
+						WHERE SITEID = #{siteid}
+						AND ORDERIDX = #{orderidx}
+						ORDER BY CLMIDX DESC 
+						LIMIT 1
+					 ) a
+				INNER JOIN t_claim_goods b 
+					ON a.CLMIDX = b.CLMIDX
+				INNER JOIN t_goods c
+					ON b.goodsno = c.goodsno
+				INNER JOIN t_promotion d
+					ON b.SALEPROMOIDX = d.PROMOIDX 
+				ORDER BY c.GOODSCODE, b.OPTIONCODE
+			 ) UNION ALL (
+			 	SELECT		/* 상품,배송비쿠폰 */
+					  a.ORDERIDX
+					, FN_GET_CODENAME(NULL, 'COMCPNTYPE', g.COMCPNTYPE) AS TYPENAME
+					, c.GOODSCODE
+					, b.OPTIONCODE
+					, g.CPNNAME AS DISCOUNTNAME
+					, (CASE WHEN g.COMCPNTYPE = 'CCT001' THEN b.GOODSCPNAMT*-1
+							WHEN g.COMCPNTYPE = 'CCT003' THEN b.DELIVCPNAMT*-1
+							ELSE 0
+					   END) AS DISCOUNTAMT
+					, count(*) over(PARTITION BY g.COMCPNTYPE) AS ROWSPAN
+					, ROW_NUMBER() OVER (PARTITION BY g.COMCPNTYPE ORDER BY g.COMCPNTYPE, c.GOODSCODE) AS ROWNO
+				FROM (
+						SELECT ORDERIDX, CLMIDX
+						FROM t_claim
+						WHERE SITEID = #{siteid}
+						AND ORDERIDX = #{orderidx}
+						ORDER BY CLMIDX DESC 
+						LIMIT 1
+					 ) a
+				INNER JOIN t_claim_goods b 
+					ON a.CLMIDX = b.CLMIDX
+				INNER JOIN t_goods c
+					ON b.goodsno = c.goodsno
+				INNER JOIN t_claim_coupon d
+					ON a.CLMIDX = d.CLMIDX 
+				   AND b.CLMGDIDX = d.CLMGDIDX 
+				INNER JOIN t_comcoupon_memissue e
+					ON d.CPNMISIDX = e.CPNMISIDX 
+				INNER JOIN t_comcoupon_info f
+					ON e.CPNINFOIDX = f.CPNINFOIDX 
+				INNER JOIN t_comcoupon g 
+					ON f.COMCPNIDX = g.COMCPNIDX 
+				ORDER BY g.COMCPNTYPE, c.GOODSCODE, b.OPTIONCODE
+			) UNION ALL (
+			 	SELECT		/* 장바구니쿠폰 */
+					  a.ORDERIDX 
+					, FN_GET_CODENAME(NULL, 'COMCPNTYPE', g.COMCPNTYPE) AS TYPENAME
+					, '' AS GOODSCODE
+					, '' AS OPTIONCODE
+					, g.CPNNAME AS DISCOUNTNAME
+					, a.BASKETCPNAMT*-1 AS DISCOUNTAMT
+					, 1 AS ROWSPAN
+					, 1 AS ROWNO
+				FROM (
+						SELECT ORDERIDX, CLMIDX, BASKETCPNAMT
+						FROM t_claim
+						WHERE SITEID = #{siteid}
+						AND ORDERIDX = #{orderidx}
+						ORDER BY CLMIDX DESC 
+						LIMIT 1
+					 ) a
+				INNER JOIN t_claim_coupon b
+					ON a.CLMIDX = b.CLMIDX 
+				   AND b.CLMGDIDX IS null
+				INNER JOIN t_comcoupon_memissue e
+					ON b.CPNMISIDX = e.CPNMISIDX
+				INNER JOIN t_comcoupon_info f
+					ON e.CPNINFOIDX = f.CPNINFOIDX 
+				INNER JOIN t_comcoupon g 
+					ON f.COMCPNIDX = g.COMCPNIDX 
+			)) ta
+    </select>
+    
+    <select id="selectOrderCouponListWithoutClaim" parameterType="somap" resultType="somap">
+    	SELECT	/* ClaimCouponMapper.xml - selectOrderCouponListWithoutClaim:: 주문쿠폰목록 클레임제외 */
+		      t1.*
+		FROM  (
+		    SELECT
+		          a.orderidx
+		        , b.ordcpidx
+		        , b.ordgdidx
+		        , b.cpnmisidx
+		        , b.comcpntype
+		        , d.cpnname
+		        , d.comcpnidx
+		        , f.goodsno
+		        , f.optioncode
+		        , fn_check_directcoupon(d.comcpnidx) as isdirect
+		        , (select goodscode from t_goods where goodsno = f.goodsno) as goodscode
+		    FROM t_comorder a
+		    INNER JOIN t_comorder_coupon b 
+		    ON a.orderidx = b.orderidx
+		    INNER JOIN t_comcoupon_memissue c 
+		    ON b.cpnmisidx = c.cpnmisidx
+		    INNER JOIN t_comcoupon_info d
+		    ON c.cpninfoidx = d.cpninfoidx
+		    INNER JOIN t_comcoupon e
+		    ON d.comcpnidx = e.comcpnidx
+		    LEFT JOIN t_comorder_goods f
+		    ON b.ordgdidx = f.ordgdidx
+		    WHERE a.orderidx = #{orderidx}
+		    <if test='comcpntype != null and comcpntype !=""'>
+		    AND e.comcpntype = #{comcpntype}
+		    </if>
+		    <if test='ordgdidx != null and ordgdidx !=""'>
+		    AND b.ordgdidx = #{ordgdidx}
+		    </if>
+		) t1
+		LEFT JOIN (
+		    SELECT
+		    	  a.clmidx
+		        , b.cpnmisidx
+		    FROM t_claim a
+		    INNER JOIN t_claim_coupon b
+		    ON a.clmidx = b.clmidx
+		    WHERE a.orderidx = #{orderidx}
+		    AND b.istrash = 'F'
+		    <if test='status == "APPLY"'>
+		    AND (a.CNCSTATUS NOT IN ('CNS003','CNS004') OR a.RTNSTATUS NOT IN ('RTS004','RTS005','RTS009') OR a.EXCSTATUS NOT IN ('EXS004','EXS005','EXS011')) -- 반려, 철회, 반송
+            </if>
+            <if test='status == "DETAIL"'>
+            AND a.clmidx <![CDATA[<>]]> #{clmidx}
+            AND (a.cncstatus IN ('CNS005','CNS007') 
+                    OR a.rtnstatus IN ('RTS006','RTS007','RTS008','RTS009','RTS010') 
+                    OR a.excstatus IN ('EXS006','EXS007','EXS008','EXS009','EXS010','EXS011','EXS012'))
+            </if>
+            <if test='status == "COMPLETE"'>
+	            <if test='clmidx != null and clmidx != ""'>
+	            AND a.clmidx <![CDATA[<>]]> #{clmidx}
+				AND a.clmcompdate <![CDATA[<]]> (SELECT clmcompdate FROM t_claim WHERE clmidx = #{clmidx})
+				</if>
+	            AND (a.cncstatus IN ('CNS005') 
+	                    OR a.rtnstatus IN ('RTS009','RTS010') 
+	                    OR a.excstatus IN ('EXS011','EXS012'))
+            </if>
+            <if test='status == "ERP"'>
+            AND a.clmidx <![CDATA[<>]]> #{clmidx}
+            AND (a.cncstatus IN ('CNS005') 
+                    OR a.rtnstatus IN ('RTS009','RTS010') 
+                    OR a.excstatus IN ('EXS011','EXS012'))
+            </if>
+		) t2
+		ON t1.cpnmisidx = t2.cpnmisidx
+		WHERE t2.clmidx is null
+    </select>
+    
+    <select id="selectOrderCouponList" parameterType="somap" resultType="somap">
+    	SELECT	/* ClaimCouponMapper.xml - selectOrderCouponList:: 클레임쿠폰목록 */
+    		  a.clmcpnidx
+	    	, a.clmidx
+	    	, a.clmgdidx
+	    	, a.comcpntype  
+	        , a.cpnmisidx
+	    FROM t_claim_coupon a
+	    WHERE a.clmidx = #{clmidx}
+	    AND a.istrash = 'F'
+    </select>
+    
+    <insert id="insertClaimCoupon" parameterType="somap" useGeneratedKeys="true" keyProperty="clmcpnidx">
+		INSERT  /* ClaimCouponMapper - insertClaimCoupon 클레임 쿠폰 저장*/
+			INTO T_CLAIM_COUPON (
+				  CLMIDX		/* 클레임IDX(FK) */
+				, CLMGDIDX		/* 클레임상품IDX(FK) */
+				, CPNMISIDX		/* 공통쿠폰회원IDX(FK) */
+				, ISTRASH		/* 삭제여부 */
+				, COMCPNTYPE	/* 쿠폰종류 */
+				, REGUSERID		/* 등록자ID */
+				, REGDATE		/* 등록일시 */
+			) VALUES (
+				  #{clmidx}
+				, #{clmgdidx}
+				, #{cpnmisidx}
+				, 'F'
+				, #{comcpntype}
+				, #{userid}
+				, sysdate()
+			)
+	</insert>
+	
+	<select id="selectClaimCouponCheck" parameterType="somap" resultType="int">
+		SELECT  /* ClaimCouponMapper - selectClaimCouponCheck 클레임 쿠폰여부 조회*/
+			COUNT(*)
+		FROM T_CLAIM_COUPON
+		WHERE  CLMIDX = #{clmidx}
+		AND CPNMISIDX = #{cpnmisidx}
+	</select>
+	
+	<update id="updateClaimCouponTrash" parameterType="somap">
+		UPDATE  /* ClaimCouponMapper - updateClaimCouponTrash 클레임 삭제여부 수정*/
+			T_CLAIM_COUPON
+		SET ISTRASH = #{istrash}
+		WHERE CLMIDX = #{clmidx}
+		<if test='cpnmisidx'>
+		AND CPNMISIDX = #{cpnmisidx}
+		</if>
+	</update>
+
+	<select id="selectClaimCouponERPData" parameterType="somap" resultType="somap">
+		SELECT
+			A.ORDCPIDX, A.ORDERIDX, A.ORDGDIDX, A.CPNMISIDX, A.COMCPNTYPE
+		FROM T_COMORDER_COUPON A LEFT OUTER JOIN (
+			SELECT
+				A.ORDERIDX, B.ORDGDIDX, C.COMCPNTYPE
+			FROM T_CLAIM A INNER JOIN T_CLAIM_GOODS B ON A.CLMIDX = B.CLMIDX AND A.ISTRASH = 'F' AND B.ISTRASH = 'F'
+						   INNER JOIN T_CLAIM_COUPON C ON A.CLMIDX = C.CLMIDX AND C.ISTRASH = 'F'
+			WHERE ORDERIDX = #{orderidx}
+			  AND B.ISCLMOPTION = 'T'
+			<if test='status == "ERP"'>
+				AND (A.CNCSTATUS = 'CNS005' AND B.CNCSTATUS = 'CNS005')
+			</if>
+			<if test='status == "ERP_RETURN"'>
+				AND	((A.CNCSTATUS = 'CNS005' AND B.CNCSTATUS = 'CNS005') OR RTNSTATUS IN ('RTS009','RTS010'))
+			</if>
+		)B ON IF(A.COMCPNTYPE = 'CCT002', A.ORDERIDX = B.ORDERIDX AND A.COMCPNTYPE = B.COMCPNTYPE , A.ORDERIDX = B.ORDERIDX AND A.ORDGDIDX = B.ORDGDIDX AND A.COMCPNTYPE = B.COMCPNTYPE)
+		WHERE A.ORDERIDX = #{orderidx}
+		  AND B.ORDERIDX IS NULL
+	</select>
+
+	<select id="selectReturnCouponERPData" parameterType="somap" resultType="somap">
+		SELECT
+			CLMCPNIDX,
+			CLMIDX,
+			CLMGDIDX,
+			CPNMISIDX,
+			COMCPNTYPE
+		FROM T_CLAIM_COUPON
+		WHERE CLMIDX = #{clmidx}
+		AND ISTRASH = 'F'
+	</select>
+</mapper>
+	

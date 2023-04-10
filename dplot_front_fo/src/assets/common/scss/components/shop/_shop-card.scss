@@ -1,0 +1,45 @@
+.shop-card {
+  position: relative;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  background-size: cover;
+  background-position: center;
+  padding-bottom: 100%;
+  &:before {
+    position: absolute;
+    top: 0;
+    left: 0;
+    display: block;
+    content: '';
+    width: 100%;
+    height: 100%;
+    background: rgba(0,0,0,.2);
+  }
+  &.none-backdrop {
+    &:before {
+      display: none;
+    }
+  }
+  @include media-breakpoint-up(xl) {
+    height: 414px;
+  }
+
+  .shop-card__title {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    font-size: 18px;
+    letter-spacing: -.54px;
+    line-height: 21px;
+    color: #fff;
+    font-weight: 600;
+    //text-transform: uppercase;
+    @include media-breakpoint-up(xl) {
+      font-size: 34px;
+      letter-spacing: -1.02px;
+      line-height: 42px;
+    }
+  }
+}

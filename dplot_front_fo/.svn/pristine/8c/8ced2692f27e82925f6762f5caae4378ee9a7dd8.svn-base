@@ -1,0 +1,75 @@
+.dp-news-letter {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin: 0 auto;
+  height: 100vh;
+
+  .dp-news-letter__img {
+    width: 116px;
+    margin: 0 auto;
+  }
+
+  .dp-news-letter__text__wrap {
+    padding: 40px 0 60px 0;
+  }
+  .dp-news-letter-wrap {
+    text-align: center;
+  }
+  .dp-news-letter__text {
+    font-size: 14px;
+    letter-spacing: -.56px;
+  }
+  .btn-group {
+    width: 100%;
+  }
+}
+//개인정보처리방침
+.personal-modal {
+  .personal__bo {
+    //display: flex;
+    //align-items: center;
+    //justify-content: center;
+    ////임시 높이값
+    //height: 560px;
+    //background-color: $gray-100;
+  }
+  .personal__select {
+    margin-top: 10px;
+  }
+  .form-select {
+    color: $gray-800;
+  }
+}
+//광고 push 동의 안내 모달
+.ad-push-modal {
+   .modal-content {
+     padding: 30px 20px;
+   }
+   .modal-header {
+     text-align: center;
+   }
+  .modal-body {
+    padding: 20px 0 30px 0;
+  }
+
+  .ad-push__body {
+    text-align: center;
+  }
+  .ap-push-btn-wrap {
+    width: 100%;
+    text-align: center;
+  }
+  .ap-push-btn {
+    width: 100%;
+    border-radius: 0;
+    font-size: 14px;
+    letter-spacing: -.56px;
+    margin-bottom: 20px;
+  }
+  .cancel__p {
+    font-size: 14px;
+    letter-spacing: -.56px;
+    text-decoration: underline;
+  }
+}

@@ -1,0 +1,207 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.dplot.mapper.DelivTemplateMapper">
+	
+	<!-- 배송템플릿 목록 조회 -->
+	<select id="selectDelivTemplateList" parameterType="somap" resultType="somap">
+		/* DelivTemplateMapper.xml - selectDelivTemplateList 배송템플릿 목록 조회 */
+		<include refid="selectDelivTemplateListSQL"/>
+	</select>
+	
+	<!-- 배송템플릿 상세 조회 -->
+	<select id="selectDelivTemplateDetail" parameterType="somap" resultType="somap">
+		SELECT 	/* DelivTemplateMapper.xml - selectDelivTemplateDetail 배송템플릿 상세 조회 */
+			tdt.idx AS delividx, tdt.delivbname, tdt.delivtype, tdt.logistype, tdt.rtndelivtype, tdt.rtnlogistype,
+			tdt.delivschtype, tdt.delivfaretype, tdt.delivfare, tdt.isnationdeliv, tdt.userno as dealerno,
+			tdt.chejufare, tdt.isolfare, tdt.exowfare, tdt.rfowfare, tdt.exrtnfare, tdt.rfrtnfare,
+			tdt.relpost, tdt.reladdr, tdt.reladdrdetail, tdt.rfpost, tdt.rfaddr, tdt.rfaddrdetail, tdt.istrash, delivfreefare, iscombdeliv
+			<if test="isgoodsdetail != null and isgoodsdetail != ''">
+				, FN_GET_CODENAME(#{siteid}, 'DELIVTYPE', tdt.rtndelivtype) as rtndelivtypename
+				, FN_GET_CODENAME(#{siteid}, 'DELIVTYPE', tdt.delivtype) as delivtypename
+				, IF(RTNDELIVTYPE ='DLT002', '직배송', FN_GET_CODENAME(#{siteid}, 'LOGISTYPE', tdt.rtnlogistype)) AS rtnlogistypename
+				, FN_GET_CODENAME(#{siteid}, 'LOGISTYPE', tdt.logistype) AS logistypename
+				, FN_GET_CODENAME(#{siteid}, 'DELIVFARETYPE', tdt.delivfaretype) AS delivfaretypename
+				, FN_GET_CODENAME(#{siteid}, 'DELIVSCHTYPE', tdt.delivschtype) AS delivschtypename
+				, IF(tdt.isnationdeliv='T', '전국', '도서산간지역제외') AS nationdelivconts
+				, (SELECT delivinfo FROM t_goods WHERE goodsno = #{goodsno}) AS delivschtypedetail
+<!-- 				, IFNULL((SELECT delivinfo FROM t_goods WHERE goodsno = #{goodsno}), (SELECT detail FROM t_common_code WHERE cmclass = 'DELIVSCHTYPE' AND cmcode = tdt.delivschtype)) AS delivschtypedetail -->
+			</if>
+		FROM t_deliv_template tdt 
+		<where>
+			AND tdt.idx = #{delividx}
+			<if test="isgoodsdetail == null">
+				<choose>
+					<when test="dealerno != null and dealerno !=''">
+					AND tdt.userno = #{dealerno}
+					</when>
+					<otherwise>
+					AND tdt.userno IS NULL
+					</otherwise>
+				</choose>
+			</if>
+		</where>
+	</select>
+	
+	<!-- 배송템플릿 등록/수정 -->
+	<insert id="mergeDelivTemplate" parameterType="somap">
+		<selectKey keyProperty="delividx" resultType="int" order="BEFORE">
+			<choose>
+				<when test="delividx != null and delividx != ''">
+					SELECT #{delividx} FROM DUAL	/* 배송템플릿일련번호 채번 */
+				</when>
+				<otherwise>
+					SELECT IFNULL(MAX(idx), 0) + 1	/* 배송템플릿일련번호 채번 */
+					FROM t_deliv_template
+				</otherwise>
+			</choose>
+		</selectKey>
+		/* DelivTemplateMapper.xml - mergeDelivTemplate 배송템플릿 등록/수정 */
+		INSERT INTO t_deliv_template (
+			  idx 			/* 일련번호 */
+			, userno 		/* 회원일련번호 */
+			, delivbname 	/* 배송정보명 */
+			, delivtype 	/* 배송방법 */
+			, logistype 	/* 택배사 */
+			, rtndelivtype	/* 반품배송방법 */
+			, rtnlogistype 	/* 반품택배사 */
+			, delivschtype 	/* 배송일정 */
+			, delivfaretype	/* 배송비종류 */
+			, delivfare 	/* 배송비 */
+			, isnationdeliv /* 전국무료배송여부 */
+			, chejufare 	/* 제주배송비 */
+			, isolfare 		/* 도서산간배송비 */
+			, exowfare 		/* 교환편도배송비 */
+			, exrtnfare 	/* 교환왕복배송비 */
+			, rfowfare	 	/* 반품편도배송비 */
+			, rfrtnfare 	/* 반품왕복배송비 */
+			, relpost 		/* 출고지우편번호 */
+			, reladdr 		/* 출고지주소 */
+			, reladdrdetail	/* 출고지상세주소 */
+			, rfpost 		/* 교환/반품우편번호 */
+			, rfaddr 		/* 교환/반품주소 */
+			, rfaddrdetail 	/* 교환/반품상세주소 */
+			, delivfreefare /* 배송비무료금액  */
+			, istrash		/* 삭제여부 */
+			, reguserid 	/* 등록자ID */
+			, regdate 		/* 등록일시 */
+			, moduserid 	/* 수정자ID */
+			, moddate 		/* 수정일시 */
+			, iscombdeliv	/* 묶음배송여부 */
+		) VALUES (
+			  #{delividx}
+			, #{dealerno}
+			, #{delivbname}
+			, #{delivtype}
+			, #{logistype}
+			, #{rtndelivtype}
+			, #{rtnlogistype}
+			, #{delivschtype}
+			, #{delivfaretype}
+			, #{delivfare}
+			, #{isnationdeliv}
+			, #{chejufare}
+			, #{isolfare}
+			, #{exowfare}
+			, #{exrtnfare}
+			, #{rfowfare}
+			, #{rfrtnfare}
+			, #{relpost}
+			, #{reladdr}
+			, #{reladdrdetail}
+			, #{rfpost}
+			, #{rfaddr}
+			, #{rfaddrdetail}
+			, #{delivfreefare} 
+			, #{istrash}
+			, #{authuserid}
+			, NOW()
+			, #{authuserid}
+			, NOW()
+			, #{iscombdeliv}
+		)
+		ON DUPLICATE KEY UPDATE
+			  delivbname = #{delivbname}
+			, delivtype = #{delivtype}
+			, logistype = #{logistype}
+			, rtndelivtype = #{rtndelivtype}
+			, rtnlogistype = #{rtnlogistype}
+			, delivschtype = #{delivschtype}
+			, delivfaretype = #{delivfaretype}
+			, delivfare = #{delivfare}
+			, isnationdeliv = #{isnationdeliv}
+			, chejufare = #{chejufare}
+			, isolfare = #{isolfare}
+			, exowfare = #{exowfare}
+			, exrtnfare = #{exrtnfare}
+			, rfowfare = #{rfowfare}
+			, rfrtnfare = #{rfrtnfare}
+			, relpost = #{relpost}
+			, reladdr = #{reladdr}
+			, reladdrdetail = #{reladdrdetail}
+			, rfpost = #{rfpost}
+			, rfaddr = #{rfaddr}
+			, rfaddrdetail = #{rfaddrdetail}
+			, delivfreefare = #{delivfreefare} 
+			, istrash = #{istrash}
+			, moduserid = #{authuserid} 
+			, moddate = NOW()
+			, iscombdeliv = #{iscombdeliv} 
+	</insert>
+
+	<select id="selectDelivTemplateListERP" parameterType="somap" resultType="somap">
+		SELECT
+			idx, B.userno, delivbname, delivtype, logistype, delivschtype, delivfaretype, delivfare, isnationdeliv, chejufare, isolfare, exowfare, exrtnfare, rfowfare, rfrtnfare, relpost, reladdr, reladdrdetail, rfpost, rfaddr, rfaddrdetail, rtnlogistype, delivfreefare
+		FROM T_DEALER A INNER JOIN T_DELIV_TEMPLATE B ON A.USERNO = B.USERNO
+		WHERE B.USERNO = #{userno}
+		AND A.DEALERST = 'DST001'
+		AND A.REQDEALST = 'RDS002'
+	</select>
+	
+	<select id="selectDelivTemplateListForExcel" parameterType="somap" resultType="HashMap">
+		/* DelivTemplateMapper.xml - selectDelivTemplateListForExcel 상품 일괄업로드 배송 템플릿 조회 */
+		<include refid="selectDelivTemplateListSQL"/>
+	</select>
+	
+	<sql id="selectDelivTemplateListSQL">
+		SELECT
+			tdt.idx AS delividx, tdt.delivbname, td.dealercode, td.name AS dealername,
+			tdt.delivtype, FN_GET_CODENAME(#{siteid}, 'DELIVTYPE', tdt.delivtype) AS delivtypename,
+			tdt.rtnlogistype, IF(RTNDELIVTYPE ='DLT002', '직배송', FN_GET_CODENAME(#{siteid}, 'LOGISTYPE', tdt.rtnlogistype)) AS rtnlogistypename,
+			tdt.logistype, FN_GET_CODENAME(#{siteid}, 'LOGISTYPE', tdt.logistype) AS logistypename,
+			tdt.delivfaretype, FN_GET_CODENAME(#{siteid}, 'DELIVFARETYPE', tdt.delivfaretype) AS delivfaretypename,
+			tdt.delivschtype, FN_GET_CODENAME(#{siteid}, 'DELIVSCHTYPE', tdt.delivschtype) AS delivschtypename,
+			FORMAT(tdt.delivfare , 0) AS delivfare, IF(tdt.isnationdeliv='T', '전국', '도서산간지역제외') AS nationdelivconts,
+			FORMAT(tdt.exowfare , 0) AS exowfare, FORMAT(tdt.rfowfare , 0) AS rfowfare,
+			FORMAT(tdt.exrtnfare , 0) AS exrtnfare, FORMAT(tdt.rfrtnfare, 0) AS rfrtnfare,
+			FORMAT(tdt.chejufare, 0) AS chejufare, FORMAT(tdt.isolfare, 0) AS isolfare,
+			tdt.relpost, tdt.reladdr, tdt.reladdrdetail, tdt.rfpost, tdt.rfaddr, tdt.rfaddrdetail,
+			tdt.istrash, IF(tdt.istrash = 'F', '사용', '미사용') AS useyn,
+			FORMAT(tdt.delivfreefare , 0) AS delivfreefare
+			, IF(tdt.iscombdeliv = 'T', '묶음' , '개별') AS iscombdelivname
+			, iscombdeliv
+		FROM t_deliv_template tdt
+		LEFT OUTER JOIN t_dealer td ON tdt.userno = td.userno
+		<where>
+			<choose>
+				<when test='type != null and type == "delivtemp"'>
+					<if test='dealerno != null and dealerno != ""'>
+					AND tdt.userno = #{dealerno}
+					</if>
+				</when>
+				<when test="dealerno != null">
+				AND tdt.userno = #{dealerno}
+				</when>
+				<otherwise>
+				AND tdt.userno IS NULL
+				</otherwise>
+			</choose>
+			<if test="istrash != null and istrash != ''">
+			AND tdt.istrash = #{istrash}
+			</if>
+			<if test="delividx != null and delividx != ''">
+			AND tdt.idx = #{delividx}
+			</if>
+		</where>
+	</sql>
+</mapper>

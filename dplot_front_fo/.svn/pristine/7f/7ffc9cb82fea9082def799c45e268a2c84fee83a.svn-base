@@ -1,0 +1,10 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 16 16">
+    <g data-name="그룹 22493">
+        <path data-name="사각형 7507" style="fill:none" d="M0 0h16v16H0z"/>
+        <path data-name="사각형 7481" style="fill:none" d="M0 0h12v12H0z" transform="translate(2 2)"/>
+        <g data-name="Icon feather-play-circle">
+            <path data-name="패스 17918" d="M14 8.5A5.5 5.5 0 1 1 8.5 3 5.5 5.5 0 0 1 14 8.5z" transform="translate(-.5 -.5)" style="stroke:#111;stroke-linecap:round;stroke-linejoin:round;fill:none"/>
+            <path data-name="패스 17919" d="m15 12 3 2-3 2z" transform="translate(-8 -5.999)" style="stroke:#111;stroke-linecap:round;stroke-linejoin:round;fill:none"/>
+        </g>
+    </g>
+</svg>

@@ -1,0 +1,841 @@
+package com.dplot.front.service;
+
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Map;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Propagation;
+import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.multipart.MultipartFile;
+import org.springframework.web.util.HtmlUtils;
+
+import com.dplot.common.CMConst;
+import com.dplot.common.SOMap;
+import com.dplot.common.service.CJMessageService;
+import com.dplot.common.service.util.FileService;
+import com.dplot.common.service.util.MallBaseService;
+import com.dplot.exception.BizException;
+import com.dplot.mapper.BannedMapper;
+import com.dplot.mapper.BoardPostMapper;
+import com.dplot.mapper.CodeMapper;
+import com.dplot.mapper.ComOrderGoodsMapper;
+import com.dplot.mapper.ComOrderMapper;
+import com.dplot.mapper.FileMapper;
+import com.dplot.mapper.GoodsMapper;
+import com.dplot.mapper.GoodsOptionDetailMapper;
+import com.dplot.mapper.GoodsOptionMapper;
+import com.dplot.mapper.GoodsQnaMapper;
+import com.dplot.mapper.InquiryMapper;
+import com.dplot.mapper.MemberMapper;
+import com.dplot.util.Util;
+
+/**
+ * 
+ * @FileName : FrontReviewServiceImpl.java
+ * @Project : datapick_api
+ * @Date : 2021. 11. 29.
+ * @Author : YIY ============================================================
+ *         DATE AUTHOR NOTE
+ *         ============================================================ 2021.
+ *         11. 29. YIY 최초작성
+ *         ------------------------------------------------------------
+ *
+ */
+@Service
+public class FrontCsServiceImpl extends MallBaseService implements FrontCsService {
+	/** The Constant logger. */
+	private static final Logger logger = LoggerFactory.getLogger(FrontCsServiceImpl.class);
+
+	@Autowired
+	private BoardPostMapper boardPostMapper;
+
+	@Autowired
+	private CodeMapper codeMapper;
+
+	@Autowired
+	private FileMapper fileMapper;
+
+	@Autowired
+	private MemberMapper memberMapper;
+
+	@Autowired
+	private FileService fileService;
+
+	@Autowired
+	private ComOrderMapper comOrderMapper;
+
+	@Autowired
+	private ComOrderGoodsMapper comOrderGoodsMapper;
+
+	@Autowired
+	private InquiryMapper inquiryMapper;
+
+	@Autowired
+	private GoodsQnaMapper goodsQnaMapper;
+
+	@Autowired
+	private GoodsMapper goodsMapper;
+
+	@Autowired
+	private CJMessageService cjMessageService;
+
+	@Autowired
+	private GoodsOptionMapper goodsOptionMapper;
+
+	@Autowired
+	private GoodsOptionDetailMapper goodsOptionDetailMapper;
+	
+	@Autowired
+	private BannedMapper bannedMapper;
+
+	/*
+	 * 고객 센터 FAQ 검색
+	 */
+	@Override
+	public List<SOMap> selectMainFaq(SOMap params) throws Exception {
+		params.put("siteid", cs.getStr("siteid"));
+		params.put("userno", cs.getInt("authmemberno"));
+		
+		//비로그인시=> 일반회원의 브론즈
+		if (params.getInt("userno")  == 0) {
+			params.put("dadamembertype", "DMT001"); //일반회원
+		}else {
+			params.put("dadamembertype", cs.getStr("authmembertype"));
+		}
+		
+		return boardPostMapper.selectMainFaq(params);
+	}
+	
+	
+	/*
+	 * 고객 센터 FAQ 검색
+	 */
+	@Override
+	public List<SOMap> selectFaq(SOMap params) throws Exception {
+		params.put("siteid", cs.getStr("siteid"));
+		params.put("platform", cs.getStr("platform"));
+		params.put("userno", cs.getStr("authmemberno"));
+		
+		//비로그인시=> 일반회원의 브론즈
+		if (params.getInt("userno")  == 0) {
+			params.put("dadamembertype", "DMT001"); //일반회원
+			params.put("mumemlvtype", "MDL001");  //브론즈
+		}else {
+			params.put("dadamembertype", cs.getStr("authmembertype"));
+			params.put("mumemlvtype", cs.getStr("authmemlvtype"));
+		}
+				
+
+		return boardPostMapper.selectFaq(params);
+	}
+
+	/*
+	 * 고객 센터 FAQ 총 갯수
+	 */
+	@Override
+	public int selectFaqCount(SOMap params) throws Exception {
+		params.put("siteid", cs.getStr("siteid"));
+		params.put("platform", cs.getStr("platform"));
+		params.put("userno", cs.getStr("authmemberno"));
+		
+		//비로그인시=> 일반회원의 브론즈
+		if (params.getInt("userno")  == 0) {
+			params.put("dadamembertype", "DMT001"); //일반회원
+			params.put("mumemlvtype", "MDL001");  //브론즈
+		}else {
+			params.put("dadamembertype", cs.getStr("authmembertype"));
+			params.put("mumemlvtype", cs.getStr("authmemlvtype"));
+		}
+				
+
+		// TODO Auto-generated method stub
+		return boardPostMapper.selectFaqCount(params);
+	}
+
+	/*
+	 * 고객센터 메인 공지사항 노출 (상단 고정 최신글 + 최신글)
+	 */
+	@Override
+	public List<SOMap> selectMainNotice(SOMap params) throws Exception {
+		params.put("siteid", cs.getStr("siteid"));
+		params.put("platform", cs.getStr("platform"));
+		params.put("userno", cs.getStr("authmemberno"));
+		
+		//비로그인시=> 일반회원의 브론즈
+		if (params.getInt("userno")  == 0) {
+			params.put("dadamembertype", "DMT001"); //일반회원
+			params.put("mumemlvtype", "MDL001");  //브론즈
+		}else {
+			params.put("dadamembertype", cs.getStr("authmembertype"));
+			params.put("mumemlvtype", cs.getStr("authmemlvtype"));
+		}
+		
+		int page = params.getInt("currentpage");
+		int startPage = (page > 1) ? ((page -1 ) * params.getInt("listcnt")) : 0;
+		params.put("startpage", startPage);
+		params.put("endpage", params.getInt("listcnt"));
+		
+		// 
+		if(Util.flag2Bool(params.getDbStr("init")) && !cs.getStr("platform").equals("MAC001")) {
+			params.put("startpage", 0);
+			params.put("endpage", startPage + params.getInt("listcnt"));
+		}
+		
+		List<SOMap> result = boardPostMapper.selectMainNotice(params);
+
+		return result;
+	}
+
+	/*
+	 * 고객센터 공지사항 총 갯수
+	 */
+	@Override
+	public int selectMainNoticeCount(SOMap params) throws Exception {
+		params.put("siteid", cs.getStr("siteid"));
+		params.put("platform", cs.getStr("platform"));
+		params.put("userno", cs.getStr("authmemberno"));
+		
+		//비로그인시=> 일반회원의 브론즈
+		if (params.getInt("userno")  == 0) {
+			params.put("dadamembertype", "DMT001"); //일반회원
+			params.put("mumemlvtype", "MDL001");  //브론즈
+		}else {
+			params.put("dadamembertype", cs.getStr("authmembertype"));
+			params.put("mumemlvtype", cs.getStr("authmemlvtype"));
+		}
+
+		return boardPostMapper.selectMainNoticeCount(params);
+	}
+
+	/*
+	 * 고객센터 공지사항 상세
+	 */
+	@Override
+	public SOMap selectNoticeDetail(SOMap params) throws Exception {
+		params.put("siteid", cs.getStr("siteid"));
+		params.put("imgtype", Util.flag2Bool(cs.getStr("ismobile")) ? CMConst.IMG_TYPE_GOODS_IMG_MO_M
+				: CMConst.IMG_TYPE_GOODS_IMG_PC_M);
+		params.put("platform", cs.getStr("platform"));
+		
+		//비로그인시=> 일반회원의 브론즈
+		if (params.getInt("userno")  == 0) {
+			params.put("dadamembertype", "DMT001"); //일반회원
+			params.put("mumemlvtype", "MDL001");  //브론즈
+		}else {
+			params.put("dadamembertype", cs.getStr("authmembertype"));
+			params.put("mumemlvtype", cs.getStr("authmemlvtype"));
+		}
+
+		SOMap result = boardPostMapper.selectNoticeDetail(params);
+
+		return result;
+	}
+
+	@Override
+	public List<SOMap> selectInquiry(SOMap params) throws Exception {
+		params.put("siteid", cs.getStr("siteid"));
+		params.put("userno", cs.getInt("authmemberno"));
+		params.put("dadamembertype", cs.getStr("authmembertype"));
+		params.put("memlvtype", cs.getStr("authmemlvtype"));
+
+		return inquiryMapper.selectInquiry(params);
+	}
+
+	@Override
+	public int selectInquiryCount(SOMap params) throws Exception {
+		params.put("siteid", cs.getStr("siteid"));
+		params.put("userno", cs.getInt("authmemberno"));
+		params.put("dadamembertype", cs.getStr("authmembertype"));
+		params.put("memlvtype", cs.getStr("authmemlvtype"));
+
+		return inquiryMapper.selectInquiryCount(params);
+	}
+
+	@Override
+	public SOMap selectInquiryDetail(SOMap params) throws Exception {
+		if (cs.getInt("authmemberno") == 0) {
+			throw new BizException("로그인 후 이용해주세요.");
+		}
+
+		params.put("siteid", cs.getStr("siteid"));
+		params.put("userno", cs.getInt("authmemberno"));
+		params.put("dadamembertype", cs.getStr("authmembertype"));
+		params.put("memlvtype", cs.getStr("authmemlvtype"));
+
+		SOMap result = inquiryMapper.selectInquiryDetail(params);
+		if (result.size() == 0) {
+			throw new BizException("비 정상적인 접근입니다.");
+		}
+
+		params.put("inqidx", params.getInt("idx"));
+
+		List<SOMap> goodsList = new ArrayList<SOMap>();
+		List<SOMap> orderMapping = inquiryMapper.selectInquiryOrderDetail(params);
+
+		if (!orderMapping.isEmpty()) {
+			for (SOMap item : orderMapping) {
+				SOMap dbParam = new SOMap();
+				dbParam.put("orderidx", item.getInt("orderidx"));
+				dbParam.put("imgtype", Util.flag2Bool(cs.getStr("ismobile")) ? CMConst.IMG_TYPE_GOODS_IMG_MO_M
+						: CMConst.IMG_TYPE_GOODS_IMG_PC_M);
+				List<SOMap> goods = comOrderGoodsMapper.selectComOrderGoodsLIstDeliv(dbParam);
+				if (!goods.isEmpty()) {
+					for (SOMap goodsItem : goods) {
+						if (goodsItem.getInt("ordgdidx") == item.getInt("ordgdidx")) {
+							goodsList.add(goodsItem);
+						}
+					}
+					result.put("goodslist", goodsList);
+				}
+
+			}
+		}
+
+		// String[] imgtypes =
+		// {CMConst.IMG_TYPE_INQUIRY,CMConst.IMG_TYPE_REVIEW_MOV};
+		String[] imgtypes = { CMConst.IMG_TYPE_INQUIRY };
+		SOMap dbParam = new SOMap();
+		dbParam.put("imgtypes", imgtypes);
+		dbParam.put("orgidx", params.get("idx"));
+
+		List<SOMap> uploadedfileList = fileMapper.selectFileList(dbParam);
+		List<SOMap> imgList = new ArrayList<SOMap>();
+		List<SOMap> movList = new ArrayList<SOMap>();
+		List<SOMap> movImgList = new ArrayList<SOMap>();
+
+		for (SOMap files : uploadedfileList) {
+			if (CMConst.IMG_TYPE_INQUIRY.equals(files.getStr("imgtype"))) {
+				imgList.add(files);
+			} else {
+				if (CMConst.FILE_TYPE_IMG.equals(files.getStr("filetype"))) {
+					movImgList.add(files);
+				} else {
+					movImgList.add(files);
+				}
+			}
+		}
+		result.put("files", uploadedfileList);
+		result.put("imglist", imgList);
+		result.put("movlist", movList);
+		result.put("movimglist", movImgList);
+
+		return result;
+	}
+
+	@Override
+	@Transactional(propagation = Propagation.REQUIRED, rollbackFor = { Exception.class })
+	public int deleteInquiryIdx(SOMap params) throws Exception {
+		int result;
+		params.put("siteid", cs.getStr("siteid"));
+		params.put("userno", cs.getInt("authmemberno"));
+		params.put("dadamembertype", cs.getStr("authmembertype"));
+		params.put("memlvtype", cs.getStr("authmemlvtype"));
+
+		if (inquiryMapper.selectInquiryDetail(params).get("isreply").equals("T")) {
+			result = 0;
+			throw new BizException("답변완료된 문의는 삭제하실 수 업습니다.");
+		}
+
+		// 파일리스트도 같이 삭제
+		try {
+			ArrayList<Integer> list = (ArrayList<Integer>) params.get("fileidx");
+			for (int idx : list) {
+				fileService.delete(idx);
+			}
+			result = inquiryMapper.deleteInquiryIdx(params);
+
+		} catch (Exception e) {
+			result = 0;
+		}
+
+		// TODO Auto-generated method stub
+		return result;
+
+	}
+
+	@Override
+	public List<SOMap> selectInquiryQna(SOMap params) throws Exception {
+		params.put("siteid", cs.getStr("siteid"));
+		params.put("userno", cs.getInt("authmemberno"));
+		params.put("dadamembertype", cs.getStr("authmembertype"));
+		params.put("memlvtype", cs.getStr("authmemlvtype"));
+
+		params.put("imgtype", Util.flag2Bool(cs.getStr("ismobile")) ? CMConst.IMG_TYPE_GOODS_IMG_MO_M
+				: CMConst.IMG_TYPE_GOODS_IMG_PC_M);
+		// TODO Auto-generated method stub
+		List<SOMap> QnAlist = goodsQnaMapper.selectInquiryQna(params);
+
+		return QnAlist;
+	}
+
+	@Override
+	public int selectInquiryQnaCount(SOMap params) throws Exception {
+		params.put("siteid", cs.getStr("siteid"));
+		params.put("userno", cs.getInt("authmemberno"));
+		params.put("dadamembertype", cs.getStr("authmembertype"));
+		params.put("memlvtype", cs.getStr("authmemlvtype"));
+
+		// TODO Auto-generated method stub
+		return goodsQnaMapper.selectInquiryQnaCount(params);
+	}
+
+	@Override
+	public List<SOMap> selectComorderGoods(SOMap params) throws Exception {
+		params.put("siteid", cs.getStr("siteid"));
+		params.put("userno", cs.getInt("authmemberno"));
+
+		// TODO Auto-generated method stub
+		return boardPostMapper.selectComorderGoods(params);
+	}
+
+	/*
+	 * 1:1 문의 저장
+	 */
+	@Override
+	@Transactional(propagation = Propagation.REQUIRED, rollbackFor = { Exception.class })
+	public SOMap saveInquiry(SOMap params, Map<String, MultipartFile> uploadFiles) throws Exception {
+		SOMap result = new SOMap();
+		params.put("siteid", cs.getStr("siteid"));
+		params.put("userno", cs.getInt("authmemberno"));
+
+		if (params.getInt("userno") == 0) {
+			throw new BizException("1:1문의등록은 로그인 후 가능합니다.");
+		}
+		
+		Util util = new Util();
+		String badWordList = bannedMapper.badWordList();
+		
+		String filterText = util.filterText(badWordList, params.getStr("content"));
+		if(!filterText.equals("")){
+			throw new BizException("금칙어가 포함되어 있습니다. " + filterText);
+		}
+
+		String content = HtmlUtils.htmlEscape(params.getStr("content"));
+		content = content.replaceAll("\n", "<br/>");
+		params.put("content", content);
+		
+		
+		// user 정보 조회
+		SOMap memberInfo = memberMapper.selectMember(params);
+		memberInfo.put("type", params.get("type"));
+		memberInfo.put("content", params.get("content"));
+		memberInfo.put("siteid", cs.getStr("siteid"));
+		memberInfo.put("dadamembertype", cs.getStr("authmembertype"));
+		memberInfo.put("memlvtype", cs.getStr("authmemlvtype"));
+
+		// 1:1 문의 유형에서 제목이 없어서 임시로 텍스트 넣음
+		memberInfo.put("subject", "-");
+
+		int idx = 0;
+		int insertResult = 0;
+		// user 정보 포함하여 내용만 처리
+		insertResult = inquiryMapper.insertInquiry(memberInfo);
+
+		if (insertResult == 0) {
+			throw new BizException("문의 등록에 실패했습니다.");
+		}
+		// 내용 처리 후 idx 반환
+		idx = memberInfo.getDbInt("idx");
+
+		List<Map<String, Object>> goodslist = (List<Map<String, Object>>) params.get("goodslist");
+		if (!goodslist.isEmpty()) {
+			for (Map<String, Object> item : goodslist) {
+				SOMap dbparam = new SOMap();
+				dbparam.put("userid", memberInfo.get("userid"));
+				dbparam.put("inqidx", idx);
+				dbparam.put("ordgdidx", item.get("ordgdidx"));
+
+				int orderResult = inquiryMapper.insertInquiryOrder(dbparam);
+				if (orderResult == 0) {
+					throw new BizException("문의 등록에 실패했습니다. (주문상품등록 실패)");
+				}
+			}
+		}
+
+		// 이미지 처리
+		/*********************************
+		 * 파일 업로드 처리
+		 *********************************/
+		for (String key : uploadFiles.keySet()) {
+			MultipartFile file = uploadFiles.get(key);
+			if (key.contains("filelist")) {
+				if (file.getContentType().contains("image")) {
+					fileService.uploadImage(file, idx, CMConst.IMG_TYPE_INQUIRY);
+				} else if (file.getContentType().contains("video")) {
+					fileService.uploadMov(file, idx, CMConst.IMG_TYPE_INQUIRY);
+				} else {
+					throw new Exception("지원하지 않는 파일 형식입니다.");
+				}
+			}
+		}
+		/************************************
+		 * 파일 삭제 처리
+		 ***********************************/
+		List<Integer> deleteFiles = params.getArrayList("deletefilelist");
+		for (int fileIdx : deleteFiles) {
+			fileService.delete(fileIdx);
+		}
+
+		return result;
+	}
+	
+	/*
+	 * 1:1 문의 수정
+	 */
+	@Override
+	@Transactional(propagation = Propagation.REQUIRED, rollbackFor = { Exception.class })
+	public void reviseInquiry(SOMap params, Map<String, MultipartFile> uploadFiles) throws Exception {
+		SOMap result = new SOMap();
+		params.put("siteid", cs.getStr("siteid"));
+		params.put("userno", cs.getInt("authmemberno"));
+
+		if (params.getInt("userno") == 0) {
+			throw new BizException("1:1문의등록은 로그인 후 가능합니다.");
+		}
+		
+		Util util = new Util();
+		String badWordList = bannedMapper.badWordList();
+		
+		String filterText = util.filterText(badWordList, params.getStr("content"));
+		if(!filterText.equals("")){
+			throw new BizException("금칙어가 포함되어 있습니다. " + filterText);
+		}
+
+		//Escape 처
+		String content = HtmlUtils.htmlEscape(params.getStr("content"));
+		content = content.replaceAll("\n", "<br/>");
+		params.put("content", content);
+		
+		// user 정보 조회
+		SOMap memberInfo = memberMapper.selectMember(params);
+
+		int insertResult = 0;		
+		insertResult = inquiryMapper.updateInquiryIdx(params);
+		if (insertResult == 0) {
+			throw new BizException("문의 수정에 실패했습니다.");
+		}
+		
+		int idx = params.getDbInt("idx");
+		List<Map<String, Object>> goodslist = (List<Map<String, Object>>) params.get("goodslist");
+		if (goodslist != null) {
+			inquiryMapper.deleteInquiryMapping(params);
+			for (Map<String, Object> item : goodslist) {
+				SOMap dbparam = new SOMap();
+				dbparam.put("userid", memberInfo.get("userid"));
+				dbparam.put("inqidx", idx);
+				dbparam.put("ordgdidx", item.get("ordgdidx"));
+
+				int orderResult = inquiryMapper.insertInquiryOrder(dbparam);
+				if (orderResult == 0) {
+					throw new BizException("문의 등록에 실패했습니다. (주문상품등록 실패)");
+				}
+			}
+		}
+
+		// 이미지 처리
+		/*********************************
+		 * 파일 업로드 처리
+		 *********************************/
+		for (String key : uploadFiles.keySet()) {
+			MultipartFile file = uploadFiles.get(key);
+			if (key.contains("filelist")) {
+				if (file.getContentType().contains("image")) {
+					fileService.uploadImage(file, idx, CMConst.IMG_TYPE_INQUIRY);
+				} else if (file.getContentType().contains("video")) {
+					fileService.uploadMov(file, idx, CMConst.IMG_TYPE_INQUIRY);
+				} else {
+					throw new Exception("지원하지 않는 파일 형식입니다.");
+				}
+			}
+		}
+		/************************************
+		 * 파일 삭제 처리
+		 ***********************************/
+		List<Integer> deleteFiles = params.getArrayList("deletefilelist");
+		for (int fileIdx : deleteFiles) {
+			fileService.delete(fileIdx);
+		}
+	}	
+
+	@Override
+	public List<SOMap> selectComorder(SOMap params) throws Exception {
+		if (cs.getInt("authmemberno") == 0) {
+			throw new BizException("로그인 후 이용해주세요.");
+		}
+
+		params.put("siteid", cs.getStr("siteid"));
+		params.put("userno", cs.getInt("authmemberno"));
+		params.put("perpage", "10");
+
+		List<SOMap> orderlist = comOrderMapper.selectFrontComOrder(params);
+
+		if (orderlist.size() > 0) {
+			SOMap dbparam = new SOMap();
+			dbparam.put("siteid", cs.getStr("siteid"));
+			dbparam.put("userno", cs.getInt("authmemberno"));
+			dbparam.put("imgtype", Util.flag2Bool(cs.getStr("ismobile")) ? CMConst.IMG_TYPE_GOODS_IMG_MO_M
+					: CMConst.IMG_TYPE_GOODS_IMG_PC_M);
+			for (SOMap order : orderlist) {
+				dbparam.put("orderidx", order.getInt("orderidx"));
+				dbparam.put("ordstatus", params.getStr("ordstatus"));
+
+				List<SOMap> orderGoodslist = comOrderGoodsMapper.selectComOrderGoodsLIstDeliv(dbparam);
+				order.put("goods", orderGoodslist);
+			}
+		}
+
+		return orderlist;
+	}
+
+	@Override
+	public SOMap selectInquiryQnaDetail(SOMap params) throws Exception {
+		if (cs.getInt("authmemberno") == 0) {
+			throw new BizException("로그인 후 이용해주세요.");
+		}
+
+		params.put("siteid", cs.getStr("siteid"));
+		params.put("userno", cs.getInt("authmemberno"));
+		//params.put("dadamembertype", cs.getStr("authmembertype"));
+		//params.put("memlvtype", cs.getStr("authmemlvtype"));
+
+		params.put("imgtype", Util.flag2Bool(cs.getStr("ismobile")) ? CMConst.IMG_TYPE_GOODS_IMG_MO_M
+				: CMConst.IMG_TYPE_GOODS_IMG_PC_M);
+
+		SOMap result = goodsQnaMapper.selectQnaDtl(params);
+
+		String[] imgtypes = { CMConst.IMG_TYPE_INQUIRY };
+		SOMap dbParam = new SOMap();
+		dbParam.put("imgtypes", imgtypes);
+
+		dbParam.put("orgidx", params.get("idx"));
+		List<SOMap> uploadedfileList = fileMapper.selectFileList(dbParam);
+
+		result.put("files", uploadedfileList);
+
+		return result;
+	}
+
+	@Override
+	public List<SOMap> selectQnaGoods(SOMap params) throws Exception {
+		params.put("siteid", cs.getStr("siteid"));
+		params.put("userno", cs.getInt("authmemberno"));
+		List<SOMap> result = goodsQnaMapper.selectQnaGoods(params);
+
+		int index = 0;
+		for (SOMap item : result) {
+			if (item.getInt("userno") == params.getInt("userno")) {
+				// 로그인 작성자 댓글이 있는지 없는지 여부
+				result.get(index).put("own", true);
+			} else {
+				result.get(index).put("own", false);
+			}
+			index++;
+		}
+
+		return result;
+	}
+
+	@Override
+	public int selectQnaGoodsCount(SOMap params) throws Exception {
+		// TODO Auto-generated method stub
+		return goodsQnaMapper.selectQnaGoodsCount(params);
+	}
+
+	@Override
+	public int deleteMyQna(SOMap params) throws Exception {
+		if (cs.getInt("authmemberno") == 0) {
+			throw new BizException("로그인 후 이용해주세요.");
+		}
+		params.put("siteid", cs.getStr("siteid"));
+		params.put("userno", cs.getInt("authmemberno"));
+		params.put("dadamembertype", cs.getStr("authmembertype"));
+		params.put("memlvtype", cs.getStr("authmemlvtype"));
+
+		int result = 0;
+		SOMap chkResult = goodsQnaMapper.selectMyQna(params);
+		if (chkResult.getInt("userno") != params.getInt("userno")) {
+			result = 0;
+			throw new BizException("로그인 사용자 정보가 일치하지 않습니다.");
+		} else if (chkResult.get("isreply").equals("T")) {
+			result = 0;
+			throw new BizException("답변이 등록된 문의는 수정/삭제할 수 없습니다.");
+		} else {
+			result = goodsQnaMapper.deleteMyQna(params);
+		}
+
+		return result;
+	}
+
+	/*
+	 * 상풍별 옵션 조회
+	 */
+	@Override
+	public List<SOMap> selectGoodsOption(SOMap params) throws Exception {
+		// TODO Auto-generated method stub
+		return goodsOptionMapper.selectGoodsOptionList(params);
+	}
+
+	@Override
+	public int insertGoodsQna(SOMap params) throws Exception {
+		if (cs.getInt("authmemberno") == 0) {
+			throw new BizException("로그인 후 이용해주세요.");
+		}
+
+		params.put("siteid", cs.getStr("siteid"));
+		params.put("userno", cs.getInt("authmemberno"));
+		params.put("dadamembertype", cs.getStr("authmembertype"));
+		params.put("memlvtype", cs.getStr("authmemlvtype"));
+		
+		Util util = new Util();
+		String badWordList = bannedMapper.badWordList();
+		
+		String filterText = util.filterText(badWordList, params.getStr("content"));
+		if(!filterText.equals("")){
+			throw new BizException("금칙어가 포함되어 있습니다. " + filterText);
+		}
+		
+		String content = HtmlUtils.htmlEscape(params.getStr("content"));
+		content = content.replaceAll("\n", "<br/>");
+		params.put("content", content);
+
+		SOMap memberInfo = memberMapper.selectMember(params);
+		params.put("writer", memberInfo.get("userid"));
+		
+		params.put("dealerno", goodsMapper.selectGoodsJoinGoodsContent(params).get("dealerno"));
+
+		if (params.getInt("index") != 0) {
+			SOMap getOpCode = goodsOptionDetailMapper.selectGetOptionCode(params);
+			params.put("optioncode", getOpCode.get("optioncode"));
+		}
+
+		return goodsQnaMapper.insertGoodsQna(params);
+	}
+
+	@Override
+	public int updateMyQna(SOMap params) throws Exception {
+		if (cs.getInt("authmemberno") == 0) {
+			throw new BizException("로그인 후 이용해주세요.");
+		}
+
+		params.put("siteid", cs.getStr("siteid"));
+		params.put("userno", cs.getInt("authmemberno"));
+		params.put("dadamembertype", cs.getStr("authmembertype"));
+		params.put("memlvtype", cs.getStr("authmemlvtype"));
+		
+		Util util = new Util();
+		String badWordList = bannedMapper.badWordList();
+		
+		String filterText = util.filterText(badWordList, params.getStr("content"));
+		if(!filterText.equals("")){
+			throw new BizException("금칙어가 포함되어 있습니다. " + filterText);
+		}
+
+		String content = HtmlUtils.htmlEscape(params.getStr("content"));
+		content = content.replaceAll("\n", "<br/>");
+		params.put("content", content);
+		
+		int result = 0;
+		SOMap chkResult = goodsQnaMapper.selectMyQna(params);
+		if (chkResult.getInt("userno") != params.getInt("userno")) {
+			result = 0;
+			throw new BizException("로그인 사용자 정보가 일치하지 않습니다.");
+		} else if (chkResult.get("isreply").equals("T")) {
+			result = 0;
+			throw new BizException("답변이 등록된 문의는 수정/삭제할 수 없습니다.");
+		} else {
+			result = goodsQnaMapper.updateMyQna(params);
+		}
+
+		return result;
+	}
+
+	@Override
+	public SOMap sendPartnersApply(SOMap params) throws Exception {
+
+		return cjMessageService.sendPartnersApply(params);
+	}
+
+	@Override
+	public List<SOMap> selectOptionDetail(SOMap params) throws Exception {
+		List<SOMap> result = goodsOptionMapper.selectGoodsOptionList(params);
+
+		return result;
+	}
+
+	@Override
+	public List<SOMap> selectGoodsOptionDetail(SOMap params) throws Exception {
+		params.put("siteid", cs.getStr("siteid"));
+		params.put("userno", cs.getInt("authmemberno"));
+		params.put("platform", cs.getStr("platform"));
+
+		return goodsOptionDetailMapper.selectGoodsOptionDetailByIndex(params);
+	}
+
+	@Override
+	public SOMap searchOption(SOMap params) throws Exception {
+
+		return goodsOptionDetailMapper.selectDetailOptionCode(params);
+	}
+
+	@Override
+	public int updateQna(SOMap params) throws Exception {
+		if(params.getInt("index") != 0){
+			SOMap option = goodsOptionDetailMapper.selectGetOptionCode(params);
+			params.put("optioncode", option.get("optioncode"));			
+		}
+
+		return goodsQnaMapper.updateGoodsQna(params);
+	}
+
+
+	@Override
+	public void addHit(SOMap params) throws Exception {
+		boardPostMapper.updateBoardHits(params.getStr("idx"));
+	}
+
+
+	@Override
+	public int selectComorderCount(SOMap params) throws Exception {
+		return comOrderMapper.selectFrontComOrderCount(params);
+	}
+
+	/*
+	 * @Override public List<SOMap> selectFaqPagingList(SOMap params) throws
+	 * Exception { params.put("cmclass", "FAQTYPE"); params.put("istrash", "F");
+	 * params.put("ismemberall", "Y"); params.put("boardtype", "NTT003");
+	 * 
+	 * return boardPostMapper.selectFaqPagingList(params); }
+	 * 
+	 * 
+	 * @Override public SOMap selectFaqListStateCount(SOMap params) throws
+	 * Exception { params.put("cmclass", "FAQTYPE"); params.put("istrash", "F");
+	 * params.put("ismemberall", "Y"); params.put("boardtype", "NTT003"); return
+	 * boardPostMapper.selectFaqListStateCount(params); }
+	 * 
+	 * @Override public List<SOMap> selectNoticePagingList(SOMap params) throws
+	 * Exception{ params.put("istrash", "F"); params.put("ismemberall", "Y");
+	 * params.put("boardtype", "NTT006");
+	 * 
+	 * return boardPostMapper.selectNoticePagingList(params); }
+	 * 
+	 * @Override public SOMap faq(SOMap params) throws Exception{
+	 * params.put("cmclass", "FAQTYPE"); params.put("istrash", "F");
+	 * params.put("ismemberall", "Y"); params.put("boardtype", "NTT003");
+	 * 
+	 * SOMap result = new SOMap();
+	 * 
+	 * List<SOMap> tags = codeMapper.selectCodeDtlList(params); List<SOMap> faqs
+	 * = boardPostMapper.selectFaqPagingList(params);
+	 * 
+	 * 
+	 * result.put("tags", tags); result.put("faqs", faqs);
+	 * 
+	 * return result; }
+	 * 
+	 */
+
+}

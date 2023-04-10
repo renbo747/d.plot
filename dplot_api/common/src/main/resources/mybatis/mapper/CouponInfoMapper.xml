@@ -1,0 +1,116 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.dplot.mapper.CouponInfoMapper">
+	
+	<!-- 쿠폰정보 저장 -->
+	<insert id="insertCouponInfo" parameterType="somap" useGeneratedKeys="true" keyColumn="CPNINFOIDX" keyProperty="CPNINFOIDX">
+		/* CouponInfoMapper.xml - insertCouponInfo 쿠폰정보 저장 */
+		INSERT INTO T_COMCOUPON_INFO (
+			  COMCPNIDX			/* 공통쿠폰IDX */
+			, CPNNAME  			/* 쿠폰명 */
+			, CPNISSUEST  		/* 쿠폰발급상태 */
+			, CPNISSUEDAY  		/* 발급일시 */
+			, CPNUSESTDAY  		/* 쿠폰사용시작일 */
+			, CPNUSEEDDAY  		/* 쿠폰사용종료일 */
+			, REGUSERID  		/* 등록자ID */
+			, REGDATE  			/* 등록일시 */
+		)
+		<choose>
+			<when test="couponinfolist != null and couponinfolist.size > 0">
+				VALUES
+				<foreach collection="couponinfolist" item="data" index="index" open="" separator="," close="">
+			    (	  #{comcpnidx}
+					, CONCAT(#{cpnname}, '(', #{data.issuenum}, '/', #{totalissuecnt}, ')')
+					, #{cpnissuest}
+					, #{data.cpnissueday}
+					, #{data.cpnusestday}
+					, #{data.cpnuseedday}
+					, #{authuserid}
+					, NOW()
+			    )
+			    </foreach>
+			</when>
+			<otherwise>
+			VALUES (
+				  #{comcpnidx}
+				, #{cpnname}
+				, #{cpnissuest}
+				, #{cpnissueday}
+				, #{cpnusestday}
+				, #{cpnuseedday}
+				, #{authuserid}
+				, NOW()
+			)
+			</otherwise>
+		</choose>
+	</insert>
+	
+	<!-- 쿠폰정보 수정 -->
+	<update id="updateCouponInfo" parameterType="somap">
+		UPDATE T_COMCOUPON_INFO SET	/* CouponInfoMapper.xml - updateCouponInfo 쿠폰정보 수정 */
+			  CPNNAME = #{cpnname}
+			, CPNISSUEST = #{cpnissuest}
+			, CPNUSESTDAY = #{cpnusestday}
+			, CPNUSEEDDAY = #{cpnuseedday}
+			, CPNISSUEDAY = #{cpnissueday}
+		WHERE CPNINFOIDX = #{cpninfoidx}
+	</update>
+	
+	<!-- 쿠폰정보 삭제 -->
+	<delete id="deleteCouponInfo" parameterType="somap">
+		/* CouponInfoMapper.xml - deleteCouponInfo 쿠폰정보 삭제 */
+		DELETE FROM T_COMCOUPON_INFO
+		WHERE COMCPNIDX = #{comcpnidx}
+	</delete>
+	
+	<!-- 쿠폰 발급상태 갱신 -->
+	<update id="updateCouponIssueSt" parameterType="somap">
+		UPDATE T_COMCOUPON_INFO SET	/* CouponInfoMapper.xml - updateCouponIssueSt 쿠폰 발급상태 갱신 */
+			  CPNISSUEST = #{cpnissuest}
+		WHERE CPNINFOIDX = #{cpninfoidx}
+	</update>
+	
+	<!-- 현재 쿠폰발급상태 조회 -->
+	<select id="getCouponIssueSt" parameterType="somap" resultType="somap">
+		SELECT  /* CouponInfoMapper.xml - getCouponIssueSt 현재 쿠폰발급상태 조회 */
+			  CPNISSUEST
+		FROM T_COMCOUPON_INFO
+		WHERE CPNINFOIDX = #{cpninfoidx}
+	</select>
+	
+	<!-- 쿠폰 삭제구분 갱신 -->
+	<update id="updateCouponCpnDelType" parameterType="somap">
+		UPDATE T_COMCOUPON_INFO SET	/* CouponInfoMapper.xml - updateCouponCpnDelType 쿠폰 삭제구분 갱신 */
+			  CPNDELTYPE = #{cpndeltype}
+		WHERE 1 = 1
+		<if test="targetlist != null and targetlist.size > 0">
+		AND CPNINFOIDX IN
+			<foreach collection="targetlist" item="item" index="index" open="(" separator="," close=")">
+				#{item.cpninfoidx}
+			</foreach>
+		</if>
+	</update>
+
+ 	<select id="selectCouponInfoERPData" parameterType="somap" resultType="somap">
+		SELECT
+			A.CPNINFOIDX,
+			COMCPNIDX,
+			CPNNAME,
+			CPNISSUEST,
+			CPNISSUEDAY,
+			CPNUSESTDAY,
+			CPNUSEEDDAY,
+			CPNDELTYPE,
+			CPNISTYPE,
+			ISNOWSTOP,
+			ISNOWRESTART,
+			CPNSTOPSTDAY,
+			CPNSTOPEDDAY,
+			CPNRESTARTDAY
+		FROM T_COMCOUPON_INFO A LEFT OUTER JOIN T_COMCOUPON_ISSUE B ON B.CPNISIDX  = (
+			SELECT MAX(CPNISIDX) FROM T_COMCOUPON_ISSUE WHERE CPNINFOIDX = A.CPNINFOIDX GROUP BY CPNINFOIDX
+		)
+		WHERE COMCPNIDX = #{comcpnidx}
+	</select>
+</mapper>

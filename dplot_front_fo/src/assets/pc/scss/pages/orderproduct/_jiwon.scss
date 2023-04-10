@@ -1,0 +1,222 @@
+// 옵션 선택 모달 (PC 만)
+.option-select-modal {
+  .modal-dialog {
+    max-width: 946px !important;
+  }
+
+  .modal-body {
+    padding: 50px !important;
+  }
+
+  .option-select__product-info {
+    padding-bottom: 20px;
+
+    .seller-name {
+      font-size: 14px;
+      letter-spacing: -.42px;
+      font-weight: 600;
+      padding-bottom: 4px;
+    }
+
+    .product-name {
+      font-size: 16px;
+      letter-spacing: -.64px;
+      color: $gray-700;
+    }
+  }
+
+  .option-dropdown-area {
+    padding-bottom: 10px;
+
+    .base-dropdown {
+      width: 100%;
+      flex: 1 1 0;
+      margin-bottom: 10px;
+    }
+    .base-dropdown + .base-dropdown {
+      margin-left: 20px;
+    }
+  }
+
+  .add-option-dropdown-area {
+    padding-bottom: 30px;
+
+    .add-option__title {
+      font-size: 14px;
+      letter-spacing: -.56px;
+    }
+  }
+
+  .option-item-area {
+    padding-bottom: 20px;
+
+    li + li {
+      padding-top: 10px;
+    }
+  }
+
+  .product-price__area {
+    line-height: 1;
+    padding-bottom: 40px;
+
+    .product-price__title {
+      font-size: 16px;
+      letter-spacing: -.64px;
+      font-weight: 500;
+      padding-right: 20px;
+    }
+
+    .product-price {
+      font-size: 18px;
+      letter-spacing: -.54px;
+      font-weight: 600;
+      padding-right: 2px;
+    }
+
+    .price-unit {
+      font-size: 14px;
+      letter-spacing: -.56px;
+    }
+  }
+
+  .footer__btn-area {
+    .btn {
+      width: 280px;
+      &:first-child {
+        margin-right: 20px;
+      }
+    }
+  }
+}
+
+//////  할인/쿠폰 적용 모달 (pc 만 ) /////
+.coupon-apply-pc-modal {
+  .modal-dialog {
+    max-width: 636px !important;
+  }
+  .dp-section {
+    margin-top: 60px;
+    margin-bottom: 60px;
+  }
+  .dp-hr-h6 {
+    height: 6px;
+    background: $gray-100;
+  }
+  .form-group {
+    margin-bottom: 10px !important;
+  }
+  .discount__product-info__area {
+    padding-bottom: 50px;
+  }
+  .product-info__area {
+    width: calc(100% - 350px );
+    padding-left: 14px;
+    .seller-name {
+      font-size: 14px;
+      letter-spacing: -.42px;
+      line-height: 24px;
+      font-weight: 600;
+    }
+    .product-name {
+      font-size: 16px;
+      letter-spacing: -.64px;
+      line-height: 28px;
+      color: $gray-700;
+    }
+  }
+  .product-price__area {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end;
+    padding-right: 70px;
+    .discount-price-area {
+      display: flex;
+      justify-content: flex-end;
+      width: 100px;
+      .atten-new {
+        font-size: 18px;
+        letter-spacing: -.54px;
+        line-height: 34px;
+        font-weight: 600;
+      }
+      .price-unit {
+        font-size: 14px;
+        letter-spacing: -.56px;
+        line-height: 26px;
+        margin-top: 2px;
+        margin-left: 2px;
+      }
+    }
+    .current-price-area {
+      .current-price {
+        font-size: 16px;
+        letter-spacing: -.48px;
+        line-height: 24px;
+        color: $gray-600;
+        text-decoration: line-through;
+      }
+    }
+  }
+  .product-count-area {
+    width: 30px;
+    span {
+      font-size: 16px;
+      letter-spacing: -.64px;
+      font-weight: 500;
+    }
+  }
+  .add-discount-area {
+    .add-discount__header {
+      padding-bottom: 30px;
+      .add-discount-title {
+        font-size: 16px;
+        letter-spacing: -.64px;
+        line-height: 24px;
+        font-weight: 500;
+      }
+      .atten-new {
+        font-size: 18px;
+        letter-spacing: -.56px;
+        line-height: 34px;
+        font-weight: 600;
+      }
+      .price-unit {
+        font-size: 14px;
+        letter-spacing: -.56px;
+        line-height: 26px;
+        margin-left: 2px;
+      }
+    }
+  }
+  .shipping-coupon-area {
+    .shipping-coupon__header {
+      padding-bottom: 30px;
+      .shipping-coupon-title {
+        font-size: 16px;
+        letter-spacing: -.64px;
+        line-height: 24px;
+        font-weight: 500;
+      }
+      .atten-new {
+        font-size: 18px;
+        letter-spacing: -.56px;
+        line-height: 34px;
+        font-weight: 600;
+      }
+      .price-unit {
+        font-size: 14px;
+        letter-spacing: -.56px;
+        line-height: 26px;
+        margin-left: 2px;
+      }
+    }
+  }
+  .footer__btn-area {
+    width: 100%;
+    margin: 0 !important;
+    padding: 16px 20px;
+    .dp-btn {
+      width: 288px;
+    }
+  }
+}

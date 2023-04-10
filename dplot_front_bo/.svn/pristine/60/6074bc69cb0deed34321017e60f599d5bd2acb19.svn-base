@@ -1,0 +1,1426 @@
+<template>
+    <!-- 교환상세 팝업 -->
+    <div id="modal-wrap" class="modal" style="display: block;">
+        <div class="modal-content" style="width: 1600px;">
+            <div class="pop-header">
+                <h2>교환상세{{ ' - ' + claimInfo.excstatusnm }}</h2>
+                <button type="button" class="pop-close" @click="onClose"></button>
+            </div>
+            <div class="pop-body">
+                <div class="gray-box mg0">
+                    <div class="clearfix">
+                        <div class="fl">[{{ orderInfo.ordpathtypename }}] 주문번호 : <strong>{{ orderInfo.ordno }}</strong></div>
+                        <div class="fr txt-gray">
+                            <span>주문일 : {{ orderInfo.orderdate }}</span>
+                            <span class="left-bar" v-if="isPartner">교환신청일 : {{ orderInfo.clmreqdate }}</span>
+                        </div>
+                    </div>
+                    <hr class="solid" style="margin: 10px 0;" v-if="!isPartner"/>
+                    <div class="clearfix" v-if="!isPartner">
+                        <div class="fl">
+                            <span v-if="orderInfo.isnonmember=='F'">[{{ orderInfo.membertypename }}] [{{ orderInfo.memlvtypename }}] {{ orderInfo.ordname }}({{ orderInfo.ordid }})</span>
+                            <span v-else>{{ orderInfo.ordname }}</span>
+                            <span class="left-bar" v-if="orderInfo.isnonmember=='F'">{{ $util.maskTel(orderInfo.ordtel) }}</span>
+                            <span class="left-bar" v-if="orderInfo.isnonmember=='F'">{{ orderInfo.ordemail }}</span>
+                        </div>
+                        <div class="fr txt-gray">
+                            <span>교환신청일 : {{ orderInfo.clmreqdate }}</span>
+                        </div>
+                    </div>
+                </div>
+                <div class="clearfix mt20">
+                    <div class="bar-title small fl">교환상품</div>
+                </div>
+                <template v-for="row in clmInfo.excitems">
+                    <table cellpadding="0" cellspacing="0" class="data-tb align-c mt0" :key="'list_'+row.ordgdidx">
+                        <caption>교환상품 목록</caption>
+                        <colgroup>
+                            <col width="4.5%"  v-if="!isPartner"/><!-- 판매구분 -->
+                            <col width="6%"  v-if="!isPartner"/><!-- 파트너사 -->
+                            <col width="6.5%" /><!-- 상품코드 -->
+                            <col width="4%" /><!-- 단품코드 -->
+                            <col width="62px" /><!-- 상품이미지 -->
+                            <col width="" /><!-- 상품명 -->
+                            <col width="10%" /><!-- 옵션 -->
+                            <col width="4%" /><!-- 주문수량 -->
+                            <col width="4%" /><!-- 교환수량 -->
+                            <col width="5.5%" /><!-- 판매단가 -->
+                            <col width="5.5%" /><!-- 판매금액 -->
+                            <col width="8%" /><!-- 교환상태 -->
+                            <col width="8%" /><!-- 교환번호 -->
+                        </colgroup>
+                        <thead>
+                            <tr>
+                                <th v-if="!isPartner">판매구분</th>
+                                <th v-if="!isPartner">파트너사</th>
+                                <th>상품코드</th>
+                                <th>단품코드</th>
+                                <th colspan="2">상품명</th>
+                                <th>옵션</th>
+                                <th>주문수량</th>
+                                <th>교환수량</th>
+                                <th>판매단가</th>
+                                <th>판매금액</th>
+                                <th>교환상태</th>
+                                <th>교환번호</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td v-if="!isPartner">{{ row.ispbgoods==='T'? '자사':'파트너사' }}</td>
+                                <td v-if="!isPartner">{{ row.dealernm }}</td>
+                                <td>{{ row.goodscode }}</td>
+                                <td>{{ row.optioncode }}</td>
+                                <td>
+                                    <div class="img-thumb size60 link" @click="goFrontGoodsDetail(row.goodscode)" :class="{'no-image': $util.isNull(row.fullpath)}">
+                                        <img :src="row.fullpath" v-if="!$util.isNull(row.fullpath)">
+                                    </div>
+                                </td>
+                                <td class="left no-left">
+                                    <a href="javascript:void(0);" class="link" @click="goGoodsDetail(row.goodsno)">{{ row.goodsname }}</a>
+                                </td>
+                                <td style="white-space: pre-wrap">{{ row.bfoptionname }}</td>
+                                <td>{{ $util.maskComma(row.ordcnt) }}</td>
+                                <td>{{ $util.maskComma(row.clmcnt) }}</td>
+                                <td class="right">{{ $util.maskComma(row.price) }}</td>
+                                <td class="right">{{ $util.maskComma(Number(row.price) * Number(row.ordcnt)) }}</td>
+                                <td>
+                                    <a href="javascript:void(0);" class="link" @click="goClaimHistory(row.clmgdidx)">
+                                        {{ row.boclmstatusnm }}
+                                        {{ (row.clmstatus===$store.getters['ADMIN'].EXCHANGE_APPROVAL_COMPLETE && claimInfo.isrectracking==='T')? ' - 회수진행요청':'' }}
+                                        {{ (row.clmstatus===$store.getters['ADMIN'].EXCHANGE_RETURN_COMPLETE && claimInfo.isexctracking==='T')? ' - 배송진행요청':'' }}
+                                    </a>
+                                </td>
+                                <td>{{ row.clmno }}</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </template>
+                <table cellpadding="0" cellspacing="0" class="gray-tb">
+                    <colgroup>
+                        <col width="150px">
+                        <col width="">
+                    </colgroup>
+                    <tbody>
+                        <tr>
+                            <th>교환사유<i class="essential"></i></th>
+                            <td>
+                                <select v-model="claimInfo.exctype" disabled>
+                                    <option value="">구분선택</option>
+                                    <option v-for="item in commonCode.exctype" :key="item.cmcode" :value="item.cmcode">{{ item.codename }}</option>
+                                </select>
+                                <input type="text" class="ml3" style="width: calc(100% - 156px);" v-model="claimInfo.clmdetail" maxlength="500" disabled/>
+                            </td>
+                        </tr>
+                        <tr>
+                            <th>사진첨부</th>
+                            <td>
+                                <div v-for="(row, index) in fileList" :key="index" class="dpib">
+                                    <a href="javascript:void(0);" class="file-link" @click="viewFile(row.fullpath)">{{ row.imgforiname }}</a>
+                                </div>
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+                <div class="clearfix mt20">
+                    <div class="bar-title small fl">교환출고상품</div>
+                </div>
+                <table cellpadding="0" cellspacing="0" class="data-tb align-c mt0">
+                    <caption>주문 목록</caption>
+                    <colgroup>
+                        <col width="6%" /><!-- 판매구분 -->
+                        <col width="6%" /><!-- 파트너사 -->
+                        <col width="6%" /><!-- 상품코드 -->
+                        <col width="5%" /><!-- 상품순번 -->
+                        <col width="" /><!-- 상품명/옵션변경 -->
+                        <col width="5%" /><!-- 교환수량 -->
+                        <col width="6.5%" /><!-- 판매금액 -->
+                    </colgroup>
+                    <thead>
+                        <tr>
+                            <th>판매구분</th>
+                            <th>파트너사</th>
+                            <th>상품코드</th>
+                            <th>상품순번</th>
+                            <th>상품명/옵션변경</th>
+                            <th>교환수량</th>
+                            <th>판매금액</th>
+                        </tr>
+                    </thead>
+                    <tbody v-if="!$util.isNull(excgoods)">
+                        <tr>
+                            <td>{{ excgoods.ispbgoods==='T'? '자사':'파트너사'}}</td>
+                            <td>{{ excgoods.ispbgoods==='T'? '-':excgoods.dealernm}}</td>
+                            <td>{{ excgoods.goodscode }}</td>
+                            <td>{{ excgoods.optioncode }}</td>
+                            <td class="left">
+                                <span class="dpb">{{ excgoods.goodsname }}</span>
+                                <div class="dpb">
+                                    <select style="width: 100%;" v-model="excoption" disabled>
+                                        <option value="">선택</option>
+                                        <option v-for="(row, index) in excgoodslist" :key="index" :value="row.optioncode">{{ row.optionname }}</option>
+                                    </select>
+                                </div>
+                            </td>
+                            <td>{{ $util.maskComma(excgoods.clmcnt) }}</td>
+                            <td class="right">{{ $util.maskComma(excgoods.price) }}</td>
+                        </tr>
+                    </tbody>
+                    <tbody v-else>
+                        <tr><td colspan="7">교환 가능한 상품이 존재하지 않습니다.</td></tr>
+                    </tbody>
+                </table>
+                <hr class="dash" />
+                <div class="col2 pd scroll">
+                    <div class="left">
+                        <div class="bar-title small">회수지 정보</div>
+                        <table cellpadding="0" cellspacing="0" class="gray-tb">
+                            <colgroup>
+                                <col width="150px">
+                                <col width="">
+                            </colgroup>
+                            <tbody>
+                                <tr>
+                                    <th>회수자 명</th>
+                                    <td><input type="text" v-model="recInfo.recname" maxlength="50" :disabled="claimInfo.isrectracking==='T' || !isEditRecInfo"/></td>
+                                </tr>
+                                <tr>
+                                    <th>연락처</th>
+                                    <td><input type="text" v-model="recInfo.rectel" maxlength="11" :disabled="claimInfo.isrectracking==='T' || !isEditRecInfo" oninput="this.value = this.value.replace(/([^0-9])/gi, '');"/></td>
+                                </tr>
+                                <tr>
+                                    <th>회수지 주소</th>
+                                    <td colspan="3">
+                                        <div class="dpb">
+                                            <input type="text" class="short" v-model="recInfo.recpost" maxlength="7" readonly>
+                                            <button type="button" class="btn blue-line ml3" @click="searchAddress('rec')" :disabled="claimInfo.isrectracking==='T' || !isEditRecInfo">주소검색</button>
+                                        </div>
+                                        <input type="text" class="dpb" style="width: 100%;" v-model="recInfo.recaddrroad" maxlength="100" readonly>
+                                        <input type="text" class="dpb" style="width: 100%;" v-model="recInfo.recaddrdetailroad" maxlength="100" :disabled="claimInfo.isrectracking==='T' || !isEditRecInfo">
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                    <div class="right">
+                        <div class="bar-title small">회수택배사 정보</div>
+                        <table cellpadding="0" cellspacing="0" class="gray-tb">
+                            <colgroup>
+                                <col width="150px">
+                                <col width="">
+                            </colgroup>
+                            <tbody>
+                                <tr v-if="this.claimInfo.rtndelivtype == 'DLT004' && (this.claimInfo.excstatus == 'EXS006' || this.claimInfo.excstatus == 'EXS007')">
+                                    <th>회수 택배사</th>
+                                    <td>
+                                        <select v-model="recInfo.reclogistype" style="width: 160px;">
+                                            <option v-for="row in rtnlogislist" :key="row.rtnlogistype" :value="row.rtnlogistype">{{ row.logistypename }}</option>
+                                        </select>
+                                        <input type="text" class="ml3" placeholder="송장번호" v-model="recInfo.recinvoiceno" maxlength="50" oninput="this.value = this.value.replace(/(^0|[^0-9])/gi, '');"/>
+                                        <button type="button" class="btn big blue ml3" @click="saveRtninvoiceno(recInfo)">저장</button>
+                                    </td>
+                                </tr>
+                                <tr v-else>
+                                    <th>회수 택배사</th>
+                                    <td>
+                                        <select v-model="recInfo.reclogistype" style="width: 160px;" disabled>
+                                            <option v-for="logistype in commonCode.logistype" :key="logistype.cmcode" :value="logistype.cmcode">{{ logistype.codename }}</option>
+                                        </select>
+                                        <input type="text" class="ml3" placeholder="송장번호" v-model="recInfo.recinvoiceno" maxlength="50" disabled oninput="this.value = this.value.replace(/(^0|[^0-9])/gi, '');"/>
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <th>회수 완료일</th>
+                                    <td>
+                                        <CommonDatePicker :value="recInfo.reccomdate" @change="onChangeRecDate" :disable="true"/>
+                                        <input type="text" class="ml3" v-model="recInfo.reccomtime" readonly/>
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <th>상태</th>
+                                    <td>
+                                        <input type="text" v-model="recInfo.recstatname" readonly/>
+                                        <button type="button" class="btn blue-line ml3" :disabled="$util.isNull(recInfo.recinvoiceno) || claimInfo.excstatus === $store.getters['ADMIN'].EXCHANGE_APPROVAL_COMPLETE || claimInfo.rtndelivtype===$store.getters['ADMIN'].DELIV_DIRECT"
+                                            @click="goDelivTracking('rec')">배송조회</button>
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+                <hr class="dash" />
+                <div class="col2 pd scroll">
+                    <div class="left">
+                        <div class="bar-title small">배송지 정보</div>
+                        <table cellpadding="0" cellspacing="0" class="gray-tb">
+                            <colgroup>
+                                <col width="150px">
+                                <col width="">
+                            </colgroup>
+                            <tbody>
+                                <tr>
+                                    <th>수령인명</th>
+                                    <td><input type="text" v-model="excInfo.excdlvname" maxlength="50" :disabled="claimInfo.isexctracking==='T' || !isEditExcInfo"/></td>
+                                </tr>
+                                <tr>
+                                    <th>연락처</th>
+                                    <td><input type="text" v-model="excInfo.excdlvtel" maxlength="20" :disabled="claimInfo.isexctracking==='T' || !isEditExcInfo"/></td>
+                                </tr>
+                                <tr>
+                                    <th>배송지 주소</th>
+                                    <td colspan="3">
+                                        <div class="dpb">
+                                            <input type="text" class="short" v-model="excInfo.excpost" maxlength="7" readonly>
+                                            <button type="button" class="btn blue-line ml3" @click="searchAddress('exc')" :disabled="claimInfo.isexctracking==='T' || !isEditExcInfo">주소검색</button>
+                                        </div>
+                                        <input type="text" class="dpb" style="width: 100%;" v-model="excInfo.excdlvaddrroad" maxlength="100" readonly>
+                                        <input type="text" class="dpb" style="width: 100%;" v-model="excInfo.excdlvaddrdetailroad" maxlength="100" :disabled="claimInfo.isexctracking==='T' || !isEditExcInfo">
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                    <div class="right">
+                        <div class="bar-title small">배송택배사 정보</div>
+                        <table cellpadding="0" cellspacing="0" class="gray-tb">
+                            <colgroup>
+                                <col width="150px">
+                                <col width="">
+                            </colgroup>
+                            <tbody>
+                                <tr v-if="this.claimInfo.rtndelivtype == 'DLT004' && (this.claimInfo.excstatus == 'EXS008' || this.claimInfo.excstatus == 'EXS009')">
+                                    <th>배송 택배사</th>
+                                    <td>
+                                        <select v-model="excInfo.excdlvlogistype" style="width: 160px;">
+                                            <!-- <option :value="null">선택</option> -->
+                                            <option v-for="row in rtnlogislist" :key="row.rtnlogistype" :value="row.rtnlogistype">{{ row.logistypename }}</option>
+                                        </select>
+                                        <input type="text" class="ml3" placeholder="송장번호" v-model="excInfo.excdlvinvoiceno" maxlength="50" oninput="this.value = this.value.replace(/(^0|[^0-9])/gi, '');"/>
+                                        <button type="button" class="btn big blue ml3" @click="saveExchangeinvoiceno(recInfo)">저장</button>
+                                    </td>
+                                </tr>
+                                <tr v-else>
+                                    <th>배송 택배사</th>
+                                    <td>
+                                        <select v-model="excInfo.excdlvlogistype" style="width: 160px;" :disabled="claimInfo.isexctracking==='T' || !isEditExcInfo || ispbgoods==='T' || claimInfo.delivtype===$store.getters['ADMIN'].DELIV_DIRECT">
+                                            <option :value="null">선택</option>
+                                            <option v-for="logistype in commonCode.logistype" :key="logistype.cmcode" :value="logistype.cmcode">{{ logistype.codename }}</option>
+                                        </select>
+                                        <input type="text" class="ml3" placeholder="송장번호" v-model="excInfo.excdlvinvoiceno" maxlength="50" :disabled="claimInfo.isexctracking==='T' || !isEditExcInfo || ispbgoods==='T' || claimInfo.delivtype===$store.getters['ADMIN'].DELIV_DIRECT"
+                                            oninput="this.value = this.value.replace(/(^0|[^0-9])/gi, '');"/>
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <th>배송 완료일</th>
+                                    <td>
+                                        <CommonDatePicker :value="excInfo.excdlvcomdate" @change="onChangeRecDate" :disable="true"/>
+                                        <input type="text" class="ml3" v-model="excInfo.excdlvcomtime" readonly/>
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <th>상태</th>
+                                    <td>
+                                        <input type="text" v-model="excInfo.excdlvstatname" readonly/>
+                                        <button type="button" class="btn blue-line ml3" :disabled="!isPosTracking || claimInfo.delivtype===$store.getters['ADMIN'].DELIV_DIRECT" @click="goDelivTracking('exc')">배송조회</button>
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+                <hr class="dash" />
+                <div class="col3 pd scroll">
+                    <div class="left">
+                        <div class="bar-title small">이전 주문정보</div>
+                        <table cellpadding="0" cellspacing="0" class="gray-tb lower">
+                            <colgroup>
+                                <col width="150px">
+                                <col width="230px">
+                                <col width="">
+                            </colgroup>
+                            <tbody>
+                                <tr>
+                                    <th>판매금액 합계</th>
+                                    <td colspan="2" class="right">{{ $util.maskComma(clmInfo.bforder.ordtotprice) }}</td>
+                                </tr>
+                                <tr v-if="!isPartner">
+                                    <th>자사 배송비(+)</th>
+                                    <td>{{ clmInfo.bforder.isolatetype==='N'? '기본배송비':'도서산간배송비' }}</td>
+                                    <td class="right">{{ $util.maskComma(clmInfo.bforder.dadadelivamt) }}</td>
+                                </tr>
+                                <tr>
+                                    <th>파트너사 배송비(+)</th>
+                                    <td>{{ clmInfo.bforder.isolatetype==='N'? '기본배송비':'도서산간배송비' }}</td>
+                                    <td class="right">{{ $util.maskComma(clmInfo.bforder.ptndelivamt) }}</td>
+                                </tr>
+                                <!-- 이전프로모션할인 -->
+                                <tr v-if="$util.isNull(clmInfo.bfpromotion) || clmInfo.bfpromotion.length === 0">
+                                    <th>프로모션 할인</th>
+                                    <td class="txt-gray2">(적용할인없음)</td>
+                                    <td class="right txt-red">0</td>
+                                </tr>
+                                <tr v-else v-for="(promoRow, index) in clmInfo.bfpromotion" :key="promoRow.idx">
+                                    <th :rowspan="clmInfo.bfpromotion.length" v-if="index===0">프로모션 할인</th>
+                                    <td>{{ promoRow.promoname }}</td>
+                                    <td class="right txt-red">{{ $util.maskComma(Number(promoRow.disamount)*-1) }}</td>
+                                </tr>
+                                <!-- 이전상품쿠폰할인 -->
+                                <tr v-if="$util.isNull(clmInfo.bfgoodscoupon) || clmInfo.bfgoodscoupon.length === 0">
+                                    <th>상품 할인</th>
+                                    <td class="txt-gray2">(적용할인없음)</td>
+                                    <td class="right txt-red">0</td>
+                                </tr>
+                                <tr v-else v-for="(goodsCpnRow, index) in clmInfo.bfgoodscoupon" :key="goodsCpnRow.idx">
+                                    <th :rowspan="clmInfo.bfgoodscoupon.length" v-if="index===0">상품 할인</th>
+                                    <td>{{ goodsCpnRow.cpnname }}</td>
+                                    <td class="right txt-red">{{ $util.maskComma(Number(goodsCpnRow.disamount)*-1) }}</td>
+                                </tr>
+                                <!-- 이전장바구니쿠폰할인 -->
+                                <tr>
+                                    <th>장바구니 할인</th>
+                                    <td v-if="!$util.isNull(clmInfo.bfbasketcoupon) && clmInfo.bforder.basketcpnamt > 0">{{ clmInfo.bfbasketcoupon.cpnname }}</td>
+                                    <td v-else class="txt-gray2">(적용할인없음)</td>
+                                    <td class="right txt-red">{{ $util.maskComma(Number(clmInfo.bforder.basketcpnamt)*-1) }}</td>
+                                </tr>
+                                <!-- 이전배송비쿠폰할인 -->
+                                <tr>
+                                    <th>배송비 할인</th>
+                                    <td v-if="!$util.isNull(clmInfo.bfdelivcoupon) && clmInfo.bforder.totdelivcpnamt > 0">{{ clmInfo.bfdelivcoupon.cpnname }}</td>
+                                    <td v-else class="txt-gray2">(적용할인없음)</td>
+                                    <td class="right txt-red">{{ $util.maskComma(Number(clmInfo.bforder.totdelivcpnamt)*-1) }}</td>
+                                </tr>
+                                <tr v-if="!isPartner">
+                                    <th>임직원적립금 사용(-)</th>
+                                    <td colspan="2" class="right txt-red">{{ $util.maskComma(Number(clmInfo.bforder.empreservetotamt)*-1) }}</td>
+                                </tr>
+                                <tr v-if="!isPartner">
+                                    <th>적립금 사용(-)</th>
+                                    <td colspan="2" class="right txt-red">{{ $util.maskComma(Number(clmInfo.bforder.reservetotamt)*-1) }}</td>
+                                </tr>
+                                <tr v-if="!isPartner">
+                                    <th>D포인트 사용(-)</th>
+                                    <td colspan="2" class="right txt-red">{{ $util.maskComma(Number(clmInfo.bforder.epointtotamt)*-1) }}</td>
+                                </tr>
+                                <tr v-if="isPartner">
+                                    <th>적립금 사용(-)</th>
+                                    <td colspan="2" class="right txt-red">{{ $util.maskComma((Number(clmInfo.bforder.empreservetotamt)+Number(clmInfo.bforder.reservetotamt)+Number(clmInfo.bforder.epointtotamt))*-1) }}</td>
+                                </tr>
+                                <tr>
+                                    <th>실 결제금액</th>
+                                    <td colspan="2" class="right"><strong class="large-txt">{{ $util.maskComma(clmInfo.bforder.rpaytotprice) }}</strong></td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                    <div class="middle">
+                        <div class="bar-title small">재 계산 판매금액 합계</div>
+                        <table cellpadding="0" cellspacing="0" class="gray-tb lower">
+                            <colgroup>
+                                <col width="150px">
+                                <col width="230px">
+                                <col width="">
+                            </colgroup>
+                            <tbody>
+                                <tr>
+                                    <th>재 계산 주문금액 합계</th>
+                                    <td colspan="2" class="right">{{ $util.maskComma(clmInfo.aforder.ordtotprice) }}</td>
+                                </tr>
+                                <tr v-if="!isPartner">
+                                    <th>자사 배송비(+)</th>
+                                    <td>{{ clmInfo.bforder.isolatetype==='N'? '기본배송비':'도서산간배송비' }}</td>
+                                    <td class="right">{{ $util.maskComma(clmInfo.aforder.dadadelivamt) }}</td>
+                                </tr>
+                                <tr>
+                                    <th>파트너사 배송비(+)</th>
+                                    <td>{{ clmInfo.bforder.isolatetype==='N'? '기본배송비':'도서산간배송비' }}</td>
+                                    <td class="right">{{ $util.maskComma(clmInfo.aforder.ptndelivamt) }}</td>
+                                </tr>
+                                <!-- 재계산프로모션할인 -->
+                                <tr v-if="$util.isNull(clmInfo.afpromotion) || clmInfo.afpromotion.length === 0">
+                                    <th>프로모션 할인</th>
+                                    <td class="txt-gray2">(적용할인없음)</td>
+                                    <td class="right txt-red">0</td>
+                                </tr>
+                                <tr v-else v-for="(promoRow, index) in clmInfo.afpromotion" :key="promoRow.idx">
+                                    <th :rowspan="clmInfo.afpromotion.length" v-if="index===0">프로모션 할인</th>
+                                    <td>{{ promoRow.promoname }}</td>
+                                    <td class="right txt-red">{{ $util.maskComma(Number(promoRow.disamount)*-1) }}</td>
+                                </tr>
+                                <!-- 재계산상품쿠폰할인 -->
+                                <tr v-if="$util.isNull(clmInfo.afgoodscoupon) || clmInfo.afgoodscoupon.length === 0">
+                                    <th>상품 할인</th>
+                                    <td class="txt-gray2">(적용할인없음)</td>
+                                    <td class="right txt-red">0</td>
+                                </tr>
+                                <tr v-else v-for="(goodsCpnRow, index) in clmInfo.afgoodscoupon" :key="goodsCpnRow.idx">
+                                    <th :rowspan="clmInfo.afgoodscoupon.length" v-if="index===0">상품 할인</th>
+                                    <td>{{ goodsCpnRow.cpnname }}</td>
+                                    <td class="right txt-red">{{ $util.maskComma(Number(goodsCpnRow.disamount)*-1) }}</td>
+                                </tr>
+                                <!-- 재계산장바구니쿠폰할인 -->
+                                <tr>
+                                    <th>장바구니 할인</th>
+                                    <td v-if="!$util.isNull(clmInfo.afbasketcoupon) && clmInfo.aforder.basketcpnamt > 0">{{ clmInfo.afbasketcoupon.cpnname }}</td>
+                                    <td v-else class="txt-gray2">(적용할인없음)</td>
+                                    <td class="right txt-red">{{ $util.maskComma(Number(clmInfo.aforder.basketcpnamt)*-1) }}</td>
+                                </tr>
+                                <!-- 재계산배송비쿠폰할인 -->
+                                <tr>
+                                    <th>배송비 할인</th>
+                                    <td v-if="!$util.isNull(clmInfo.afdelivcoupon) && clmInfo.aforder.totdelivcpnamt > 0">{{ clmInfo.afdelivcoupon.cpnname }}</td>
+                                    <td v-else class="txt-gray2">(적용할인없음)</td>
+                                    <td class="right txt-red">{{ $util.maskComma(Number(clmInfo.aforder.totdelivcpnamt)*-1) }}</td>
+                                </tr>
+                                <tr v-if="!isPartner">
+                                    <th>임직원적립금 사용(-)</th>
+                                    <td colspan="2" class="right txt-red">{{ $util.maskComma(Number(clmInfo.aforder.empreservetotamt)*-1) }}</td>
+                                </tr>
+                                <tr v-if="!isPartner">
+                                    <th>적립금 사용(-)</th>
+                                    <td colspan="2" class="right txt-red">{{ $util.maskComma(Number(clmInfo.aforder.reservetotamt)*-1) }}</td>
+                                </tr>
+                                <tr v-if="!isPartner">
+                                    <th>D포인트 사용(-)</th>
+                                    <td colspan="2" class="right txt-red">{{ $util.maskComma(Number(clmInfo.aforder.epointtotamt)*-1) }}</td>
+                                </tr>
+                                <tr v-if="isPartner">
+                                    <th>적립금 사용(-)</th>
+                                    <td colspan="2" class="right txt-red">{{ $util.maskComma((Number(clmInfo.aforder.empreservetotamt)+Number(clmInfo.aforder.reservetotamt)+Number(clmInfo.aforder.epointtotamt))*-1) }}</td>
+                                </tr>
+                                <tr>
+                                    <th>재 계산 최종금액</th>
+                                    <td colspan="2" class="right"><strong class="large-txt">{{ $util.maskComma(clmInfo.aforder.rpaytotprice) }}</strong></td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                    <div class="right">
+                        <div class="bar-title small">추가배송비</div>
+                        <table cellpadding="0" cellspacing="0" class="gray-tb lower">
+                            <colgroup>
+                                <col width="150px">
+                                <col width="">
+                            </colgroup>
+                            <tbody>
+                                <tr v-if="!isPartner">
+                                    <th>자사배송비</th>
+                                    <td class="right">{{ $util.maskComma(claimInfo.adddadadelivamt) }}</td>
+                                </tr>
+                                <tr>
+                                    <th>파트너사 배송비</th>
+                                    <td class="right">{{ $util.maskComma(claimInfo.addptndelivamt) }}</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                        <template v-if="Number(claimInfo.addrpaytotprice) > 0">
+                            <div class="bar-title small">추가결제내역<span class="normal txt-orange ml10" v-if="claimInfo.excstatus === $store.getters['ADMIN'].EXCHANGE_WAITING_DEPOSIT">추가금 발생일로부터 {{ $util.maskComma(claimInfo.elapsedaycnt) }}일 경과</span></div>
+                            <table cellpadding="0" cellspacing="0" class="gray-tb lower">
+                                <colgroup>
+                                    <col width="150px">
+                                    <col width="">
+                                </colgroup>
+                                <tbody>
+                                    <tr>
+                                        <th>결제일시</th>
+                                        <td>{{ claimInfo.addpaymentdate }}</td>
+                                    </tr>
+                                    <tr>
+                                        <th>결제자명</th>
+                                        <td>{{ $util.isNull(claimInfo.addpaymentdate)? '':orderInfo.ordname }}</td>
+                                    </tr>
+                                    <tr>
+                                        <th>결제수단</th>
+                                        <td>{{ claimInfo.addpaywaytypenm }} 
+                                            {{ claimInfo.addpaywaytype===$store.getters['ADMIN'].PAY_CREDIT_CARD? '('+claimInfo.cardcompany + '/' + (claimInfo.planmonth==0||$util.isNull(claimInfo.planmonth)? '일시불':claimInfo.planmonth+'개월') +')' : '' }}
+                                            {{ claimInfo.addpaywaytype===$store.getters['ADMIN'].PAY_VIRTURE_ACCOUNT? '('+claimInfo.virbank + '/' + claimInfo.accntnumber+')' : '' }}
+                                            {{ claimInfo.addpaywaytype===$store.getters['ADMIN'].PAY_ACCOUNT_TRANSFER? '('+claimInfo.trsbank+')' : '' }}
+                                            {{ claimInfo.addpaywaytype===$store.getters['ADMIN'].PAY_MOBILE? '('+claimInfo.mopcarrier+')' : '' }}
+                                        </td>
+                                    </tr>
+                                    <tr>
+                                        <th>금액</th>
+                                        <td class="right">{{ claimInfo.addrpaytotprice===0? '' : $util.maskComma(claimInfo.addrpaytotprice) }}</td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </template>
+                        <div class="bar-title small">환불 금액</div>
+                        <table cellpadding="0" cellspacing="0" class="gray-tb lower">
+                            <colgroup>
+                                <col width="150px">
+                                <col width="">
+                            </colgroup>
+                            <tbody>
+                                <tr>
+                                    <th>환불예정금액</th>
+                                    <td class="right"><strong class="large-txt">{{ $util.maskComma(claimInfo.rtnamt) }}</strong></td>
+                                </tr>
+                                <tr>
+                                    <th>최종환불금액<i class="essential"></i></th>
+                                    <td class="right" v-if="!isPartner">
+                                        <input type="text" class="right" style="width: 100%;" v-model="claimInfo.finadjustamt" :disabled="claimInfo.isexctracking==='T' || claimInfo.orgexcstatus!==$store.getters['ADMIN'].EXCHANGE_RETURN_COMPLETE"
+                                            maxlength="11" oninput="this.value = this.value.replace(/(^0[0-9]|[^0-9])/gi, '');">
+                                    </td>
+                                    <td class="right" v-else>{{ $util.maskComma(claimInfo.finadjustamt) }}</td>
+                                </tr>
+                                <tr>
+                                    <th>조정금액(-)</th>
+                                    <td class="right">{{ $util.maskComma((Number(claimInfo.rtnamt) - Number(claimInfo.finadjustamt))*-1) }}</td>
+                                </tr>
+                                <tr>
+                                    <th>조정사유</th>
+                                    <td v-if="!isPartner">
+                                        <input type="text" style="width: 100%;" placeholder="조정금액 저장시 사유는 필수 입력사항입니다." v-model="claimInfo.adjustreason" maxlength="200"
+                                            :disabled="claimInfo.isexctracking==='T' || claimInfo.orgexcstatus!==$store.getters['ADMIN'].EXCHANGE_RETURN_COMPLETE">
+                                    </td>
+                                    <td v-else>{{ claimInfo.adjustreason }}</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                        <template v-if="clmInfo.bforder.paywaytype === $store.getters['ADMIN'].PAY_VIRTURE_ACCOUNT">
+                            <div class="bar-title small">환불계좌 정보</div>
+                            <table cellpadding="0" cellspacing="0" class="gray-tb lower">
+                                <colgroup>
+                                    <col width="150px">
+                                    <col width="">
+                                </colgroup>
+                                <tbody>
+                                    <tr>
+                                        <th>예금주명</th>
+                                        <td>{{ claimInfo.refcusname }}</td>
+                                    </tr>
+                                    <tr>
+                                        <th>환불계좌</th>
+                                        <td>[{{ claimInfo.refbanknm }}] {{ claimInfo.refaccnumber }}</td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </template>
+                        <div class="bar-title small">최종환불</div>
+                        <table cellpadding="0" cellspacing="0" class="gray-tb lower">
+                            <colgroup>
+                                <col width="150px">
+                                <col width="">
+                            </colgroup>
+                            <tbody>
+                                <tr>
+                                    <th>금액(PG)</th>
+                                    <td>{{ clmInfo.bforder.paywaytypename }}</td>
+                                    <td class="right"><strong class="large-txt">{{ $util.maskComma(claimInfo.rtnpayamt) }}</strong></td>
+                                </tr>
+                                <tr v-if="!isPartner">
+                                    <th>임직원적립금 반환</th>
+                                    <td></td>
+                                    <td class="right">{{ $util.maskComma(claimInfo.rtnempresamt) }}</td>
+                                </tr>
+                                <tr v-if="!isPartner">
+                                    <th>적립금 반환</th>
+                                    <td></td>
+                                    <td class="right">{{ $util.maskComma(claimInfo.rtnresamt) }}</td>
+                                </tr>
+                                <tr v-if="!isPartner">
+                                    <th>D포인트 반환</th>
+                                    <td></td>
+                                    <td class="right">{{ $util.maskComma(claimInfo.rtnepoamt) }}</td>
+                                </tr>
+                                <tr v-if="isPartner">
+                                    <th>적립금 반환</th>
+                                    <td></td>
+                                    <td class="right">{{ $util.maskComma(Number(claimInfo.rtnempresamt)+Number(claimInfo.rtnresamt)+Number(claimInfo.rtnepoamt)) }}</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+                <table cellpadding="0" cellspacing="0" class="gray-tb"
+                    v-if="(claimInfo.orgexcstatus!==$store.getters['ADMIN'].EXCHANGE_REQUEST_REFUSE && claimInfo.orgexcstatus!==$store.getters['ADMIN'].EXCHANGE_REJECT && claimInfo.excstatus === $store.getters['ADMIN'].EXCHANGE_REJECT)
+                        || claimInfo.excstatus === $store.getters['ADMIN'].EXCHANGE_CANCEL || claimInfo.excstatus === $store.getters['ADMIN'].EXCHANGE_REQUEST_REFUSE
+                        ||claimInfo.excstatus === $store.getters['ADMIN'].EXCHANGE_REQUEST_REFUSE || !$util.isNull(claimInfo.rejsubreason)
+                        ||(claimInfo.orgexcstatus===$store.getters['ADMIN'].EXCHANGE_REQUEST_REFUSE && claimInfo.excstatus===$store.getters['ADMIN'].EXCHANGE_APPROVAL_COMPLETE)
+                        || claimInfo.excstatus===$store.getters['ADMIN'].EXCHANGE_A_RETURN || !$util.isNull(claimInfo.rtnlogistype)
+                        || !$util.isNull(claimInfo.rejreason) || !$util.isNull(claimInfo.dropreason) || !$util.isNull(claimInfo.rejsubreason) || !$util.isNull(claimInfo.rejdenyreason)">
+                    <colgroup>
+                        <col width="150px">
+                        <col width="">
+                    </colgroup>
+                    <tbody>
+                        <tr v-if="(claimInfo.orgexcstatus!==$store.getters['ADMIN'].EXCHANGE_REQUEST_REFUSE && claimInfo.orgexcstatus!==$store.getters['ADMIN'].EXCHANGE_REJECT && claimInfo.excstatus===$store.getters['ADMIN'].EXCHANGE_REJECT) 
+                               || (claimInfo.orgexcstatus===$store.getters['ADMIN'].EXCHANGE_REJECT && $util.isNull(claimInfo.rejsubreason) && !$util.isNull(claimInfo.rejreason))">
+                            <th>반려사유<i class="essential"></i></th>
+                            <td>
+                                <input type="text" :style="isEditReason? 'width: calc(100% - 57px);':'width: 100%;'" placeholder="반려사유 입력 필수" v-model="claimInfo.rejreason" maxlength="200">
+                                <button type="button" class="btn blue ml3" v-if="isEditReason" @click="saveClaim($store.getters['ADMIN'].EXCHANGE_REJECT, 'save')">저장</button>
+                            </td>
+                        </tr>
+                        <tr v-if="claimInfo.excstatus===$store.getters['ADMIN'].EXCHANGE_CANCEL || !$util.isNull(claimInfo.dropreason)">
+                            <th>철회사유<i class="essential"></i></th>
+                            <td>
+                                <input type="text" :style="isEditReason? 'width: calc(100% - 57px);':'width: 100%;'" placeholder="철회사유 입력 필수" v-model="claimInfo.dropreason" maxlength="200">
+                                <button type="button" class="btn blue ml3" v-if="isEditReason" @click="saveClaim($store.getters['ADMIN'].EXCHANGE_CANCEL, 'save')">저장</button>
+                            </td>
+                        </tr>
+                        <tr v-if="claimInfo.excstatus===$store.getters['ADMIN'].EXCHANGE_REQUEST_REFUSE || !$util.isNull(claimInfo.rejsubreason)">
+                            <th>반려승인요청사유<i class="essential"></i></th>
+                            <td>
+                                <input type="text" :style="isPartner && isEditReason? 'width: calc(100% - 57px);':'width: 100%;'" placeholder="반려승인요청사유 입력 필수" v-model="claimInfo.rejsubreason" maxlength="200">
+                                <button type="button" class="btn blue ml3" v-if="isPartner && isEditReason" @click="saveClaim($store.getters['ADMIN'].EXCHANGE_REQUEST_REFUSE, 'save')">저장</button>
+                            </td>
+                        </tr>
+                        <tr v-if="(claimInfo.orgexcstatus===$store.getters['ADMIN'].EXCHANGE_REQUEST_REFUSE && claimInfo.excstatus===$store.getters['ADMIN'].EXCHANGE_REJECT)
+                               || (claimInfo.orgexcstatus===$store.getters['ADMIN'].EXCHANGE_REJECT && !$util.isNull(claimInfo.rejsubreason) && !$util.isNull(claimInfo.rejreason))">
+                            <th>반려승인사유<i class="essential"></i></th>
+                            <td>
+                                <input type="text" :style="isEditReason? 'width: calc(100% - 57px);':'width: 100%;'" placeholder="반려승인사유 입력 필수" v-model="claimInfo.rejreason" maxlength="200">
+                                <button type="button" class="btn blue ml3" v-if="isEditReason" @click="saveClaim($store.getters['ADMIN'].EXCHANGE_REJECT, 'save')">저장</button>
+                            </td>
+                        </tr>
+                        <tr v-if="(claimInfo.orgexcstatus===$store.getters['ADMIN'].EXCHANGE_REQUEST_REFUSE && claimInfo.excstatus===$store.getters['ADMIN'].EXCHANGE_APPROVAL_COMPLETE) 
+                               || !$util.isNull(claimInfo.rejdenyreason)">
+                            <th>반려승인거부사유<i class="essential"></i></th>
+                            <td>
+                                <input type="text" :style="isEditReason? 'width: calc(100% - 57px);':'width: 100%;'" placeholder="반려승인거부사유 입력 필수" v-model="claimInfo.rejdenyreason" maxlength="200">
+                                <button type="button" class="btn blue ml3" v-if="isEditReason" @click="saveClaim($store.getters['ADMIN'].EXCHANGE_APPROVAL_COMPLETE, 'save')">저장</button>
+                            </td>
+                        </tr>
+                        <template v-if="claimInfo.excstatus===$store.getters['ADMIN'].EXCHANGE_A_RETURN || !$util.isNull(claimInfo.rtnlogistype)">
+                            <tr>
+                                <th>반송처리사유<i class="essential"></i></th>
+                                <td>
+                                    <input type="text" style="width: 100%;" placeholder="반송 사유 입력 필수" v-model="claimInfo.rtnreason" maxlength="200">
+                                </td>
+                            </tr>
+                            <tr>
+                                <th>반송 택배사<i class="essential"></i></th>
+                                <td>
+                                    <select v-model="claimInfo.rtnlogistype" style="width: 160px;">
+                                        <option :value="null">선택</option>
+                                        <option v-for="row in commonCode.logistype" :key="row.cmcode" :value="row.cmcode">{{ row.codename }}</option>
+                                    </select>
+                                    <input type="text" class="ml3" placeholder="송장번호" v-model="claimInfo.rtninvoiceno" maxlength="50"
+                                        oninput="this.value = this.value.replace(/(^0|[^0-9])/gi, '');">
+                                    <button type="button" class="btn blue ml3" v-if="isEditReason" @click="saveClaim($store.getters['ADMIN'].EXCHANGE_A_RETURN, 'save')">저장</button>
+                                </td>
+                            </tr>
+                        </template>
+                    </tbody>
+                </table>
+                <div class="btn-group" v-if="!isPartner">
+                    <button type="button" class="btn big blue" v-if="claimInfo.orgexcstatus===$store.getters['ADMIN'].EXCHANGE_WAITING_APPLY || claimInfo.orgexcstatus===$store.getters['ADMIN'].EXCHANGE_COMPLEATE_PAYMENT" @click="saveClaim($store.getters['ADMIN'].EXCHANGE_APPROVAL_COMPLETE, 'proc')">교환승인</button>
+                    <button type="button" class="btn big red" v-if="claimInfo.orgexcstatus===$store.getters['ADMIN'].EXCHANGE_WAITING_APPLY || claimInfo.orgexcstatus===$store.getters['ADMIN'].EXCHANGE_COMPLEATE_PAYMENT" @click="changeClaimStatus($store.getters['ADMIN'].EXCHANGE_REJECT)">교환반려</button>
+                    <button type="button" class="btn big red" v-if="claimInfo.orgexcstatus===$store.getters['ADMIN'].EXCHANGE_WAITING_DEPOSIT" @click="changeClaimStatus($store.getters['ADMIN'].EXCHANGE_REJECT)">교환반려</button>
+                    <!-- <button type="button" class="btn big red" v-if="claimInfo.orgexcstatus===$store.getters['ADMIN'].EXCHANGE_WAITING_DEPOSIT" @click="changeClaimStatus($store.getters['ADMIN'].EXCHANGE_CANCEL)">교환철회</button> -->
+                    <button type="button" class="btn big blue" v-if="claimInfo.orgexcstatus===$store.getters['ADMIN'].EXCHANGE_REQUEST_REFUSE" @click="changeClaimStatus($store.getters['ADMIN'].EXCHANGE_REJECT)">교환반려승인</button>
+                    <button type="button" class="btn big red" v-if="claimInfo.orgexcstatus===$store.getters['ADMIN'].EXCHANGE_REQUEST_REFUSE" @click="changeClaimStatus($store.getters['ADMIN'].EXCHANGE_APPROVAL_COMPLETE)">교환반려승인거부</button>
+                    <button type="button" class="btn big blue" v-if="claimInfo.ispbgoods==='F' && claimInfo.rtndelivtype != 'DLT004' && claimInfo.isrectracking==='F' && claimInfo.orgexcstatus===$store.getters['ADMIN'].EXCHANGE_APPROVAL_COMPLETE" @click="procReturn">회수진행</button>
+                    <button type="button" class="btn big blue" v-if="claimInfo.ispbgoods==='F' && claimInfo.orgexcstatus===$store.getters['ADMIN'].EXCHANGE_RETURN_DELIVERY" @click="saveClaim($store.getters['ADMIN'].EXCHANGE_RETURN_COMPLETE, 'proc')">회수완료</button>
+                    <button type="button" class="btn big blue-line" v-if="!isPartner && claimInfo.isexctracking==='F' && claimInfo.orgexcstatus===$store.getters['ADMIN'].EXCHANGE_RETURN_COMPLETE" @click="saveFinAdjustamt">조정금액저장</button>
+                    <button type="button" class="btn big blue" v-if="claimInfo.ispbgoods==='F' && claimInfo.isexctracking==='F' && claimInfo.orgexcstatus===$store.getters['ADMIN'].EXCHANGE_RETURN_COMPLETE" @click="procDelivery">배송진행</button>
+                    <button type="button" class="btn big red" v-if="claimInfo.isexctracking==='F' && claimInfo.orgexcstatus===$store.getters['ADMIN'].EXCHANGE_RETURN_COMPLETE" @click="changeClaimStatus($store.getters['ADMIN'].EXCHANGE_A_RETURN)">반송처리</button>
+                    <button type="button" class="btn big blue" v-if="claimInfo.ispbgoods==='F' && claimInfo.orgexcstatus===$store.getters['ADMIN'].EXCHANGE_IN_DELIVERY" @click="saveClaim($store.getters['ADMIN'].EXCHANGE_COMPLETE_DELIV, 'proc')">배송완료</button>
+                    <button type="button" class="btn big blue" v-if="claimInfo.orgexcstatus===$store.getters['ADMIN'].EXCHANGE_COMPLETE_DELIV" @click="saveClaim($store.getters['ADMIN'].EXCHANGE_COMPLETE, 'proc')">처리완료</button>
+                    <button type="button" class="btn big darkgray" @click="onClose">닫기</button>
+                </div>
+                <div class="btn-group" v-else>
+                    <button type="button" class="btn big blue" v-if="claimInfo.orgexcstatus===$store.getters['ADMIN'].EXCHANGE_WAITING_APPLY || claimInfo.orgexcstatus===$store.getters['ADMIN'].EXCHANGE_COMPLEATE_PAYMENT" @click="saveClaim($store.getters['ADMIN'].EXCHANGE_APPROVAL_COMPLETE, 'proc')">교환승인</button>
+                    <button type="button" class="btn big red" v-if="claimInfo.orgexcstatus===$store.getters['ADMIN'].EXCHANGE_WAITING_APPLY || claimInfo.orgexcstatus===$store.getters['ADMIN'].EXCHANGE_COMPLEATE_PAYMENT" @click="changeClaimStatus($store.getters['ADMIN'].EXCHANGE_REQUEST_REFUSE)">교환반려승인요청</button>
+                    <button type="button" class="btn big red" v-if="claimInfo.orgexcstatus===$store.getters['ADMIN'].EXCHANGE_WAITING_DEPOSIT" @click="changeClaimStatus($store.getters['ADMIN'].EXCHANGE_REQUEST_REFUSE)">교환반려승인요청</button>
+                    <!-- <button type="button" class="btn big red" v-if="claimInfo.orgexcstatus===$store.getters['ADMIN'].EXCHANGE_WAITING_DEPOSIT" @click="changeClaimStatus($store.getters['ADMIN'].EXCHANGE_CANCEL)">교환철회</button> -->
+                    <button type="button" class="btn big blue" v-if="claimInfo.isrectracking==='F' && claimInfo.rtndelivtype != 'DLT004' && claimInfo.orgexcstatus===$store.getters['ADMIN'].EXCHANGE_APPROVAL_COMPLETE" @click="procReturn">회수진행</button>
+                    <button type="button" class="btn big blue" v-if="claimInfo.orgexcstatus===$store.getters['ADMIN'].EXCHANGE_RETURN_DELIVERY" @click="saveClaim($store.getters['ADMIN'].EXCHANGE_RETURN_COMPLETE, 'proc')">회수완료</button>
+                    <button type="button" class="btn big blue" v-if="claimInfo.isexctracking==='F' && claimInfo.orgexcstatus===$store.getters['ADMIN'].EXCHANGE_RETURN_COMPLETE" @click="procDelivery">배송진행</button>
+                    <button type="button" class="btn big red" v-if="claimInfo.isexctracking==='F' && claimInfo.orgexcstatus===$store.getters['ADMIN'].EXCHANGE_RETURN_COMPLETE" @click="changeClaimStatus($store.getters['ADMIN'].EXCHANGE_A_RETURN)">반송처리</button>
+                    <button type="button" class="btn big blue" v-if="claimInfo.orgexcstatus===$store.getters['ADMIN'].EXCHANGE_IN_DELIVERY" @click="saveClaim($store.getters['ADMIN'].EXCHANGE_COMPLETE_DELIV, 'proc')">배송완료</button>
+                    <button type="button" class="btn big darkgray" @click="onClose">닫기</button>
+                </div>
+            </div>
+        </div>
+        <AdminMemberInfo v-if="isShowMemDetail" :activeUserNo="activeUserNo" @closeDetail="closeMemDetail"></AdminMemberInfo>
+        <GoodsDetail v-if="isGoodsDetailShow" :activeGoodsNo="activeGoodsNo" @closePopup="closeGoodsDetail"></GoodsDetail>
+    </div>
+    <!-- /교환상세 팝업 -->
+</template>
+
+<script>
+import CommonDatePicker from "@views.admin/common/CommonDatePicker";
+import AdminMemberInfo from '@views.admin/member/info/AdminMemberInfo.vue';
+import GoodsDetail from '@views.admin/goods/manage/GoodsDetail.vue';
+import ClaimStatusHistoryPopup from '@views.admin/order/popup/ClaimStatusHistoryPopup.vue';
+
+export default {
+    name: 'admin.order.claim.exchange.detail',
+    props: ['activeClmParam', 'activeOrderInfo'],
+    components:{
+        CommonDatePicker,
+        AdminMemberInfo,
+        GoodsDetail
+    },
+    data() {
+        return {
+            isPartner: false,
+            orderInfo: {},          // 주문정보
+            claimInfo: {},          // 클레임정보
+            claimGoodsList: [],     // 클레임상품목록
+            clmInfo: {
+                bforder: {},            // 이전클레임 정보
+                bfpromotion: [],        // 이전프로모션
+                bfgoodscoupon: [],      // 이전상품쿠폰
+                bfdelivcoupon: [],      // 이전배송비쿠폰
+                bfbasketcoupon: [],     // 이전장바구니쿠폰
+                calinfo: {},            // 재계산정보
+                aforder: {},            // 재계산정보
+                afpromotion: [],        // 재계산프로모션
+                afgoodscoupon: [],      // 재계산상품쿠폰
+                afdelivcoupon: [],      // 재계산배송비쿠폰
+                afbasketcoupon: [],     // 재계산장바구니쿠폰
+                dispitems: [],          // 클레임신청(노출)
+                items: [],              // 클레임상품
+                afitems: [],            // 주문후상품
+                excitems: []            // 교환상품
+            },
+            recInfo : {       // 회수지, 회수택배사 정보
+                recname: null,          // 회수자명
+                rectel: null,           // 회수자연락처
+                recpost: null,          // 회수자우편번호
+                recaddr: null,          // 회수자지번주소
+                recaddrdetail: null,    // 회주사지번상세주소
+                recaddrroad: null,      // 회수자도로명주소
+                recaddrdetailroad: null,// 회수자도로명상세주소
+                recsigungucode: null,   // 회수자시군구코드
+                recbuildingcode: null,  // 회수자빌딩코드
+                recroadnamecode: null,  // 회수자도로명코드
+                recinvoiceno: null,     // 회수운송장코드
+                reclogistype: null,     // 회수택배사코드
+                reccomdate: null,       // 회수완료일자
+                reccomtime: null,       // 회수완료시간
+                recdelivname: null,     // 회수처리자명
+                recstatname: null       // 회수상태명
+            },
+            excInfo : {     // 반품배송지, 반품배송사 정보
+                excdlvname: null,           // 반품자명
+                excdlvtel: null,            // 반품자연락처
+                excpost: null,              // 반품자우편번호
+                excdlvaddr: null,           // 반품자지번주소
+                excdlvaddrdetail: null,     // 반품자지번상세주소
+                excdlvaddrroad: null,       // 반품자도로명주소
+                excdlvaddrdetailroad: null, // 반품자도로명상세주소
+                excsigungucode: null,       // 반품자시군구코드
+                excbuildingcode: null,      // 반품자빌딩코드
+                excroadnamecode : null,     // 반품자도로명코드
+                excdlvinvoiceno: null,      // 반품운송장번호
+                excdlvlogistype: null,      // 반품택배사코드
+                excdlvcomdate: null,           // 반품완료일자
+                excdlvcomtime: null,           // 반품완료시간
+                excdelivname: null,         // 반품처리자명
+                excdlvstatname: null           // 반품상태명
+            },
+            refInfo : {              //환불정보
+                refaccnumber : null,
+                refbank : null,
+                refcusname : null,
+                confirm : false,
+            },
+            rtnlogislist: [],       // 반품택배사목록
+            excgoodslist: [],       // 교환출고상품목록
+            excgoods: {},           // 선택한 교환상품
+            excoption: '',          // 교환상품옵션코드
+            ispbgoods: '',          // 직매입상품여부
+            commonCode: {
+                logistype: [],      // 택배사코드
+                exctype: []         // 교환사유
+            },
+            fileList: [],           // 첨부파일 목록
+            videoList: [],          // 동영상 목록
+            activeUserNo: '',
+            activeGoodsNo : false,
+            isShowMemDetail: false,     // 회원상세 팝업 노출여부
+            isGoodsDetailShow: false,   // 상품상세 팝업 노출여부
+            isRead : false,
+            isWrite : false,
+            isEditRecInfo: false,       // 회수지수정가능여부
+            isEditExcInfo: true,        // 교환배송지수정가능여부
+            isPosTracking: false,       // 배송조회가능여부
+            isEditReason : false,       // 사유수정가능여부
+            isEditExcoption: false,     // 교환상품수정가능 여부
+            isShowAdjustamt: false      // 조정사유 노출여부
+        }
+    },
+    mounted() {
+        this.isPartner = this.$util.isAuthorized(this.$store.getters['CONSTANTS'].PARTNER_USER);
+        this.orderInfo = this.activeOrderInfo;
+        let params = { url: this.$options.name, isloading: false };
+        this.$http.post('/admin/common/pageAuth/check', params)
+            .then(result => {
+                this.isRead = (result.data.isread === 'T');
+                this.isWrite = (result.data.iswrite === 'T');
+            
+                if(this.isRead) {
+                    // 공통코드 조회
+                    this.getCommonCodeList();
+                } else {
+                    alert('페이지 접근 권한이 없습니다.');
+                    this.onClose();
+                }
+            }).catch(error => {
+                this.$util.debug(error);
+            });
+    },
+    methods: {
+        // 공통코드 목록 조회
+        getCommonCodeList: function() {
+            let cmclassArr = ['EXCTYPE', 'LOGISTYPE'];
+            this.$http.post('/common/code/map/list', {cmclass : cmclassArr, isloading: false})
+                .then(result =>{
+                    let data = result.data;
+                    for (const [key] of Object.entries(data)) {
+                        this.commonCode[key] = data[key];
+                    }
+                    // 반품정보 조회
+                    this.searchOrdExchangeInfo();
+                })
+                .catch(error => {
+                    this.$util.debug(error);
+                });
+        },
+        // 반품정보 조회
+        searchOrdExchangeInfo: function() {
+            let params = { 
+                orderidx: this.activeClmParam.orderidx, 
+                clmidx: this.activeClmParam.clmidx, 
+                clmgdidx: this.activeClmParam.clmgdidx, 
+                clmtype: this.$store.getters['ADMIN'].CLM_EXCHANGE
+            };
+            this.$http.post('/admin/order/claim/detail/info', params)
+                .then(result => {
+                    this.$util.debug(result);
+                    let data = result.data;
+                    this.claimInfo = data.claiminfo;
+                    this.claimInfo.orgexcstatus = this.claimInfo.excstatus;
+                    this.claimGoodsList = data.claimgoodslist;
+                    for (const [key] of Object.entries(data)) {
+                        this.clmInfo[key] = data[key];
+                    }
+                    this.claimInfo.orgfinadjustamt = this.claimInfo.finadjustamt;
+                    this.rtnlogislist = data.rtnlogislist;
+                    this.excgoodslist = data.excgoodslist;
+                    this.excgoods = this.clmInfo.excitems[0];
+                    this.excoption = this.excgoods.optioncode;
+
+                    // 재계산 자사/파트너사 배송비, 적립금/임직원적립금/E포인트
+                    this.clmInfo.aforder.dadadelivamt = Number(this.clmInfo.aforder.dadadelivamt) - Number(this.clmInfo.calinfo.rtndadadelivamt);
+                    this.clmInfo.aforder.ptndelivamt = Number(this.clmInfo.aforder.ptndelivamt) - Number(this.clmInfo.calinfo.rtnptndelivamt);
+                    this.clmInfo.aforder.empreservetotamt = Number(this.clmInfo.bforder.empreservetotamt) - Number(this.clmInfo.calinfo.rtnempresamt);
+                    this.clmInfo.aforder.reservetotamt = Number(this.clmInfo.bforder.reservetotamt) - Number(this.clmInfo.calinfo.rtnresamt);
+                    this.clmInfo.aforder.epointtotamt = Number(this.clmInfo.bforder.epointtotamt) - Number(this.clmInfo.calinfo.rtnepoamt);
+                    this.clmInfo.aforder.rpaytotprice = Number(this.clmInfo.aforder.rpaytotprice) + Number(this.clmInfo.calinfo.rtnempresamt) + Number(this.clmInfo.calinfo.rtnresamt) + Number(this.clmInfo.calinfo.rtnepoamt);
+
+                    // 클레임정보 세팅(결제대기경과일, 직매입여부, 주문수령인연락처, 주문일자)
+                    this.claimInfo.elapsedaycnt = this.clmInfo.items[0].elapsedaycnt;
+                    this.claimInfo.ispbgoods = this.clmInfo.items[0].ispbgoods;
+                    this.claimInfo.rtndelivtype = this.clmInfo.items[0].rtndelivtype;
+                    this.claimInfo.delivtype = this.clmInfo.items[0].delivtype;
+                    this.claimInfo.rcvtel = this.clmInfo.bforder.rcvtel1;
+
+                    // 추가배송비 자사/파트너사 세팅
+                    let adddelivamt = this.claimInfo.adddelivamt;
+                    this.claimInfo.adddadadelivamt = this.claimInfo.ispbgoods==='T'? adddelivamt : 0;
+                    this.claimInfo.addptndelivamt = this.claimInfo.ispbgoods==='F'? adddelivamt : 0;
+
+                    //회수지,교환배송지 디폴트설정
+                    let addr = {
+                        post : this.clmInfo.bforder.rcvpost,
+                        addrroad : this.clmInfo.bforder.rcvaddrroad,
+                        addrdetailroad : this.clmInfo.bforder.rcvaddrdetailroad,
+                        addr : this.clmInfo.bforder.rcvaddr,
+                        addrdetail : this.clmInfo.bforder.rcvaddrdetail,
+                        sigungucode : this.clmInfo.bforder.rcvsigungucode,
+                        buildingcode : this.clmInfo.bforder.rcvbuildingcode,
+                        roadnamecode : this.clmInfo.bforder.rcvroadnamecode
+                    }
+                    this.excInfo.excdelivname = this.clmInfo.excdelivname;
+                    if(this.$util.isNull(this.claimInfo.recpost)) {
+                        this.recInfo.recname = this.clmInfo.bforder.rcvname;
+                        this.recInfo.rectel = this.clmInfo.bforder.rcvtel1;
+                        this.setAddr('rec', addr);
+                    } else {
+                        for (const [key] of Object.entries(this.recInfo)) {
+                            this.recInfo[key] = this.claimInfo[key];
+                        }
+                    }
+                    if(this.$util.isNull(this.claimInfo.excpost)) {
+                        this.excInfo.excdlvname = this.clmInfo.bforder.rcvname;
+                        this.excInfo.excdlvtel = this.clmInfo.bforder.rcvtel1;
+                        this.setAddr('exc', addr);
+                    } else {
+                        for (const [key] of Object.entries(this.excInfo)) {
+                            this.excInfo[key] = this.claimInfo[key];
+                        }
+                    }
+                    //회수택배사 디폴트 설정
+                    if (this.$util.isNull(this.recInfo.reclogistype)) {
+                        this.recInfo.reclogistype = this.clmInfo.items[0].rtnlogistype;
+                    }
+                    //배송택배사 디폴트 설정
+                    if (this.$util.isNull(this.excInfo.excdlvlogistype)) {
+                        this.excInfo.excdlvlogistype = this.clmInfo.items[0].rtnlogistype;
+                    }
+                    //  교환상품 수정가능여부 세팅
+                    let isEditExcOptStatusArr = [
+                        this.$store.getters['ADMIN'].EXCHANGE_WAITING_APPLY,
+                        this.$store.getters['ADMIN'].EXCHANGE_COMPLEATE_PAYMENT
+                    ];
+                    if (isEditExcOptStatusArr.indexOf(this.claimInfo.orgexcstatus) > -1) {
+                        this.isEditExcoption = true;
+                    }
+                    // 회수지 수정가능여부 세팅
+                    let isEditRecStatusArr = [
+                        this.$store.getters['ADMIN'].EXCHANGE_WAITING_APPLY,
+                        this.$store.getters['ADMIN'].EXCHANGE_WAITING_DEPOSIT,
+                        this.$store.getters['ADMIN'].EXCHANGE_COMPLEATE_PAYMENT,
+                        this.$store.getters['ADMIN'].EXCHANGE_APPROVAL_COMPLETE,
+                        this.$store.getters['ADMIN'].EXCHANGE_REQUEST_REFUSE
+                    ];
+                    if (isEditRecStatusArr.indexOf(this.claimInfo.orgexcstatus) > -1) {
+                        this.isEditRecInfo = true;
+                    }
+                    // 교환배송지 수정가능여부 세팅
+                    let isNotEditExcStatusArr = [
+                        this.$store.getters['ADMIN'].EXCHANGE_IN_DELIVERY,
+                        this.$store.getters['ADMIN'].EXCHANGE_COMPLETE_DELIV,
+                        this.$store.getters['ADMIN'].EXCHANGE_A_RETURN,
+                        this.$store.getters['ADMIN'].EXCHANGE_COMPLET,
+                        this.$store.getters['ADMIN'].EXCHANGE_REJECT,
+                        this.$store.getters['ADMIN'].EXCHANGE_CANCEL
+                    ];
+                    if (isNotEditExcStatusArr.indexOf(this.claimInfo.orgexcstatus) > -1) {
+                        this.isEditExcInfo = false;
+                    }
+                    // 배송조회가능여부 세팅
+                    let isPosTrckStatusArr = [
+                        this.$store.getters['ADMIN'].EXCHANGE_IN_DELIVERY,
+                        this.$store.getters['ADMIN'].EXCHANGE_COMPLETE_DELIV,
+                        this.$store.getters['ADMIN'].EXCHANGE_COMPLETE
+                    ];
+                    if (isPosTrckStatusArr.indexOf(this.claimInfo.orgexcstatus) > -1) {
+                        this.isPosTracking = true;
+                    }
+                    // 조정금액 노출여부 세팅
+                    let isShowAdjustStatusArr = [
+                        this.$store.getters['ADMIN'].EXCHANGE_RETURN_COMPLETE,
+                        this.$store.getters['ADMIN'].EXCHANGE_IN_DELIVERY,
+                        this.$store.getters['ADMIN'].EXCHANGE_COMPLETE_DELIV,
+                        this.$store.getters['ADMIN'].EXCHANGE_A_RETURN,
+                        this.$store.getters['ADMIN'].EXCHANGE_COMPLET
+                    ];
+                    if (isShowAdjustStatusArr.indexOf(this.claimInfo.orgexcstatus) > -1) {
+                        this.isShowAdjustamt = true;
+                    }
+
+                    // 첨부파일 세팅
+                    let uploadedFiles = data.uploadedfiles;
+                    for (let i=0; i<uploadedFiles.length; i++) {
+                        if (uploadedFiles[i].filetype === this.$store.getters['ADMIN'].FILE_TYPE_IMG) {
+                            this.fileList.push(uploadedFiles[i]);
+                        } else if (uploadedFiles[i].filetype === this.$store.getters['ADMIN'].FILE_TYPE_VIDEO) {
+                            this.videoList.push(uploadedFiles[i]);
+                        }
+                    }
+                })
+                .catch(error => {
+                    this.$util.debug(error);
+                });
+        },
+        // 회수진행
+        procReturn: function() {
+            this.recInfo.type = 'rec';
+            let msgType = '회수요청';
+            let params = {centercode: ''};
+
+            if (this.$util.isNull(this.recInfo.recname) || this.recInfo.recname.trim()==='') {
+                alert('회수자명을 입력해수세요.');
+                return;
+            }
+            if (this.$util.isNull(this.recInfo.rectel) || this.recInfo.rectel.trim()==='') {
+                alert('회수자 연락처를 입력해수세요.');
+                return;
+            }
+            if (this.$util.isNull(this.recInfo.recpost) || this.recInfo.recpost.trim()==='') {
+                alert('회수지 주소를 입력해수세요.');
+                return;
+            }
+            if (this.claimInfo.rtndelivtype === this.$store.getters['ADMIN'].DELIV_PARCEL) {
+                if (this.$util.isNull(this.recInfo.reclogistype)) {
+                    alert('해당 상품의 반품택배사가 존재하지 않습니다. 확인후 진행해주세요.');
+                    return;
+                }
+
+                this.rtnlogislist.forEach(item => {
+
+                    if (item.logistype===this.recInfo.reclogistype && item.isvalid==='T') {
+                        params.centercode = item.centercode;
+                    }
+                });
+                if (this.$util.isNull(params.centercode)) {
+                    alert('계약한 반품택배사의 센터코드가 존재하지 않습니다.');
+                    return;
+                }
+            } else {
+                // 직배송시 상태변경
+                msgType = '회수진행';
+                this.claimInfo.excstatus = this.$store.getters['ADMIN'].EXCHANGE_RETURN_DELIVERY;
+            }
+
+            params = Object.assign({}, params, this.claimInfo, this.recInfo, {claimgoods: this.clmInfo.items[0]});
+            if (confirm(msgType + ' 하시겠습니까?')) {
+                this.$http.post('/admin/order/claim/proc/return', params).then(result => {
+                    this.$util.debug(result);
+                    if (result.statusCode === 200) {
+                        alert(msgType + '이 완료되었습니다.');
+                        this.onClose(true);
+                    }
+                })
+                .catch(error => {
+                    this.$util.debug(error);
+                });
+            }
+        },
+        // 교환배송 진행
+        procDelivery: function() {
+            this.excInfo.type = 'exc';
+            let msgType = '배송진행 요청';
+            if (this.$util.isNull(this.excInfo.excdlvname) || this.excInfo.excdlvname.trim()==='') {
+                alert('수령인명을 입력해수세요.');
+                return;
+            }
+            if (this.$util.isNull(this.excInfo.excdlvtel) || this.excInfo.excdlvtel.trim()==='') {
+                alert('수령인 연락처를 입력해수세요.');
+                return;
+            }
+            if (this.$util.isNull(this.excInfo.excpost) || this.excInfo.excpost.trim()==='') {
+                alert('배송지 주소를 입력해수세요.');
+                return;
+            }
+            
+            if (this.claimInfo.delivtype === this.$store.getters['ADMIN'].DELIV_PARCEL) {
+                if (this.$util.isNull(this.excInfo.excdlvlogistype) || this.excInfo.excdlvlogistype.trim()==='') {
+                    alert('배송택배사를 선택해주세요.');
+                    return;
+                }
+                if (this.$util.isNull(this.excInfo.excdlvinvoiceno) || this.excInfo.excdlvinvoiceno.trim()==='') {
+                    alert('배송 운송장번호를 입력해주세요.');
+                    return;
+                }
+            } else {
+                // 직배송시 상태변경
+                msgType = '배송진행';
+                this.claimInfo.excstatus = this.$store.getters['ADMIN'].EXCHANGE_IN_DELIVERY;
+            }
+
+            let params = Object.assign({}, this.claimInfo, this.excInfo, {claimgoods: this.clmInfo.items[0]});
+            if (confirm(msgType + ' 하시겠습니까?')) {
+                this.$http.post('/admin/order/claim/proc/deliv', params).then(result => {
+                    this.$util.debug(result);
+                    if (result.statusCode === 200) {
+                        alert(msgType + '이 완료되었습니다.');
+                        this.onClose(true);
+                    }
+                })
+                .catch(error => {
+                    this.$util.debug(error);
+                });
+            }
+        },
+        // 배송추적
+        goDelivTracking: function(type) {
+            let params = {
+                invoiceno: '',
+                logistype: ''
+            }
+            if (type === 'rec') {
+                params.invoiceno = this.recInfo.recinvoiceno;
+                params.logistype = this.recInfo.reclogistype;
+            } else {
+                params.invoiceno = this.excInfo.excdlvinvoiceno;
+                params.logistype = this.excInfo.excdlvlogistype;
+            }
+            this.$http.post('/common/deliv/tracking', params)
+                .then(result => {
+                    this.$util.debug(result);
+                    window.open(result.data.url, "_blank", "width=400,height=650");
+                })
+                .catch(error => {
+                    this.$util.debug(error);
+                });
+        },
+        // 조정금액 저장
+        saveFinAdjustamt: function() {
+            // 필수값 체크
+            let msg = '';
+            let valid = [
+                {field: 'claimInfo.finadjustamt', type: 'I', name: '조정금액', required: true},
+                {field: 'claimInfo.adjustreason', type: 'I', name: '조정사유', required: true}
+            ];
+            msg = this.$util.validMsg(this.$data, valid);
+            if (!this.$util.isNull(msg)) {
+                alert(msg);
+                return false;
+            }
+
+            // 조정금액 max 환불금액 체크
+            let finAdjustAmt = Number(this.claimInfo.finadjustamt);
+            let rtnAmt = Number(this.clmInfo.calinfo.rtnamt);
+            if (finAdjustAmt > rtnAmt) {
+                alert('조정금액은 환불예정금액 이내로만 조정이 가능합니다. 확인후 진행해주세요.');
+                return false;
+            }
+
+            // 조정금액 저장
+            if (confirm('저장 하시겠습니까?')) {
+                this.$http.post('/admin/order/claim/save/adjust', this.claimInfo).then(result => {
+                    this.$util.debug(result);
+                    if (result.statusCode === 200) {
+                        alert('저장이 완료되었습니다.');
+                        this.searchOrdExchangeInfo();
+                    }
+                })
+                .catch(error => {
+                    this.$util.debug(error);
+                });
+            }
+        },
+        // 교환클레임 상태 변경
+        changeClaimStatus: function(reqStatus) {
+            this.claimInfo.excstatus = reqStatus;
+            let isEditRsStatusArr = [
+                this.$store.getters['ADMIN'].EXCHANGE_REQUEST_REFUSE,
+                this.$store.getters['ADMIN'].EXCHANGE_CANCEL,
+                this.$store.getters['ADMIN'].EXCHANGE_REJECT,
+                this.$store.getters['ADMIN'].EXCHANGE_A_RETURN,
+                this.$store.getters['ADMIN'].EXCHANGE_APPROVAL_COMPLETE
+            ];
+            if (isEditRsStatusArr.indexOf(reqStatus) > -1) {
+                this.isEditReason = true;
+            }
+        },
+        // 교환클레임 저장
+        saveClaim: function(reqStatus, type) {
+            this.claimInfo.excstatus = reqStatus;
+            if (this.claimInfo.orgfinadjustamt !== this.claimInfo.finadjustamt) {
+                alert('조정금액 저장 후 진행해주세요.');
+                return;
+            }
+            if (this.claimInfo.orgexcstatus !== this.$store.getters['ADMIN'].EXCHANGE_REQUEST_REFUSE && reqStatus === this.$store.getters['ADMIN'].EXCHANGE_REJECT && (this.$util.isNull(this.claimInfo.rejreason) || this.claimInfo.rejreason.trim()==='')) {
+                alert('반려사유를 입력해주세요.');
+                return;
+            }
+            if (reqStatus === this.$store.getters['ADMIN'].EXCHANGE_CANCEL && (this.$util.isNull(this.claimInfo.dropreason) || this.claimInfo.dropreason.trim()==='')) {
+                alert('철회사유를 입력해주세요.');
+                return;
+            }
+            if (reqStatus === this.$store.getters['ADMIN'].EXCHANGE_REQUEST_REFUSE && (this.$util.isNull(this.claimInfo.rejsubreason) || this.claimInfo.rejsubreason.trim()==='')) {
+                alert('반려승인요청사유를 입력해주세요.');
+                return;
+            }
+            if (this.claimInfo.orgexcstatus === this.$store.getters['ADMIN'].EXCHANGE_REQUEST_REFUSE && reqStatus === this.$store.getters['ADMIN'].EXCHANGE_REJECT && (this.$util.isNull(this.claimInfo.rejreason) || this.claimInfo.rejreason.trim()==='')) {
+                alert('반려승인사유를 입력해주세요.');
+                return;
+            }
+            if (this.claimInfo.orgexcstatus === this.$store.getters['ADMIN'].EXCHANGE_REQUEST_REFUSE && reqStatus === this.$store.getters['ADMIN'].EXCHANGE_APPROVAL_COMPLETE && (this.$util.isNull(this.claimInfo.rejdenyreason) || this.claimInfo.rejdenyreason.trim()==='')) {
+                alert('반려승인거부사유를 입력해주세요.');
+                return;
+            }
+            if (reqStatus === this.$store.getters['ADMIN'].EXCHANGE_A_RETURN) {
+                if (this.$util.isNull(this.claimInfo.rtnreason) || this.claimInfo.rtnreason.trim()==='') {
+                    alert('반송처리사유를 입력해주세요.');
+                    return;
+                }
+                if (this.$util.isNull(this.claimInfo.rtnlogistype)) {
+                    alert('반송택배사를 선택해주세요.');
+                    return;
+                }
+                if (this.$util.isNull(this.claimInfo.rtninvoiceno) || this.claimInfo.rtninvoiceno.trim()==='') {
+                    alert('반송 운송장번호를 입력해주세요.');
+                    return;
+                }
+            }
+
+            let msgType = '처리';
+            if (type === 'save') {
+                msgType = '저장';
+            }
+            let params = { 
+                orderidx: this.claimInfo.orderidx,
+                clmtype: this.claimInfo.clmtype,
+                clmidx: this.claimInfo.clmidx,
+                excstatus: reqStatus,
+                rejreason: reqStatus === this.$store.getters['ADMIN'].EXCHANGE_REJECT? this.claimInfo.rejreason : null,
+                dropreason: reqStatus === this.$store.getters['ADMIN'].EXCHANGE_CANCEL? this.claimInfo.dropreason : null,
+                rejsubreason: this.claimInfo.orgexcstatus === this.$store.getters['ADMIN'].EXCHANGE_REQUEST_REFUSE || reqStatus === this.$store.getters['ADMIN'].EXCHANGE_REQUEST_REFUSE? this.claimInfo.rejsubreason : null,
+                rejdenyreason: this.claimInfo.orgexcstatus === this.$store.getters['ADMIN'].EXCHANGE_REQUEST_REFUSE && reqStatus === this.$store.getters['ADMIN'].EXCHANGE_APPROVAL_COMPLETE? this.claimInfo.rejdenyreason : null,
+                rtnreason: reqStatus === this.$store.getters['ADMIN'].EXCHANGE_A_RETURN? this.claimInfo.rtnreason : null,
+                rtnlogistype: reqStatus === this.$store.getters['ADMIN'].EXCHANGE_A_RETURN? this.claimInfo.rtnlogistype : null,
+                rtninvoiceno: reqStatus === this.$store.getters['ADMIN'].EXCHANGE_A_RETURN? this.claimInfo.rtninvoiceno : null,
+                adddelivamt: this.claimInfo.adddelivamt,
+                finadjustamt: this.claimInfo.finadjustamt
+            };
+            params = Object.assign({}, params, this.recInfo);
+            params = Object.assign({}, params, this.excInfo);
+            if (confirm(msgType + '하시겠습니까?')) {
+                this.$http.post('/admin/order/claim/save/status', params).then(result => {
+                    this.$util.debug(result);
+                    if (result.statusCode === 200) {
+                        alert(this.$util.josaStr(msgType, '이') + ' 완료되었습니다.');
+                        this.onClose(true);
+                    }
+                })
+                .catch(error => {
+                    this.$util.debug(error);
+                });
+            }
+        },
+        // 날짜 picker 콜백 함수
+        onChangeRecDate: function(value) {
+            this.recInfo.reccomdate = value;
+        },
+        // 날짜 picker 콜백 함수
+        onChangeExcDate: function(value) {
+            this.excInfo.exccomdate = value;
+        },
+        // 파일보기
+        viewFile: function(url) {
+            this.$viewerApi({
+                images : [url]
+            });
+        },
+        // 주소 세팅(회수지, 교환배송지)
+        setAddr(type, addr) {
+            if(type === 'rec') {
+                //회수지
+                this.recInfo.recpost = addr.post;
+                this.recInfo.recaddr = addr.addr;
+                this.recInfo.recaddrdetail = addr.addrdetail;
+                this.recInfo.recaddrroad = addr.addrroad;
+                this.recInfo.recaddrdetailroad = addr.addrdetailroad;
+                this.recInfo.recsigungucode = addr.sigungucode;
+                this.recInfo.recbuildingcode = addr.buildingcode;
+                this.recInfo.recroadnamecode = addr.roadnamecode;
+            } else if(type === 'exc') {
+                //교환배송지
+                this.excInfo.excpost = addr.post;
+                this.excInfo.excdlvaddr = addr.addr;
+                this.excInfo.excdlvaddrdetail = addr.addrdetail;
+                this.excInfo.excdlvaddrroad = addr.addrroad;
+                this.excInfo.excdlvaddrdetailroad = addr.addrdetailroad;
+                this.excInfo.excsigungucode = addr.sigungucode;
+                this.excInfo.excbuildingcode = addr.buildingcode;
+                this.excInfo.excroadnamecode = addr.roadnamecode;
+            }
+        },
+        // 주소검색
+        searchAddress: function(type) {
+            new window.daum.Postcode({
+                oncomplete: (data) => {
+                    let addr = {
+                        post: data.zonecode,
+                        addr: this.$util.isNull(data.jibunAddress)? data.autoJibunAddress : data.jibunAddress,
+                        addrdetail: '',
+                        addrroad: this.$util.isNull(data.roadAddress)? data.autoRoadAddress : data.roadAddress,
+                        addrdetailroad: '',
+                        sigungucode: data.sigunguCode,
+                        buildingcode: data.buildingCode,
+                        roadnamecode: data.roadnameCode
+                    };
+                    this.setAddr(type, addr);
+                }
+            }).open();
+        },
+        // 클래임상태변경이력 팝업 오픈
+        goClaimHistory: function(value) {
+            let param = { clmgdidx: value };
+            this.$eventBus.$emit('modalShow', ClaimStatusHistoryPopup, param, null);
+        },
+        // Front 화면으로 이동
+        goFrontGoodsDetail: function(value) {
+            window.open(process.env.VUE_APP_PC_GOODS_DETAIL_URL + value, "_blank");
+        },
+        // 회원상세 팝업 오픈
+        goMemDetail: function(value) {
+            this.isShowMemDetail = true;
+            this.activeUserNo = value;
+        },
+        // 회원상세 팝업 닫기
+        closeMemDetail: function() {
+            this.isShowMemDetail = false;
+        },
+        // 상품상세 팝업 오픈
+        goGoodsDetail: function(value) {
+            this.activeGoodsNo = value;
+            this.isGoodsDetailShow = true;
+        },
+        // 상품상세 팝업 닫기
+        closeGoodsDetail: function () {
+            this.isGoodsDetailShow = false;
+        },
+        // 팝업닫기
+        onClose(isreload) {
+            if(typeof(isreload) === 'boolean' && isreload) {
+                this.$emit('closeDetail', true);
+            } else {
+                this.$emit('closeDetail');
+            }
+        },
+        saveExchangeinvoiceno: function(obj) {
+            let params = {
+                delivtype : 'DLT004',
+                excdlvinvoiceno : this.excInfo.excdlvinvoiceno,
+                excdlvlogistype : this.excInfo.excdlvlogistyp,
+                reexcdlvnamecname : this.excInfo.excdlvname,
+                type : 'exc',
+                istracking : 'T'
+            }
+            
+            params = Object.assign({}, params, this.claimInfo, this.excInfo, {claimgoods: this.clmInfo.items[0]});
+            
+            if (confirm('송장등록 하시겠습니까?')) {
+                console.log(params);
+                this.$http.post('/admin/order/claim/proc/deliv', params)
+                    .then(result => {
+                        this.$util.debug(result);
+                        if (result.statusCode == 200) {
+                            alert('처리가 완료되었습니다.');
+                            this.searchOrdExchangeInfo();
+                        }
+                    })
+                    .catch(error => {
+                        this.$util.debug(error);
+                    });
+            }
+        },
+        saveRtninvoiceno: function(obj) {
+            let params = {
+                delivtype : 'DLT004',
+                recinvoiceno : this.recInfo.recinvoiceno,
+                reclogistype : this.recInfo.reclogistype,
+                recname : this.recInfo.recname,
+                istracking : 'T'
+            }
+            
+            params = Object.assign({}, params, this.claimInfo, this.recInfo, {claimgoods: this.clmInfo.items[0]});
+            
+            if (confirm('송장등록 하시겠습니까?')) {
+                console.log(params);
+                this.$http.post('/admin/order/claim/proc/return/man', params)
+                    .then(result => {
+                        this.$util.debug(result);
+                        if (result.statusCode == 200) {
+                            alert('처리가 완료되었습니다.');
+                            this.searchOrdExchangeInfo();
+                        }
+                    })
+                    .catch(error => {
+                        this.$util.debug(error);
+                    });
+            }
+        },
+    }
+}
+</script>

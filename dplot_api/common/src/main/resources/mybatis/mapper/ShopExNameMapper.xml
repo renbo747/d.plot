@@ -1,0 +1,81 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.dplot.mapper.ShopExNameMapper">
+	<!-- 쇼핑메인전시영역명칭 목록 조회 -->
+	<select id="selectShopExNameList" resultType="somap" parameterType="somap">
+        /* ShopExNameMapper.xml - selectShopExNameList 쇼핑메인전시영역명칭 목록 조회  */
+        SELECT 
+        	  exnidx       -- 영역명칭idx
+        	, extype       -- 전싱영역구분
+        	, exhibitname  -- 전시영역명
+        	, isintro      -- 소개문구여부
+        	, intro        -- 전시양약소개문구
+        FROM t_shopexname
+        WHERE 1 = 1
+        <if test='siteid != "" and siteid != null'>
+        AND SITEID = #{siteid}
+        </if>
+        <if test='extype != null and extype != ""'>
+        AND EXTYPE = #{extype}
+        </if>
+        ORDER BY EXTYPE  ASC
+    </select>
+    
+    <!-- 쇼핑메인전시영역명칭 목록 조회 -->
+	<select id="selectShopExName" resultType="somap" parameterType="somap">
+        /* ShopExNameMapper.xml - selectShopExName 쇼핑메인전시영역명칭 목록 조회  */
+        SELECT  exhibitname  -- 전시영역명
+        FROM t_shopexname
+        WHERE 1 = 1
+        <if test='siteid != "" and siteid != null'>
+        AND SITEID = #{siteid}
+        </if>
+        <if test='extype!= null and extype != ""'>
+        AND EXTYPE = #{extype}
+        </if>
+        ORDER BY EXTYPE  ASC
+    </select>
+    
+    <!-- 쇼핑메인전시영역명칭 추가 -->
+    <insert id="insertExName" parameterType="HashMap">
+        /* ShopExNameMapper.xml - insertExName 쇼핑메인전시영역명칭 추가  */
+    	INSERT INTO t_shopexname
+    	(siteid, extype, exhibitname, isintro, intro, reguserid, regdate)
+    	VALUES
+    	<foreach collection="list" item="item" separator=",">
+    		(#{siteid}, #{item.extype},#{item.exhibitname},#{item.isintro},#{item.intro},#{reguserid},now())
+    	</foreach>
+    </insert>
+    
+    <!-- 쇼핑메인전시영역명칭 수정 -->
+    <update id="updateExName" parameterType="HashMap">
+        /* ShopExNameMapper.xml - updateExName 쇼핑메인전시영역명칭 수정  */
+    	UPDATE t_shopexname
+    	SET exhibitname =
+            CASE exnidx
+            <foreach collection="list" index="index" item="item">
+                WHEN #{item.exnidx} THEN #{item.exhibitname}
+            </foreach>
+            END,
+            isintro =
+            CASE exnidx
+            <foreach collection="list" index="index" item="item">
+                WHEN #{item.exnidx} THEN #{item.isintro}
+            </foreach>
+            END,
+            intro =
+            CASE exnidx
+            <foreach collection="list" index="index" item="item">
+                WHEN #{item.exnidx} THEN #{item.intro}
+            </foreach>
+            END,
+            moduserid = #{moduserid},
+            moddate = now()
+        WHERE 1 = 1
+        AND exnidx in
+        <foreach collection="list" index="index" item="item" separator="," open="(" close=")">
+            #{item.exnidx}
+        </foreach>
+    </update>
+</mapper>

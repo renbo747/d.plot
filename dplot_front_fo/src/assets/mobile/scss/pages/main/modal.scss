@@ -1,0 +1,40 @@
+.dp-modal.pop-over.main-popup-modal01 {
+  padding: 0;
+  //.swiper-container {
+  //  padding-bottom: 30px;
+  //}
+  .modal-body {
+    padding: 0;
+  }
+  .modal-dialog {
+    width: 320px;
+  }
+  .popup-thumbnail {
+    width: 320px;
+    height: 400px;
+    .popup-thumbnail__image {
+      width: 100%;
+    }
+  }
+
+  .modal-body-popup {
+    position: relative;
+    .modal-popup-header {
+      position: absolute;
+      right: 20px;
+      top: 20px;
+      z-index: 10;
+    }
+  }
+  .popup-modal-footer {
+    position: absolute;
+    left: 0;
+    bottom: -34px;
+    .magic-checkbox + label {
+      color: $white;
+      font-weight: 400;
+    }
+  }
+}
+
+

@@ -1,0 +1,1324 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.dplot.mapper.ClaimGoodsMapper">
+	
+	<select id="selectClaimGoodsList" parameterType="somap" resultType="somap">
+		SELECT /*ClaimGoodsMapper.xml - selectClaimGoodsList::클레임 상품목록 조회 */
+			  a.CLMIDX
+			, a.ORDERIDX
+			, b.ORDGDIDX		/* 주문상품IDX(FK) */
+			, b.CLMGDIDX		/* 클레임상품IDX */
+			, a.CLMNO			/* 클레임번호 */
+			, b.GOODSNO			/* 상품번호 */
+			, b.OPTIONCODE		/* 옵션코드 */
+			, b.CLMCNT			/* 클레임수량 */
+			, b.PRICE			/* 판매금액 */
+			, b.SALEPROMOAMT	/* 프로모션할인금액 */
+			, b.SALEPROMOIDX	/* 할인프로모션IDX */
+			, b.GOODSCPNAMT		/* 상품쿠폰할인금액 */
+			, b.GOODSCPNIDX		/* 상품쿠폰IDX */
+			, b.DELIVFARETYPE	/* 배송비종류 */
+			, b.DELIVAMT		/* 배송비 */
+			, b.DELIVCPNAMT		/* 배송비쿠폰할인금액 */
+			, b.REALGOODSAMT	/* 할인적용후급액 */
+			, b.RESERVEAMT		/* 적립금안분금액 */
+			, b.EPOINTAMT		/* EPOINT안분금액 */
+			, b.EMPRESERVEAMT	/* 임직원적립금안분금액 */
+			, b.ISTRASH			/* 삭제여부 */
+			, b.ISCLMOPTION		/* 클레임대상옵션여부 */
+			, b.REJREASON		/* 반려사유 */
+			, b.DROPREASON		/* 철회사유 */
+			, b.DELIVTYPE		/* 배송방법 */
+			, b.ADDDELIVAMT		/* 추가배송비 */
+			, b.RTNDELIVAMT		/* 반환배송비 */
+			, b.BASEDELIVAMT	/* 기본배송비 */
+			, b.ISODELIVAMT		/* 도서산간배송비 */
+			, b.COMMRATE		/* 수수료율 */
+			, c.ISPBGOODS
+            , c.GOODSCODE
+            , c.GOODSNAME
+		FROM T_CLAIM a
+		INNER JOIN T_CLAIM_GOODS b
+		ON a.CLMIDX = b.CLMIDX
+		INNER JOIN T_GOODS c
+		ON b.GOODSNO = c.GOODSNO
+		WHERE b.ISCLMOPTION = 'T'
+		AND a.CLMIDX = #{clmidx}
+		<if test="clmgdidx != null and clmgdidx != ''">
+		AND b.CLMGDIDX = #{clmgdidx}
+		</if>
+	</select>
+	
+	<select id="selectOrderClaimGoodsList" parameterType="somap" resultType="somap">
+		SELECT /*ClaimGoodsMapper.xml - selectOrderClaimGoodsList::주문클레임 상품목록 조회 */
+			  a.CLMIDX
+			, a.ORDERIDX
+			, b.ORDGDIDX		/* 주문상품IDX(FK) */
+			, b.CLMGDIDX		/* 클레임상품IDX */
+			, a.CLMNO			/* 클레임번호 */
+			, b.GOODSNO			/* 상품번호 */
+			, b.OPTIONCODE		/* 옵션코드 */
+			, b.CLMCNT			/* 클레임수량 */
+			, b.PRICE			/* 판매금액 */
+			, b.SALEPROMOAMT	/* 프로모션할인금액 */
+			, b.SALEPROMOIDX	/* 할인프로모션IDX */
+			, b.GOODSCPNAMT		/* 상품쿠폰할인금액 */
+			, b.GOODSCPNIDX		/* 상품쿠폰IDX */
+			, b.DELIVFARETYPE	/* 배송비종류 */
+			, b.DELIVAMT		/* 배송비 */
+			, b.DELIVCPNAMT		/* 배송비쿠폰할인금액 */
+			, b.REALGOODSAMT	/* 할인적용후급액 */
+			, b.RESERVEAMT		/* 적립금안분금액 */
+			, b.EPOINTAMT		/* EPOINT안분금액 */
+			, b.EMPRESERVEAMT	/* 임직원적립금안분금액 */
+			, b.ISTRASH			/* 삭제여부 */
+			, b.ISCLMOPTION		/* 클레임대상옵션여부 */
+			, b.BASEDELIVAMT	/* 기본배송비 */
+			, b.ISODELIVAMT		/* 도서산간배송비 */
+			, DATE_FORMAT(a.CLMREQDATE, '%Y-%m-%d %H:%i:%s') as CLMREQDATE		/* 클레임신청일 */ 
+			, DATE_FORMAT(a.CLMCOMPDATE, '%Y-%m-%d %H:%i:%s') as CLMCOMPDATE	/* 클레임완료일 */ 
+			, a.CLMTYPE
+			, FN_GET_CODENAME(#{siteid}, 'CLMTYPE', a.CLMTYPE) as CLMTYPENM 
+			, a.CNCTYPE			/* 취소사유 */
+			, FN_GET_CODENAME(#{siteid}, 'CNCTYPE', a.CNCTYPE) as CNCTYPENM
+			, a.RTNTYPE			/* 반품사유 */
+			, FN_GET_CODENAME(#{siteid}, 'RTNTYPE', a.RTNTYPE) as RTNTYPENM 
+			, a.EXCTYPE			/* 교환사유 */ 
+			, FN_GET_CODENAME(#{siteid}, 'EXCTYPE', a.EXCTYPE) as EXCTYPENM
+			, a.CLMDETAIL		/* 상세사유 */
+			, CASE
+                WHEN a.CLMTYPE = 'CLM001' THEN b.CNCSTATUS
+                WHEN a.CLMTYPE = 'CLM002' THEN a.RTNSTATUS
+                ELSE a.EXCSTATUS
+              END as clmstatus
+            , CASE
+                WHEN a.clmtype = 'CLM001' THEN (SELECT DETAIL FROM T_COMMON_CODE WHERE CMCLASS = 'CNCSTATUS' AND CMCODE = b.cncstatus)
+                WHEN a.clmtype = 'CLM002' THEN (SELECT DETAIL FROM T_COMMON_CODE WHERE CMCLASS = 'RTNSTATUS' AND CMCODE = a.rtnstatus)
+                ELSE (SELECT DETAIL FROM T_COMMON_CODE WHERE CMCLASS = 'EXCSTATUS' AND CMCODE = a.excstatus)
+              END as clmstatusnm
+            , CASE
+                WHEN a.clmtype = 'CLM001' THEN (SELECT CODENAME FROM T_COMMON_CODE WHERE CMCLASS = 'CNCSTATUS' AND CMCODE = b.cncstatus)
+                WHEN a.clmtype = 'CLM002' THEN (SELECT CODENAME FROM T_COMMON_CODE WHERE CMCLASS = 'RTNSTATUS' AND CMCODE = a.rtnstatus)
+                ELSE (SELECT CODENAME FROM T_COMMON_CODE WHERE CMCLASS = 'EXCSTATUS' AND CMCODE = a.excstatus)
+              END as boclmstatusnm
+			, b.REJREASON		/* 반려사유 */
+			, b.DROPREASON		/* 철회사유 */
+			, b.DELIVTYPE		/* 배송방법 */
+			, b.ADDDELIVAMT		/* 추가배송비 */
+			, b.RTNDELIVAMT		/* 반환배송비 */
+			, b.COMMRATE		/* 수수료율 */
+			, FN_GET_OPTION_CONCAT(b.GOODSNO, b.OPTIONCODE, ' | ') AS OPTIONNAME
+			, FN_GET_FILE_URL(b.GOODSNO, 'FLT001', #{imgtype}) AS FULLPATH
+			, CASE
+                WHEN CLMTYPE = 'CLM003' and (d.BFCLMIDX is null or d.BFCLMIDX = 0) then (SELECT FN_GET_OPTION_CONCAT(goodsno, optioncode, ' | ') FROM t_comorder_goods WHERE ordgdidx = b.ordgdidx)
+                WHEN CLMTYPE = 'CLM003' and d.BFCLMIDX > 0 then (SELECT FN_GET_OPTION_CONCAT(goodsno, optioncode, ' | ') FROM t_claim_goods WHERE clmidx = d.bfclmidx and ordgdidx = b.ordgdidx and isclmoption = 'T')
+                ELSE null
+              END as bfoptionname
+            , c.ISPBGOODS
+            , c.GOODSCODE
+            , c.GOODSNAME
+		    , ifnull(f.DELIVCNT, 0) as frstordcnt
+		    , ifnull(f.delivcnt, 0) - ifnull(e.CLMCNT, 0) + ifnull(e.cnccompcnt, 0) as bfordcnt
+		    , CASE
+		    	WHEN b.CNCSTATUS = 'CNS005' OR a.RTNSTATUS = 'RTS010' THEN ifnull(f.DELIVCNT, 0) - ifnull(e.clmcompcnt, 0) + b.clmcnt
+		    	ELSE ifnull(f.DELIVCNT, 0) - ifnull(e.clmcompcnt, 0)
+		      END as ordcnt
+			, CASE WHEN a.CNCSTATUS = 'CNS002' OR a.RTNSTATUS = 'RTS002' OR a.EXCSTATUS = 'EXS002'
+				   THEN (SELECT datediff(now(), regdate) FROM t_claim_goods_hist WHERE CLMGDIDX= b.CLMGDIDX AND AFTVAL = 'CNS002')
+				   ELSE 0
+			  END as elapsedaycnt 	/* 결제대기상태 경과일  */
+		    , c.DEALERNO
+            , CASE 
+		    	WHEN c.DEALERNO IS NULL OR c.DEALERNO = 0 THEN 'D.PLOT'
+		    	ELSE (SELECT NAME FROM T_DEALER WHERE USERNO = c.DEALERNO)
+		      END AS DEALERNM
+		    <choose>
+		    	<when test='clmtype != null and clmtype == "CLM001"'>
+		    	, b.REJREASON
+		    	, b.DROPREASON
+		    	, b.REJSUBREASON
+		    	, b.REJDENYREASON
+		    	</when>
+		    	<otherwise>
+		    	, a.REJREASON
+		    	, a.DROPREASON
+		    	, a.REJSUBREASON
+		    	, a.REJDENYREASON
+		    	</otherwise>
+		    </choose>
+		FROM T_CLAIM a
+		INNER JOIN T_CLAIM_GOODS b
+		ON a.CLMIDX = b.CLMIDX
+		INNER JOIN T_GOODS c
+		ON b.GOODSNO = c.GOODSNO
+		LEFT OUTER JOIN T_EXCHANGE_HIST d
+        ON b.CLMIDX = d.AFCLMIDX
+        LEFT JOIN (
+            SELECT
+            	  ta.orderidx, tb.ordgdidx, tc.frstordcnt, ta.clmidx
+                , SUM(CASE WHEN ta.cncstatus = 'CNS005' AND tb.CNCSTATUS NOT IN ('CNS003','CNS004') THEN tb.clmcnt ELSE 0 END) 
+                  	OVER(PARTITION BY ta.orderidx, tb.ordgdidx) AS cnccompcnt
+                , SUM(CASE WHEN tb.cncstatus = 'CNS005' OR ta.rtnstatus = 'RTS010' THEN tb.clmcnt ELSE 0 END) 
+                  	OVER(PARTITION BY ta.orderidx, tb.ordgdidx) AS clmcompcnt
+				, SUM(CASE WHEN ta.clmidx <![CDATA[<>]]> #{clmidx} AND (tb.CNCSTATUS NOT IN ('CNS003','CNS004') OR ta.RTNSTATUS NOT IN ('RTS004','RTS005','RTS009') OR ta.EXCSTATUS NOT IN ('EXS004','EXS005','EXS011','EXS012'))
+						THEN tb.clmcnt ELSE 0 END) OVER (PARTITION BY ta.orderidx, tb.ordgdidx ORDER BY ta.CLMCOMPDATE IS NULL, ta.CLMCOMPDATE, ta.CLMREQDATE) AS clmcnt
+            FROM t_claim ta
+            INNER JOIN t_claim_goods tb ON ta.clmidx = tb.clmidx and tb.isclmoption = 'T'
+            INNER JOIN t_comorder_goods tc ON tb.ordgdidx = tc.ordgdidx
+	        AND ta.ISTRASH = 'F'
+        ) e ON a.orderidx = e.orderidx AND b.ordgdidx = e.ordgdidx AND b.clmidx = e.clmidx
+        LEFT OUTER JOIN (
+        	SELECT ordgdidx, SUM(delivcnt) AS delivcnt
+			FROM t_comorder_goods_deliv
+			WHERE istrash = 'F'
+			GROUP BY ordgdidx
+		) AS f ON b.ordgdidx = f.ordgdidx
+		WHERE a.ISTRASH = 'F' 
+		AND b.ISTRASH = 'F'
+		AND b.ISCLMOPTION = 'T'
+		<choose>
+			<when test="orderidx != null">
+			AND a.ORDERIDX = #{orderidx}
+			</when>
+			<otherwise>
+			AND a.CLMIDX = #{clmidx}
+			</otherwise>
+		</choose>
+		<if test="dealerno != null and !dealerno.equals('')">
+			AND EXISTS (
+				SELECT 1
+				FROM t_comorder_goods
+				WHERE ordgdidx = b.ordgdidx
+				AND dealerno = #{dealerno}
+			)
+		</if>
+		<if test='type != null and type == "oneclaim" and clmidx != null and clmidx != ""'>
+		AND a.CLMIDX = #{clmidx}
+		</if>
+		<if test='type != null and type == "oneclaim" and clmgdidx != null and clmgdidx != ""'>
+			AND b.CLMGDIDX = #{clmgdidx}
+		</if>
+		ORDER BY b.GOODSNO, b.OPTIONCODE, a.CLMCOMPDATE DESC, a.CLMREQDATE DESC
+	</select>
+	
+	<select id="selectMyClaimGoodsList" parameterType="somap" resultType="somap">
+		SELECT /* -- ClaimMapper.xml selectMyClaimList 마이페이지 클레임 목록조회 -- */
+            t.*
+            , case
+                when clmtype = 'CLM003' then price - promoamt - cpnamt
+                else saleamt
+              end realgoodsamt
+        FROM (
+            SELECT
+                  a.orderidx
+                , a.ordno
+                , date_format(a.orderdate, '%Y%m%d%H%i%s') as orderdate
+                , b.clmidx
+                , b.clmno
+                , b.clmtype
+                , FN_GET_CODENAME('base', 'CLMTYPE', b.clmtype) AS clmtypenm
+                , date_format(b.clmreqdate, '%Y%m%d%H%i%s') as clmreqdate
+                , CASE
+                    WHEN clmtype = 'CLM001' THEN c.cncstatus
+                    WHEN clmtype = 'CLM002' THEN b.rtnstatus
+                    ELSE b.excstatus
+                  END as clmstatus
+                , CASE
+                    WHEN clmtype = 'CLM001' THEN (SELECT detail FROM t_common_code WHERE cmclass = 'CNCSTATUS' AND cmcode = c.cncstatus)
+                    WHEN clmtype = 'CLM002' THEN (SELECT detail FROM t_common_code WHERE cmclass = 'RTNSTATUS' AND cmcode = b.rtnstatus)
+                    ELSE (SELECT detail FROM t_common_code WHERE cmclass = 'EXCSTATUS' AND cmcode = b.excstatus)
+                  END as clmstatusnm
+                , recinvoiceno
+                , rtninvoiceno
+                , c.clmgdidx
+                , c.ordgdidx
+                , d.dealerno
+                , c.goodsno
+                , c.optioncode
+                , d.goodscode
+                , c.price
+                , c.clmcnt
+                , c.delivfaretype
+                , c.realgoodsamt as saleamt
+                , (select SALEPROMOAMT / frstordcnt from t_comorder_goods where ordgdidx = c.ordgdidx) as promoamt
+                , case
+                    when fn_check_directcoupon(c.goodscpnidx) = 'T' then (select goodscpnamt / frstordcnt from t_comorder_goods where ordgdidx = c.ordgdidx)
+                    else 0
+                  end as cpnamt
+                , c.delivtype
+                , c.basedelivamt
+				, c.isodelivamt
+                , d.goodsname
+                , d.ispbgoods
+                , case 
+                    when d.dealerno is null or d.dealerno = 0 then 'D.PLOT'
+                    else 
+                    (select name
+                     from t_dealer
+                     where userno = d.dealerno)
+                  end as dealernm
+                , FN_GET_OPTION_CONCAT(c.goodsno, c.optioncode, ' | ') as optionname
+                , e.name as brandname
+                , FN_GET_FILE_URL(c.goodsno, 'FLT001', #{imgtype}) as fullpath
+                , f.bfclmidx
+                , case
+                    when clmtype = 'CLM003' and (f.bfclmidx is null or f.bfclmidx = 0) then (SELECT FN_GET_OPTION_CONCAT(goodsno, optioncode, ' | ') FROM t_comorder_goods WHERE ordgdidx = c.ordgdidx)
+                    when clmtype = 'CLM003' and f.bfclmidx > 0 then (SELECT FN_GET_OPTION_CONCAT(goodsno, optioncode, ' | ') FROM t_claim_goods WHERE clmidx = f.bfclmidx and ordgdidx = c.ordgdidx and isclmoption = 'T')
+                    else null
+                  end as bfoptionname
+                , (select count(*) from t_exchange_hist where bfclmidx = b.clmidx) as bfclmcnt
+                , FN_GET_ORDER_STATUS(c.ordgdidx) as ordstatus
+            FROM t_comorder a
+            INNER JOIN t_claim b
+            on a.orderidx = b.orderidx
+            INNER JOIN t_claim_goods c
+            ON b.clmidx = c.clmidx
+            AND c.isclmoption = 'T'
+            INNER JOIN t_goods d
+            ON c.goodsno = d.goodsno
+            LEFT OUTER JOIN t_brand e
+            ON d.brandidx = e.idx
+            LEFT OUTER JOIN t_exchange_hist f
+            ON b.clmidx = f.afclmidx
+            WHERE a.istrash = 'F'
+            AND b.istrash  = 'F'
+            <choose>
+			<when test="orderidx != null">
+			AND a.orderidx = #{orderidx}
+			</when>
+			<when test="clmidx != null">
+			AND b.clmidx = #{clmidx}
+			</when>
+			</choose>
+        ) t
+        WHERE  1 = 1
+        order by clmidx, goodsno, optioncode
+	</select>
+	
+    <select id="selectOrderClaimGoodsApplyList" parameterType="somap" resultType="somap">
+	SELECT /*ClaimGoodsMapper.xml - selectOrderClaimGoodsApply::주문클레임신청 상품목록 조회 */
+		  t.*
+        , couponusecnt - clmusecnt as remainusecnt /* 남은쿠폰수량 */
+        , CASE
+            WHEN (couponusecnt - clmusecnt) = 0 THEN 0
+            WHEN (couponusecnt - clmusecnt) <![CDATA[<]]> ordcnt THEN couponusecnt - clmusecnt
+            ELSE ordcnt
+          END as usecnt /* 클레임계산용 쿠폰사용수량 (주문쿠폰수량과 클레임쿠폰수량이 같으면 0 or 주문쿠폰수량 - 클레임쿠폰수량이 주문수량보다 작으면 주문쿠폰수량 - 클레임쿠폰수량 or 주문수량)*/
+        , concat(salepromoidx, '|', disprice) as salepromo
+        , (SELECT clmno FROM t_claim WHERE clmidx = #{clmidx}) as clmno
+    FROM (
+        SELECT
+              a.orderidx
+            , a.ordgdidx
+            , a.goodsturn
+            , a.dealerno
+            , a.goodsno
+            , c.optioncode
+            , FN_GET_OPTION_DETAIL(a.goodsno, c.optioncode, '\n') as optionname
+            , FN_GET_OPTION_CONCAT(a.goodsno, c.optioncode, ' | ') as frontoptionname
+            , FN_GET_OPTION_CONCAT(a.goodsno, c.optioncode, ', ') as fulloptionnm
+            , fullcategoryname
+            , ifnull((SELECT enname FROM t_brand WHERE idx = b.brandidx), '') AS brandname
+            , a.frstordcnt
+            , a.frstordcnt - ifnull(d.clmcnt, 0 ) - if(#{clmtype} = 'CLM003', 0, ifnull(c.clmcnt, 0)) as ordcnt
+            , a.frstordcnt - ifnull(d.clmcnt, 0) - ifnull(d.clmingcnt, 0) as origincnt
+            , ifnull(c.clmcnt, 0) as clmcnt
+            , a.price
+            , a.salepromoamt - ifnull(d.salepromoamt, 0) as salepromoamt
+            , a.salepromoidx
+            , (
+                select ROUND(IF(ispercent = 'F', disprice, a.price * (dispercent/100)))
+                from t_promotion 
+                where promoidx = a.salepromoidx
+              ) as disprice
+            , (
+            	select promoname
+             	from t_promotion
+             	where promoidx = a.salepromoidx
+              ) as promoname
+            , a.goodscpnamt - ifnull(d.goodscpnamt, 0) as goodscpnamt
+            , a.goodscpnidx
+            , fn_check_directcoupon(a.goodscpnidx) as isdirect /* 즉시할인쿠폰여부 */
+            , (
+            	select cpnname
+             	from t_comcoupon
+             	where comcpnidx = a.goodscpnidx
+              ) as cpnname
+            , CASE
+                WHEN fn_check_directcoupon(a.goodscpnidx) = 'T' THEN a.frstordcnt
+                ELSE (SELECT count(*) FROM t_comorder_coupon WHERE ordgdidx = a.ordgdidx AND comcpntype = 'CCT001')
+              END AS couponusecnt                 /* 주문 상품쿠폰수량 */
+            , ifnull(d.clmusecnt, 0) as clmusecnt /* 클레임 상품쿠폰수량 */
+            , a.delivfaretype
+            , a.delivamt - ifnull(d.delivamt, 0) + ifnull(d.rtndelivamt,0) as delivamt
+            , a.delivcpnamt - ifnull(d.delivcpnamt, 0) as delivcpnamt
+            , a.realgoodsamt - ifnull(d.realgoodsamt, 0) as realgoodsamt
+            , a.reserveamt
+            , a.epointamt
+            , a.empreserveamt
+            , a.iscancel
+            , a.isrefund
+            , a.isexchange
+            , a.istrash
+            , a.isaddgoods
+            , (select cateidx from t_goods_category where goodsno = a.goodsno and isrepre = 'T') as cateidx
+            , a.orggoodsno
+            , a.delivtype
+            , a.commrate
+            , a.basedelivamt
+			, a.isodelivamt
+            , FN_GET_FILE_URL(a.goodsno, 'FLT001', #{imgtype}) as fullpath
+            , ifnull(c.isclmoption, 'F') as isclmoption
+            , b.delividx    /* 배송템플릿일련번호 */ 
+            , a.iscombdeliv /* 묶음배송여부 */
+            , isnationdeliv                                 /* 전국배송여부*/
+            , a.delivfare           /* 배송비 */
+            , a.chejufare           /* 제주배송비 */
+            , a.isolfare             /* 도서산간배송비 */
+            , a.delivfreefare   /* 조건부주문금액 */
+            , IFNULL(e.exowfare, 0) as exowfare             /* 교환편도배송비 */
+            , IFNULL(e.exrtnfare, 0) as exrtnfare           /* 교환왕복배송비 */
+            , IFNULL(e.rfowfare, 0) as rfowfare             /* 반품편도배송비 */
+            , IFNULL(e.rfrtnfare, 0) as rfrtnfare           /* 반품왕복배송비 */
+            , e.logistype									/* 배송택배사코드 */
+            , e.rtndelivtype								/* 교환/반품배송유형 */
+            , e.rtnlogistype								/* 교환/반품택배사코드 */
+            , e.rfpost										/* 교환/반품우편번호 */
+            , e.rfaddr										/* 교환/반품주소 */
+            , e.rfaddrdetail								/* 교환/반품상세주소 */
+            , (CASE WHEN a.dealerno is not null and a.dealerno != 0
+					THEN (select name from t_dealer where userno = a.dealerno)
+					ELSE 'D.PLOT' END) as dealername
+            , b.ispbgoods
+			, b.goodscode
+			, b.goodsname
+			, c.clmidx
+            , c.clmgdidx
+			, c.ordstatus
+			, c.clmstatus
+			, FN_GET_CODENAME(NULL, 'ORDSTATUS', c.ordstatus) as ordstatusname
+			, FN_GET_CODENAME(NULL, 'CNCSTATUS', c.clmstatus) as cncstatusname
+			, FN_GET_CODENAME(NULL, 'RTNSTATUS', c.clmstatus) as rtnstatusname
+			, FN_GET_CODENAME(NULL, 'EXCSTATUS', c.clmstatus) as excstatusname
+        	<if test='status == "DETAIL" or status == "COMPLETE"'>
+        	, f.rejreason
+        	, f.dropreason
+        	, f.rejsubreason
+        	, f.rejdenyreason
+        	, f.elapsedaycnt
+        	</if>
+        FROM
+            t_comorder_goods a
+        INNER JOIN t_goods b 
+        on a.goodsno = b.goodsno
+        LEFT OUTER JOIN (
+			WITH CATEGORY AS (
+				SELECT IDX, NAME, DEPTH, PARENT
+				FROM T_CATEGORY
+			)
+			SELECT
+				  T.CATEIDX, T.DEPTH1IDX, T.DEPTH2IDX, T.DEPTH3IDX, T.DEPTH4IDX, T.FULLCATEGORYNAME
+			FROM (SELECT
+					  A.IDX AS DEPTH1IDX, B.IDX AS DEPTH2IDX, C.IDX AS DEPTH3IDX, D.IDX AS DEPTH4IDX
+					, CONCAT_WS(', ', A.NAME, B.NAME, C.NAME, D.NAME) AS FULLCATEGORYNAME
+					, (CASE WHEN D.IDX IS NOT NULL THEN D.IDX
+							WHEN C.IDX IS NOT NULL THEN C.IDX
+							WHEN B.IDX IS NOT NULL THEN B.IDX
+							ELSE A.IDX
+						END) AS CATEIDX
+				FROM CATEGORY A
+				LEFT OUTER JOIN CATEGORY B ON A.IDX = B.PARENT
+				LEFT OUTER JOIN CATEGORY C ON B.IDX = C.PARENT
+				LEFT OUTER JOIN CATEGORY D ON C.IDX = D.PARENT
+				WHERE A.DEPTH = 1
+			) T
+		) FF ON F.CATEIDX = (select cateidx from t_goods_category where goodsno = a.goodsno and isrepre = 'T')
+		LEFT JOIN (
+		<choose>
+			<when test="claim != null and claim.size > 0">
+			    <foreach item="item" collection="claim" separator="UNION ALL">
+		    	SELECT
+					  #{item.ordgdidx}		as ordgdidx
+					, #{item.clmidx}	    as clmidx
+					, #{item.clmgdidx}	    as clmgdidx
+					, #{item.clmcnt}		as clmcnt
+					, #{item.optioncode}	as optioncode
+					, 'T'   				as isclmoption
+					, FN_GET_ORDER_STATUS(#{item.ordgdidx}) as ordstatus
+					, FN_GET_CLAIM_STATUS(#{item.clmidx}, #{item.clmgdidx}) as clmstatus
+				</foreach>
+			</when>
+			<otherwise>
+			SELECT tcg.ordgdidx, tc.clmidx, tcg.clmgdidx, tcg.optioncode, tcg.isclmoption
+	            , (CASE WHEN tcg.CNCSTATUS IN ('CNS003','CNS004')
+					 		   OR tc.RTNSTATUS IN ('RTS004','RTS005', 'RTS009')
+					 		   OR tc.EXCSTATUS IN ('EXS004','EXS005', 'EXS011')
+					 	THEN 0 ELSE tcg.clmcnt END) as clmcnt
+				 , FN_GET_ORDER_STATUS(tcg.ordgdidx) as ordstatus
+				 , FN_GET_CLAIM_STATUS(tc.clmidx, tcg.clmgdidx) as clmstatus
+			FROM t_claim tc 
+			INNER JOIN t_claim_goods tcg 
+			ON tc.CLMIDX = tcg.CLMIDX AND tcg.ISCLMOPTION = 'T'
+			WHERE tc.ORDERIDX = #{orderidx}
+           	<if test='clmidx != null and clmidx != ""'>
+           	AND tc.CLMIDX = #{clmidx}
+           	</if>
+			</otherwise>
+		</choose>
+		) c on a.ordgdidx = c.ordgdidx
+		LEFT JOIN (
+            SELECT
+                  ordgdidx
+                , sum(if(t1.clmtype = 'CLM003', 0, t2.clmcnt)) as clmcnt /* 이전 클레임수량(교환제외) - 재계산용 */
+                , sum(if(t1.clmtype = 'CLM003' and t4.bfclmidx = 0, t2.clmcnt, 0)) - sum(if(t1.clmtype='CLM002' and t4.bfclmidx <![CDATA[<>]]> 0, t2.clmcnt, 0)) as clmingcnt /* 클레임 가능수량 */
+                , sum(if(t1.clmtype = 'CLM003', 0, t2.salepromoamt)) as salepromoamt
+                , sum(if(t1.clmtype = 'CLM003', 0, t2.delivamt)) as delivamt
+                , sum(if(t1.clmtype = 'CLM003', 0, t2.delivcpnamt)) as delivcpnamt
+                , sum(if(t1.clmtype = 'CLM003', 0, t2.goodscpnamt)) as goodscpnamt
+                , sum(if(t1.clmtype = 'CLM003', 0, t2.realgoodsamt)) as realgoodsamt
+                , sum(if(t1.clmtype = 'CLM003', 0, t2.rtndelivamt)) as rtndelivamt
+                , CASE
+	                WHEN fn_check_directcoupon(t2.goodscpnidx) = 'T' THEN sum(if(t1.clmtype = 'CLM003', 0, t2.clmcnt))
+	                ELSE max(t3.clmusecnt)
+	              END AS clmusecnt                 /* 주문 상품쿠폰사용수량 */
+            FROM T_CLAIM t1
+            INNER JOIN t_claim_goods t2
+            ON t1.CLMIDX = t2.CLMIDX
+            LEFT JOIN (
+                SELECT clmgdidx, count(*) as clmusecnt
+                FROM t_claim_coupon
+                WHERE comcpntype = 'CCT001'
+                GROUP BY clmgdidx ) t3
+            ON t2.clmgdidx = t3.clmgdidx
+            LEFT JOIN t_exchange_hist t4
+            ON t1.clmidx = t4.afclmidx
+            WHERE t1.ORDERIDX = #{orderidx}
+            AND t1.ISTRASH = 'F'
+            AND t2.ISCLMOPTION = 'T'
+            <if test='status == "APPLY"'>
+		    AND ((t1.CNCSTATUS NOT IN ('CNS003','CNS004') AND t2.CNCSTATUS NOT IN ('CNS003','CNS004')) OR t1.RTNSTATUS NOT IN ('RTS004','RTS005','RTS009') OR t1.EXCSTATUS NOT IN ('EXS004','EXS005','EXS011')) -- 반려, 철회, 반송
+            </if>
+            <if test='status == "DETAIL"'>
+            	<if test='clmidx != null and clmidx != ""'>
+            	AND t1.CLMIDX <![CDATA[<>]]> #{clmidx}
+            	</if>
+	            AND (t2.CNCSTATUS IN ('CNS005','CNS007') 
+	                    OR t1.RTNSTATUS IN ('RTS006','RTS007','RTS008','RTS009','RTS010') 
+	                    OR t1.EXCSTATUS IN ('EXS006','EXS007','EXS008','EXS009','EXS010','EXS011','EXS012'))
+            </if>
+            <if test='status == "COMPLETE"'>
+            	<if test='clmidx != null and clmidx != ""'>
+            	AND t1.CLMIDX <![CDATA[<>]]> #{clmidx}
+				AND t1.CLMCOMPDATE <![CDATA[<]]> (SELECT CLMCOMPDATE FROM t_claim WHERE CLMIDX = #{clmidx})
+				</if>
+	            AND (t1.CNCSTATUS NOT IN ('CNS005') 
+                  		OR t1.RTNSTATUS NOT IN ('RTS009','RTS010') 
+                  		OR t1.EXCSTATUS NOT IN ('EXS011','EXS012'))
+            </if>
+            <if test='status == "ERP"'>
+            	<if test='clmidx != null and clmidx != ""'>
+            	AND t1.CLMIDX <![CDATA[<>]]> #{clmidx}
+				</if>
+	            AND (t1.CNCSTATUS IN ('CNS005') 
+                  		OR t1.RTNSTATUS IN ('RTS009','RTS010') 
+                  		OR t1.EXCSTATUS IN ('EXS011','EXS012'))
+            </if>
+            GROUP BY ordgdidx, goodscpnidx
+        ) d
+		ON a.ordgdidx = d.ordgdidx
+		LEFT OUTER JOIN t_deliv_template e
+		ON b.delividx = e.idx
+        <if test='status == "DETAIL" or status == "COMPLETE"'>
+		LEFT OUTER JOIN (
+			SELECT t1.clmidx, t2.clmgdidx
+				 , (CASE WHEN t1.clmtype = 'CLM001' THEN t2.rejreason ELSE t1.rejreason END) as rejreason
+				 , (CASE WHEN t1.clmtype = 'CLM001' THEN t2.dropreason ELSE t1.dropreason END) as dropreason
+				 , (CASE WHEN t1.clmtype = 'CLM001' THEN t2.rejsubreason ELSE t1.rejsubreason END) as rejsubreason
+				 , (CASE WHEN t1.clmtype = 'CLM001' THEN t2.rejdenyreason ELSE t1.rejdenyreason END) as rejdenyreason
+				 , (CASE WHEN t1.CNCSTATUS = 'CNS002' OR t1.RTNSTATUS = 'RTS002' OR t1.EXCSTATUS = 'EXS002'
+					   	THEN (SELECT datediff(now(), regdate) FROM t_claim_goods_hist WHERE CLMGDIDX= t2.CLMGDIDX AND (AFTVAL = 'CNS002' OR AFTVAL = 'RTS002' OR AFTVAL = 'EXS002'))
+					   	ELSE 0
+				   END) as elapsedaycnt 	/* 결제대기상태 경과일  */
+			FROM t_claim t1
+			INNER JOIN t_claim_goods t2
+			ON t1.clmidx = t2.clmidx
+			WHERE t1.istrash = 'F'
+            <if test='clmidx != null and clmidx != ""'>
+			AND t1.clmidx = #{clmidx}
+			</if>
+		) f
+		ON c.clmidx = f.clmidx
+		AND c.clmgdidx = f.clmgdidx
+        </if>
+        
+		WHERE a.orderidx = #{orderidx}
+	) t
+	INNER JOIN t_comorder tc 
+    ON t.orderidx = tc.orderidx
+	ORDER BY dealerno, orggoodsno, isaddgoods, goodsno, optioncode, delividx
+	</select>
+	
+	<select id="selectClaimGoodsCnt" parameterType="somap" resultType="somap">
+		SELECT /*ClaimGoodsMapper.xml - selectClaimGoodsCnt::클레엠별 갯수 조회 */
+	          IFNULL(SUM(t.claimcnccnt), 0) AS claimcnccnt
+	        , IFNULL(SUM(t.claimrtncnt), 0) AS claimrtncnt
+	        , IFNULL(SUM(t.claimexccnt), 0) AS claimexccnt
+	    FROM (
+	        SELECT  
+	              (CASE WHEN b.clmtype = 'CLM001' THEN 1 ELSE 0 END) AS claimcnccnt      /* 클레임-취소 */
+	            , (CASE WHEN b.clmtype = 'CLM002' THEN 1 ELSE 0 END) AS claimrtncnt      /* 클레임-반품 */
+	            , (CASE WHEN b.clmtype = 'CLM003' THEN 1 ELSE 0 END) AS claimexccnt      /* 클레임-교환 */
+	        FROM t_comorder a
+	        INNER JOIN t_claim b
+	        on a.orderidx = b.orderidx
+	        INNER JOIN t_claim_goods c
+	        ON b.clmidx = c.clmidx
+	        AND c.isclmoption = 'T'
+	        WHERE 1 = 1
+			<choose>
+	        <when test='orderidx != null'>
+	        AND a.orderidx = #{orderidx}
+	        </when>
+	        <when test='ordno != null and ordno != ""'>
+	        AND a.ordno = #{ordno}
+	        </when>
+	        <otherwise>
+	        AND a.userno = #{userno}
+	        </otherwise>
+	        </choose>
+	        AND a.istrash = 'F'
+	        AND b.istrash = 'F'
+	        AND c.istrash = 'F'
+	        AND date_format(b.clmreqdate, '%Y-%m-%d') >= DATE_FORMAT(date_add(now(), interval -1 month),'%Y-%m-%d')
+	    ) t
+	</select>
+	
+	<insert id="insertClaimGoods" parameterType="somap" useGeneratedKeys="true" keyProperty="clmgdidx">
+		INSERT  /* ClaimGoodsMapper - insertClaimGoods 클레임 상품 저장*/
+			INTO T_CLAIM_GOODS (
+				  CLMIDX		/* 클레임IDX(FK) */
+				, ORDGDIDX		/* 주문상품IDX(FK) */
+				, GOODSNO		/* 상품번호 */
+				, OPTIONCODE	/* 옵션코드 */
+				, CLMCNT		/* 클레임수량 */
+				, PRICE			/* 판매금액 */
+				, SALEPROMOAMT	/* 프로모션할인금액 */
+				, SALEPROMOIDX	/* 할인프로모션IDX */
+				, GOODSCPNAMT	/* 상품쿠폰할인금액 */
+				, GOODSCPNIDX	/* 상품쿠폰IDX */
+				, DELIVFARETYPE	/* 배송비종류 */
+				, DELIVAMT		/* 배송비 */
+				, DELIVCPNAMT	/* 배송비쿠폰할인금액 */
+				, REALGOODSAMT	/* 할인적용후급액 */
+				, RESERVEAMT	/* 적립금안분금액 */
+				, EPOINTAMT		/* EPOINT안분금액 */
+				, EMPRESERVEAMT	/* 임직원적립금안분금액 */
+				, BASKETDIVAMT  /* 장바구니쿠폰안분금액 */
+				, ISTRASH		/* 삭제여부 */
+				, ISCLMOPTION	/* 클레임대상옵션여부 */
+				, CNCSTATUS		/* 취소상태 */
+				, REJREASON		/* 반려사유 */
+				, DROPREASON	/* 철회사유 */
+				, DELIVTYPE		/* 배송방법 */
+				, ADDDELIVAMT	/* 추가배송비 */
+				, RTNDELIVAMT	/* 반환배송비 */
+				, COMMRATE		/* 수수료율 */
+				, BASEDELIVAMT  /* 기본배송비 */
+				, ISODELIVAMT	/* 도서산간배송비 */
+				, REGUSERID		/* 등록자ID */
+				, REGDATE		/* 등록일시 */
+			) VALUES (
+				  #{clmidx}
+				, #{ordgdidx}
+				, #{goodsno}
+				, #{optioncode}
+				, #{clmcnt}
+				, #{price}
+				, #{salepromoamt}
+				, #{salepromoidx}
+				, #{goodscpnamt}
+				, #{goodscpnidx}
+				, #{delivfaretype}
+				, #{delivamt}
+				, #{delivcpnamt}
+				, #{realgoodsamt}
+				, #{reserveamt}
+				, #{epointamt}
+				, #{empreserveamt}
+				, #{basketdivamt}
+				, 'F'
+				, #{isclmoption}
+				, #{cncstatus}
+				, #{rejreason}
+				, #{dropreason}
+				, #{delivtype}
+				, #{adddelivamt}
+				, #{rtndelivamt}
+				, #{commrate}
+				, #{basedelivamt}
+				, #{isodelivamt}
+				, #{userid}
+				, sysdate()
+			)
+	</insert>
+
+    <update id="updateGoodsCncStatus" parameterType="somap">
+    	/* ClaimGoodsMapper - updateGoodsCncStatus 클레임상품 취소상태 변경*/
+        UPDATE t_claim_goods SET
+              CNCSTATUS = #{cncstatus}
+			<if test='rejreason != null and rejreason != ""'>
+           	, REJREASON = #{rejreason}
+	        </if>
+	        <if test='dropreason != null and dropreason != ""'>
+	        , DROPREASON = #{dropreason}
+	        </if>
+	        <if test='rejsubreason != null and rejsubreason != ""'>
+	        , REJSUBREASON = #{rejsubreason}
+	        </if>
+	        <if test='rejdenyreason != null and rejdenyreason != ""'>
+	        , REJDENYREASON = #{rejdenyreason}
+	       	</if>
+        WHERE 1 = 1
+		<choose>
+			<when test="clmgdidx != null and clmgdidx != ''">
+			AND CLMGDIDX = #{clmgdidx}
+			</when>
+			<otherwise>
+			AND CLMIDX = #{clmidx}
+			AND (CNCSTATUS IS NULL OR CNCSTATUS IN ('CNS001', 'CNS002', 'CNS007'))	/* 승인대기, 결제대기, 승인완료 */
+			</otherwise>
+		</choose>
+    </update>
+    
+    <update id="updateClaimGoods" parameterType="somap">
+    	UPDATE /* ClaimGoodsMapper - updateClaimGoods 클레임상품 수정*/
+		    T_CLAIM_GOODS
+		SET
+		      PRICE 		= #{price}
+		    , SALEPROMOAMT 	= #{salepromoamt}
+		    , SALEPROMOIDX 	= #{salepromoidx}
+		    , GOODSCPNAMT 	= #{goodscpnamt}
+		    , GOODSCPNIDX 	= #{goodscpnidx}
+		    , DELIVAMT 		= #{delivamt}
+		    , DELIVCPNAMT 	= #{delivcpnamt}
+		    , REALGOODSAMT 	= #{realgoodsamt}
+		    , ADDDELIVAMT 	= #{adddelivamt}
+		    , RTNDELIVAMT 	= #{rtndelivamt}
+		    , RESERVEAMT	= #{reserveamt}
+		    , EPOINTAMT		= #{epointamt}
+		    , EMPRESERVEAMT	= #{empreserveamt}
+		    , BASKETDIVAMT	= #{basketdivamt}
+		WHERE
+		    CLMGDIDX = #{clmgdidx}
+    </update>
+
+	<select id="selectStatsClaimRankByGoodsList" parameterType="somap" resultType="somap">
+		SELECT
+			FORMAT(RANK() OVER (ORDER BY CLMCNT DESC, CLMAMT DESC), 0) AS RANKING
+			<choose>
+				<when test="gubun == 'GOODS'">
+					, T.GOODSNO, GOODSCODE, GOODSNAME
+				</when>
+				<when test="gubun == 'OPTION'">
+					, T.GOODSNO, GOODSCODE, GOODSNAME, OPTIONCODE, OPTIONNAME
+				</when>
+			</choose>
+		    , FORMAT(FRSTORDCNT, 0) AS FRSTORDCNT, FORMAT(CLMCNT, 0) AS CLMCNT, FORMAT(CNT, 0) AS CNT, FORMAT(CLMAMT, 0) AS CLMAMT
+		FROM (
+			SELECT
+				<choose>
+					<when test="gubun == 'GOODS'">
+						B.GOODSNO, MAX(GOODSCODE) AS GOODSCODE, MAX(GOODSNAME) AS GOODSNAME
+					</when>
+					<when test="gubun == 'OPTION'">
+						B.GOODSNO, MAX(GOODSCODE) AS GOODSCODE, MAX(GOODSNAME) AS GOODSNAME, B.OPTIONCODE, FN_GET_OPTION_CONCAT(B.GOODSNO, B.OPTIONCODE, ', ') AS OPTIONNAME
+					</when>
+				</choose>
+			    , SUM(FRSTORDCNT) AS FRSTORDCNT, SUM(CLMCNT) AS CLMCNT, SUM(FRSTORDCNT - CLMCNT) AS CNT
+				, SUM(A.RTNAMT * ((B.PRICE * B.CLMCNT) / (SELECT SUM(PRICE * CLMCNT) FROM T_CLAIM_GOODS WHERE ISTRASH = 'F' AND CLMIDX = A.CLMIDX))) AS CLMAMT
+			FROM T_CLAIM A INNER JOIN T_CLAIM_GOODS B ON A.CLMIDX = B.CLMIDX AND A.ISTRASH = 'F' AND B.ISTRASH = 'F'
+				INNER JOIN T_COMORDER C ON A.ORDERIDX = C.ORDERIDX AND C.ISTRASH = 'F'
+				INNER JOIN T_COMORDER_GOODS D ON B.ORDGDIDX = D.ORDGDIDX AND D.ISTRASH = 'F'
+				INNER JOIN (
+					SELECT
+						B.GOODSNO, A.GOODSCODE, B.OPTIONCODE, A.GOODSNAME, BRANDIDX
+						, FN_GET_OPTION_CONCAT(B.GOODSNO, B.OPTIONCODE, ', ') AS OPTIONNAME
+						, (SELECT CATEIDX FROM T_GOODS_CATEGORY WHERE GOODSNO = A.GOODSNO AND ISREPRE = 'T') AS CATEIDX
+					FROM T_GOODS A INNER JOIN T_GOODS_OPTION_DETAIL B ON A.GOODSNO = B.GOODSNO
+				)E ON B.GOODSNO = E.GOODSNO AND B.OPTIONCODE = E.OPTIONCODE
+				LEFT OUTER JOIN (
+					WITH RECURSIVE CATEGORY AS (
+						SELECT TA.IDX AS CATEIDX, TA.NAME, TA.DEPTH, TA.PARENT, TA.NAME AS PATH, CONCAT(TA.IDX, '') AS DEPTH1IDX
+							 , CAST(NULL AS CHAR(10)) AS DEPTH2IDX, CAST(NULL AS CHAR(10)) AS DEPTH3IDX, CAST(NULL AS CHAR(10)) AS DEPTH4IDX
+						FROM T_CATEGORY TA
+						WHERE DEPTH = 1
+						UNION ALL
+						SELECT TA.IDX AS CATEIDX, TA.NAME, TA.DEPTH, TA.PARENT, CONCAT_WS(' > ', TB.PATH, TA.NAME) AS PATH, TB.DEPTH1IDX
+							 , IF(TB.DEPTH2IDX IS NULL AND TA.DEPTH  >  1, CAST(TA.IDX AS CHAR(10)), TB.DEPTH2IDX) AS DEPTH2IDX
+							 , IF(TB.DEPTH3IDX IS NULL AND TA.DEPTH  >  2, CAST(TA.IDX AS CHAR(10)), TB.DEPTH3IDX) AS DEPTH3IDX
+							 , IF(TB.DEPTH4IDX IS NULL AND TA.DEPTH  >  3, CAST(TA.IDX AS CHAR(10)), TB.DEPTH4IDX) AS DEPTH4IDX
+						FROM T_CATEGORY TA
+								 INNER JOIN CATEGORY TB ON TA.PARENT = TB.CATEIDX
+					)
+					SELECT CATEIDX, NAME, DEPTH, PARENT, PATH AS FULLCATEGORYNAME, DEPTH1IDX, DEPTH2IDX, DEPTH3IDX, DEPTH4IDX
+					FROM CATEGORY
+				)F ON E.CATEIDX = F.CATEIDX
+				LEFT OUTER JOIN T_BRAND G ON E.BRANDIDX = G.IDX
+				LEFT OUTER JOIN T_DEALER H ON D.DEALERNO = H.USERNO
+			WHERE A.SITEID = #{siteid}
+			AND B.ISCLMOPTION = 'T'
+			AND CASE WHEN CLMTYPE = 'CLM002' THEN RTNSTATUS = 'RTS010'
+			WHEN CLMTYPE = 'CLM003' THEN EXCSTATUS = 'EXS012'
+			ELSE FALSE END
+
+			<if test="(startdate != null and startdate != '') and (enddate != null and enddate != '') ">
+				AND CLMCOMPDATE BETWEEN DATE_FORMAT(STR_TO_DATE(#{startdate}, '%Y-%m-%d'), '%Y%m%d000000') AND DATE_FORMAT(STR_TO_DATE(#{enddate}, '%Y-%m-%d'), '%Y%m%d235959')
+			</if>
+			<if test='isallmember != null and isallmember == "F" and mumembertypearr != null and mumembertypearr.size > 0'>
+				AND C.DADAMEMBERTYPE IN
+				<foreach index="index" collection="mumembertypearr" item="_idx" open="(" close=")" separator="," >
+					#{_idx}
+				</foreach>
+			</if>
+			<if test='isallmemlv != null and isallmemlv =="F" and mumemlvtypearr != null and mumemlvtypearr.size > 0'>
+				AND C.MEMLVTYPE IN
+				<foreach index="index" collection="mumemlvtypearr" item="_idx" open="(" close=")" separator="," >
+					#{_idx}
+				</foreach>
+			</if>
+			<if test='isallchannel != null and isallchannel =="F" and muappchtypearr != null and muappchtypearr.size > 0'>
+				AND ORDPATHTYPE IN
+				<foreach index="index" collection="muappchtypearr" item="_idx" open="(" close=")" separator="," >
+					#{_idx}
+				</foreach>
+			</if>
+
+			<if test="isnonmember != null and isnonmember != '' ">
+				AND ISNONMEMBER = #{isnonmember}
+			</if>
+			<if test="depth1cateidx != null and depth1cateidx != '' ">
+				AND F.DEPTH1IDX = #{depth1cateidx}	/* 대분류카테고리 */
+			</if>
+			<if test="depth2cateidx != null and depth2cateidx != '' ">
+				AND F.DEPTH2IDX = #{depth2cateidx}	/* 중분류카테고리 */
+			</if>
+			<if test="depth3cateidx != null and depth3cateidx != '' ">
+				AND F.DEPTH3IDX = #{depth3cateidx}	/* 소분류카테고리 */
+			</if>
+			<if test="depth4cateidx != null and depth4cateidx != '' ">
+				AND F.DEPTH4IDX = #{depth4cateidx}	/* 세분류카테고리 */
+			</if>
+
+			<if test="sword != null and sword != '' ">
+				<choose>
+					<when test="skey == 'dealercode'">
+						AND D.DEALERNO LIKE CONCAT('%', #{sword}, '%')
+					</when>
+					<when test="skey == 'dealername'">
+						AND H.NAME LIKE CONCAT('%', #{sword}, '%')
+					</when>
+					<when test="skey == 'brandcode'">
+						AND G.BRCODE LIKE CONCAT('%', #{sword}, '%')
+					</when>
+					<when test="skey == 'brandname'">
+						AND G.NAME LIKE CONCAT('%', #{sword}, '%')
+					</when>
+					<when test="skey == 'goodscode'">
+						AND B.GOODSCODE LIKE CONCAT('%', #{sword}, '%')
+					</when>
+					<when test="skey == 'optioncode'">
+						AND B.OPTIONCODE LIKE CONCAT('%', #{sword}, '%')
+					</when>
+					<when test="skey == 'goodsname'">
+						AND E.GOODSNAME LIKE CONCAT('%', #{sword}, '%')
+					</when>
+					<when test="skey == 'optionname'">
+						AND FN_GET_OPTION_DETAIL(B.GOODSNO, B.OPTIONCODE, '') LIKE CONCAT('%', #{sword}, '%')
+					</when>
+					<otherwise>
+						AND (D.DEALERNO LIKE CONCAT('%', #{sword}, '%')
+						OR H.NAME LIKE CONCAT('%', #{sword}, '%')
+						OR G.BRCODE LIKE CONCAT('%', #{sword}, '%')
+						OR G.NAME LIKE CONCAT('%', #{sword}, '%')
+						OR B.GOODSCODE LIKE CONCAT('%', #{sword}, '%')
+						OR B.OPTIONCODE LIKE CONCAT('%', #{sword}, '%')
+						OR E.GOODSNAME LIKE CONCAT('%', #{sword}, '%')
+						OR FN_GET_OPTION_DETAIL(B.GOODSNO, B.OPTIONCODE, '') LIKE CONCAT('%', #{sword}, '%')
+						)
+					</otherwise>
+				</choose>
+			</if>
+
+			<choose>
+				<when test="gubun == 'GOODS'">
+					GROUP BY B.GOODSNO
+				</when>
+				<when test="gubun == 'OPTION'">
+					GROUP BY B.GOODSNO, B.OPTIONCODE
+				</when>
+			</choose>
+		)T
+		<choose>
+			<when test="psort == 'rank_asc'">
+				ORDER BY CAST(RANKING AS SIGNED) ASC
+			</when>
+			<when test="psort == 'rank_desc'">
+				ORDER BY CAST(RANKING AS SIGNED) DESC
+			</when>
+			<when test="psort == 'goodscode_asc'">
+				ORDER BY T.GOODSCODE ASC
+			</when>
+			<when test="psort == 'goodscode_desc'">
+				ORDER BY T.GOODSCODE DESC
+			</when>
+			<when test="psort == 'goodsname_asc'">
+				ORDER BY T.GOODSNAME ASC
+			</when>
+			<when test="psort == 'goodsname_desc'">
+				ORDER BY T.GOODSNAME DESC
+			</when>
+			<when test="psort == 'optioncode_asc'">
+				ORDER BY T.OPTIONCODE ASC
+			</when>
+			<when test="psort == 'optioncode_desc'">
+				ORDER BY T.OPTIONCODE DESC
+			</when>
+			<when test="psort == 'optionname_asc'">
+				ORDER BY T.OPTIONNAME ASC
+			</when>
+			<when test="psort == 'optionname_desc'">
+				ORDER BY T.OPTIONNAME DESC
+			</when>
+			<when test="psort == 'frstordcnt_asc'">
+				ORDER BY T.FRSTORDCNT ASC
+			</when>
+			<when test="psort == 'frstordcnt_desc'">
+				ORDER BY T.FRSTORDCNT DESC
+			</when>
+			<when test="psort == 'clmcnt_asc'">
+				ORDER BY T.CLMCNT ASC
+			</when>
+			<when test="psort == 'clmcnt_desc'">
+				ORDER BY T.CLMCNT DESC
+			</when>
+			<when test="psort == 'cnt_asc'">
+				ORDER BY T.CNT ASC
+			</when>
+			<when test="psort == 'cnt_desc'">
+				ORDER BY T.CNT DESC
+			</when>
+			<when test="psort == 'clmamt_asc'">
+				ORDER BY T.CLMAMT ASC
+			</when>
+			<when test="psort == 'clmamt_desc'">
+				ORDER BY T.CLMAMT DESC
+			</when>
+			<otherwise>
+				ORDER BY T.CLMCNT DESC, T.CLMAMT DESC
+			</otherwise>
+		</choose>
+		<if test="startpage != null and !startpage.equals('') and endpage != null and !endpage.equals('')">
+			LIMIT #{startpage}, #{endpage}
+		</if>
+	</select>
+
+	<select id="selectStatsClaimRankByGoodsListCountInfo" parameterType="somap" resultType="somap">
+		SELECT
+			FORMAT(COUNT(*), 0) AS TOTAL
+			, FORMAT(SUM(FRSTORDCNT), 0) AS FRST
+			, FORMAT(SUM(CLMCNT), 0) AS CLM
+			, FORMAT(SUM(FRSTORDCNT - CLMCNT), 0) AS CNT
+			, FORMAT(SUM(CLMAMT), 0) AS AMT
+		FROM (
+			SELECT
+				<choose>
+					<when test="gubun == 'GOODS'">
+						B.GOODSNO, MAX(GOODSCODE) AS GOODSCODE, MAX(GOODSNAME) AS GOODSNAME
+					</when>
+					<when test="gubun == 'OPTION'">
+						B.GOODSNO, MAX(GOODSCODE) AS GOODSCODE, MAX(GOODSNAME) AS GOODSNAME, B.OPTIONCODE, FN_GET_OPTION_CONCAT(B.GOODSNO, B.OPTIONCODE, ' | ') AS OPTIONNAME
+					</when>
+				</choose>
+			    , SUM(FRSTORDCNT) AS FRSTORDCNT, SUM(CLMCNT) AS CLMCNT, SUM(FRSTORDCNT - CLMCNT) AS CNT
+				, SUM(A.RTNAMT * ((B.PRICE * B.CLMCNT) / (SELECT SUM(PRICE * CLMCNT) FROM T_CLAIM_GOODS WHERE ISTRASH = 'F' AND CLMIDX = A.CLMIDX))) AS CLMAMT
+			FROM T_CLAIM A INNER JOIN T_CLAIM_GOODS B ON A.CLMIDX = B.CLMIDX AND A.ISTRASH = 'F' AND B.ISTRASH = 'F'
+				INNER JOIN T_COMORDER C ON A.ORDERIDX = C.ORDERIDX AND C.ISTRASH = 'F'
+				INNER JOIN T_COMORDER_GOODS D ON B.ORDGDIDX = D.ORDGDIDX AND D.ISTRASH = 'F'
+				INNER JOIN (
+					SELECT
+						B.GOODSNO, A.GOODSCODE, B.OPTIONCODE, B.GOODSNAME, BRANDIDX
+						, FN_GET_OPTION_CONCAT(B.GOODSNO, B.OPTIONCODE, ', ') AS OPTIONNAME
+						, (SELECT CATEIDX FROM T_GOODS_CATEGORY WHERE GOODSNO = A.GOODSNO AND ISREPRE = 'T') AS CATEIDX
+					FROM T_GOODS A INNER JOIN T_GOODS_OPTION_DETAIL B ON A.GOODSNO = B.GOODSNO
+				)E ON B.GOODSNO = E.GOODSNO AND B.OPTIONCODE = E.OPTIONCODE
+				LEFT OUTER JOIN (
+					WITH RECURSIVE CATEGORY AS (
+						SELECT TA.IDX AS CATEIDX, TA.NAME, TA.DEPTH, TA.PARENT, TA.NAME AS PATH, CONCAT(TA.IDX, '') AS DEPTH1IDX
+							 , CAST(NULL AS CHAR(10)) AS DEPTH2IDX, CAST(NULL AS CHAR(10)) AS DEPTH3IDX, CAST(NULL AS CHAR(10)) AS DEPTH4IDX
+						FROM T_CATEGORY TA
+						WHERE DEPTH = 1
+						UNION ALL
+						SELECT TA.IDX AS CATEIDX, TA.NAME, TA.DEPTH, TA.PARENT, CONCAT_WS(' > ', TB.PATH, TA.NAME) AS PATH, TB.DEPTH1IDX
+							 , IF(TB.DEPTH2IDX IS NULL AND TA.DEPTH  >  1, CAST(TA.IDX AS CHAR(10)), TB.DEPTH2IDX) AS DEPTH2IDX
+							 , IF(TB.DEPTH3IDX IS NULL AND TA.DEPTH  >  2, CAST(TA.IDX AS CHAR(10)), TB.DEPTH3IDX) AS DEPTH3IDX
+							 , IF(TB.DEPTH4IDX IS NULL AND TA.DEPTH  >  3, CAST(TA.IDX AS CHAR(10)), TB.DEPTH4IDX) AS DEPTH4IDX
+						FROM T_CATEGORY TA
+								 INNER JOIN CATEGORY TB ON TA.PARENT = TB.CATEIDX
+					)
+					SELECT CATEIDX, NAME, DEPTH, PARENT, PATH AS FULLCATEGORYNAME, DEPTH1IDX, DEPTH2IDX, DEPTH3IDX, DEPTH4IDX
+					FROM CATEGORY
+				)F ON E.CATEIDX = F.CATEIDX
+				LEFT OUTER JOIN T_BRAND G ON E.BRANDIDX = G.IDX
+				LEFT OUTER JOIN T_DEALER H ON D.DEALERNO = H.USERNO
+			WHERE A.SITEID = #{siteid}
+			AND B.ISCLMOPTION = 'T'
+			AND CASE WHEN CLMTYPE = 'CLM002' THEN RTNSTATUS = 'RTS010'
+			WHEN CLMTYPE = 'CLM003' THEN EXCSTATUS = 'EXS012'
+			ELSE FALSE END
+
+			<if test="(startdate != null and startdate != '') and (enddate != null and enddate != '') ">
+				AND CLMCOMPDATE BETWEEN DATE_FORMAT(STR_TO_DATE(#{startdate}, '%Y-%m-%d'), '%Y%m%d000000') AND DATE_FORMAT(STR_TO_DATE(#{enddate}, '%Y-%m-%d'), '%Y%m%d235959')
+			</if>
+
+			<if test='isallmember != null and isallmember == "F" and mumembertypearr != null and mumembertypearr.size > 0'>
+				AND C.DADAMEMBERTYPE IN
+				<foreach index="index" collection="mumembertypearr" item="_idx" open="(" close=")" separator="," >
+					#{_idx}
+				</foreach>
+			</if>
+			<if test='isallmemlv != null and isallmemlv =="F" and mumemlvtypearr != null and mumemlvtypearr.size > 0'>
+				AND C.MEMLVTYPE IN
+				<foreach index="index" collection="mumemlvtypearr" item="_idx" open="(" close=")" separator="," >
+					#{_idx}
+				</foreach>
+			</if>
+			<if test='isallchannel != null and isallchannel =="F" and muappchtypearr != null and muappchtypearr.size > 0'>
+				AND ORDPATHTYPE IN
+				<foreach index="index" collection="muappchtypearr" item="_idx" open="(" close=")" separator="," >
+					#{_idx}
+				</foreach>
+			</if>
+
+			<if test="isnonmember != null and isnonmember != '' ">
+				AND ISNONMEMBER = #{isnonmember}
+			</if>
+			<if test="depth1cateidx != null and depth1cateidx != '' ">
+				AND F.DEPTH1IDX = #{depth1cateidx}	/* 대분류카테고리 */
+			</if>
+			<if test="depth2cateidx != null and depth2cateidx != '' ">
+				AND F.DEPTH2IDX = #{depth2cateidx}	/* 중분류카테고리 */
+			</if>
+			<if test="depth3cateidx != null and depth3cateidx != '' ">
+				AND F.DEPTH3IDX = #{depth3cateidx}	/* 소분류카테고리 */
+			</if>
+			<if test="depth4cateidx != null and depth4cateidx != '' ">
+				AND F.DEPTH4IDX = #{depth4cateidx}	/* 세분류카테고리 */
+			</if>
+
+			<if test="sword != null and sword != '' ">
+				<choose>
+					<when test="skey == 'dealercode'">
+						AND D.DEALERNO LIKE CONCAT('%', #{sword}, '%')
+					</when>
+					<when test="skey == 'dealername'">
+						AND H.NAME LIKE CONCAT('%', #{sword}, '%')
+					</when>
+					<when test="skey == 'brandcode'">
+						AND G.BRCODE LIKE CONCAT('%', #{sword}, '%')
+					</when>
+					<when test="skey == 'brandname'">
+						AND G.NAME LIKE CONCAT('%', #{sword}, '%')
+					</when>
+					<when test="skey == 'goodscode'">
+						AND B.GOODSCODE LIKE CONCAT('%', #{sword}, '%')
+					</when>
+					<when test="skey == 'optioncode'">
+						AND B.OPTIONCODE LIKE CONCAT('%', #{sword}, '%')
+					</when>
+					<when test="skey == 'goodsname'">
+						AND E.GOODSNAME LIKE CONCAT('%', #{sword}, '%')
+					</when>
+					<when test="skey == 'optionname'">
+						AND FN_GET_OPTION_DETAIL(B.GOODSNO, B.OPTIONCODE, '') LIKE CONCAT('%', #{sword}, '%')
+					</when>
+					<otherwise>
+						AND (D.DEALERNO LIKE CONCAT('%', #{sword}, '%')
+						OR H.NAME LIKE CONCAT('%', #{sword}, '%')
+						OR G.BRCODE LIKE CONCAT('%', #{sword}, '%')
+						OR G.NAME LIKE CONCAT('%', #{sword}, '%')
+						OR B.GOODSCODE LIKE CONCAT('%', #{sword}, '%')
+						OR B.OPTIONCODE LIKE CONCAT('%', #{sword}, '%')
+						OR E.GOODSNAME LIKE CONCAT('%', #{sword}, '%')
+						OR FN_GET_OPTION_DETAIL(B.GOODSNO, B.OPTIONCODE, '') LIKE CONCAT('%', #{sword}, '%')
+						)
+					</otherwise>
+				</choose>
+			</if>
+
+			<choose>
+				<when test="gubun == 'GOODS'">
+					GROUP BY B.GOODSNO
+				</when>
+				<when test="gubun == 'OPTION'">
+					GROUP BY B.GOODSNO, B.OPTIONCODE
+				</when>
+			</choose>
+		)T
+	</select>
+	
+	<select id="selectExcAfterRecList" parameterType="somap" resultType="somap">
+		/*ClaimGoodsMapper.xml - selectExcAfterRecList:: 교환 회수완료 이후 상품목록 조회 */
+		SELECT	  t.*
+				, t.ORDCNT AS DELIVCNT
+				, t.ORDCNT * t.PRICE AS TOTPRICE
+		FROM (
+			SELECT
+				  tc.orderidx
+				, tcg.clmgdidx
+				, tcg.ordgdidx
+	            , tcgd.orgdelividx
+				, tc.clmidx
+				, tg.ISPBGOODS
+				, IF(tg.ispbgoods='T', '자사', '파트너사') AS ispbgoodsname	
+				, (CASE WHEN tcg2.dealerno is not null and tcg2.dealerno != 0
+						THEN (select name from t_dealer where userno = tcg2.dealerno)
+						ELSE 'D.PLOT'
+				   END) AS dealername
+				, tg.GOODSCODE 
+				, tcg.GOODSNO 
+				, tcg.OPTIONCODE 
+				, tcg2.GOODSTURN 
+				, tg.GOODSNAME 
+				, FN_GET_FILE_URL(tcg.goodsno, 'FLT001', 'IGT003') AS FULLPATH
+				, FN_GET_OPTION_DETAIL(tcg.goodsno, tcg.optioncode, '\n') AS OPTIONCONTS
+                , tcg.CLMCNT - ifnull(sub.CLMCOMPCNT, 0) AS ORDCNT
+				, tcg.PRICE 
+				, IF(tcg2.DELIVFARETYPE='T', 'Y', 'N') AS ISADDGOODS
+				, IF(tg.ISCOMBDELIV='T', '묶음', '개별') AS ISCOMBDELIVNAME
+				, tcg2.DELIVFARETYPE
+				, FN_GET_CODENAME(#{siteid}, 'DELIVFARETYPE', tcg2.DELIVFARETYPE) AS DELIVFARETYPENAME
+				, tcg.DELIVAMT
+				, tcg2.DELIVTYPE
+				, tc.RECLOGISTYPE AS LOGISTYPE
+				, FN_GET_CODENAME(#{siteid}, 'LOGISTYPE', tc.RECLOGISTYPE) AS LOGISTYPENAME
+				, tc.RECINVOICENO AS INVOICENO
+				, (CASE WHEN tcgd.ORDCFMDATE IS NULL
+					    THEN '미확정'
+					    ELSE CONCAT(DATE_FORMAT(tcgd.ORDCFMDATE, '%Y-%m-%d %H:%i:%s'), ' (', FN_GET_CODENAME(#{siteid}, 'ORDCFMTYPE', tcgd.ordcfmtype), ')')
+				   END) AS CFMCONTS						/* 구매확정내역 */
+				, FN_GET_ORDER_STATUS(tcg.ORDGDIDX) AS ORDSTATUS
+				, FN_GET_CODENAME(#{siteid}, 'ORDSTATUS', FN_GET_ORDER_STATUS(tcg.ORDGDIDX)) AS ORDSTATUSNAME
+				, tc.EXCSTATUS AS CLMSTATUS
+				, FN_GET_CODENAME(#{siteid}, 'EXCSTATUS', tc.EXCSTATUS) AS CLMSTATUSNAME
+				, FN_GET_CLAIM_CNT(tcg2.ordgdidx) AS clmingcnt
+			    , (CASE WHEN tc.excstatus NOT IN ('EXS004', 'EXS005', 'EXS011', 'EXS012') THEN tcg.clmcnt ELSE 0 END) AS excproccnt
+			    , ifnull(sub.exccompcnt, 0) AS origincnt
+			    , tcg.clmcnt
+			FROM t_claim tc
+				INNER JOIN t_claim_goods tcg 
+				ON tc.CLMIDX = tcg.CLMIDX AND tcg.ISCLMOPTION = 'T'
+				INNER JOIN t_comorder_goods tcg2 
+				ON tcg.ORDGDIDX = tcg2.ORDGDIDX 
+				INNER JOIN t_goods tg 
+				ON tcg.GOODSNO = tg.GOODSNO 
+	            LEFT OUTER JOIN t_exchange_hist teh
+	            ON tc.clmidx = teh.afclmidx
+				LEFT OUTER JOIN (
+					SELECT t1.ORDGDIDX, t1.ORGDELIVIDX, t1.ORDCFMTYPE
+						 , MAX(t2.ORDCFMDATE) AS ORDCFMDATE
+					FROM t_comorder_goods_deliv t1
+					LEFT OUTER JOIN (
+						SELECT cgh.ORGDELIVIDX
+							 , MAX(cgh.REGDATE) AS ORDCFMDATE		/* 구매확정 */
+						FROM t_comorder_goods_his cgh 
+					    WHERE cgh.AFTVAL = 'ODS009'
+						GROUP BY cgh.ORGDELIVIDX
+					) t2 ON t1.ORGDELIVIDX = t2.ORGDELIVIDX
+					GROUP BY t1.ORDGDIDX, t1.ORDCFMTYPE
+				) tcgd ON tcg.ORDGDIDX = tcgd.ORDGDIDX
+				LEFT OUTER JOIN (
+					SELECT t2.ORDGDIDX, SUM(t2.CLMCNT) AS CLMCNT
+						 , SUM(CASE WHEN t1.EXCSTATUS NOT IN ('EXS004','EXS005','EXS0011','EXS0012') OR t1.RTNSTATUS NOT IN ('RTS004','RTS005','RTS009','RTS010') THEN t2.CLMCNT ELSE 0 END) AS CLMINGCNT
+						 , SUM(CASE WHEN t1.RTNSTATUS = 'RTS010' THEN t2.CLMCNT ELSE 0 END) AS CLMCOMPCNT
+						 , SUM(if(t1.CLMTYPE = 'CLM003' AND t3.BFCLMIDX = 0, t2.CLMCNT, 0)) - SUM(if(t3.BFCLMIDX <![CDATA[<>]]> 0 AND t1.RTNSTATUS not in ('RTS004', 'RTS005', 'RTS009'), t2.CLMCNT, 0)) as exccompcnt
+                    FROM t_claim t1
+					INNER JOIN t_claim_goods t2
+					ON t1.CLMIDX = t2.CLMIDX AND t2.ISCLMOPTION = 'T'
+					LEFT OUTER JOIN t_exchange_hist t3
+					ON t1.clmidx = t3.afclmidx
+                    WHERE t1.ORDERIDX = #{orderidx}
+                    AND t1.CLMTYPE IN ('CLM002','CLM003')
+					GROUP BY t2.ORDGDIDX
+                ) sub ON tcg.ORDGDIDX = sub.ORDGDIDX
+			WHERE tc.ISTRASH = 'F'
+			AND tc.CLMTYPE = 'CLM003'
+			AND tc.ORDERIDX = #{orderidx}
+			AND (	teh.BFCLMIDX = 0 
+				AND tc.EXCSTATUS IN ('EXS009','EXS010','EXS012')
+			 OR (	teh.BFCLMIDX > 0
+			 	AND teh.AFCLMIDX NOT IN (
+						SELECT tb.AFCLMIDX
+						FROM t_claim ta
+						INNER JOIN t_exchange_hist tb
+						ON ta.CLMIDX = tb.BFCLMIDX
+						WHERE ta.ORDERIDX = #{orderidx}
+						AND ta.ISTRASH = 'F'
+						AND ta.EXCSTATUS IN ('EXS009','EXS010','EXS012')
+					)
+				)
+			)
+		) t
+		WHERE t.ORDCNT <![CDATA[>]]> 0
+		ORDER BY t.CLMIDX, t.CLMGDIDX
+	</select>
+
+	<select id="selectOrderCancelGoodsERPData" parameterType="somap" resultType="somap">
+		SELECT
+			T.*
+		FROM (
+				 SELECT
+					 ORDERIDX, A.ORDGDIDX
+					  , GOODSTURN
+					  , DEALERNO
+					  , GOODSNO
+					  , OPTIONCODE
+					  , SALEPROMOIDX
+					  , DELIVFARETYPE
+					  , REALGOODSAMT
+					  , ISCANCEL
+					  , ISREFUND
+					  , ISEXCHANGE
+					  , ISADDGOODS
+					  , ORGGOODSNO
+					  , DELIVTYPE
+					  , A.PRICE
+					  , (A.FRSTORDCNT - IFNULL(B.CLMCNT, 0)) AS FRSTORDCNT
+					  , (A.SALEPROMOAMT - IFNULL(B.SALEPROMOAMT, 0)) AS SALEPROMOAMT
+					  , (A.GOODSCPNAMT - IFNULL(B.GOODSCPNAMT, 0)) AS GOODSCPNAMT
+					  , (A.DELIVCPNAMT - IFNULL(B.DELIVCPNAMT, 0)) AS DELIVCPNAMT
+					  , (A.DELIVAMT - IFNULL(B.DELIVAMT, 0)) AS DELIVAMT
+					  , (A.RESERVEAMT - IFNULL(B.RESERVEAMT, 0)) AS RESERVEAMT
+					  , (A.EPOINTAMT - IFNULL(B.EPOINTAMT, 0)) AS EPOINTAMT
+					  , (A.EMPRESERVEAMT - IFNULL(B.EMPRESERVEAMT, 0)) AS EMPRESERVEAMT
+					  , IFNULL(B.ADDDELIVAMT, 0) AS ADDDELIVAMT
+					  , IFNULL(B.RTNDELIVAMT, 0) AS RTNDELIVAMT
+				 FROM T_COMORDER_GOODS A LEFT OUTER JOIN (
+					 SELECT
+						 ORDGDIDX
+						  , SUM(PRICE * CLMCNT) AS PRICE
+						  , SUM(CLMCNT) AS CLMCNT
+						  , SUM(SALEPROMOAMT) AS SALEPROMOAMT
+						  , SUM(GOODSCPNAMT) AS GOODSCPNAMT
+						  , SUM(DELIVCPNAMT) AS DELIVCPNAMT
+						  , SUM(DELIVAMT) AS DELIVAMT
+						  , SUM(RESERVEAMT) AS RESERVEAMT
+						  , SUM(EPOINTAMT) AS EPOINTAMT
+						  , SUM(EMPRESERVEAMT) AS EMPRESERVEAMT
+						  , SUM(B.ADDDELIVAMT) AS ADDDELIVAMT
+						  , SUM(RTNDELIVAMT) AS RTNDELIVAMT
+					 FROM T_CLAIM A INNER JOIN T_CLAIM_GOODS B ON A.CLMIDX = B.CLMIDX AND A.ISTRASH = 'F' AND B.ISTRASH = 'F' AND ISCLMOPTION = 'T'
+					 WHERE A.ORDERIDX = #{orderidx}
+					<if test='status == "ERP"'>
+						AND (A.CNCSTATUS = 'CNS005' AND B.CNCSTATUS = 'CNS005')
+					</if>
+					<if test='status == "ERP_RETURN"'>
+						AND (A.CNCSTATUS = 'CNS005' AND B.CNCSTATUS = 'CNS005')
+					</if>
+					 GROUP BY ORDGDIDX
+				 )B ON A.ORDGDIDX = B.ORDGDIDX AND A.ISTRASH = 'F'
+				 WHERE ORDERIDX = #{orderidx}
+			 )T
+		WHERE T.FRSTORDCNT > 0
+	</select>
+
+    <select id="selectOrderGoodsWithoutClaimList" parameterType="somap" resultType="somap">
+    	SELECT /*ClaimGoodsMapper.xml - selectOrderGoodsWithoutClaimList::주문 클레임제외 상품목록 조회 */
+		  t.*
+	    FROM (
+	        SELECT
+	              a.orderidx      
+	            , a.ordgdidx
+	            , a.goodsturn
+	            , a.dealerno
+	            , a.goodsno
+	            , a.optioncode
+	            , a.frstordcnt - if(NULL = 'CLM003', 0, ifnull(c.clmcnt, 0)) as ordcnt
+	            , a.frstordcnt - if(NULL = 'CLM003', 0, ifnull(c.clmcnt, 0)) as origincnt
+	            , ifnull(if(NULL = 'CLM003', 0, ifnull(c.clmcnt, 0)) , 0) as clmcnt
+	            , a.price
+	            , a.salepromoamt - ifnull(c.salepromoamt, 0) as salepromoamt
+	            , a.salepromoidx
+	            , (
+	            	select promoname
+	             	from t_promotion
+	             	where promoidx = a.salepromoidx
+	              ) as promoname
+	            , a.goodscpnamt - ifnull(c.goodscpnamt, 0) as goodscpnamt
+	            , a.goodscpnidx
+	            , (
+	            	select cpnname
+	             	from t_comcoupon
+	             	where comcpnidx = a.goodscpnidx
+	              ) as cpnname
+	            , a.delivcpnamt - ifnull(c.delivcpnamt, 0) as delivcpnamt
+				, b.goodscode
+				, b.goodsname
+	        FROM
+	            t_comorder_goods a
+	        INNER JOIN t_goods b 
+	        on a.goodsno = b.goodsno
+			LEFT JOIN (
+				SELECT tcg.ordgdidx
+		            , sum(CASE WHEN tc.CLMTYPE = 'CLM003' AND tc.EXCSTATUS = 'EXS012' THEN 0 ELSE tcg.clmcnt END) as clmcnt
+					, sum(tcg.salepromoamt) as salepromoamt
+					, sum(tcg.delivamt) as delivamt
+					, sum(tcg.delivcpnamt) as delivcpnamt
+					, sum(tcg.goodscpnamt) as goodscpnamt
+					, sum(tcg.realgoodsamt) as realgoodsamt
+				FROM t_claim tc 
+				INNER JOIN t_claim_goods tcg 
+				ON tc.CLMIDX = tcg.CLMIDX AND tcg.ISCLMOPTION = 'T'
+				WHERE tc.ORDERIDX = #{orderidx}
+				AND ((tc.CNCSTATUS = 'CNS005' AND tcg.CNCSTATUS NOT IN ('CNS003', 'CNS004')) OR tc.RTNSTATUS = 'RTS010' OR tc.EXCSTATUS = 'EXS012')
+				GROUP BY tcg.ordgdidx
+			) c on a.ordgdidx = c.ordgdidx
+			WHERE a.ORDERIDX = #{orderidx}
+		) t
+	    where t.ordcnt <![CDATA[>]]> 0
+    </select>
+
+	<select id="selectReturnGoodsERPData" parameterType="somap" resultType="somap">
+		SELECT
+			CLMGDIDX
+			 ,CLMIDX
+			 ,ORDGDIDX
+			 ,GOODSNO
+			 ,OPTIONCODE
+			 ,CLMCNT
+			 ,PRICE
+			 ,SALEPROMOAMT
+			 ,SALEPROMOIDX
+			 ,GOODSCPNAMT
+			 ,GOODSCPNIDX
+			 ,DELIVFARETYPE
+			 ,DELIVAMT
+			 ,DELIVCPNAMT
+			 ,REALGOODSAMT
+			 ,RESERVEAMT
+			 ,EPOINTAMT
+			 ,EMPRESERVEAMT
+			 ,ISCLMOPTION
+			 ,CNCSTATUS
+			 ,REJREASON
+			 ,DROPREASON
+			 ,DELIVTYPE
+			 ,ADDDELIVAMT
+			 ,RTNDELIVAMT
+			 ,COMMRATE
+		FROM T_CLAIM_GOODS
+		WHERE ISTRASH = 'F'
+		AND ISCLMOPTION = 'T'
+		AND CLMIDX = #{clmidx}
+	</select>
+</mapper>
+	

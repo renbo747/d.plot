@@ -1,0 +1,230 @@
+.dp-cart {
+  .dp-cart-header {
+    padding-bottom: 60px;
+  }
+  .dp-cart-title {
+    font-size: 26px;
+    line-height: -1.04px;
+  }
+  .dp-cart-product-header {
+    padding-bottom: 50px;
+  }
+  .dp-cart-product-checkbox {
+    .magic-checkbox + label {
+      display: flex;
+      align-items: center;
+      font-size: 18px;
+      font-weight: 500;
+      color: #111;
+      padding-left: 38px;
+    }
+  }
+  .dp-cart-product-delete__p {
+    font-size: 16px;
+    letter-spacing: -.72px;
+    color: $black;
+    cursor: pointer;
+  }
+
+  //리스트 메뉴
+  .dp-cart-product-menu-wrap {
+    padding-bottom: 14px;
+    border-bottom: solid 1px $border-color;
+  }
+  .dp-cart-product-menu {
+    text-align: center;
+  }
+  .dp-cart-product-menu__title {
+    font-size: 16px;
+    letter-spacing: -.64px;
+    color: $gray-700;
+  }
+  .product-menu-info {
+    width: 466px;
+  }
+
+  .product-menu-price {
+    width: 80px;
+    margin-right: 70px;
+    margin-left: 40px;
+  }
+  .product-menu-count {
+    width: 100px;
+    margin-right: 85px;
+  }
+  .product-menu-select {
+    width: 100px;
+  }
+  .cart-caption {
+    padding-top: 30px;
+  }
+  .cart-caption-title {
+    padding-left: 378px;
+  }
+
+  //빈 장바구니일때
+  .empty-cart-area {
+    padding-top: 100px;
+  }
+  .empty-cart-icon-wrap {
+    width: 100px;
+    height: 100px;
+    border-radius: 50%;
+    background-color: $gray-100;
+    margin-bottom: 50px;
+  }
+  .icon-bag {
+    background-image: url("~@/assets/common/icon/icon-bag-black-50px.svg");
+  }
+
+  // 상품 리스트 ( 컴포넌트 scss 수정 포함)
+  .dp-cart-product-list__option {
+    .list__option + .list__option {
+      margin-top: 10px;
+    }
+  }
+  .dp-cart-product-list__option__total {
+    padding-top: 24px;
+  }
+  .option__total__price {
+    font-size: 16px;
+    letter-spacing: -.64px;
+    margin-right: 20px;
+  }
+  .option__total__unit {
+    font-size: 14px;
+    letter-spacing: -.56px;
+  }
+  .option__total__num {
+    font-size: 18px;
+    letter-spacing: -.54px;
+    line-height: 1;
+  }
+
+
+  // layout-right 장바구니 주문금액 페이지
+  .dp-cart__btn-group {
+    position: sticky;
+    top: 120px;
+    border: solid 1px $border-color;
+
+    .dp-hr-receipt {
+      height: 1px;
+      margin-bottom: 20px;
+      background-color: $black;
+    }
+    .btn-group {
+      width: 100%;
+    }
+
+    .dp-cart__price-summary {
+      padding: 0 30px;
+
+      .dp-cart__price-header {
+        padding-top: 50px;
+        padding-bottom: 20px;
+      }
+      .summary__text {
+        font-size: 14px;
+        letter-spacing: -.56px;
+        font-weight: 400;
+        color: $gray-700;
+      }
+      .summary__price {
+        font-size: 14px;
+        letter-spacing: -.56px;
+        color: $black;
+        margin-bottom: 0;
+        span {
+          font-size: 16px;
+          letter-spacing: -.48px;
+          font-weight: 500;
+        }
+      }
+    }
+    .dp-cart__price-summary-list {
+      margin-bottom: 25px;
+      li + li {
+        margin-top: 10px;
+      }
+    }
+    .dp-cart__price-footer {
+      padding-top: 12px;
+      padding-bottom: 60px;
+
+      .footer-summary__price {
+        font-size: 16px;
+        span {
+          font-size: 18px;
+          font-weight: 600;
+        }
+      }
+    }
+    .btn-group {
+      padding: 0 30px 20px 30px;
+
+    }
+
+  }
+
+  //슬라이드
+  .dp-cart-slide {
+    padding-top: 130px;
+  }
+  .dp-cart-slide-header {
+    padding-bottom: 40px;
+  }
+  .dp-cart-slide-title {
+    font-size: 24px;
+    letter-spacing: -.96px;
+    font-weight: 700;
+    color: $black;
+  }
+  .dp-cart-slide__body {
+
+    .swiper-container {
+      @include media-breakpoint-up(md) {
+        padding-bottom: 70px;
+      }
+      @include media-breakpoint-up(lg) {
+        padding-bottom: 70px;
+      }
+    }
+  }
+  .swiper-pagination {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0 20px;
+    bottom: 0;
+  }
+
+  .swiper-slide {
+    width: 295px;
+  }
+
+  .swiper-pagination-bullet {
+    width: 10px;
+    height: 10px;
+    opacity: 1;
+    background: $gray-400;
+    margin: 0 10px;
+  }
+
+  .swiper-pagination-bullet-active {
+    width: 10px;
+    height: 10px;
+    background: $black;
+  }
+
+}
+//common scss
+.mt-20 {
+  margin-top: 20px;
+}
+.pt-pb-30 {
+  padding: 30px 0;
+}
+.ml-30 {
+  margin-left: 38px;
+}

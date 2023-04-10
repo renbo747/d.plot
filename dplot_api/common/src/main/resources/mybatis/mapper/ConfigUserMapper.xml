@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.dplot.mapper.ConfigUserMapper">
+<cache eviction="FIFO" flushInterval="60000" size="512" readOnly="true"/>
+
+
+<resultMap type="somap" id="ConfigUserResult">
+	<result property="blockid" column="blockid" jdbcType="CLOB" javaType="java.lang.String" />
+</resultMap>
+<select id="selectConfigUserBlockId" parameterType="somap" resultMap="ConfigUserResult"  >
+		SELECT /* ConfigUserMapper.xml - selectConfigUserBlockId 사용자 BlockId 조회 */
+		BLOCKID
+		FROM T_CONFIG_USER
+	<where>
+		AND SITEID = #{siteid}
+	</where>		 
+</select>
+
+<update id="updateConfigUser" parameterType="somap">
+	UPDATE  /* ConfigUserMapper.xml - updateConfigUser 사용자 BlockId 수정 */ 
+		T_CONFIG_USER
+	SET
+		BlockID=#{blockid}
+	WHERE SiteID=#{siteid}
+</update>
+</mapper>

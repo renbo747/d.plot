@@ -1,0 +1,124 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<!--
+설명 : 입점사 동의내역 테이블 맵퍼 (T_Board_Agree)
+생성 : 정재호
+일시 : 2021-11-10
+-->
+<mapper namespace="com.dplot.mapper.BoardAgreeMapper">
+
+    <!-- 체크된 리스트 조회 -->
+    <select id="selectCheckList" parameterType="HashMap" resultType="HashMap">
+        select ifnull(group_concat(a.userno order by a.postidx), 0) as nolist
+             , ifnull(group_concat(a.name order by a.postidx), 0)   as namelist
+             , ifnull(group_concat(a.userid order by a.postidx), 0) as useridlist
+        from (
+                 select a.userno
+                      , c.userid
+                      , b.name
+                      , a.postidx
+                 from t_board_agree a
+                          join t_dealer b on a.userno = b.userno
+                          join t_user c on b.userno = c.no
+                 where 1 = 1
+                   and a.postidx = #{boardidx}
+                   -- and b.dealerst = 'DST001' -- 운영중
+                   -- and b.reqdealst = 'RDS002' -- 승인
+             ) a;
+    </select>
+
+    <!-- 기본 조회 -->
+    <select id="selectAgreePagingList" parameterType="HashMap" resultType="HashMap">
+        SELECT tbp.subject                           -- 타이틀
+            , tu.userid                             -- 유저 아이디
+            , td.name                               -- 업체명
+            , ifnull(tba.agreedate, 0) AS agreedate -- 동의 일시
+            , tba.isagree                           -- 동의 여부
+            ,@ROWNUM := @ROWNUM + 1 as rn
+        FROM t_board_post tbp
+            JOIN t_board_agree tba ON tbp.idx = tba.postidx
+            JOIN t_dealer td ON tba.userno = td.userno
+            JOIN t_user tu ON td.userno = tu.no
+            , (SELECT @ROWNUM := 0) AS b
+        WHERE 1 = 1
+            AND tbp.istrash = 'F'
+            -- AND td.dealerst = 'DST001'
+            -- AND td.reqdealst = 'RDS002'
+            AND tbp.boardtype = #{boardtype}
+            AND tba.isagree = #{isagree}
+            AND tbp.idx = #{idx}
+            AND AGREEDATE IS NOT NULL
+        <choose>
+            <when test="psort == 'userid_desc'">
+                ORDER BY tu.userid DESC
+            </when>
+            <when test="psort == 'userid_asc'">
+                ORDER BY tu.userid ASC
+            </when>
+            <when test="psort == 'name_desc'">
+                ORDER BY td.name DESC
+            </when>
+            <when test="psort == 'name_asc'">
+                ORDER BY td.name ASC
+            </when>
+        </choose>
+        LIMIT #{startPage}, #{endPage} -- 페이징
+    </select>
+
+    <!-- 동의내역 리스트 갯수 조회 -->
+    <select id="selectAgreeListCount" parameterType="HashMap" resultType="Integer">
+        SELECT count(*)
+        FROM t_board_post tbp
+                 JOIN t_board_agree tba ON tbp.idx = tba.postidx
+                 JOIN t_dealer td on tba.USERNO = td.USERNO
+        WHERE 1 = 1
+          AND tbp.istrash = 'F'
+          -- AND td.dealerst = 'DST001'
+          -- AND td.reqdealst = 'RDS002'
+          AND tbp.boardtype = #{boardtype}
+          AND tba.isagree = #{isagree}
+          AND tbp.idx = #{idx}
+          AND AGREEDATE IS NOT NULL
+    </select>
+
+    <!-- 동의내역 저장 -->
+    <insert id="insertBoardAgree" parameterType="java.util.List">
+        INSERT INTO t_board_agree (postidx, userno, isagree) VALUE
+        <foreach collection="list" index="index" item="item" separator=",">
+            (
+            #{item.postidx},
+            #{item.userno},
+            #{item.isagree}
+            )
+        </foreach>
+    </insert>
+
+    <!-- 동의 내역 삭제 -->
+    <delete id="deleteBoardAgreeByUserNo" parameterType="HashMap">
+        DELETE FROM t_board_agree
+        WHERE 1 = 1
+        AND userno IN
+        <foreach collection="deleteNoList" index="index" item="item" separator="," open="(" close=")">
+            #{item}
+        </foreach>
+        AND postidx = #{postidx}
+    </delete>
+
+    <!-- 동의 내역 삭제 -->
+    <delete id="deleteBoardAgreeAllByPostIdx" parameterType="String">
+        DELETE FROM t_board_agree WHERE postidx = #{postidx}
+    </delete>
+    
+    <!-- 파트너사 동의/미동의 수정 -->
+    <update id="updateAgree" parameterType="somap">
+    	/* BoardAgreeMapper.xml - updateAgree 파트너사 동의/미동의 수정 */ 
+    	UPDATE t_board_agree
+    	SET isagree = #{isagree},
+    		agreedate = now()
+    	WHERE 1=1 
+    	AND postidx = #{postidx}
+    	AND userno = #{userno}
+    </update>
+
+</mapper>

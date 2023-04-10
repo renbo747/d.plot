@@ -1,0 +1,163 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.dplot.mapper.MemberSnsMapper">
+	
+	<select id="selectMemberSns" parameterType="somap" resultType="somap" >
+		SELECT  /* MemberSnsMapper.xml - selectMemberSns SNS사용자 정보조회 */ 
+			M.USERNO,
+			U.USERID,
+			M.EMAIL,
+			M.MOBILE,
+			M.STATE,
+			MS.SNSMEMBERNO,
+			MS.SNSTYPE
+		FROM T_USER U
+		INNER JOIN T_MEMBER M
+		ON U.NO = M.USERNO
+		INNER JOIN T_MEMBER_SNS MS
+		ON U.NO = MS.USERNO
+		WHERE MS.SNSMEMBERNO = #{snsmemberno}
+		AND MS.SNSTYPE = #{snstype}
+		AND M.STATE <![CDATA[<>]]> 'MST003'
+
+	</select>
+	
+	<select id="selectMemberbyCi" parameterType="somap" resultType="somap" >
+		SELECT  /* MemberSnsMapper.xml - selectMember 사용자 정보조회 */ 
+			M.USERNO
+		  , U.USERID
+		  ,	M.EMAIL
+		  ,	M.MOBILE
+		  , M.JOINCHTYPE
+		  ,	M.STATE
+		  , IF ((
+		       SELECT count(*)
+			   FROM t_member_sns tms
+			   WHERE userno = m.userno
+			 )<![CDATA[>]]> 0,'T','F') as issns
+		FROM T_USER U
+		INNER JOIN T_MEMBER M
+		ON U.NO = M.USERNO
+		WHERE U.SITEID = #{siteid} 
+		AND M.CONNINFO = #{conninfo}
+	</select>
+	
+	<select id="selectMemberbyEmail" parameterType="somap" resultType="somap" >
+		SELECT  /* MemberSnsMapper.xml - selectMember 사용자 정보조회 */ 
+			M.USERNO
+		  , U.USERID
+		  ,	M.EMAIL
+		  ,	M.MOBILE
+		  , M.JOINCHTYPE
+		  ,	M.STATE
+		  , IF ((
+		       SELECT count(*)
+			   FROM t_member_sns tms
+			   WHERE userno = m.userno
+			 )<![CDATA[>]]> 0,'T','F') as issns
+		FROM T_USER U
+		INNER JOIN T_MEMBER M
+		ON U.NO = M.USERNO
+		WHERE U.SITEID = #{siteid} 
+		AND (M.EMAIL = #{email} OR M.MOBILE = #{mobile})
+	</select>
+	
+	<select id="selectMemberList" parameterType="somap" resultType="somap" >
+		SELECT  /* MemberSnsMapper.xml - selectMember 사용자 정보조회 */ 
+			M.USERNO
+		  , U.USERID
+		  ,	M.EMAIL
+		  ,	M.MOBILE
+		  , M.JOINCHTYPE
+		  ,	M.STATE
+		  , IF ((
+		       SELECT count(*)
+			   FROM t_member_sns tms
+			   WHERE userno = m.userno
+			 )<![CDATA[>]]> 0,'T','F') as issns
+		FROM T_USER U
+		INNER JOIN T_MEMBER M
+		ON U.NO = M.USERNO
+		WHERE U.SITEID = #{siteid} 
+		<if test='mobile != null and mobile != "" and email != null and email != ""'>
+		AND (M.EMAIL = #{email} OR M.MOBILE = #{mobile})
+		</if>
+	</select>
+	
+	<select id="selectMemberInfo" parameterType="somap" resultType="somap">
+		SELECT /*MemberSnsMapper.xml - selectMemberInfo 사용자정보 조회*/ 
+		      tu.USERID
+		    , tm.USERNO 
+		    , tm.EMAIL
+		    , tm.NAME
+		    , tm.MOBILE
+		    , tm.JOINCHTYPE
+		    , tm.DADAMEMBERTYPE
+		    , tm.MEMLVTYPE
+		    , tm.COMPANYTYPE
+		    , tm.COMPANY
+		    , DATE_FORMAT(tu.REGDATE, '%Y%m%d') AS REGDT
+		    , IF ((
+		       SELECT count(*)
+			   FROM t_member_sns tms
+			   WHERE userno = tm.userno
+			  )<![CDATA[>]]> 0,'T','F') as issns
+		FROM t_user tu
+		INNER JOIN t_member tm 
+		ON tu.NO = tm.USERNO
+		WHERE tu.siteid = #{siteid}
+		<if test='state != null and state != ""'>
+		AND tm.STATE = #{state}
+		</if>
+		<choose>
+			<when test='ci != null and ci != "" and di != "" and di != null'>
+			AND tm.CONNINFO = #{ci} OR tm.dival = #{di}
+			</when>
+			<otherwise>
+			AND tm.MOBILE= #{mobile}
+			</otherwise> 
+		</choose>
+	</select>
+	
+	<select id="selectMemberSnsInfo" parameterType="somap" resultType="somap">
+		SELECT  /* MemberSnsMapper.xml - selectMemberSns SNS사용자 정보조회 */ 
+			M.USERNO,
+			U.USERID,
+			M.EMAIL,
+			M.MOBILE,
+			M.STATE,
+			MS.SNSMEMBERNO,
+			MS.SNSTYPE,
+			MS.SNSEMAIL
+		FROM T_USER U
+		INNER JOIN T_MEMBER M
+		ON U.NO = M.USERNO
+		INNER JOIN T_MEMBER_SNS MS
+		ON U.NO = MS.USERNO
+		WHERE 1 = 1
+		AND MS.userno = #{userno}
+	</select>
+
+	<insert id="insertMemberSns" parameterType="somap">
+		INSERT INTO /* MemberSnsMapper.xml - insertMemberSns 회원 SNS정보저장 */ 
+			T_MEMBER_SNS
+		(USERNO, SNSTYPE, SNSMEMBERNO, TOKEN, SNSEMAIL, REGDATE, UPTDATE)
+		VALUES(#{userno}, #{snstype}, #{snsmemberno}, #{token}, #{snsemail}, sysdate(), sysdate())
+	</insert>
+	
+	<delete id="deleteMemberSns" parameterType="somap">
+		DELETE /*MemberSnsMapper.xml - deleteMemberSns:: SNS 회원 정보 삭제*/
+		FROM T_MEMBER_SNS
+		WHERE userno = #{userno}
+		<if test='snstype != null and snstype != ""'>
+			AND SNSTYPE = #{snstype}
+		</if>
+	</delete>
+
+	<delete id="deleteMemberSnsArr" parameterType="somap">
+		DELETE /*MemberSnsMapper.xml - deleteMemberSnsArr:: SNS 회원 정보 삭제 ARRAY*/
+		FROM T_MEMBER_SNS
+		WHERE USERNO IN <foreach index="index" collection="user_no_arr" item="_idx" open="(" close=")" separator="," >#{_idx}</foreach>
+	</delete>
+</mapper>

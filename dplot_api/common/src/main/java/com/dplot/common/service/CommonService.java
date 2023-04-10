@@ -1,0 +1,162 @@
+package com.dplot.common.service;
+
+import java.util.ArrayList;
+
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
+
+import com.dplot.common.Response;
+import com.dplot.common.SOMap;
+
+/**
+ * 공통 관련 service
+ */
+public interface CommonService {
+	ArrayList<SOMap> getCodeList(SOMap p) throws Exception;
+
+	/**
+	 * 코드 복수개 리턴
+	 * @param param
+	 * @return
+	 * @throws Exception
+	 */
+	SOMap getCodeMapList(SOMap param) throws Exception;
+
+	/**
+	 * 본인인증 요청
+	 * @param param
+	 * @return
+	 */
+	Response kmcRequest(SOMap param) throws Exception;
+
+	/**
+	 * 본인인증 복호화 요청
+	 *
+	 * @param param
+	 * @param response
+	 * @param request
+	 * @return
+	 */
+	Response kmcCertDecry(SOMap param, HttpServletRequest request, HttpServletResponse response) throws Exception;
+
+	/**
+	 * 토스 가상계좌 입금/취소 콜백
+	 * @param param
+	 * @throws Exception
+	 */
+	void tossVirtualAccount(SOMap param) throws Exception;
+
+	/**
+	 * 주문완료 메시지전송(카카오톡,이메일)
+	 * @param param
+	 * @throws Exception
+	 */
+	void sendMessageOrderComplete(SOMap param) throws Exception;
+
+	/**
+	 * 주문완료 가상계좌(카카오톡, 이메일 발송)
+	 * @param param
+	 * @throws Exception
+	 */
+	void sendMessageOrderComplete2(SOMap param) throws Exception;
+
+	/**
+	 * 스플래쉬 목록 조회
+	 * @param param
+	 * @return
+	 * @throws Exception
+	 */
+	SOMap getsplashimgList(SOMap param) throws Exception;
+
+	/**
+	 * 적립금지급
+	 * @param param
+	 * @return int
+	 * @throws Exception
+	 */
+	int paymentReserve(SOMap param) throws Exception;
+
+	/**
+	 * E포인트지급
+	 * @param param
+	 * @return int
+	 * @throws Exception
+	 */
+	int paymentEpotint(SOMap param) throws Exception;
+
+	/**
+	 * 적립금, E포인트 사용,복원처리
+	 * @param param
+	 * @throws Exception
+	 */
+	void procUseReserveEPoint(SOMap param) throws Exception;
+
+	/**
+	 * 주문배송조회
+	 */
+	public SOMap selectDeliveryTracking(SOMap param) throws Exception;
+
+	/**
+	 * 주소 제주/산간여부 조회
+	 * @param param
+	 * @return
+	 * @throws Exception
+	 */
+	public SOMap selectAddrIsolatetype(SOMap param) throws Exception;
+
+	/**
+	 * NICE 계좌 소유주 인증
+	 * @param param
+	 * @return
+	 * @throws Exception
+	 */
+	SOMap niceBankAccountCheck(SOMap param) throws Exception;
+
+	/**
+	 * 주문상태 업데이트 처리 이후 구매확정 및 구매취소 서비스 호출
+	 * @param param
+	 * @return
+	 * @throws Exception
+	 */
+	void batchOrderCompleteAndCancel(SOMap param) throws Exception;
+
+	/**
+	 * ERP에서 데이터를 받아와 상품 업데이트 처리를 함.
+	 */
+	void updateGoodsAndGiftStock(SOMap param) throws Exception ;
+
+	/**
+	 * 네이버 EP 생성
+	 *
+	 * @param param
+	 * @return SOMap
+	 * @throws Exception
+	 */
+	SOMap createNaverEp(SOMap param) throws Exception;
+
+	/**
+	 * 메타 EP 생성
+	 *
+	 * @param param
+	 * @return SOMap
+	 * @throws Exception
+	 */
+	SOMap createMetaEp(SOMap param) throws Exception;
+	
+	/**
+	 * 구글 EP 생성
+	 *
+	 * @param param
+	 * @return SOMap
+	 * @throws Exception
+	 */
+	SOMap createGoogleEp(SOMap param) throws Exception;
+
+    /**
+     * 관리자 - 휴면회원 복구처리
+     * @param params
+     * @return
+     * @throws Exception
+     */
+    SOMap memberSleepRestore(SOMap params) throws Exception;
+}

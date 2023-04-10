@@ -1,0 +1,28 @@
+.dp-progress {
+  $gauge-height: 6px;
+  $gauge-radius: $gauge-height / 2;
+  .progress-rail {
+    position: relative;
+    background: $gray-400;
+    height: $gauge-height;
+    border-radius: $gauge-radius;
+    overflow: hidden;
+  }
+  .progress-gauge {
+    position: absolute;
+    left: 0;
+    top: 0;
+    height: $gauge-height;
+    border-radius: $gauge-radius;
+    background: $gray-600;
+  }
+
+  .progress-mark {
+    display: flex;
+    justify-content: space-between;
+    font-size: 12px;
+    letter-spacing: -.48px;
+    line-height: 22px;
+    color: $gray-600;
+  }
+}

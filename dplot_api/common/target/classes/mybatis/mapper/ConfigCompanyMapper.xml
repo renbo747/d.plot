@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.dplot.mapper.ConfigCompanyMapper">
+	<!-- 사업자주소 조회  -->
+	<select id="selectCompanyAddr" parameterType="somap" resultType="somap">
+		SELECT	/* ConfigCompanyMapper.xml - selectCompanyAddr 사업자주소 조회 */
+			tcc.compost AS post, tcc.comaddr AS addr, tcc.comaddrdetail AS addrdetail
+		FROM t_config_company tcc 
+		WHERE siteid = #{siteid}
+    </select>
+    
+    <!-- 상품상세 자사 AS정보 조회 -->
+    <select id="selectCompanyAsInfo" parameterType="somap" resultType="somap">
+    	/* ConfigCompanyMapper.xml - selectCompanyAsInfo 상품상세 자사 AS정보 조회 */
+        SELECT siteid -- 판매자번호
+			, comname as compname -- 상호
+			, ceoname as reprename -- 대표자
+			, bizno -- 사업자등록번호
+			, tongsinno as comsellno -- 통신판매신고번호
+			, comtel as tel -- 연락처
+			, comfax as fax -- 팩스
+			, mdemail as email -- 이메일
+			, concat(compost, comaddr, ifnull(comaddrdetail, '')) as fulladdr -- 사업장소재지
+		FROM t_config_company
+		WHERE siteid = #{siteid}
+    </select>
+</mapper>

@@ -1,0 +1,43 @@
+.sns-share {
+  .modal-content {
+    background: transparent;
+    @include media-breakpoint-up(xl) {
+      min-height: auto !important;
+    }
+  }
+  .modal-header {
+    background: #fff;
+  }
+  .modal-body {
+    display: flex;
+    background: rgba(0,0,0,.5);
+    padding: 0 !important;
+    @include media-breakpoint-up(xl) {
+      background: #fff;
+      height: inherit;
+    }
+  }
+  .page-layer__body {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    width: 100%;
+    @include media-breakpoint-up(xl) {
+      padding: 20px 0;
+      min-height: inherit;
+    }
+  }
+  .sns-share__link-group {
+    display: flex;
+    a {
+      width: 56px;
+      height: 56px;
+      img {
+        width: 100%;
+      }
+    }
+    a + a {
+      margin-left: 16px;
+    }
+  }
+}

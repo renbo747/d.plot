@@ -1,0 +1,92 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.dplot.mapper.BestGoodsMapper">
+	<select id="selectBestGoodsList" parameterType="somap" resultType="somap">
+		SELECT /*BestGoodsMapper.xml - selectBestGoodsList:: 베스트 상품 조회*/
+			 tbg.bestidx
+			, tbg.goodsno
+			, tg.goodscode
+			, tbg.cateidx
+			, tg.goodsname
+			, fullcategoryname
+			, fn_get_file_url(tbg.goodsno,'FLT001',#{imgtype}) as fullpath
+			, fn_get_goods_stock(#{siteid}, tbg.goodsno) as stockcnt
+			, ifnull((select 'T' from t_wish where goodsno = tbg.goodsno and userno = #{userno} and istrash = 'F'), 'F') as iswished
+			, FN_GET_GOODS_MARKETPRICE(#{siteid}, tbg.goodsno) as marketprice -- 대표상품공급가
+			, FN_GET_GOODS_PRICE(#{siteid}, tbg.goodsno) as price -- 대표상품판매가
+		    , IFNULL(VP.PRICE, 0) AS saleamt /* 프로모션할인적용가(할인가) */
+		    , IFNULL(VC.PRICE,0) AS goodscpnamt /* 즉시할인쿠폰할인가 */
+			<!-- , FN_GET_GOODS_SALEPROMOAMT(#{siteid}, tbg.goodsno, null, 0, #{platform}) as saleamt  프로모션할인적용가(할인가)
+			, FN_GET_GOODS_SALECOUPONAMT(#{siteid}, tbg.goodsno, null, 0, #{platform}) as goodscpnamt  즉시할인쿠폰할인가  -->
+			, ifnull(tb.enname, '') as brandname -- 브랜드명
+		FROM
+		    (SELECT @userno := 0) TUSNO,
+		    (SELECT @appchtype  := #{platform} ) TAPT,
+		t_bestgoods tbg
+		INNER JOIN t_goods tg ON tbg.goodsno = tg.goodsno
+		LEFT OUTER JOIN t_brand tb on tb.idx = tg.brandidx
+		LEFT JOIN (
+			SELECT
+				  g.goodsno
+				, g.goodscode
+				, tc.fullcategoryname
+				, g.goodsname
+				, depth1idx
+				, depth2idx
+				, depth3idx
+				, depth4idx
+				, (CASE WHEN g.mdifidx IS NOT NULL AND g.mdifidx != '' THEN (SELECT empname FROM t_mdinfo WHERE mdifidx = g.mdifidx) ELSE '' END) AS mdname
+				, (CASE WHEN g.brandidx IS NOT NULL AND g.brandidx != 0 THEN (SELECT name FROM t_brand WHERE idx = g.brandidx) ELSE '' END) AS brandname
+			FROM t_goods g
+			LEFT OUTER JOIN t_goods_category tgc
+			ON g.goodsno = tgc.goodsno
+			AND tgc.isrepre = 'T'
+			LEFT OUTER JOIN (
+				WITH category AS (
+					SELECT idx, name, depth, parent
+					FROM t_category
+					WHERE siteid = #{siteid}
+					AND hidden = 0
+				)
+				SELECT
+					  t.cateidx, t.depth1idx, t.depth2idx, t.depth3idx, t.depth4idx, t.fullcategoryname
+				FROM (
+					SELECT
+						  a.idx AS depth1idx, b.idx AS depth2idx, c.idx AS depth3idx, d.idx AS depth4idx
+						, CONCAT_WS(', ', a.name, b.name, c.name, d.name) AS fullcategoryname
+						, (CASE WHEN d.idx IS NOT NULL THEN d.idx
+								WHEN c.idx IS NOT NULL THEN c.idx
+								WHEN b.idx IS NOT NULL THEN b.idx
+								ELSE a.idx
+							END) AS cateidx
+					FROM category a
+					LEFT OUTER JOIN category b ON a.idx = b.parent
+					LEFT OUTER JOIN category c ON b.idx = c.parent
+					LEFT OUTER JOIN category d ON c.idx = d.parent
+					WHERE a.depth = 1
+				) t
+			) tc ON tgc.cateidx = tc.cateidx
+		) d ON tg.goodsno = d.goodsno
+		LEFT OUTER JOIN v_goods_salepromoamt VP
+        ON tbg.goodsno = VP.GOODSNO
+        LEFT OUTER JOIN v_goods_salecouponamt VC
+        ON tbg.goodsno = VC.GOODSNO
+		WHERE  1 = 1
+		AND tg.goodsselltype = 'GST002'
+		<if test='mainyn != "T"'>
+			<choose>
+			<when test="cateidx != null">
+			AND tbg.cateidx = #{cateidx}
+			</when>
+			<otherwise>
+			AND tbg.cateidx IS NULL
+			</otherwise>
+			</choose>
+		</if>
+		ORDER BY tbg.sort
+		<if test="limit != null and limit != ''">
+		LIMIT 6
+		</if>
+	</select>
+</mapper>

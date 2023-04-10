@@ -1,0 +1,56 @@
+.dp-as-apply-list {
+  padding: 20px 0 40px;
+  min-height: calc(100vh - 110px);
+  .dp-hr {
+    margin-top: 30px;
+  }
+  .h1 {
+    margin-top: 14px;
+    margin-bottom: 30px;
+  }
+  // section as-apply-list__header
+  .as-apply-list__header {
+    .as-apply__btn-area {
+      padding-bottom: 20px;
+    }
+  }
+  //section as-apply-list__body
+  .as-apply-list__body {
+    .select__area {
+      .form-select:first-child {
+        margin-right: 12px;
+      }
+    }
+    .as-product-info__area {
+      padding-top: 30px;
+      .apply-date {
+        font-size: 14px;
+        letter-spacing: -.42px;
+        line-height: 20px;
+      }
+    }
+
+    // 신청 목록이 비어있을 떄
+    .as__empty-apply__area {
+      padding-top: 80px;
+      .icon-empty-apply__area {
+        width: 94px;
+        height: 94px;
+        background: $gray-100;
+        border-radius: 50%;
+        margin-bottom: 20px;
+      }
+      .as__empty-apply__text {
+        color: $gray-700;
+      }
+    }
+  }
+.as-product-info__wrap {
+  &:last-child {
+    .dp-hr {
+      display: none;
+    }
+  }
+}
+
+}

@@ -1,0 +1,1029 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.dplot.mapper.TimeSpcPriceMapper">
+	
+	<!-- 타임특가 조회 -->
+	<select id="selectTimeSpcPrice" parameterType="somap" resultType="somap" >
+		SELECT /* TimeSpcPriceMapper.xml - selectTimeSpcPrice 타임특가 조회 */
+			tspcidx
+			, expsttime
+			, expedtime
+			, salesttime
+			, saleedtime
+			, goodsno
+			, isflatrate
+			, discrate
+			, prtpercent
+			, timestampdiff(SECOND , str_to_date(salesttime,'%Y%m%d%H%i'), str_to_date(saleedtime,'%Y%m%d%H%i')) as timer
+		FROM t_time_spcprice
+		WHERE istrash = 'F' 
+		AND siteid = #{siteid}
+		AND goodsno = #{goodsno}
+		LIMIT 1
+	</select>
+	
+	<!-- Front 타임특가 조회(메인 전시) -->
+	<select id="selectFrontTimePriceList" parameterType="somap" resultType="somap">
+		SELECT /* TimeSpcPriceMapper.xml - selectFrontTimePriceList Front 타임특가 조회(메인 전시) */
+		       tts.tspcidx          -- 타임특가idx
+		     , tts.expsttime        -- 노출시작일
+		     , tts.expedtime        -- 노출종료일
+		     , tts.salesttime       -- 판매시작일
+		     , tts.saleedtime       -- 판매종료일
+		     , TIMESTAMPDIFF(SECOND , STR_TO_DATE(tts.salesttime,'%Y%m%d%H%i'), STR_TO_DATE(tts.saleedtime,'%Y%m%d%H%i')) AS timer
+		     , tts.goodsno          -- 상품번호
+		     , tg.goodsname         -- 상품명
+		     , tts.isflatrate       -- 정액여부
+		     , tts.discrate         -- 할인액률
+		     , tts.prtpercent       -- 파트너분담비율
+		     , CONCAT(tf.host, tf.imgpath, tf.imgfname) AS fullpath -- 이미지 경로
+		     , tg.marketprice       -- 시중가
+			 , fn_get_goods_price(tg.siteid, tg.goodsno) as dicount -- 할인가
+			 , (1 - (fn_get_goods_price(tg.siteid, tg.goodsno)/tg.marketprice)) *100 AS discountrate -- 할인율
+			 , tdt.delivtype        -- 배송방법(DLT001:택배배송,DLT002:직배송,DLT003:우편배송)
+			 , tdt.delivschtype     -- 배송일정(DSC001:당일배송, DSC002:익일배송, DSC003:주문제작, DSC004:(가구)설치/화물배송)
+			 , tdt.delivfaretype    -- 배송비종류(DCT001:무료,DCT002:유료,DCT003:조건부무료,DCT004:착불)
+		FROM t_time_spcprice tts
+		INNER JOIN t_goods tg ON tts.goodsno  = tg.goodsno
+			AND tg.siteid = #{siteid}
+			AND tg.isdisplay = 'T'
+			AND tg.goodsapprtype = 'GAT004' -- 승인완료
+			AND tg.goodsselltype IN ('GST002', 'GST004', 'GST005') 
+		LEFT OUTER JOIN t_deliv_template tdt ON tg.delividx  = tdt.idx
+			AND tdt.ISTRASH = 'F'
+		LEFT OUTER JOIN t_file tf ON tg.goodsno = tf.ORGIDX
+			AND tf.filetype = 'FLT001'
+			<choose>
+			  <when test='platform == "MOBILE"'>
+			  	AND tf.imgtype  = 'IGT005'
+			  </when>
+			  <otherwise>
+			  	AND tf.imgtype  = 'IGT002'
+			  </otherwise>
+			 </choose> 
+			AND tf.istrash  = 'F'
+		WHERE 1 = 1
+		AND tts.istrash = 'F'
+		AND date_format(now(), '%Y%m%d%H%i') BETWEEN tts.expsttime AND tts.expedtime
+		ORDER BY tts.regdate desc
+	</select>
+
+
+	<!-- ADMIN 쿼리 시작 -->
+	<!-- 타임특가 전체 조회 -->
+	<select id="selectTimeSpcPriceList" parameterType="somap" resultType="somap">
+		SELECT  /* TimeSpcPriceMapper.xml - selectTimeSpcPriceList 타임특가 전체 조회  */
+			a.*, FORMAT(@ROWNUM := @ROWNUM+1,0) AS no
+		FROM (
+		SELECT 
+			tspcidx
+			, tts.expsttime
+			, tts.expedtime
+			, tts.salesttime
+			, tts.saleedtime
+			, DATE_FORMAT(tts.regdate, '%Y-%m-%d') as regdate
+			, c.name as regusername
+			, tts.istrash
+			, CASE tg.ispbgoods WHEN 'T' THEN '직매입' WHEN 'F' THEN '위탁' ELSE '' END AS ispbgoodsname
+			, IFNULL(tg.dealerno, 0) as dealerno
+			, IFNULL(td.name, '') AS dealername
+			, tcm.mdname
+			, CONCAT(tf.host, tf.imgpath, tf.imgfname) AS fullpath
+			, d.fullcategoryname
+			, tb.name as brandname
+			, tg.goodscode
+			, tg.goodsname
+			,CASE WHEN (LENGTH(tg.muappchtype) - LENGTH(REPLACE(tg.muappchtype, ',','')) + 1 - (SELECT count(*) FROM t_common_code WHERE cmclass= 'MUAPPCHTYPE' AND istrash = 'F')) = 0 then '전체' 
+			ELSE (SELECT group_concat(codename SEPARATOR ', ') FROM t_common_code WHERE ifnull(tg.muappchtype,'') like concat('%',cmcode,'%') AND cmclass = 'MUAPPCHTYPE') END AS muappchtype
+			,CASE WHEN (LENGTH(tg.mumembertype) - LENGTH(REPLACE(tg.mumembertype, ',','')) + 1 - (SELECT count(*) FROM t_common_code WHERE cmclass= 'MUMEMBERTYPE' AND istrash = 'F')) = 0 then '전체' 
+			ELSE (SELECT group_concat(codename SEPARATOR ', ') FROM t_common_code WHERE ifnull(tg.mumembertype,'') like concat('%',cmcode,'%') AND cmclass = 'MUMEMBERTYPE') END AS mumembertype
+			,CASE WHEN (LENGTH(tg.mumemlvtype) - LENGTH(REPLACE(tg.mumemlvtype, ',','')) + 1 - (SELECT count(*) FROM t_common_code WHERE cmclass= 'MUMEMLVTYPE' AND istrash = 'F')) = 0 then '전체' 
+			ELSE (SELECT group_concat(codename SEPARATOR ', ') FROM t_common_code WHERE ifnull(tg.mumemlvtype,'') like concat('%',cmcode,'%') AND cmclass = 'MUMEMLVTYPE') END AS mumemlvtype
+			, <![CDATA[
+			(CASE WHEN (tts.expsttime > date_format(now(), '%Y%m%d%H%i')) THEN '노출전' 
+				  WHEN ((tts.expsttime <= date_format(now(), '%Y%m%d%H%i'))
+						AND (tts.expedtime > date_format(now(), '%Y%m%d%H%i'))) THEN '노출중'
+				  WHEN (tts.expedtime < date_format(now(), '%Y%m%d%H%i')) THEN '종료' END
+			) as exptype
+			]]>
+			, <![CDATA[
+			(CASE WHEN tg.GOODSSELLTYPE IN ('GST004','GST005') THEN '매진(솔드아웃)'
+				  WHEN (tts.salesttime > date_format(now(), '%Y%m%d%H%i')) THEN '진행전(커밍순)' 
+				  WHEN ((tts.salesttime <= date_format(now(), '%Y%m%d%H%i'))
+						AND (tts.saleedtime > date_format(now(), '%Y%m%d%H%i'))) THEN '진행중(판매중)'
+				  WHEN (tts.saleedtime < date_format(now(), '%Y%m%d%H%i')) THEN '종료(판매종료)' END
+			) as saletype
+			]]>
+			, isflatrate
+			, discrate
+		FROM t_time_spcprice tts
+		LEFT OUTER JOIN t_goods tg ON tg.goodsno = tts.goodsno
+		LEFT JOIN (SELECT userid, name FROM t_user a LEFT JOIN t_admin b ON a.no = b.userno) c ON c.userid = tts.reguserid 
+		LEFT OUTER JOIN t_brand tb ON tb.idx = tg.brandidx
+		LEFT OUTER JOIN t_dealer td ON tg.dealerno = td.userno 
+		LEFT OUTER JOIN t_charge_md tcm ON tcm.mdcode = tg.mdcode
+		LEFT OUTER JOIN t_goods_category tgc
+			ON tts.goodsno = tgc.goodsno
+			AND isrepre = 'T'
+		LEFT OUTER JOIN (
+			WITH category AS (
+			    SELECT idx, name, depth, parent
+				FROM t_category
+				WHERE siteid = #{siteid}
+				AND hidden = 0 
+			)
+			SELECT 
+				  t.cateidx, t.depth1idx, t.depth2idx, t.depth3idx, t.depth4idx, t.fullcategoryname
+			FROM (	SELECT 
+						  a.idx AS depth1idx, b.idx AS depth2idx, c.idx AS depth3idx, d.idx AS depth4idx
+						, concat_ws(' > ', a.name, b.name, c.name, d.name) AS fullcategoryname
+						, (CASE WHEN d.idx IS NOT NULL THEN d.idx
+							    WHEN c.idx IS NOT NULL THEN c.idx
+							    WHEN b.idx IS NOT NULL THEN b.idx
+							    ELSE a.idx
+						   END) AS cateidx
+					FROM category a
+					LEFT OUTER JOIN category b ON a.idx = b.parent
+					LEFT OUTER JOIN category c ON b.idx = c.parent
+					LEFT OUTER JOIN category d ON c.idx = d.parent
+					WHERE a.depth = 1
+				 ) t
+			) d ON tgc.cateidx = d.cateidx
+		LEFT JOIN t_file tf on tts.goodsno = tf.orgidx
+			and tf.imgtype = 'IGT003'
+			and tf.filetype = 'FLT001'
+			and tf.istrash = 'F'
+		<where>
+		AND tts.siteid = #{siteid}
+		<if test="sword != null and sword != ''">
+			<choose>
+				<when test="skey == 'dealername'">
+					AND td.name like concat('%',#{sword},'%')
+				</when>
+				<when test="skey == 'brandname'">
+					AND tb.name like concat('%',#{sword},'%')
+				</when>
+				<when test="skey == 'goodscode'">
+					AND tg.goodscode like concat('%',#{sword},'%')
+				</when>
+				<when test="skey == 'goodsname'">
+					AND tg.goodsname like concat('%',#{sword},'%')
+				</when>
+				<when test="skey == 'mdname'">
+					AND tcm.mdname like concat('%',#{sword},'%')
+				</when>
+				<when test="skey == 'regusername'">
+					AND c.name like concat('%',#{sword},'%')
+				</when>
+				<otherwise>
+					AND (
+						td.name like concat('%',#{sword},'%')
+						OR tb.name like concat('%',#{sword},'%')
+						OR tg.goodscode like concat('%',#{sword},'%')
+						OR tg.goodsname like concat('%',#{sword},'%')
+						OR tcm.mdname like concat('%',#{sword},'%')
+						OR c.name like concat('%',#{sword},'%')
+					)
+				</otherwise>
+			</choose>
+		</if>
+		<choose>
+			<when test="stype == 'expsttime'">
+			<![CDATA[
+				AND date_format(STR_TO_DATE(tts.expsttime, '%Y%m%d%H%i'), '%Y-%m-%d %H:%i') >= date_format(concat(#{startdate}, ' ', '00:00') , '%Y-%m-%d %H:%i')
+				AND date_format(STR_TO_DATE(tts.expsttime, '%Y%m%d%H%i'), '%Y-%m-%d %H:%i')  <= date_format(concat(#{enddate}, ' ', '23:59'), '%Y-%m-%d %H:%i')
+			]]>
+			</when>
+			<when test="stype == 'expedtime'">
+			<![CDATA[
+				AND date_format(STR_TO_DATE(tts.expedtime, '%Y%m%d%H%i'), '%Y-%m-%d %H:%i') >= date_format(concat(#{startdate}, ' ', '00:00') , '%Y-%m-%d %H:%i')
+				AND date_format(STR_TO_DATE(tts.expedtime, '%Y%m%d%H%i'), '%Y-%m-%d %H:%i')  <= date_format(concat(#{enddate}, ' ', '23:59'), '%Y-%m-%d %H:%i')
+			]]>
+			</when>
+			<when test="stype == 'salesttime'">
+			<![CDATA[
+				AND date_format(STR_TO_DATE(tts.salesttime, '%Y%m%d%H%i'), '%Y-%m-%d %H:%i') >= date_format(concat(#{startdate}, ' ', '00:00') , '%Y-%m-%d %H:%i')
+				AND date_format(STR_TO_DATE(tts.salesttime, '%Y%m%d%H%i'), '%Y-%m-%d %H:%i')  <= date_format(concat(#{enddate}, ' ', '23:59'), '%Y-%m-%d %H:%i')
+			]]>
+			</when>
+			<when test="stype == 'saleedtime'">
+			<![CDATA[
+				AND date_format(STR_TO_DATE(tts.saleedtime, '%Y%m%d%H%i'), '%Y-%m-%d %H:%i') >= date_format(concat(#{startdate}, ' ', '00:00') , '%Y-%m-%d %H:%i')
+				AND date_format(STR_TO_DATE(tts.saleedtime, '%Y%m%d%H%i'), '%Y-%m-%d %H:%i')  <= date_format(concat(#{enddate}, ' ', '23:59'), '%Y-%m-%d %H:%i')
+			]]>
+			</when>
+			<when test="stype == 'regdate'">
+			<![CDATA[
+				AND tts.regdate >= date_format(concat(#{startdate}, ' ', '00:00:00') , '%Y-%m-%d %H:%i:%s')
+				AND tts.regdate <= date_format(concat(#{enddate}, ' ', '23:59:59'), '%Y-%m-%d %H:%i:%s')
+			]]>
+			</when>
+			<otherwise>
+			<![CDATA[
+			AND (
+			    (date_format(STR_TO_DATE(tts.expsttime, '%Y%m%d%H%i'), '%Y-%m-%d %H:%i') >= date_format(concat(#{startdate}, ' ', '00:00') , '%Y-%m-%d %H:%i')
+				AND date_format(STR_TO_DATE(tts.expsttime, '%Y%m%d%H%i'), '%Y-%m-%d %H:%i')  <= date_format(concat(#{enddate}, ' ', '23:59'), '%Y-%m-%d %H:%i'))
+			OR (date_format(STR_TO_DATE(tts.expedtime, '%Y%m%d%H%i'), '%Y-%m-%d %H:%i') >= date_format(concat(#{startdate}, ' ', '00:00') , '%Y-%m-%d %H:%i')
+				AND date_format(STR_TO_DATE(tts.expedtime, '%Y%m%d%H%i'), '%Y-%m-%d %H:%i')  <= date_format(concat(#{enddate}, ' ', '23:59'), '%Y-%m-%d %H:%i'))
+			OR (date_format(STR_TO_DATE(tts.salesttime, '%Y%m%d%H%i'), '%Y-%m-%d %H:%i') >= date_format(concat(#{startdate}, ' ', '00:00') , '%Y-%m-%d %H:%i')
+				AND date_format(STR_TO_DATE(tts.salesttime, '%Y%m%d%H%i'), '%Y-%m-%d %H:%i')  <= date_format(concat(#{enddate}, ' ', '23:59'), '%Y-%m-%d %H:%i'))
+			OR (date_format(STR_TO_DATE(tts.saleedtime, '%Y%m%d%H%i'), '%Y-%m-%d %H:%i') >= date_format(concat(#{startdate}, ' ', '00:00') , '%Y-%m-%d %H:%i')
+				AND date_format(STR_TO_DATE(tts.saleedtime, '%Y%m%d%H%i'), '%Y-%m-%d %H:%i')  <= date_format(concat(#{enddate}, ' ', '23:59'), '%Y-%m-%d %H:%i'))
+			OR (tts.regdate >= date_format(concat(#{startdate}, ' ', '00:00:00') , '%Y-%m-%d %H:%i:%s')
+				AND tts.regdate <= date_format(concat(#{enddate}, ' ', '23:59:59'), '%Y-%m-%d %H:%i:%s'))
+			)
+			]]>
+			</otherwise>
+		</choose>
+		<if test="depth1cateidx != null and depth1cateidx != '' ">
+		AND d.depth1idx = #{depth1cateidx}
+		</if>
+		<if test="depth2cateidx != null and depth2cateidx != '' ">
+		AND d.depth2idx = #{depth2cateidx}
+		</if>
+		<if test="depth3cateidx != null and depth3cateidx != '' ">
+		AND d.depth3idx = #{depth3cateidx}
+		</if>
+		<if test="depth4cateidx != null and depth4cateidx != '' ">
+		AND d.depth4idx = #{depth4cateidx}
+		</if>
+		<if test="istrash != null and istrash != '' ">
+		AND tts.istrash = #{istrash}
+		</if>
+		<choose>
+			<when test='isdealer == "T"'>
+				AND (tg.dealerno IS NOT NULL AND tg.dealerno != 0)
+				<if test="dealerno != null and dealerno != ''">
+					AND td.userno = #{dealerno}
+				</if>
+			</when>
+			<when test='isdealer == "F"'>
+				AND (tg.dealerno IS NULL OR tg.dealerno = 0)
+			</when>			
+		</choose>
+		<choose>
+			<when test='isallmuappch == "T"'>
+			</when>
+			<when test="muappchtype != null and muappchtype != ''">
+				AND (
+				<foreach collection="muappchtypearr" item="muappch" index="index" separator="OR" >
+					tg.muappchtype like concat('%',#{muappch},'%')  
+				</foreach>
+				<if test='isallmuappch == "T"'>
+					OR tg.muappchtype is null
+					OR tg.muappchtype = ''
+				</if>
+				)
+			</when>
+			<when test='isallmuappch != "T"'>
+				AND ( tg.muappchtype is null
+				OR tg.muappchtype = '')
+			</when>
+		</choose>
+		<choose>
+			<when test='isallmumember == "T"'>
+			</when>
+			<when test="mumembertype != null and mumembertype != ''">
+				AND (
+				<foreach collection="mumembertypearr" item="mumember" index="index" separator="OR">
+					tg.mumembertype like concat('%',#{mumember},'%')
+				</foreach>
+				<if test='isallmumember == "T"'>
+					OR tg.mumembertype is null
+					OR tg.mumembertype = ''
+				</if>
+				)
+			</when>
+			<when test='isallmumember != "T"'>
+				AND ( tg.mumembertype is null
+				OR tg.mumembertype = '')
+			</when>
+		</choose>
+		<choose>
+			<when test='isallmumemlv == "T"'>
+			</when>
+			<when test="mumemlvtype != null and mumemlvtype != ''">
+				AND (
+				<foreach collection="mumemlvtypearr" item="mumemlv" index="index" separator="OR">
+					 tg.mumemlvtype like concat('%',#{mumemlv},'%')
+				</foreach>
+				<if test='isallmumemlv == "T"'>
+					OR tg.mumemlvtype is null
+					OR tg.mumemlvtype = ''
+				</if>
+				)
+			</when>
+			<when test='isallmumemlv != "T"'>
+				AND ( tg.mumemlvtype is null
+				OR tg.mumemlvtype = '')
+			</when>
+		</choose>
+		<choose>
+			<when test='isallexp == "T"'>
+			</when>
+			<when test="exptype != null and exptype != ''">
+				AND
+				<foreach collection="exptypearr" item="item" index="index" open="(" separator="OR" close=")">
+					<if test="item == 'EXP001'">
+						<![CDATA[
+						tts.expsttime > date_format(now(), '%Y%m%d%H%i')
+						]]>
+					</if>
+					<if test="item == 'EXP002'">
+						<![CDATA[
+						(tts.expsttime <= date_format(now(), '%Y%m%d%H%i')
+						AND tts.expedtime >= date_format(now(), '%Y%m%d%H%i'))
+						]]>
+					</if>
+					<if test="item == 'EXP003'">
+						<![CDATA[
+						tts.expedtime < date_format(now(), '%Y%m%d%H%i')
+						]]>
+					</if>
+				</foreach>
+			</when>
+		</choose>
+		<choose>
+			<when test='isallsale == "T"'>
+			</when>
+			<when test="saletype != null and saletype != ''">
+				AND
+				<foreach collection="saletypearr" item="item" index="index" open="(" separator="OR" close=")">
+					<if test="item == 'SAL001'">
+						<![CDATA[
+						tts.salesttime > date_format(now(), '%Y%m%d%H%i')
+						]]>
+					</if>
+					<if test="item == 'SAL002'">
+						<![CDATA[
+						(tts.salesttime <= date_format(now(), '%Y%m%d%H%i')
+						AND tts.saleedtime >= date_format(now(), '%Y%m%d%H%i'))
+						]]>
+					</if>
+					<if test="item == 'SAL003'">
+						<![CDATA[
+						tts.saleedtime < date_format(now(), '%Y%m%d%H%i')
+						]]>
+					</if>
+					<if test="item == 'SAL004'">
+						tg.goodsselltype IN ('GST004', 'GST005') 
+					</if>
+				</foreach>
+			</when>
+		</choose>
+		</where>
+		<choose>
+			<when test="psort == 'goodscode_asc'">
+				ORDER BY tg.goodscode ASC
+			</when>
+			<when test="psort == 'goodscode_desc'">
+				ORDER BY tg.goodscode DESC
+			</when>
+			<when test="psort == 'regdate_asc'">
+				ORDER BY tts.regdate ASC
+			</when>
+			<when test="psort == 'regdate_desc'">
+				ORDER BY tts.regdate DESC
+			</when>
+			<otherwise>
+				ORDER BY tts.istrash, tts.expsttime DESC
+			</otherwise>
+		</choose>
+		) a, (select @ROWNUM := #{startpage}) as b
+		LIMIT #{startpage}, #{endpage}
+	</select>
+	
+	<!-- 타임특가 사용여부별 수량 조회 -->
+	<select id="selectTimeSpcPriceUseCnt" parameterType="somap" resultType="somap">
+		SELECT /* TimeSpcPriceMapper.xml - selectTimeSpcPriceUseCnt 타임특가 사용여부별 수량 조회  */
+			count(*) as total_cnt,
+			IFNULL(SUM(CASE tts.istrash WHEN 'F' THEN 1 ELSE 0 END), 0) AS use_cnt,
+			IFNULL(SUM(CASE tts.istrash WHEN 'T' THEN 1 ELSE 0 END), 0) AS trash_cnt
+		FROM t_time_spcprice tts
+		LEFT OUTER JOIN t_goods tg ON tg.goodsno = tts.goodsno
+		LEFT JOIN (SELECT userid, name FROM t_user a LEFT JOIN t_admin b ON a.no = b.userno) c ON c.userid = tts.reguserid 
+		LEFT OUTER JOIN t_brand tb ON tb.idx = tg.brandidx
+		LEFT OUTER JOIN t_dealer td ON tg.dealerno = td.userno 
+		LEFT OUTER JOIN t_charge_md tcm ON tcm.mdcode = tg.mdcode
+		LEFT OUTER JOIN t_goods_category tgc
+			ON tts.goodsno = tgc.goodsno
+			AND isrepre = 'T'
+		LEFT OUTER JOIN (
+			WITH category AS (
+			    SELECT idx, name, depth, parent
+				FROM t_category
+				WHERE siteid = #{siteid}
+				AND hidden = 0 
+			)
+			SELECT 
+				  t.cateidx, t.depth1idx, t.depth2idx, t.depth3idx, t.depth4idx, t.fullcategoryname
+			FROM (	SELECT 
+						  a.idx AS depth1idx, b.idx AS depth2idx, c.idx AS depth3idx, d.idx AS depth4idx
+						, concat_ws(' > ', a.name, b.name, c.name, d.name) AS fullcategoryname
+						, (CASE WHEN d.idx IS NOT NULL THEN d.idx
+							    WHEN c.idx IS NOT NULL THEN c.idx
+							    WHEN b.idx IS NOT NULL THEN b.idx
+							    ELSE a.idx
+						   END) AS cateidx
+					FROM category a
+					LEFT OUTER JOIN category b ON a.idx = b.parent
+					LEFT OUTER JOIN category c ON b.idx = c.parent
+					LEFT OUTER JOIN category d ON c.idx = d.parent
+					WHERE a.depth = 1
+				 ) t
+			) d ON tgc.cateidx = d.cateidx
+		LEFT JOIN t_file tf on tts.goodsno = tf.orgidx
+			and tf.imgtype = 'IGT003'
+			and tf.filetype = 'FLT001'
+			and tf.istrash = 'F'
+		<where>
+		AND tts.siteid = #{siteid}
+		<if test="sword != null and sword != ''">
+			<choose>
+				<when test="skey == 'dealername'">
+					AND td.name like concat('%',#{sword},'%')
+				</when>
+				<when test="skey == 'brandname'">
+					AND tb.name like concat('%',#{sword},'%')
+				</when>
+				<when test="skey == 'goodscode'">
+					AND tg.goodscode like concat('%',#{sword},'%')
+				</when>
+				<when test="skey == 'goodsname'">
+					AND tg.goodsname like concat('%',#{sword},'%')
+				</when>
+				<when test="skey == 'mdname'">
+					AND tcm.mdname like concat('%',#{sword},'%')
+				</when>
+				<when test="skey == 'regusername'">
+					AND c.name like concat('%',#{sword},'%')
+				</when>
+				<otherwise>
+					AND (
+						td.name like concat('%',#{sword},'%')
+						OR tb.name like concat('%',#{sword},'%')
+						OR tg.goodscode like concat('%',#{sword},'%')
+						OR tg.goodsname like concat('%',#{sword},'%')
+						OR tcm.mdname like concat('%',#{sword},'%')
+						OR c.name like concat('%',#{sword},'%')
+					)
+				</otherwise>
+			</choose>
+		</if>
+		<choose>
+			<when test="stype == 'expsttime'">
+			<![CDATA[
+				AND date_format(STR_TO_DATE(tts.expsttime, '%Y%m%d%H%i'), '%Y-%m-%d %H:%i') >= date_format(concat(#{startdate}, ' ', '00:00') , '%Y-%m-%d %H:%i')
+				AND date_format(STR_TO_DATE(tts.expsttime, '%Y%m%d%H%i'), '%Y-%m-%d %H:%i')  <= date_format(concat(#{enddate}, ' ', '23:59'), '%Y-%m-%d %H:%i')
+			]]>
+			</when>
+			<when test="stype == 'expedtime'">
+			<![CDATA[
+				AND date_format(STR_TO_DATE(tts.expedtime, '%Y%m%d%H%i'), '%Y-%m-%d %H:%i') >= date_format(concat(#{startdate}, ' ', '00:00') , '%Y-%m-%d %H:%i')
+				AND date_format(STR_TO_DATE(tts.expedtime, '%Y%m%d%H%i'), '%Y-%m-%d %H:%i')  <= date_format(concat(#{enddate}, ' ', '23:59'), '%Y-%m-%d %H:%i')
+			]]>
+			</when>
+			<when test="stype == 'salesttime'">
+			<![CDATA[
+				AND date_format(STR_TO_DATE(tts.salesttime, '%Y%m%d%H%i'), '%Y-%m-%d %H:%i') >= date_format(concat(#{startdate}, ' ', '00:00') , '%Y-%m-%d %H:%i')
+				AND date_format(STR_TO_DATE(tts.salesttime, '%Y%m%d%H%i'), '%Y-%m-%d %H:%i')  <= date_format(concat(#{enddate}, ' ', '23:59'), '%Y-%m-%d %H:%i')
+			]]>
+			</when>
+			<when test="stype == 'saleedtime'">
+			<![CDATA[
+				AND date_format(STR_TO_DATE(tts.saleedtime, '%Y%m%d%H%i'), '%Y-%m-%d %H:%i') >= date_format(concat(#{startdate}, ' ', '00:00') , '%Y-%m-%d %H:%i')
+				AND date_format(STR_TO_DATE(tts.saleedtime, '%Y%m%d%H%i'), '%Y-%m-%d %H:%i')  <= date_format(concat(#{enddate}, ' ', '23:59'), '%Y-%m-%d %H:%i')
+			]]>
+			</when>
+			<when test="stype == 'regdate'">
+			<![CDATA[
+				AND tts.regdate >= date_format(concat(#{startdate}, ' ', '00:00:00') , '%Y-%m-%d %H:%i:%s')
+				AND tts.regdate <= date_format(concat(#{enddate}, ' ', '23:59:59'), '%Y-%m-%d %H:%i:%s')
+			]]>
+			</when>
+			<otherwise>
+			<![CDATA[
+			AND (
+			    (date_format(STR_TO_DATE(tts.expsttime, '%Y%m%d%H%i'), '%Y-%m-%d %H:%i') >= date_format(concat(#{startdate}, ' ', '00:00') , '%Y-%m-%d %H:%i')
+				AND date_format(STR_TO_DATE(tts.expsttime, '%Y%m%d%H%i'), '%Y-%m-%d %H:%i')  <= date_format(concat(#{enddate}, ' ', '23:59'), '%Y-%m-%d %H:%i'))
+			OR (date_format(STR_TO_DATE(tts.expedtime, '%Y%m%d%H%i'), '%Y-%m-%d %H:%i') >= date_format(concat(#{startdate}, ' ', '00:00') , '%Y-%m-%d %H:%i')
+				AND date_format(STR_TO_DATE(tts.expedtime, '%Y%m%d%H%i'), '%Y-%m-%d %H:%i')  <= date_format(concat(#{enddate}, ' ', '23:59'), '%Y-%m-%d %H:%i'))
+			OR (date_format(STR_TO_DATE(tts.salesttime, '%Y%m%d%H%i'), '%Y-%m-%d %H:%i') >= date_format(concat(#{startdate}, ' ', '00:00') , '%Y-%m-%d %H:%i')
+				AND date_format(STR_TO_DATE(tts.salesttime, '%Y%m%d%H%i'), '%Y-%m-%d %H:%i')  <= date_format(concat(#{enddate}, ' ', '23:59'), '%Y-%m-%d %H:%i'))
+			OR (date_format(STR_TO_DATE(tts.saleedtime, '%Y%m%d%H%i'), '%Y-%m-%d %H:%i') >= date_format(concat(#{startdate}, ' ', '00:00') , '%Y-%m-%d %H:%i')
+				AND date_format(STR_TO_DATE(tts.saleedtime, '%Y%m%d%H%i'), '%Y-%m-%d %H:%i')  <= date_format(concat(#{enddate}, ' ', '23:59'), '%Y-%m-%d %H:%i'))
+			OR (tts.regdate >= date_format(concat(#{startdate}, ' ', '00:00:00') , '%Y-%m-%d %H:%i:%s')
+				AND tts.regdate <= date_format(concat(#{enddate}, ' ', '23:59:59'), '%Y-%m-%d %H:%i:%s'))
+			)
+			]]>
+			</otherwise>
+		</choose>
+		<if test="depth1cateidx != null and depth1cateidx != '' ">
+		AND d.depth1idx = #{depth1cateidx}
+		</if>
+		<if test="depth2cateidx != null and depth2cateidx != '' ">
+		AND d.depth2idx = #{depth2cateidx}
+		</if>
+		<if test="depth3cateidx != null and depth3cateidx != '' ">
+		AND d.depth3idx = #{depth3cateidx}
+		</if>
+		<if test="depth4cateidx != null and depth4cateidx != '' ">
+		AND d.depth4idx = #{depth4cateidx}
+		</if>
+		<if test="istrash != null and istrash != '' ">
+		AND tts.istrash = #{istrash}
+		</if>
+		<choose>
+			<when test='isdealer == "T"'>
+				AND (tg.dealerno IS NOT NULL AND tg.dealerno != 0)
+				<if test="dealerno != null and dealerno != ''">
+					AND td.userno = #{dealerno}
+				</if>
+			</when>
+			<when test='isdealer == "F"'>
+				AND (tg.dealerno IS NULL OR tg.dealerno = 0)
+			</when>			
+		</choose>
+		<choose>
+			<when test='isallmuappch == "T"'>
+			</when>
+			<when test="muappchtype != null and muappchtype != ''">
+				AND (
+				<foreach collection="muappchtypearr" item="muappch" index="index" separator="OR" >
+					tg.muappchtype like concat('%',#{muappch},'%')  
+				</foreach>
+				<if test='isallmuappch == "T"'>
+					OR tg.muappchtype is null
+					OR tg.muappchtype = ''
+				</if>
+				)
+			</when>
+			<when test='isallmuappch != "T"'>
+				AND ( tg.muappchtype is null
+				OR tg.muappchtype = '')
+			</when>
+		</choose>
+		<choose>
+			<when test='isallmumember == "T"'>
+			</when>
+			<when test="mumembertype != null and mumembertype != ''">
+				AND (
+				<foreach collection="mumembertypearr" item="mumember" index="index" separator="OR">
+					tg.mumembertype like concat('%',#{mumember},'%')
+				</foreach>
+				<if test='isallmumember == "T"'>
+					OR tg.mumembertype is null
+					OR tg.mumembertype = ''
+				</if>
+				)
+			</when>
+			<when test='isallmumember != "T"'>
+				AND ( tg.mumembertype is null
+				OR tg.mumembertype = '')
+			</when>
+		</choose>
+		<choose>
+			<when test='isallmumemlv == "T"'>
+			</when>
+			<when test="mumemlvtype != null and mumemlvtype != ''">
+				AND (
+				<foreach collection="mumemlvtypearr" item="mumemlv" index="index" separator="OR">
+					 tg.mumemlvtype like concat('%',#{mumemlv},'%')
+				</foreach>
+				<if test='isallmumemlv == "T"'>
+					OR tg.mumemlvtype is null
+					OR tg.mumemlvtype = ''
+				</if>
+				)
+			</when>
+			<when test='isallmumemlv != "T"'>
+				AND ( tg.mumemlvtype is null
+				OR tg.mumemlvtype = '')
+			</when>
+		</choose>
+		<if test="exptype != null and exptype != ''">
+			AND
+			<foreach collection="exptypearr" item="item" index="index" open="(" separator="OR" close=")">
+				<if test="item == 'EXP001'">
+					<![CDATA[
+					tts.expsttime > date_format(now(), '%Y%m%d%H%i')
+					]]>
+				</if>
+				<if test="item == 'EXP002'">
+					<![CDATA[
+					(tts.expsttime <= date_format(now(), '%Y%m%d%H%i')
+					AND tts.expedtime >= date_format(now(), '%Y%m%d%H%i'))
+					]]>
+				</if>
+				<if test="item == 'EXP003'">
+					<![CDATA[
+					tts.expedtime < date_format(now(), '%Y%m%d%H%i')
+					]]>
+				</if>
+			</foreach>
+		</if>
+		<if test="saletype != null and saletype != ''">
+			AND
+			<foreach collection="saletypearr" item="item" index="index" open="(" separator="OR" close=")">
+				<if test="item == 'SAL001'">
+					<![CDATA[
+					tts.salesttime > date_format(now(), '%Y%m%d%H%i')
+					]]>
+				</if>
+				<if test="item == 'SAL002'">
+					<![CDATA[
+					(tts.salesttime <= date_format(now(), '%Y%m%d%H%i')
+					AND tts.saleedtime >= date_format(now(), '%Y%m%d%H%i'))
+					]]>
+				</if>
+				<if test="item == 'SAL003'">
+					<![CDATA[
+					tts.saleedtime < date_format(now(), '%Y%m%d%H%i')
+					]]>
+				</if>
+				<if test="item == 'SAL004'">
+					tg.goodsselltype IN ('GST004', 'GST005') 
+				</if>
+			</foreach>
+		</if>
+		</where>
+	</select>
+	
+	<!-- 타임특가 추가 -->
+	<insert id="insertTimeSpcPrice" parameterType="somap">
+		INSERT INTO  /* TimeSpcPriceMapper.xml - insertTimeSpcPrice 타임특가 추가  */
+		t_time_spcprice(siteid, expsttime, expedtime, salesttime, saleedtime, goodsno, isflatrate, discrate, prtpercent, istrash, reguserid, regdate)
+		VALUES(#{siteid},#{expsttime}, #{expedtime}, #{salesttime}, #{saleedtime}, #{goodsno}, #{isflatrate}, #{discrate}, #{prtpercent}, #{istrash}, #{reguserid}, now())
+	</insert>
+	
+	<!-- 타임특가 사용여부 수정 -->
+	<update id="updateTimeSpcPriceUse" parameterType="somap">
+		UPDATE t_time_spcprice /* TimeSpcPriceMapper.xml - updateTimeSpcPriceUse 타임특가 사용여부 수정  */
+		SET istrash = #{istrash}, modeuserid = #{moduserid}, moddate = now()
+		WHERE tspcidx in 
+		<foreach collection="list" item="item" index="index" open="(" separator="," close=")">
+			#{item}
+		</foreach>
+	</update>
+	
+	<!-- 타임특가 엑셀 목록 조회 -->
+	<select id="selectTimeSpcPriceExcelList" parameterType="somap" resultType="HashMap">
+		SELECT  /* TimeSpcPriceMapper.xml - selectTimeSpcPriceExcelList 타임특가 엑셀 목록 조회  */
+			a.*, FORMAT(@ROWNUM := @ROWNUM+1,0) AS no
+		FROM (
+		SELECT 
+			tspcidx
+			, DATE_FORMAT(STR_TO_DATE(tts.expsttime, '%Y%m%d'), '%Y-%m-%d') as expsttime
+			, DATE_FORMAT(STR_TO_DATE(tts.expedtime, '%Y%m%d'), '%Y-%m-%d') as expedtime
+			, DATE_FORMAT(STR_TO_DATE(tts.salesttime, '%Y%m%d'), '%Y-%m-%d') as salesttime
+			, DATE_FORMAT(STR_TO_DATE(tts.saleedtime, '%Y%m%d'), '%Y-%m-%d') as saleedtime
+			, DATE_FORMAT(tts.regdate, '%Y-%m-%d') as regdate
+			, c.name as regusername
+			, CASE tts.istrash WHEN 'F' THEN '사용' ELSE '미사용' END as istrash
+			, CASE tg.ispbgoods WHEN 'T' THEN '직매입' WHEN 'F' THEN '위탁' ELSE '' END AS ispbgoodsname
+			, IFNULL(tg.dealerno, 0) as dealerno
+			, IFNULL(td.name, '') AS dealername
+			, tcm.mdname
+			, CONCAT(tf.host, tf.imgpath, tf.imgfname) AS fullpath
+			, d.fullcategoryname
+			, tb.name as brandname
+			, tg.goodscode
+			, tg.goodsname
+			, CASE WHEN d.fullcategoryname IS NULL THEN tg.goodsname ELSE CONCAT(' ( ',d.fullcategoryname,' ) ',tg.goodsname) END AS goodsinfo
+			,CASE WHEN (LENGTH(tg.muappchtype) - LENGTH(REPLACE(tg.muappchtype, ',','')) + 1 - (SELECT count(*) FROM t_common_code WHERE cmclass= 'MUAPPCHTYPE' AND istrash = 'F')) = 0 then '전체' 
+			ELSE (SELECT group_concat(codename SEPARATOR ', ') FROM t_common_code WHERE ifnull(tg.muappchtype,'') like concat('%',cmcode,'%') AND cmclass = 'MUAPPCHTYPE') END AS muappchtype
+			,CASE WHEN (LENGTH(tg.mumembertype) - LENGTH(REPLACE(tg.mumembertype, ',','')) + 1 - (SELECT count(*) FROM t_common_code WHERE cmclass= 'MUMEMBERTYPE' AND istrash = 'F')) = 0 then '전체' 
+			ELSE (SELECT group_concat(codename SEPARATOR ', ') FROM t_common_code WHERE ifnull(tg.mumembertype,'') like concat('%',cmcode,'%') AND cmclass = 'MUMEMBERTYPE') END AS mumembertype
+			,CASE WHEN (LENGTH(tg.mumemlvtype) - LENGTH(REPLACE(tg.mumemlvtype, ',','')) + 1 - (SELECT count(*) FROM t_common_code WHERE cmclass= 'MUMEMLVTYPE' AND istrash = 'F')) = 0 then '전체' 
+			ELSE (SELECT group_concat(codename SEPARATOR ', ') FROM t_common_code WHERE ifnull(tg.mumemlvtype,'') like concat('%',cmcode,'%') AND cmclass = 'MUMEMLVTYPE') END AS mumemlvtype
+			, <![CDATA[
+			(CASE WHEN (tts.expsttime > date_format(now(), '%Y%m%d%H%i')) THEN '노출전' 
+				  WHEN ((tts.expsttime <= date_format(now(), '%Y%m%d%H%i'))
+						AND (tts.expedtime > date_format(now(), '%Y%m%d%H%i'))) THEN '노출중'
+				  WHEN (tts.expedtime < date_format(now(), '%Y%m%d%H%i')) THEN '종료' END
+			) as exptype
+			]]>
+			, <![CDATA[
+			(CASE WHEN tg.GOODSSELLTYPE IN ('GST004','GST005') THEN '매진(솔드아웃)'
+				  WHEN (tts.salesttime > date_format(now(), '%Y%m%d%H%i')) THEN '진행전(커밍순)' 
+				  WHEN ((tts.salesttime <= date_format(now(), '%Y%m%d%H%i'))
+						AND (tts.saleedtime > date_format(now(), '%Y%m%d%H%i'))) THEN '진행중(판매중)'
+				  WHEN (tts.saleedtime < date_format(now(), '%Y%m%d%H%i')) THEN '종료(판매종료)' END
+			) as saletype
+			]]>
+			, CASE isflatrate WHEN 'T' THEN CONCAT('정액(',discrate,'원)') ELSE CONCAT('정률(',discrate,'%)') END AS flatrate
+			, discrate
+		FROM t_time_spcprice tts
+		LEFT OUTER JOIN t_goods tg ON tg.goodsno = tts.goodsno
+		LEFT JOIN (SELECT userid, name FROM t_user a LEFT JOIN t_admin b ON a.no = b.userno) c ON c.userid = tts.reguserid 
+		LEFT OUTER JOIN t_brand tb ON tb.idx = tg.brandidx
+		LEFT OUTER JOIN t_dealer td ON tg.dealerno = td.userno 
+		LEFT OUTER JOIN t_charge_md tcm ON tcm.mdcode = tg.mdcode
+		LEFT OUTER JOIN t_goods_category tgc
+			ON tts.goodsno = tgc.goodsno
+			AND isrepre = 'T'
+		LEFT OUTER JOIN (
+			WITH category AS (
+			    SELECT idx, name, depth, parent
+				FROM t_category
+				WHERE siteid = #{siteid}
+				AND hidden = 0 
+			)
+			SELECT 
+				  t.cateidx, t.depth1idx, t.depth2idx, t.depth3idx, t.depth4idx, t.fullcategoryname
+			FROM (	SELECT 
+						  a.idx AS depth1idx, b.idx AS depth2idx, c.idx AS depth3idx, d.idx AS depth4idx
+						, concat_ws(' > ', a.name, b.name, c.name, d.name) AS fullcategoryname
+						, (CASE WHEN d.idx IS NOT NULL THEN d.idx
+							    WHEN c.idx IS NOT NULL THEN c.idx
+							    WHEN b.idx IS NOT NULL THEN b.idx
+							    ELSE a.idx
+						   END) AS cateidx
+					FROM category a
+					LEFT OUTER JOIN category b ON a.idx = b.parent
+					LEFT OUTER JOIN category c ON b.idx = c.parent
+					LEFT OUTER JOIN category d ON c.idx = d.parent
+					WHERE a.depth = 1
+				 ) t
+			) d ON tgc.cateidx = d.cateidx
+		LEFT JOIN t_file tf on tts.goodsno = tf.orgidx
+			and tf.imgtype = 'IGT003'
+			and tf.filetype = 'FLT001'
+			and tf.istrash = 'F'
+		<where>
+		AND tts.siteid = #{siteid}
+		<if test="sword != null and sword != ''">
+			<choose>
+				<when test="skey == 'dealername'">
+					AND td.name like concat('%',#{sword},'%')
+				</when>
+				<when test="skey == 'brandname'">
+					AND tb.name like concat('%',#{sword},'%')
+				</when>
+				<when test="skey == 'goodscode'">
+					AND tg.goodscode like concat('%',#{sword},'%')
+				</when>
+				<when test="skey == 'goodsname'">
+					AND tg.goodsname like concat('%',#{sword},'%')
+				</when>
+				<when test="skey == 'mdname'">
+					AND tcm.mdname like concat('%',#{sword},'%')
+				</when>
+				<when test="skey == 'regusername'">
+					AND c.name like concat('%',#{sword},'%')
+				</when>
+				<otherwise>
+					AND (
+						td.name like concat('%',#{sword},'%')
+						OR tb.name like concat('%',#{sword},'%')
+						OR tg.goodscode like concat('%',#{sword},'%')
+						OR tg.goodsname like concat('%',#{sword},'%')
+						OR tcm.mdname like concat('%',#{sword},'%')
+						OR c.name like concat('%',#{sword},'%')
+					)
+				</otherwise>
+			</choose>
+		</if>
+		<choose>
+			<when test="stype == 'expsttime'">
+			<![CDATA[
+				AND date_format(STR_TO_DATE(tts.expsttime, '%Y%m%d%H%i'), '%Y-%m-%d %H:%i') >= date_format(concat(#{startdate}, ' ', '00:00') , '%Y-%m-%d %H:%i')
+				AND date_format(STR_TO_DATE(tts.expsttime, '%Y%m%d%H%i'), '%Y-%m-%d %H:%i')  <= date_format(concat(#{enddate}, ' ', '23:59'), '%Y-%m-%d %H:%i')
+			]]>
+			</when>
+			<when test="stype == 'expedtime'">
+			<![CDATA[
+				AND date_format(STR_TO_DATE(tts.expedtime, '%Y%m%d%H%i'), '%Y-%m-%d %H:%i') >= date_format(concat(#{startdate}, ' ', '00:00') , '%Y-%m-%d %H:%i')
+				AND date_format(STR_TO_DATE(tts.expedtime, '%Y%m%d%H%i'), '%Y-%m-%d %H:%i')  <= date_format(concat(#{enddate}, ' ', '23:59'), '%Y-%m-%d %H:%i')
+			]]>
+			</when>
+			<when test="stype == 'salesttime'">
+			<![CDATA[
+				AND date_format(STR_TO_DATE(tts.salesttime, '%Y%m%d%H%i'), '%Y-%m-%d %H:%i') >= date_format(concat(#{startdate}, ' ', '00:00') , '%Y-%m-%d %H:%i')
+				AND date_format(STR_TO_DATE(tts.salesttime, '%Y%m%d%H%i'), '%Y-%m-%d %H:%i')  <= date_format(concat(#{enddate}, ' ', '23:59'), '%Y-%m-%d %H:%i')
+			]]>
+			</when>
+			<when test="stype == 'saleedtime'">
+			<![CDATA[
+				AND date_format(STR_TO_DATE(tts.saleedtime, '%Y%m%d%H%i'), '%Y-%m-%d %H:%i') >= date_format(concat(#{startdate}, ' ', '00:00') , '%Y-%m-%d %H:%i')
+				AND date_format(STR_TO_DATE(tts.saleedtime, '%Y%m%d%H%i'), '%Y-%m-%d %H:%i')  <= date_format(concat(#{enddate}, ' ', '23:59'), '%Y-%m-%d %H:%i')
+			]]>
+			</when>
+			<when test="stype == 'regdate'">
+			<![CDATA[
+				AND tts.regdate >= date_format(concat(#{startdate}, ' ', '00:00:00') , '%Y-%m-%d %H:%i:%s')
+				AND tts.regdate <= date_format(concat(#{enddate}, ' ', '23:59:59'), '%Y-%m-%d %H:%i:%s')
+			]]>
+			</when>
+			<otherwise>
+			<![CDATA[
+			AND (
+			    (date_format(STR_TO_DATE(tts.expsttime, '%Y%m%d%H%i'), '%Y-%m-%d %H:%i') >= date_format(concat(#{startdate}, ' ', '00:00') , '%Y-%m-%d %H:%i')
+				AND date_format(STR_TO_DATE(tts.expsttime, '%Y%m%d%H%i'), '%Y-%m-%d %H:%i')  <= date_format(concat(#{enddate}, ' ', '23:59'), '%Y-%m-%d %H:%i'))
+			OR (date_format(STR_TO_DATE(tts.expedtime, '%Y%m%d%H%i'), '%Y-%m-%d %H:%i') >= date_format(concat(#{startdate}, ' ', '00:00') , '%Y-%m-%d %H:%i')
+				AND date_format(STR_TO_DATE(tts.expedtime, '%Y%m%d%H%i'), '%Y-%m-%d %H:%i')  <= date_format(concat(#{enddate}, ' ', '23:59'), '%Y-%m-%d %H:%i'))
+			OR (date_format(STR_TO_DATE(tts.salesttime, '%Y%m%d%H%i'), '%Y-%m-%d %H:%i') >= date_format(concat(#{startdate}, ' ', '00:00') , '%Y-%m-%d %H:%i')
+				AND date_format(STR_TO_DATE(tts.salesttime, '%Y%m%d%H%i'), '%Y-%m-%d %H:%i')  <= date_format(concat(#{enddate}, ' ', '23:59'), '%Y-%m-%d %H:%i'))
+			OR (date_format(STR_TO_DATE(tts.saleedtime, '%Y%m%d%H%i'), '%Y-%m-%d %H:%i') >= date_format(concat(#{startdate}, ' ', '00:00') , '%Y-%m-%d %H:%i')
+				AND date_format(STR_TO_DATE(tts.saleedtime, '%Y%m%d%H%i'), '%Y-%m-%d %H:%i')  <= date_format(concat(#{enddate}, ' ', '23:59'), '%Y-%m-%d %H:%i'))
+			OR (tts.regdate >= date_format(concat(#{startdate}, ' ', '00:00:00') , '%Y-%m-%d %H:%i:%s')
+				AND tts.regdate <= date_format(concat(#{enddate}, ' ', '23:59:59'), '%Y-%m-%d %H:%i:%s'))
+			)
+			]]>
+			</otherwise>
+		</choose>
+		<if test="depth1cateidx != null and depth1cateidx != '' ">
+		AND d.depth1idx = #{depth1cateidx}
+		</if>
+		<if test="depth2cateidx != null and depth2cateidx != '' ">
+		AND d.depth2idx = #{depth2cateidx}
+		</if>
+		<if test="depth3cateidx != null and depth3cateidx != '' ">
+		AND d.depth3idx = #{depth3cateidx}
+		</if>
+		<if test="depth4cateidx != null and depth4cateidx != '' ">
+		AND d.depth4idx = #{depth4cateidx}
+		</if>
+		<if test="istrash != null and istrash != '' ">
+		AND tts.istrash = #{istrash}
+		</if>
+		<choose>
+			<when test='isdealer == "T"'>
+				AND (tg.dealerno IS NOT NULL AND tg.dealerno != 0)
+				<if test="dealerno != null and dealerno != ''">
+					AND td.userno = #{dealerno}
+				</if>
+			</when>
+			<when test='isdealer == "F"'>
+				AND (tg.dealerno IS NULL OR tg.dealerno = 0)
+			</when>			
+		</choose>
+		<choose>
+			<when test='isallmuappch == "T"'>
+			</when>
+			<when test="muappchtype != null and muappchtype != ''">
+				AND (
+				<foreach collection="muappchtypearr" item="muappch" index="index" separator="OR" >
+					tg.muappchtype like concat('%',#{muappch},'%')  
+				</foreach>
+				<if test='isallmuappch == "T"'>
+					OR tg.muappchtype is null
+					OR tg.muappchtype = ''
+				</if>
+				)
+			</when>
+			<when test='isallmuappch != "T"'>
+				AND ( tg.muappchtype is null
+				OR tg.muappchtype = '')
+			</when>
+		</choose>
+		<choose>
+			<when test='isallmumember == "T"'>
+			</when>
+			<when test="mumembertype != null and mumembertype != ''">
+				AND (
+				<foreach collection="mumembertypearr" item="mumember" index="index" separator="OR">
+					tg.mumembertype like concat('%',#{mumember},'%')
+				</foreach>
+				<if test='isallmumember == "T"'>
+					OR tg.mumembertype is null
+					OR tg.mumembertype = ''
+				</if>
+				)
+			</when>
+			<when test='isallmumember != "T"'>
+				AND ( tg.mumembertype is null
+				OR tg.mumembertype = '')
+			</when>
+		</choose>
+		<choose>
+			<when test='isallmumemlv == "T"'>
+			</when>
+			<when test="mumemlvtype != null and mumemlvtype != ''">
+				AND (
+				<foreach collection="mumemlvtypearr" item="mumemlv" index="index" separator="OR">
+					 tg.mumemlvtype like concat('%',#{mumemlv},'%')
+				</foreach>
+				<if test='isallmumemlv == "T"'>
+					OR tg.mumemlvtype is null
+					OR tg.mumemlvtype = ''
+				</if>
+				)
+			</when>
+			<when test='isallmumemlv != "T"'>
+				AND ( tg.mumemlvtype is null
+				OR tg.mumemlvtype = '')
+			</when>
+		</choose>
+		<choose>
+			<when test='isallexp == "T"'>
+			</when>
+			<when test="exptype != null and exptype != ''">
+				AND
+				<foreach collection="exptypearr" item="item" index="index" open="(" separator="OR" close=")">
+					<if test="item == 'EXP001'">
+						<![CDATA[
+						tts.expsttime > date_format(now(), '%Y%m%d%H%i')
+						]]>
+					</if>
+					<if test="item == 'EXP002'">
+						<![CDATA[
+						(tts.expsttime <= date_format(now(), '%Y%m%d%H%i')
+						AND tts.expedtime >= date_format(now(), '%Y%m%d%H%i'))
+						]]>
+					</if>
+					<if test="item == 'EXP003'">
+						<![CDATA[
+						tts.expedtime < date_format(now(), '%Y%m%d%H%i')
+						]]>
+					</if>
+				</foreach>
+			</when>
+		</choose>
+		<choose>
+			<when test='isallsale == "T"'>
+			</when>
+			<when test="saletype != null and saletype != ''">
+				AND
+				<foreach collection="saletypearr" item="item" index="index" open="(" separator="OR" close=")">
+					<if test="item == 'SAL001'">
+						<![CDATA[
+						tts.salesttime > date_format(now(), '%Y%m%d%H%i')
+						]]>
+					</if>
+					<if test="item == 'SAL002'">
+						<![CDATA[
+						(tts.salesttime <= date_format(now(), '%Y%m%d%H%i')
+						AND tts.saleedtime >= date_format(now(), '%Y%m%d%H%i'))
+						]]>
+					</if>
+					<if test="item == 'SAL003'">
+						<![CDATA[
+						tts.saleedtime < date_format(now(), '%Y%m%d%H%i')
+						]]>
+					</if>
+					<if test="item == 'SAL004'">
+						tg.goodsselltype IN ('GST004', 'GST005') 
+					</if>
+				</foreach>
+			</when>
+		</choose>
+		</where>
+		<choose>
+			<when test="psort == 'goodscode_asc'">
+				ORDER BY tg.goodscode ASC
+			</when>
+			<when test="psort == 'goodscode_desc'">
+				ORDER BY tg.goodscode DESC
+			</when>
+			<when test="psort == 'regdate_asc'">
+				ORDER BY tts.regdate ASC
+			</when>
+			<when test="psort == 'regdate_desc'">
+				ORDER BY tts.regdate DESC
+			</when>
+			<otherwise>
+				ORDER BY tts.istrash, tts.expsttime DESC
+			</otherwise>
+		</choose>
+		) a, (select @ROWNUM := 0) as b
+	</select>
+	
+	<!-- 타임특가 상세 조회 -->
+	<select id="selectTimeSpcPriceDetail" parameterType="somap" resultType="somap">
+		SELECT  /* TimeSpcPriceMapper.xml - selectTimeSpcPriceExcelList 타임특가 엑셀 목록 조회  */
+			tspcidx
+			, date_format(str_to_date(expsttime,'%Y%m%d%H%i'), '%Y-%m-%d') as expstartdate
+			, date_format(str_to_date(expsttime,'%Y%m%d%H%i'), '%H')       as expstarthour
+			, date_format(str_to_date(expsttime,'%Y%m%d%H%i'), '%i')       as expstartmi
+			, date_format(str_to_date(expedtime,'%Y%m%d%H%i'), '%Y-%m-%d') as expenddate
+			, date_format(str_to_date(expedtime,'%Y%m%d%H%i'), '%H')       as expendhour
+			, date_format(str_to_date(expedtime,'%Y%m%d%H%i'), '%i')       as expendmi
+			, date_format(str_to_date(salesttime,'%Y%m%d%H%i'), '%Y-%m-%d') as salestartdate
+			, date_format(str_to_date(salesttime,'%Y%m%d%H%i'), '%H')       as salestarthour
+			, date_format(str_to_date(salesttime,'%Y%m%d%H%i'), '%i')       as salestartmi
+			, date_format(str_to_date(saleedtime,'%Y%m%d%H%i'), '%Y-%m-%d') as saleenddate
+			, date_format(str_to_date(saleedtime,'%Y%m%d%H%i'), '%H')       as saleendhour
+			, date_format(str_to_date(saleedtime,'%Y%m%d%H%i'), '%i')       as saleendmi
+			, expsttime
+			, expedtime
+			, salesttime
+			, saleedtime
+			, goodsno
+			, isflatrate
+			, discrate
+			, prtpercent
+			, istrash
+		FROM t_time_spcprice
+		<where>
+			tspcidx = #{tspcidx}
+		</where>
+	</select>
+	
+	<update id="updateTimeSpcPrice" parameterType="somap">
+		UPDATE t_time_spcprice
+		SET expsttime = #{expsttime}, expedtime = #{expedtime}, salesttime = #{salesttime}, saleedtime = #{saleedtime}, goodsno = #{goodsno}, isflatrate = #{isflatrate}, istrash = #{istrash}, moduserid = #{moduserid}, moddate = now()
+		WHERE tspcidx = #{tspcidx}
+	</update>
+</mapper>

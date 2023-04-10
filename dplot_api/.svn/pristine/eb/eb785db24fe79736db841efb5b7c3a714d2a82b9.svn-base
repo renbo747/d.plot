@@ -1,0 +1,607 @@
+package com.dplot.front.service;
+
+import java.text.SimpleDateFormat;
+import java.util.ArrayList;
+import java.util.Calendar;
+import java.util.Date;
+import java.util.List;
+import java.util.Map;
+
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Propagation;
+import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.multipart.MultipartFile;
+
+import com.dplot.common.CMConst;
+import com.dplot.common.SOMap;
+import com.dplot.common.Status;
+import com.dplot.common.service.CommonService;
+import com.dplot.common.service.util.FileService;
+import com.dplot.common.service.util.MallBaseService;
+import com.dplot.exception.BizException;
+import com.dplot.mapper.BannedMapper;
+import com.dplot.mapper.ConfigMapper;
+import com.dplot.mapper.FileMapper;
+import com.dplot.mapper.GoodsReviewMapper;
+import com.dplot.mapper.ReserveConfigMapper;
+import com.dplot.mapper.ReservePayMapper;
+import com.dplot.mapper.ReviewHelpMapper;
+import com.dplot.mapper.ReviewNotiMapper;
+import com.dplot.util.DateTimeUtil;
+import com.dplot.util.Util;
+import com.restfb.types.Review;
+
+@Service
+public class ReviewServiceImpl extends MallBaseService implements ReviewService{
+
+	@Autowired
+	private ReserveConfigMapper reserveConfigMapper;
+	
+	@Autowired
+	private GoodsReviewMapper goodsReviewMapper;
+	
+	@Autowired
+	private ReviewNotiMapper reviewNotiMapper; 
+	
+	@Autowired
+	private ReviewHelpMapper reviewHelpMapper; 
+	
+	@Autowired
+	private ReservePayMapper reservePayMapper;
+	
+	@Autowired
+	private FileService fileService;
+	
+	@Autowired
+	private FileMapper fileMapper;
+	
+	@Autowired
+	private ConfigMapper configMapper;
+	
+	@Autowired
+	private CommonService commonservice;
+	
+	@Autowired
+	private BannedMapper bannedMapper;
+	/**
+	 * 리뷰보상 정보 조회
+	 */
+	@Override
+	public SOMap selectReviewReward(SOMap param) throws Exception {
+		SOMap resultMap = new SOMap();
+		param.put("siteid", cs.getStr("siteid"));
+		String userid = cs.getStr("authmemberid");
+		String membertype = cs.getStr("authmembertype");
+		String memlvtype = cs.getStr("authmemlvtype");
+		
+		//비회원시 일반회원의 브론즈등급으로 조회
+		if (userid == "") {
+			membertype = "DMT001";
+			memlvtype  = "MDL001";
+		}
+		param.put("membertype", membertype);
+		param.put("memlvtype", memlvtype);
+		/*****************************
+		 *  리뷰 보상 정보 조회
+		 ******************************/
+		SOMap reviewRewardInfo= reserveConfigMapper.selectReserveConfigInfoByMemberType(param);
+		resultMap.put("reviewreward", reviewRewardInfo);
+		return resultMap;
+	}
+	
+	/**
+	 * 나의 리뷰 목록 조회(작성가능, 작성완료)
+	 */
+	@Override
+	public SOMap selectMyReviewList(SOMap param) throws Exception{
+		SOMap resultMap = new SOMap();
+		if (cs.getInt("authmemberno") == 0) {
+			throw new BizException("로그인 후 이용해주세요.");
+		}
+		param.put("userno", cs.getInt("authmemberno"));
+		param.put("siteid",cs.getStr("siteid"));
+		param.put("platform", cs.getStr("platform"));
+		
+		//페이지 처리
+		int page = param.getInt("currentpage");
+		int startPage = (page > 1) ? ((page -1 ) * param.getInt("listcnt")) : 0;
+		param.put("startpage", startPage);
+		param.put("endpage", param.getInt("listcnt"));
+		
+		if(Util.flag2Bool(param.getDbStr("init")) && !cs.getStr("platform").equals("MAC001")) {
+			param.put("startpage", 0);
+			param.put("endpage", startPage + param.getInt("listcnt"));
+		}
+		
+		if (CMConst.CM_PLATFORM_PC.equals(param.getDbStr("platform"))) {
+			param.put("imgtype", CMConst.IMG_TYPE_GOODS_IMG_PC_M);
+		} else {
+			param.put("imgtype", CMConst.IMG_TYPE_GOODS_IMG_MO_M);
+		}
+		//리뷰 목록 조회
+		List<SOMap> reviewList = goodsReviewMapper.selectMyReviewList(param);
+		
+		resultMap.put("listtotal", goodsReviewMapper.selectMyReviewCnt(param));
+		
+		String[] imgtypes = {CMConst.IMG_TYPE_REVIEW_IMG,CMConst.IMG_TYPE_REVIEW_MOV};
+		SOMap dbParam = new SOMap();
+		dbParam.put("imgtypes", imgtypes);
+		 
+		for(SOMap reivew: reviewList) {
+			if (reivew.getInt("reviewidx") == 0) {
+				break;
+			}
+			dbParam.put("orgidx", reivew.getInt("reviewidx"));
+			List<SOMap> uploadedfileList = fileMapper.selectFileList(dbParam);
+			List<SOMap> imgList = new ArrayList<SOMap>();
+			List<SOMap> movList = new ArrayList<SOMap>();
+			List<SOMap> movImgList = new ArrayList<SOMap>();
+			
+			for(SOMap files : uploadedfileList) {
+				if (CMConst.IMG_TYPE_REVIEW_IMG.equals(files.getStr("imgtype"))) {
+					imgList.add(files);
+				}else {
+					if (CMConst.FILE_TYPE_IMG.equals(files.getStr("filetype"))) {
+						movImgList.add(files);
+					}else {
+						movImgList.add(files);
+					}
+				}
+			}
+			reivew.put("files", uploadedfileList);
+			reivew.put("imglist", imgList);
+			reivew.put("movlist", movList);
+			reivew.put("movimglist", movImgList);
+		}
+		resultMap.put("reviewlist", reviewList);
+		
+		return resultMap;
+	}
+	
+	/**
+	 * 상품상세 리뷰 목록 조회
+	 */
+	@Override
+	public SOMap selectReviewList(SOMap param) throws Exception {
+		//리뷰 목록 조회
+		SOMap result = new SOMap();
+
+		param.put("siteid", cs.getStr("siteid"));
+		param.put("platform", cs.getStr("platform"));
+		param.put("userno", cs.getInt("authmemberno"));
+		param.put("isdetail", "T");
+		
+		int page = param.getInt("currentpage");
+		int startPage = (page > 1) ? ((page -1 ) * param.getInt("listcnt")) : 0;
+		param.put("startpage", startPage);
+		param.put("endpage", param.getInt("listcnt"));
+		
+		result.putAll(getReviewList(param));
+		return result;
+	}
+
+	
+
+
+	/**
+	 * 리뷰 저장 처리
+	 */
+	@Override
+	@Transactional(propagation = Propagation.REQUIRED, rollbackFor = {Exception.class})
+	public SOMap saveReview(SOMap param, Map<String, MultipartFile> uploadFiles) throws Exception {
+		/**********************************
+		 * 기본데이터 셋팅
+		 **********************************/
+		int resultCnt = 0;
+		SOMap resultMap = new SOMap();
+		param.put("siteid", cs.getStr("siteid"));
+		param.put("userno", cs.getInt("authmemberno"));
+		param.put("userid", cs.getStr("authmemberid"));
+		param.put("membertype", cs.getStr("authmembertype"));
+		param.put("memlvtype", cs.getStr("authmemlvtype"));
+
+		/**********************************
+		 * 타당성 검사
+		 **********************************/
+		if (param.getInt("userno") == 0) {
+			throw new BizException("리뷰 작성은 로그인 후 가능합니다.");
+		}
+		if (param.getInt("ordgdidx") == 0 || param.getInt("orderidx") == 0) {
+			throw new BizException("주문 정보가 없습니다.");
+		}
+		Util util = new Util();
+		String badWordList = bannedMapper.badWordList();
+		
+		String filterText = util.filterText(badWordList, param.getStr("content"));
+		if(!filterText.equals("")){
+			throw new BizException("금칙어가 포함되어 있습니다. " + filterText);
+		}
+		/*********************************
+		 * 리뷰 작성 처리
+		 *********************************/
+		if (param.getStr("isedit").equals("F")) {
+			resultCnt = goodsReviewMapper.insertGoodsReview(param);
+			if (resultCnt != 1) {
+				throw new BizException("리뷰작성에 실패했습니다.");
+			}
+			/**********************************
+			 * 리뷰 보상 처리- 우선 최초작성시만지급
+			 *********************************/
+			String filetype = CMConst.RES_PAY_TYPE_REVIEW_TEXT;//텍스트:RPT002, PHOTO:RPT003, MOV:RPT004
+			Boolean isPhoto = false;
+			Boolean isMov = false;
+			int paypoint = 0;
+
+			for (String key : uploadFiles.keySet()) {
+				MultipartFile file = uploadFiles.get(key);
+				if (key.contains("filelist")) {
+					if (file.getContentType().contains("video")) {
+						isMov = true;
+					}
+					if(file.getContentType().contains("image")){
+						isPhoto = true;
+					}
+				}
+			}
+			if (isMov) {
+				filetype = CMConst.RES_PAY_TYPE_REVIEW_MOV;
+			}else if (!isMov && isPhoto) {
+				filetype = CMConst.RES_PAY_TYPE_REVIEW_PHOTO;
+			}else {
+				filetype = CMConst.RES_PAY_TYPE_REVIEW_TEXT;
+			}
+			
+			SOMap reviewRewardInfo= reserveConfigMapper.selectReserveConfigInfoByMemberType(param);
+			if (reviewRewardInfo != null) {
+				String startDay = DateTimeUtil.getNowFormatStr(DateTimeUtil.MALL_DATE_FORMAT_VARCHAR12);
+				String endDay = DateTimeUtil.getPointEndDate(startDay);
+				if (filetype.equals(CMConst.RES_PAY_TYPE_REVIEW_TEXT)) {
+					paypoint = reviewRewardInfo.getInt("textreviewamt");
+				}else if (filetype.equals(CMConst.RES_PAY_TYPE_REVIEW_PHOTO)) {
+					paypoint = reviewRewardInfo.getInt("photoreviewamt");
+				}else if (filetype.equals(CMConst.RES_PAY_TYPE_REVIEW_MOV)) {
+					paypoint = reviewRewardInfo.getInt("movreviewamt");
+				}else {
+					throw new BizException("적립금 보상 정보가 없습니다.");
+				}
+				/**************************
+				 * 리뷰 작성보상 지급
+				 **************************/
+				SOMap reserveParam = new SOMap();
+				reserveParam.put("userno", param.getInt("userno"));
+				reserveParam.put("isempreserve", "F");
+				reserveParam.put("resstday", startDay);
+				reserveParam.put("resedday", endDay);
+				reserveParam.put("respaytype", filetype);
+				reserveParam.put("paymembertype", param.getStr("membertype"));
+				reserveParam.put("paymemlvtype", param.getStr("memlvtype"));
+				reserveParam.put("paypoint", paypoint);
+				reserveParam.put("authuserid", param.getStr("userid"));
+				if (reserveParam.getInt("paypoint") > 0) {
+					//resultCnt = reservePayMapper.insertReservePayAll(reserveParam);
+					resultCnt = commonservice.paymentReserve(reserveParam);
+				}
+				
+				
+				/**************************
+				 * 첫 리뷰 작성보상 지급
+				 **************************/
+				int reviewCnt = goodsReviewMapper.selectReviewCnt(param);
+				if (reviewCnt <= 1) {
+					SOMap configInfo = configMapper.selectConfigForReserveConfig(param);
+					if (configInfo.getInt("frstreviewamt") > 0) {
+						SOMap reserveParam2 = new SOMap();
+						startDay = DateTimeUtil.getNowFormatStr(DateTimeUtil.MALL_DATE_FORMAT_VARCHAR12);
+						endDay = DateTimeUtil.getPointEndDate(startDay);
+						reserveParam2.put("userno", param.getInt("userno"));
+						reserveParam2.put("isempreserve", "F");
+						reserveParam2.put("resstday", startDay);
+						reserveParam2.put("resedday", endDay);
+						reserveParam2.put("respaytype", "RPT015"); //임시 첫리뷰작성
+						reserveParam2.put("paymembertype", param.getStr("membertype"));
+						reserveParam2.put("paymemlvtype", param.getStr("memlvtype"));
+						reserveParam2.put("paypoint", configInfo.getInt("frstreviewamt"));
+						reserveParam2.put("authuserid", param.getStr("userid"));
+						//resultCnt = reservePayMapper.insertReservePayAll(reserveParam2);
+						resultCnt = commonservice.paymentReserve(reserveParam2);
+					}
+				}	
+			}
+		}else {
+			resultCnt = goodsReviewMapper.updateFrontGoodsReview(param);
+		}
+		if (resultCnt != 1) {
+			throw new BizException("리뷰작성에 실패했습니다.");
+		}
+	
+		/*********************************
+		 * 파일 업로드 처리
+		 *********************************/
+		for (String key : uploadFiles.keySet()) {
+			MultipartFile file = uploadFiles.get(key);
+			if (key.contains("filelist")) {
+				if (file.getContentType().contains("image")) {
+					fileService.uploadImage(file, param.getDbInt("reviewidx"), CMConst.IMG_TYPE_REVIEW_IMG);
+				}else if (file.getContentType().contains("video")) {
+					fileService.uploadMov(file, param.getDbInt("reviewidx"), CMConst.IMG_TYPE_REVIEW_MOV);
+				}else{
+					throw new Exception("지원하지 않는 파일 형식입니다.");
+				}
+			}
+		}
+		/************************************
+		 * 파일  삭제 처리
+		 ***********************************/
+		List<Integer> deleteFiles = param.getArrayList("deletefilelist");
+		for(int idx : deleteFiles) {
+			fileService.delete(idx);
+		}
+		return resultMap;
+	}
+
+	/**
+	 * 나의 리뷰 상세 조회
+	 */
+	@Override
+	public SOMap selectReviewDetail(SOMap param) throws Exception{
+		SOMap resultMap = new SOMap();
+		
+		param.put("siteid",cs.getStr("siteid"));
+		param.put("platform", cs.getStr("platform"));
+		param.put("userno", cs.getInt("authmemberno"));
+		if (CMConst.CM_PLATFORM_PC.equals(param.getDbStr("platform"))) {
+			param.put("imgtype", CMConst.IMG_TYPE_GOODS_IMG_PC_M);
+		} else {
+			param.put("imgtype", CMConst.IMG_TYPE_GOODS_IMG_MO_M);
+		}
+		//리뷰 상세 조회
+		SOMap reviewDetail = goodsReviewMapper.selectFrontReviewDetail(param);
+		
+		if (reviewDetail == null) {
+			throw new BizException("리뷰 정보가 없습니다.");
+		}
+		
+		String[] imgtypes = {CMConst.IMG_TYPE_REVIEW_IMG,CMConst.IMG_TYPE_REVIEW_MOV};
+		SOMap dbParam = new SOMap();
+		dbParam.put("imgtypes", imgtypes);
+		 
+		dbParam.put("orgidx", reviewDetail.getInt("reviewidx"));
+		List<SOMap> uploadedfileList = fileMapper.selectFileList(dbParam);
+		List<SOMap> imgList = new ArrayList<SOMap>();
+		List<SOMap> movList = new ArrayList<SOMap>();
+		List<SOMap> movImgList = new ArrayList<SOMap>();
+			
+		for(SOMap files : uploadedfileList) {
+			if (CMConst.IMG_TYPE_REVIEW_IMG.equals(files.getStr("imgtype"))) {
+				imgList.add(files);
+			}else {
+				if (CMConst.FILE_TYPE_IMG.equals(files.getStr("filetype"))) {
+					movImgList.add(files);
+				}else {
+					movImgList.add(files);
+				}
+			}
+		}
+		reviewDetail.put("files", uploadedfileList);
+		reviewDetail.put("imglist", imgList);
+		reviewDetail.put("movlist", movList);
+		reviewDetail.put("movimglist", movImgList);
+		
+		resultMap.put("reviewdetail", reviewDetail);
+		return resultMap;
+	}
+
+	/**
+	 * 나의 리뷰 삭제 처리
+	 */
+	@Override
+	@Transactional(propagation = Propagation.REQUIRED, rollbackFor = {Exception.class})
+	public SOMap deleteReview(SOMap param) throws Exception {
+		/**********************************
+		 * 기본데이터 셋팅
+		 **********************************/
+		Calendar calendar = Calendar.getInstance();
+		SOMap resultMap = new SOMap();
+		int resultCnt = 0;
+		
+		param.put("siteid", cs.getStr("siteid"));
+		param.put("userid", cs.getInt("authmemberid"));
+		if (param.getStr("userid") == "") {
+			throw new BizException("로그인을 하셔야 본 서비스를 이용하실 수 있어요.");
+		}
+		if (param.getInt("reviewidx") == 0) {
+			throw new BizException("리뷰 삭제에 실패했습니다.");
+		}
+		
+		SimpleDateFormat format = new SimpleDateFormat("yyyyMMddHHmm");
+		Date currentTime = new Date();
+		String date = format.format(currentTime);
+
+		String end_dt = param.getStr("regdate");
+
+		Date endDate = format.parse(end_dt);
+		calendar.setTime(endDate);
+		calendar.add(Calendar.DATE, 3);
+		endDate = calendar.getTime();
+		Date todate = format.parse(date);
+
+		int compare = endDate.compareTo(todate);
+		if (compare < 0) {
+			throw new BizException("리뷰 삭제는 작성후 3일이내에 가능합니다.");
+		}
+		
+		/**********************************
+		 * 나의 리뷰 삭제
+		 **********************************/
+		resultCnt = goodsReviewMapper.updateReviewIstrash(param);
+		if (resultCnt == 0) {
+			throw new BizException("리뷰 삭제에 실패했습니다.");
+		}
+		String[] imgtypes = {CMConst.IMG_TYPE_REVIEW_IMG,CMConst.IMG_TYPE_REVIEW_MOV};
+		SOMap dbParam = new SOMap();
+		dbParam.put("imgtypes", imgtypes);
+		dbParam.put("orgidx", param.getInt("reviewidx"));
+		List<SOMap> uploadedfileList = fileMapper.selectFileList(dbParam);
+		for(SOMap files: uploadedfileList){
+			fileService.delete(files.getInt("idx"));
+		}
+		return resultMap;
+	}
+
+
+	/**
+	 * 리뷰 신고하기 처리
+	 */
+	@Override
+	public SOMap saveReviewNoti(SOMap param) throws Exception {
+		SOMap result = new SOMap();
+		param.put("userno", cs.getInt("authmemberno"));
+		param.put("userid", cs.getStr("authmemberid"));
+		
+		if (param.getInt("userno") == 0) {
+			throw new BizException("신고하기는 로그인 후 가능합니다.");
+		}
+		
+		int reviewNotiCnt = reviewNotiMapper.selectReviewNotiCnt(param);
+		if (reviewNotiCnt > 0) {
+			throw new BizException("이미 신고한 리뷰입니다.");
+		}
+		Util util = new Util();
+		String badWordList = bannedMapper.badWordList();
+		
+		String filterText = util.filterText(badWordList, param.getStr("etcreason"));
+		if(!filterText.equals("")){
+			throw new BizException("금칙어가 포함되어 있습니다. " + filterText);
+		}
+		reviewNotiMapper.insertReviewNoti(param);
+		
+		SOMap isnotiMap = goodsReviewMapper.selectReviewIsNoti(param);
+		if (isnotiMap == null) {
+			throw new BizException("리뷰정보가 없습니다.");
+		}else {
+			if (isnotiMap.getStr("isnoti").equals("F")) {
+				param.put("isnoti", "T");
+				goodsReviewMapper.updateFrontGoodsReview(param);
+			}
+		}		
+		return result;
+	}
+
+	/**
+	 * 리뷰 도움여부 추가처리
+	 */
+	@Override
+	public SOMap saveReviewHelp(SOMap param) throws Exception {
+		SOMap result = new SOMap();
+		param.put("userno", cs.getInt("authmemberno"));
+		
+		if (param.getInt("userno")  == 0) {
+			throw new BizException("리뷰좋아요 처리는 로그인 후 가능합니다.");
+		}
+		if (param.getInt("reviewidx") == 0) {
+			throw new BizException("리뷰정보가 없습니다."); 
+		}
+		
+		int helpCnt = reviewHelpMapper.selectReviewHelpCnt(param);
+		if (helpCnt > 0) {
+			reviewHelpMapper.deleteReviewHelp(param);
+		}else {
+			reviewHelpMapper.insertReviewHelp(param);
+		}
+		return result;
+	}
+	
+	
+	
+	/********************************
+	 * 베스트리뷰
+	 * @throws Exception 
+	 *********************************/
+	@Override
+	public SOMap selectMzReview(SOMap param) throws Exception {
+		SOMap result = new SOMap();
+		
+		param.put("siteid", cs.getStr("siteid"));
+		param.put("userno", cs.getInt("authmemberno"));
+		
+		//limit이 정해진경우 해당 수까지만 조회 아닐경우 페이징처리
+		param.put("startpage", 0);
+		param.put("endpage", param.getInt("limit"));
+
+		result.putAll(getReviewList(param));
+		
+		return result;
+	}
+	
+	/*************************************
+	 * 라이브리뷰
+	 * @throws Exception 
+	 *************************************/
+	@Override
+	public SOMap selectMzLiveReview(SOMap param) throws Exception {
+		SOMap result = new SOMap();
+		
+		param.put("siteid", cs.getStr("siteid"));
+		param.put("userno", cs.getInt("authmemberno"));
+		
+		param.put("imgtype", CMConst.IMG_TYPE_GOODS_IMG_PC_M);
+		int page = param.getInt("currentpage");
+		int startPage = (page > 1) ? ((page -1 ) * param.getInt("listcnt")) : 0;
+		param.put("startpage", startPage);
+		param.put("endpage", param.getInt("listcnt"));
+		
+		result.putAll(getReviewList(param));
+		return result;
+	}
+	
+	/**
+	 * 리뷰 목록 조회(공통)
+	 * @param param
+	 * @return
+	 * @throws Exception
+	 */
+	private SOMap getReviewList(SOMap param) throws Exception {
+		SOMap result = new SOMap();
+		
+		if(Util.flag2Bool(cs.getStr("ismobile"))) {
+			param.put("imgtype", CMConst.IMG_TYPE_GOODS_IMG_PC_M);
+		} else {
+			param.put("imgtype", CMConst.IMG_TYPE_GOODS_IMG_MO_M);			
+		}
+		
+		List<SOMap> reviewList = goodsReviewMapper.selectReviewListbyGoodsno(param);
+		
+		List<SOMap> fstfileList = new ArrayList<>();
+		String[] imgtypes = {CMConst.IMG_TYPE_REVIEW_IMG,CMConst.IMG_TYPE_REVIEW_MOV};
+		SOMap dbParam = new SOMap();
+		dbParam.put("imgtypes", imgtypes);
+		
+		for(SOMap review : reviewList) {
+			if (review.getInt("reviewidx") == 0) {
+				break;
+			}
+			dbParam.put("orgidx", review.getInt("reviewidx"));
+			List<SOMap> uploadedfileList = fileMapper.selectFileList(dbParam);
+			review.put("files", uploadedfileList);
+			if (uploadedfileList.size() > 0) {
+				review.put("fstfiles", uploadedfileList.get(0));
+				uploadedfileList.get(0).put("imgcnt", uploadedfileList.size());
+				fstfileList.add(uploadedfileList.get(0));
+			}
+		}
+		
+		//총점 및 평균 구하기
+		if (reviewList.size() > 0) {
+			result.put("reviewavg", reviewList.get(0).getFloat("reviewavg"));
+			result.put("totalcnt", reviewList.get(0).getInt("totalcnt"));
+		}
+		int listtotal = goodsReviewMapper.selectReviewListbyGoodsnoCnt(param);
+		
+		result.put("listtotal", listtotal);// 리뷰 목록 전체수
+		result.put("reviewlist", reviewList);// 리뷰 목록 전체 
+		result.put("fstfilelist", fstfileList);//리뷰의 각 첫번째 이미지만 추출 목록
+	
+		return result;
+	}
+}

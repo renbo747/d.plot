@@ -1,0 +1,7 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="30" height="30" viewBox="0 0 30 30">
+    <path data-name="사각형 6401" style="fill:none" d="M0 0h30v30H0z"/>
+    <g data-name="그룹 20168">
+        <path data-name="선 725" transform="rotate(45 6.464 32.678)" style="stroke:#111;stroke-linecap:round;fill:none" d="M0 0v28.284"/>
+        <path data-name="선 726" transform="rotate(135 7.322 17.678)" style="stroke:#111;stroke-linecap:round;fill:none" d="M0 28.284V0"/>
+    </g>
+</svg>

@@ -1,0 +1,653 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.dplot.mapper.DealerMapper">
+
+	<select id="selectDealer" parameterType="com.dplot.common.SOMap" resultType="com.dplot.common.SOMap" >
+		SELECT /* DealerMapper.xml - selectDealer 파트너사 간단 정보 조회 */
+		       A.NAME, A.REQDEALST, A.DEALERST, E.CHARGENAME, E.CHARGEMOBILE,
+		       IFNULL(PWFAILCNT,0) AS PWFAILCNT,
+		        (SELECT COUNT(*) FROM T_DELIV_TEMPLATE WHERE USERNO = A.USERNO) AS TEMPLATECNT
+		FROM T_DEALER A
+			 LEFT OUTER JOIN T_DEALER_CHARGE E
+			 ON A.USERNO = E.USERNO AND E.CHARGETYPE = 'CHA001'
+			 INNER JOIN T_USER TU ON A.USERNO = TU.NO
+		<where>
+			AND A.UserNo=#{userno}
+		</where>
+	</select>
+
+	<select id="selectPartnersList" parameterType="somap" resultType="somap">
+		SELECT /* DealerMapper.xml - selectPartnersList 파트너사 전체 목록 */
+			a.no, c.name, a.userid, d.bizno, c.dealercode
+		FROM t_user a
+		JOIN t_dealer c ON a.no = c.userno
+		JOIN t_dealer_INFO d ON a.no = dealerno
+		<where>
+			AND a.siteid = #{siteid}
+			AND c.dealerst <![CDATA[<>]]> 'DST004'
+			<if test="sword != null and sword != ''">
+				<choose>
+					<when test="skey == 'id'">
+						AND a.userid LIKE CONCAT('%',#{sword},'%')
+					</when>
+					<when test="skey == 'name'">
+						AND c.name LIKE CONCAT('%',#{sword},'%')
+					</when>
+					<when test="skey == 'bizno'">
+						AND d.bizno LIKE CONCAT('%',#{sword},'%')
+					</when>
+					<otherwise>
+						AND (
+						   a.userid LIKE CONCAT('%',#{sword},'%')
+						OR c.name LIKE CONCAT('%',#{sword},'%')
+						OR d.bizno LIKE CONCAT('%',#{sword},'%')
+						)
+					</otherwise>
+				</choose>
+			</if>
+		</where>
+		ORDER BY a.regdate
+	</select>
+
+	<select id="selectPartnsersApplyList" parameterType="somap" resultType="somap">
+		SELECT /* DEALERMAPPER.XML - SELECTPARTNSERSAPPLYLIST 파트너사 입점신청 리스트 조회 */
+			A.NO, 
+			A.USERID AS DEALER_ID, 
+			C.DEALERTYPE, 
+			C.NAME, 
+			D.EMAIL, 
+			D.TEL, 
+			D.REPMOBILE, 
+			D.MOBILE, 
+			C.REQDEALST, 
+			D.BIZNO,
+			E.CHARGENAME,
+			F.MDNAME,
+			E.CHARGEMOBILE,
+			DATE_FORMAT(A.REGDATE, '%Y-%m-%d') REGDATEYYYYMMDD, DATE_FORMAT(A.REGDATE, '%Y-%m-%d %H:%i:%s') as REGDATE
+		FROM T_USER A
+		INNER JOIN T_DEALER C ON A.NO = C.USERNO
+		INNER JOIN T_DEALER_INFO D ON A.NO = DEALERNO
+		LEFT OUTER JOIN T_DEALER_CHARGE E ON A.NO = E.USERNO AND CHARGETYPE = 'CHA001'
+		LEFT OUTER JOIN (
+			SELECT	RANK() OVER(PARTITION BY AA.DEALERNO ORDER BY AA.GOODSNO DESC) AS RANK_NO,
+					AA.DEALERNO, BB.MDNAME
+			FROM	T_GOODS AA
+			INNER JOIN T_MDINFO BB
+			ON		AA.MDCODE = BB.MDCODE
+		) F
+		ON		A.NO = F.DEALERNO
+		AND		F.RANK_NO = 1
+		<where>
+			AND A.SITEID = #{siteid}
+			<if test='ignoreperiod != null and ignoreperiod == "F"'>
+			AND A.REGDATE >= DATE_FORMAT(CONCAT(#{startdate}, ' ', '00:00:00') , '%Y-%m-%d %H:%i:%s')
+			AND A.REGDATE &lt; DATE_FORMAT(CONCAT(#{enddate}, ' ', '23:59:59'), '%Y-%m-%d %H:%i:%s')
+			</if>
+			<if test="state != null and state != ''">
+				AND C.REQDEALST = #{state}
+			</if>
+			<if test="sword != null and sword != ''">
+				<choose>
+					<when test="skey == 'id'">
+						AND A.USERID LIKE CONCAT('%',#{sword},'%')
+					</when>
+					<when test="skey == 'name'">
+						AND C.NAME LIKE CONCAT('%',#{sword},'%')
+					</when>
+					<when test="skey == 'charger'">
+						AND E.CHARGENAME LIKE CONCAT('%',#{sword},'%')
+					</when>
+					<when test="skey == 'bizno'">
+						AND D.BIZNO LIKE CONCAT('%',#{sword},'%')
+					</when>
+					<when test="skey == 'tel'">
+						AND D.TEL LIKE CONCAT('%',#{sword},'%')
+					</when>
+					<when test="skey == 'repmobile'">
+						AND D.REPMOBILE LIKE CONCAT('%',#{sword},'%')
+					</when>
+					<when test="skey == 'email'">
+						AND D.EMAIL LIKE CONCAT('%',#{sword},'%')
+					</when>
+					<otherwise>
+						AND (
+						A.USERID LIKE CONCAT('%',#{sword},'%')
+						OR C.NAME LIKE CONCAT('%',#{sword},'%')
+						OR E.CHARGENAME LIKE CONCAT('%',#{sword},'%')
+						OR D.BIZNO LIKE CONCAT('%',#{sword},'%')
+						OR D.TEL LIKE CONCAT('%',#{sword},'%')
+						OR D.REPMOBILE LIKE CONCAT('%',#{sword},'%')
+						OR D.EMAIL LIKE CONCAT('%',#{sword},'%')
+						)
+					</otherwise>
+				</choose>
+			</if>
+		</where>
+		<choose>
+			<when test="psort == 'id_asc'">
+				ORDER BY A.USERID ASC, NO DESC
+			</when>
+			<when test="psort == 'id_desc'">
+				ORDER BY A.USERID DESC, NO DESC
+			</when>
+			<when test="psort == 'name_asc'">
+				ORDER BY C.NAME ASC, NO DESC
+			</when>
+			<when test="psort == 'name_desc'">
+				ORDER BY C.NAME DESC, NO DESC
+			</when>
+			<when test="psort == 'charger_asc'">
+				ORDER BY E.CHARGENAME ASC, NO DESC
+			</when>
+			<when test="psort == 'charger_desc'">
+				ORDER BY E.CHARGENAME DESC, NO DESC
+			</when>
+			<when test="psort == 'regdate_asc'">
+				ORDER BY A.REGDATE ASC
+			</when>
+			<otherwise>
+				ORDER BY A.REGDATE DESC
+			</otherwise>
+		</choose>
+		LIMIT #{startpage}, #{endpage}
+	</select>
+
+	<select id="selectPartnsersApplyListStateCount" parameterType="somap" resultType="somap">
+		SELECT /* DealerMapper.xml - selectPartnsersApplyListStateCount 파트너사 입점신청 리스트 상태 카운트 조회 */
+		COUNT(*) AS total_cnt,
+		SUM(WAIT) AS wait_cnt,
+		SUM(APPROVAL) AS approval_cnt,
+		SUM(DENIED) AS denied_cnt
+		FROM (
+		SELECT
+		(CASE WHEN REQDEALST = 'RDS001' THEN 1 ELSE 0 END) AS WAIT,
+		(CASE WHEN REQDEALST = 'RDS002' THEN 1 ELSE 0 END) AS APPROVAL,
+		(CASE WHEN REQDEALST = 'RDS003' THEN 1 ELSE 0 END) AS DENIED
+		FROM T_USER A
+		INNER JOIN T_DEALER C ON A.NO = C.USERNO
+		INNER JOIN T_DEALER_INFO D ON A.NO = DEALERNO
+		LEFT OUTER JOIN T_DEALER_CHARGE E ON A.NO = E.USERNO AND CHARGETYPE = 'CHA001'
+		<where>
+			AND A.SITEID = #{siteid}
+			<if test='ignoreperiod != null and ignoreperiod == "F"'>
+			AND A.REGDATE >= DATE_FORMAT(CONCAT(#{startdate}, ' ', '00:00:00') , '%Y-%m-%d %H:%i:%s')
+			AND A.REGDATE &lt; DATE_FORMAT(CONCAT(#{enddate}, ' ', '23:59:59'), '%Y-%m-%d %H:%i:%s')
+			</if>
+			<if test="state != null and state != ''">
+				AND C.REQDEALST = #{state}
+			</if>
+			<if test="sword != null and sword != ''">
+				<choose>
+					<when test="skey == 'id'">
+						AND A.USERID LIKE CONCAT('%',#{sword},'%')
+					</when>
+					<when test="skey == 'name'">
+						AND C.NAME LIKE CONCAT('%',#{sword},'%')
+					</when>
+					<when test="skey == 'charger'">
+						AND E.CHARGENAME LIKE CONCAT('%',#{sword},'%')
+					</when>
+					<when test="skey == 'bizno'">
+						AND D.BIZNO LIKE CONCAT('%',#{sword},'%')
+					</when>
+					<when test="skey == 'tel'">
+						AND D.TEL LIKE CONCAT('%',#{sword},'%')
+					</when>
+					<when test="skey == 'repmobile'">
+						AND D.REPMOBILE LIKE CONCAT('%',#{sword},'%')
+					</when>
+					<when test="skey == 'email'">
+						AND D.EMAIL LIKE CONCAT('%',#{sword},'%')
+					</when>
+					<otherwise>
+						AND (
+						A.USERID LIKE CONCAT('%',#{sword},'%')
+						OR C.NAME LIKE CONCAT('%',#{sword},'%')
+						OR E.CHARGENAME LIKE CONCAT('%',#{sword},'%')
+						OR D.BIZNO LIKE CONCAT('%',#{sword},'%')
+						OR D.TEL LIKE CONCAT('%',#{sword},'%')
+						OR D.REPMOBILE LIKE CONCAT('%',#{sword},'%')
+						OR D.EMAIL LIKE CONCAT('%',#{sword},'%')
+						)
+					</otherwise>
+				</choose>
+			</if>
+		</where>
+		)T
+	</select>
+
+	<update id="updatePartnersReqDealst" parameterType="somap">
+		UPDATE /* DealerMapper.xml - updatePartnersReqDealst 파트너사 입점신청 상태 업데이트 */
+		    T_DEALER SET REQDEALST = #{state}
+		WHERE USERNO IN
+		<foreach collection="user_no_arr" item="userno" index="index" open="(" separator="," close=")">
+			#{userno}
+		</foreach>
+	</update>
+
+	<select id="selectPartnsersDetail" parameterType="somap" resultType="somap">
+		SELECT /* DealerMapper.xml - selectPartnsersDetail 파트너사 입점신청 상세내용 조회 */
+			   A.no
+		     , A.userid
+		     , C.reqdealst
+		     , C.name
+			 , C.dealerst
+			 , (select codename from t_common_code where cmclass = 'REQDEALST' and cmcode = C.reqdealst) as reqdealstname
+			 , C.sellprodtype, C.comsellno, C.remitbirth, C.isadsms, C.isadmailing, C.handbrand, C.commrate
+			 , D.bizno, D.compname, D.reprename, D.repmobile, D.mobile, D.bizcondition, D.bizitem, D.post, D.addr, D.addrdetail
+		     , D.sigungucode, D.buildingcode, D.roadnamecode
+		     , D.tel, D.email, D.remitbank, D.remitaccount, D.remitdepositor, D.muaddauthtype, D.repci
+			 , (SELECT CHARGEEMAIL FROM T_DEALER_CHARGE WHERE USERNO = C.USERNO AND CHARGETYPE = 'CHA001') AS CHARGEMAIL
+		FROM T_USER A JOIN T_DEALER C ON A.NO = C.USERNO
+					  JOIN T_DEALER_INFO D ON A.NO = DEALERNO
+		WHERE 1 = 1
+		<if test="userno != null and userno != ''">
+			AND A.NO = #{userno}
+		</if>
+		<if test="dealercode != null and dealercode != ''">
+			AND C.DEALERCODE = #{dealercode}
+		</if>
+	</select>
+
+	<insert id="insertPartnership" parameterType="somap">
+		INSERT /* DealerMapper.xml - insertPartnership 파트너사 등록 */ INTO t_dealer (userno, name, state, isadsms, isadmailing, comsellno, remitbirth, sellprodtype, dealerst, reqdealst, dealercontst, handbrand, dealercode)
+		VALUES (#{userno}, #{name}, #{state}, #{isadsms}, #{isadmailing}, #{comsellno}, #{remitbirth}, #{sellprodtype}, #{dealerst}, #{reqdealst}, #{dealercontst}, #{handbrand}, FN_GET_DEALER_CODE())
+	</insert>
+
+	<update id="updatePartnership" parameterType="somap">
+		UPDATE T_DEALER SET /* DealerMapper.xml - updatePartnership 파트너사 정보 수정 */
+		  name = #{name}
+		, sellprodtype = #{sellprodtype}
+		, comsellno = #{comsellno}
+		, isadsms = #{isadsms}
+		, isadmailing = #{isadmailing}
+		, handbrand = #{handbrand}
+		, commrate = #{commrate}
+		<if test="reqdealst != null and reqdealst != '' ">
+			, reqdealst = #{reqdealst}
+		</if>
+		WHERE userno = #{no}
+	</update>
+
+	<update id="updatePartnershipFile" parameterType="somap">
+		UPDATE T_DEALER SET /* DealerMapper.xml - updatePartnership 파트너사 정보 수정 */
+		<trim prefixOverrides=",">
+			<if test="orgbiznofile != null and orgbiznofile != '' ">
+				, orgbiznofile = #{orgbiznofile}
+			</if>
+			<if test="pathbiznofile != null and pathbiznofile != '' ">
+				, pathbiznofile = #{pathbiznofile}
+			</if>
+			<if test="orgbcopyfile != null and orgbcopyfile != '' ">
+				, orgbcopyfile = #{orgbcopyfile}
+			</if>
+			<if test="pathbcopyfile != null and pathbcopyfile != '' ">
+				, pathbcopyfile = #{pathbcopyfile}
+			</if>
+			<if test="orgcsellfile != null and orgcsellfile != '' ">
+				, orgcsellfile = #{orgcsellfile}
+			</if>
+			<if test="pathcsellfile != null and pathcsellfile != '' ">
+				, pathcsellfile = #{pathcsellfile}
+			</if>
+		</trim>
+		WHERE userno = #{no}
+	</update>
+
+	<select id="selectPartnsersStatusList" parameterType="somap" resultType="somap">
+		SELECT /* DealerMapper.xml - selectPartnsersStatusList 파트너사 현황 리스트 */
+		A.NO, A.USERID AS DEALER_ID, C.DEALERTYPE, C.NAME, moduurl, C.MODUID,
+		(SELECT chargename FROM T_DEALER_CHARGE WHERE USERNO = a.no AND CHARGETYPE = 'CHA001' LIMIT 1) AS chargename,
+		(SELECT chargemobile FROM T_DEALER_CHARGE WHERE USERNO = a.no AND CHARGETYPE = 'CHA001' LIMIT 1) AS tel,
+		D.EMAIL, D.repmobile, (CASE C.DEALERST WHEN 'DST001' THEN '운영중' WHEN 'DST002' THEN '일시중단' WHEN 'DST003' THEN '휴점' END) AS DEALERST, D.BIZNO,
+		DATE_FORMAT(REGDATE, '%Y-%m-%d') REGDATEYYYYMMDD, DATE_FORMAT(REGDATE, '%Y-%m-%d %H:%i:%s') AS REGDATE, (SELECT COUNT(*) FROM T_DEALER_MEMO M WHERE M.USERNO = C.USERNO and isuse = 'T') AS MEMOCNT,
+		(SELECT COUNT(*) FROM T_GOODS G WHERE G.DEALERNO = C.USERNO AND isdisplay='T' AND goodsselltype not in ('GST003','GST006') AND GOODSAPPRTYPE = 'GAT004') AS GOODSCNT, dealercontst
+		FROM T_USER A JOIN T_DEALER C ON A.NO = C.USERNO
+		JOIN T_DEALER_INFO D ON A.NO = DEALERNO
+		<where>
+			AND A.SITEID = #{siteid}
+			AND c.reqdealst = 'RDS002'
+			<![CDATA[
+			AND A.REGDATE >= DATE_FORMAT(CONCAT(#{startdate}, ' ', '00:00:00') , '%Y-%m-%d %H:%i:%s')
+			AND A.REGDATE < DATE_FORMAT(CONCAT(#{enddate}, ' ', '23:59:59'), '%Y-%m-%d %H:%i:%s')
+			]]>
+			<choose>
+				<when test="status != null and status != ''">
+					AND C.DEALERST = #{status}
+				</when>
+				<otherwise>
+					AND C.DEALERST != 'DST004'
+				</otherwise>
+			</choose>
+			<if test="sword != null and sword != ''">
+				<choose>
+					<when test="skey == 'id'">
+						AND A.USERID LIKE CONCAT('%',#{sword},'%')
+					</when>
+					<when test="skey == 'name'">
+						AND C.NAME LIKE CONCAT('%',#{sword},'%')
+					</when>
+					<!-- <when test="skey == 'charger'">
+						AND D.CHARGENAME LIKE CONCAT('%',#{sword},'%')
+					</when> -->
+					<when test="skey == 'bizno'">
+						AND D.BIZNO LIKE CONCAT('%',#{sword},'%')
+					</when>
+					<when test="skey == 'mobile'">
+						AND D.REPMOBILE LIKE CONCAT('%',#{sword},'%')
+					</when>
+					<otherwise>
+						AND (
+						A.USERID LIKE CONCAT('%',#{sword},'%')
+						OR C.NAME LIKE CONCAT('%',#{sword},'%')
+						<!-- OR D.CHARGENAME LIKE CONCAT('%',#{sword},'%') -->
+						OR D.BIZNO LIKE CONCAT('%',#{sword},'%')
+						OR D.REPMOBILE LIKE CONCAT('%',#{sword},'%')
+						)
+					</otherwise>
+				</choose>
+			</if>
+		</where>
+		<choose>
+			<when test="psort == 'id_asc'">
+				ORDER BY A.USERID ASC, No DESC
+			</when>
+			<when test="psort == 'id_desc'">
+				ORDER BY A.USERID DESC, No DESC
+			</when>
+			<when test="psort == 'name_asc'">
+				ORDER BY C.NAME ASC, No DESC
+			</when>
+			<when test="psort == 'name_desc'">
+				ORDER BY C.NAME DESC, No DESC
+			</when>
+			<when test="psort == 'charger_asc'">
+				ORDER BY CHARGENAME ASC, No DESC
+			</when>
+			<when test="psort == 'charger_desc'">
+				ORDER BY CHARGENAME DESC, No DESC
+			</when>
+			<when test="psort == 'regdate_asc'">
+				ORDER BY A.REGDATE ASC
+			</when>
+			<otherwise>
+				ORDER BY A.REGDATE DESC
+			</otherwise>
+		</choose>
+		LIMIT #{startpage}, #{endpage}
+	</select>
+
+	<select id="selectPartnsersStatusListStateCount" parameterType="somap" resultType="somap">
+		SELECT /* DealerMapper.xml - selectPartnsersStatusListStateCount 파트너사 현황 상태 카운트 */
+		count(*) as total_cnt,
+		SUM(OPERATION) AS OPERATION_CNT,
+		SUM(SUSPEND) AS SUSPEND_CNT,
+		SUM(CLOSED) AS CLOSED_CNT
+		FROM (
+		SELECT
+		(CASE WHEN DEALERST = 'DST001' THEN 1 ELSE 0 END) AS OPERATION,
+		(CASE WHEN DEALERST = 'DST002' THEN 1 ELSE 0 END) AS SUSPEND,
+		(CASE WHEN DEALERST = 'DST003' THEN 1 ELSE 0 END) AS CLOSED
+		FROM T_USER A JOIN T_DEALER C ON A.NO = C.USERNO
+		JOIN T_DEALER_INFO D ON A.NO = DEALERNO
+		<where>
+			AND A.SITEID = #{siteid}
+			AND c.reqdealst = 'RDS002'
+			<![CDATA[
+				AND A.REGDATE >= DATE_FORMAT(CONCAT(#{startdate}, ' ', '00:00:00') , '%Y-%m-%d %H:%i:%s')
+				AND A.REGDATE < DATE_FORMAT(CONCAT(#{enddate}, ' ', '23:59:59'), '%Y-%m-%d %H:%i:%s')
+				]]>
+			<choose>
+				<when test="status != null and status != ''">
+					AND C.DEALERST = #{status}
+				</when>
+				<otherwise>
+					AND C.DEALERST != 'DST004'
+				</otherwise>
+			</choose>
+			<if test="sword != null and sword != ''">
+				<choose>
+					<when test="skey == 'id'">
+						AND A.USERID LIKE CONCAT('%',#{sword},'%')
+					</when>
+					<when test="skey == 'name'">
+						AND C.NAME LIKE CONCAT('%',#{sword},'%')
+					</when>
+					<!-- <when test="skey == 'charger'">
+						AND D.CHARGENAME LIKE CONCAT('%',#{sword},'%')
+					</when> -->
+					<when test="skey == 'bizno'">
+						AND D.BIZNO LIKE CONCAT('%',#{sword},'%')
+					</when>
+					<when test="skey == 'mobile'">
+						AND D.REPMOBILE LIKE CONCAT('%',#{sword},'%')
+					</when>
+					<otherwise>
+						AND (
+						A.USERID LIKE CONCAT('%',#{sword},'%')
+						OR C.NAME LIKE CONCAT('%',#{sword},'%')
+						<!-- OR D.CHARGENAME LIKE CONCAT('%',#{sword},'%') -->
+						OR D.BIZNO LIKE CONCAT('%',#{sword},'%')
+						OR D.REPMOBILE LIKE CONCAT('%',#{sword},'%')
+						)
+					</otherwise>
+				</choose>
+			</if>
+		</where>
+		)T
+	</select>
+
+	<select id="selectPartnsersExcelList" parameterType="somap" resultType="HashMap">
+		SELECT /* DealerMapper.xml - selectPartnsersExcelList 파트너사 현황 엑셀 다운로드 리스트 */
+		A.USERID AS '아이디', C.NAME AS '업체명', D.BIZNO AS '사업자등록번호',
+		(SELECT chargename FROM T_DEALER_CHARGE WHERE USERNO = a.no AND CHARGETYPE = 'CHA001' LIMIT 1) AS '제휴 담당자',
+		(SELECT chargemobile FROM T_DEALER_CHARGE WHERE USERNO = a.no AND CHARGETYPE = 'CHA001' LIMIT 1) AS '담당자 연락처', D.repmobile AS '대표자 휴대폰',
+		DATE_FORMAT(REGDATE, '%Y-%m-%d') AS '입점일',
+		(SELECT COUNT(*) FROM T_GOODS G WHERE G.DEALERNO = C.USERNO AND isdisplay='T' AND goodsselltype not in ('GST003','GST006') AND GOODSAPPRTYPE = 'GAT004') AS '전시상품',
+		(CASE C.DEALERST WHEN 'DST001' THEN '운영중' WHEN 'DST002' THEN '일시중단' WHEN 'DST003' THEN '휴점' END) AS '상태',
+		(SELECT COUNT(*) FROM T_DEALER_MEMO M WHERE M.USERNO = C.USERNO and isuse = 'T') AS '메모',
+		(CASE C.dealercontst WHEN 'DCS001' THEN '계약전' WHEN 'DCS002' THEN '계약중' WHEN 'DCS003' THEN '계약완료' END) AS '계약요청'
+		FROM T_USER A JOIN T_DEALER C ON A.NO = C.USERNO
+		JOIN T_DEALER_INFO D ON A.NO = DEALERNO
+		<where>
+			AND A.SITEID = #{siteid}
+			AND c.reqdealst = 'RDS002'
+			<![CDATA[
+			AND A.REGDATE >= DATE_FORMAT(CONCAT(#{startdate}, ' ', '00:00:00') , '%Y-%m-%d %H:%i:%s')
+			AND A.REGDATE < DATE_FORMAT(CONCAT(#{enddate}, ' ', '23:59:59'), '%Y-%m-%d %H:%i:%s')
+			]]>
+			<choose>
+				<when test="status != null and status != ''">
+					AND C.DEALERST = #{status}
+				</when>
+				<otherwise>
+					AND C.DEALERST != 'DST004'
+				</otherwise>
+			</choose>
+			<if test="sword != null and sword != ''">
+				<choose>
+					<when test="skey == 'id'">
+						AND A.USERID LIKE CONCAT('%',#{sword},'%')
+					</when>
+					<when test="skey == 'name'">
+						AND C.NAME LIKE CONCAT('%',#{sword},'%')
+					</when>
+					<!-- <when test="skey == 'charger'">
+						AND D.CHARGENAME LIKE CONCAT('%',#{sword},'%')
+					</when> -->
+					<when test="skey == 'bizno'">
+						AND D.BIZNO LIKE CONCAT('%',#{sword},'%')
+					</when>
+					<when test="skey == 'mobile'">
+						AND D.REPMOBILE LIKE CONCAT('%',#{sword},'%')
+					</when>
+					<otherwise>
+						AND (
+						A.USERID LIKE CONCAT('%',#{sword},'%')
+						OR C.NAME LIKE CONCAT('%',#{sword},'%')
+						<!-- OR D.CHARGENAME LIKE CONCAT('%',#{sword},'%') -->
+						OR D.BIZNO LIKE CONCAT('%',#{sword},'%')
+						OR D.REPMOBILE LIKE CONCAT('%',#{sword},'%')
+						)
+					</otherwise>
+				</choose>
+			</if>
+		</where>
+		<choose>
+			<when test="psort == 'id_asc'">
+				ORDER BY A.USERID ASC, No DESC
+			</when>
+			<when test="psort == 'id_desc'">
+				ORDER BY A.USERID DESC, No DESC
+			</when>
+			<when test="psort == 'name_asc'">
+				ORDER BY C.NAME ASC, No DESC
+			</when>
+			<when test="psort == 'name_desc'">
+				ORDER BY C.NAME DESC, No DESC
+			</when>
+			<when test="psort == 'charger_asc'">
+				ORDER BY D.CHARGENAME ASC, No DESC
+			</when>
+			<when test="psort == 'charger_desc'">
+				ORDER BY D.CHARGENAME DESC, No DESC
+			</when>
+			<when test="psort == 'regdate_asc'">
+				ORDER BY A.REGDATE ASC
+			</when>
+			<otherwise>
+				ORDER BY A.REGDATE DESC
+			</otherwise>
+		</choose>
+	</select>
+
+	<update id="updatePartnersDealerst" parameterType="somap">
+		UPDATE T_DEALER SET DEALERST = #{status} /* DealerMapper.xml - updatePartnersDealerst 파트너사 입점상태 수정 */
+		WHERE USERNO IN
+		<foreach collection="user_no_arr" item="userNo" index="index" open="(" separator="," close=")">
+			#{userNo}
+		</foreach>
+	</update>
+
+	<update id="updateSignStateAndModuId" parameterType="somap">
+		UPDATE T_DEALER SET /* DealerMapper.xml - updateSignStateAndModuId 파트너사 계약관련 모두아이디 수정 */
+			MODUID = #{signid},
+			DEALERCONTST = #{dealercontst}
+		WHERE userno = #{no}
+	</update>
+
+	<update id="updateSignState" parameterType="somap">
+		UPDATE T_DEALER SET /* DealerMapper.xml - updateSignState 파트너사 계약상태 및 계약서 URL 수정 */
+			DEALERCONTST = #{dealercontst},
+			MODUURL = #{signurl}
+		WHERE MODUID = #{signid}
+	</update>
+
+	<select id="selectPartnsersERPData" parameterType="somap" resultType="somap">
+		SELECT
+			D.IFLOGIDX, USERNO, NAME, ACCOUNTCYCLE, STATE, SELLPRODTYPE, COMSELLNO, REMITBIRTH, ISADSMS
+			 , ISADMAILING, DEALERST, REQDEALST, DEALERCONTST, MODUID, MODUURL, HANDBRAND
+			 , DEALERCODE, BIZNO, BIZCONDITION, BIZITEM, REMITBANK, REMITACCOUNT, REMITDEPOSITOR
+			 , CHARGENAME, CHARGEPOSITION, TEL, FAX, MOBILE, EMAIL, HOMEPAGE, POST, ADDR, ADDRDETAIL
+			 , CONCAT(SIGUNGUCODE, ROADNAMECODE) AS ROAD_NAME_CODE, BUILDINGCODE AS BD_MGT_NO
+			 , MEMO, NOTE, GOODSAPPRTYPE, REPRENAME, REPMOBILE, COMPNAME, REPCI, MUADDAUTHTYPE, D.AUD_TYPE_CD
+		FROM T_USER A INNER JOIN T_DEALER B ON A.NO = B.USERNO INNER JOIN T_DEALER_INFO C ON B.USERNO = C.DEALERNO
+					  INNER JOIN (
+			SELECT
+				ORGNO, GROUP_CONCAT(IFLOGIDX) AS IFLOGIDX, MIN(REGDATE) AS REGDATE
+				 , AUDDIV AS AUD_TYPE_CD
+			FROM T_IFLOG A
+			WHERE IFTYPE = 'IFT001'
+			AND IFDATE IS NULL
+			GROUP BY ORGNO, AUDDIV
+		)D ON B.USERNO = D.ORGNO
+		WHERE A.SITEID = #{siteid}
+	</select>
+
+	<select id="selectDealerListCalculate" parameterType="somap" resultType="somap">
+		SELECT
+			A.USERNO, A.NAME, A.DEALERCODE, C.BIZNO
+		FROM T_DEALER A INNER JOIN T_USER B ON A.USERNO = B.NO INNER JOIN T_DEALER_INFO C ON A.USERNO = C.DEALERNO
+		WHERE B.SITEID = #{siteid}
+	</select>
+
+	<select id="selectPartnersDelaySendTargetList" parameterType="somap" resultType="somap">
+		SELECT
+			B.USERNO, REPMOBILE, A.SITEID
+			 , (SELECT CHARGEMOBILE FROM T_DEALER_CHARGE WHERE CHARGETYPE = 'CHA001' AND USERNO = B.USERNO ORDER BY REGDATE DESC LIMIT 1) AS CHARGEMOBILE
+		FROM T_USER A INNER JOIN T_DEALER B ON A.NO = B.USERNO
+			INNER JOIN T_DEALER_INFO C ON B.USERNO = C.DEALERNO
+		WHERE A.SITEID = 'base'
+		  AND B.DEALERST = 'DST001'
+		  AND B.REQDEALST = 'RDS002';
+	</select>
+
+	<select id="selectPartnersDealerstCountByGoodsno" parameterType="somap" resultType="somap">
+		SELECT /* DealerMapper.xml - selectPartnersDealerstCountByGoodsno 상품번호로 휴점, 일시중단 파트너사 카운트 */
+			count(*) as TOTAL_CNT,
+			SUM(T.STOP_CNT) AS STOP_CNT,
+			SUM(T.EXIT_CNT) AS EXIT_CNT
+		FROM (
+			SELECT
+				(CASE WHEN B.DEALERST = 'DST002' THEN 1 ELSE 0 END) AS STOP_CNT,
+				(CASE WHEN B.DEALERST = 'DST004' THEN 1 ELSE 0 END) AS EXIT_CNT
+			FROM T_USER A
+			JOIN T_DEALER B ON A.NO = B.USERNO
+			JOIN T_GOODS C ON A.NO = C.DEALERNO
+			WHERE 1 = 1
+			<choose>
+				<when test="goodsnolist != null and goodsnolist.size > 0">
+					AND C.GOODSNO IN
+					<foreach collection="goodsnolist" item="_goodsno" index="index" open="(" separator="," close=")">
+						#{_goodsno}
+					</foreach>
+				</when>
+				<otherwise>
+				AND C.GOODSNO = #{goodsno}
+				</otherwise>
+			</choose>
+		)T
+	</select>
+
+	<select id="selectDealerList" parameterType="somap" resultType="somap">
+		select /*DealerMapper.xml - selectDealerList:: 판매업체 목록 조회*/
+			   USERNO
+			 , NAME
+		from t_dealer
+		where DEALERST = 'DST001'
+		AND REQDEALST = 'RDS002'
+	</select>
+
+	<select id="selectDealerMemberInfo" parameterType="somap" resultType="somap">
+		SELECT /*selectDealerMemberInfo.xml - selectAdminMemberInfo DealerCharge 사용자정보 조회*/
+		      tu.USERID
+		    , tdc.USERNO
+		    , tdc.CHARGEEMAIL AS EMAIL
+		    , tm.NAME
+		    , tdc.CHARGEMOBILE AS MOBILE
+		    , DATE_FORMAT(tu.REGDATE, '%Y%m%d') AS REGDT
+		    , tdc.CONNINFO AS CI
+		    , tdc.DIVAL AS DI
+		FROM t_user tu
+		INNER JOIN T_DEALER tm
+		ON tu.NO = tm.USERNO
+		INNER JOIN T_DEALER_CHARGE tdc
+		ON tu.NO = tdc.USERNO
+		AND tdc.CHARGETYPE = 'CHA001'
+		WHERE tu.siteid = #{siteid}
+		AND ( (tdc.CONNINFO = #{ci} OR tdc.DIVAL = #{di} )
+		      OR (tdc.CONNINFO IS NULL AND  tdc.dival IS NULL AND tdc.CHARGEMOBILE= #{mobile} ) )
+		LIMIT 1
+	</select>
+
+	<update id="updateDealerMemberCiDiInfo" parameterType="somap">
+		UPDATE T_DEALER_CHARGE /*selectDealerMemberInfo.xml - updateDealerMemberCiDiInfo DEALER_CHARGE ci,di정보 업데이트*/
+		SET
+		CONNINFO = #{ci},
+		DIVAL = #{di}
+		WHERE  USERNO = #{userno}
+		AND    CHARGETYPE = 'CHA001'
+	</update>
+</mapper>

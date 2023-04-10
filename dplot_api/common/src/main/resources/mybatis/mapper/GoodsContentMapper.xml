@@ -1,0 +1,72 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.dplot.mapper.GoodsContentMapper">
+	<!-- 상품내용 조회 -->
+	<resultMap id="selectGoodsContentRseult" type="somap">
+		<result property="PCCONTENT" column="PCCONTENT" jdbcType="NCLOB" javaType="java.lang.String" />
+		<result property="MOBILECONTENT" column="MOBILECONTENT" jdbcType="NCLOB" javaType="java.lang.String" />
+		<result property="NOTICECONTENT" column="NOTICECONTENT" jdbcType="NCLOB" javaType="java.lang.String" />
+		<result property="INTROCONTENT" column="INTROCONTENT" jdbcType="NCLOB" javaType="java.lang.String" />
+	</resultMap>
+	<select id="selectGoodsContent" parameterType="somap" resultMap="selectGoodsContentRseult">
+		SELECT	/* GoodsContentMapper.xml - selectGoodsContent 상품내용 조회 */
+			  IFNULL(content, '') AS pccontent
+			, IFNULL(mobile_content, '') AS mobilecontent
+			, IFNULL(notice_content, '') AS noticecontent
+			, IFNULL(intro_content, '') AS introcontent
+		FROM t_goods_content
+		WHERE goodsno = #{goodsno}
+    </select>
+	
+	<!-- 상품내용 저장 -->
+	<insert id="mergeGoodsContent" parameterType="somap">
+		/* GoodsContentMapper.xml - mergeGoodsContent 상품내용 저장 */
+		INSERT INTO t_goods_content (
+			  goodsno  			/* 상품번호 */
+			, content  			/* 상세내용 */
+			, mobile_content  	/* 모바일_상세내용 */
+			, notice_content  	/* 공지이미지 */
+			, intro_content  	/* 인트로이미지 */
+		) VALUES (
+			  #{goodsno}
+			, #{pccontent}
+			, #{mobilecontent}
+			, #{noticecontent}
+			, #{introcontent}
+		)
+		ON DUPLICATE KEY UPDATE
+			  content = #{pccontent}
+			, mobile_content = #{mobilecontent}
+			, notice_content = #{noticecontent}
+			, intro_content = #{introcontent}
+	</insert>
+	
+	<!-- 상품내용 일괄수정 -->
+	<update id="updateAllGoodsContent" parameterType="somap">
+		UPDATE t_goods_content	/* GoodsContentMapper.xml - updateAllGoodsContent 상품내용 일괄수정 */
+		<set>
+			<if test='isnoticechange != null and isnoticechange == "T"'>
+			notice_content = #{noticecontent},
+			</if>
+			<if test='isintrochange != null and isintrochange == "T"'>
+			intro_content = #{introcontent},
+			</if>
+			<if test='ispcdetailchange != null and ispcdetailchange == "T"'>
+			content = #{pccontent},
+			</if>
+			<if test='ismodetailchange != null and ismodetailchange == "T"'>
+			mobile_content = #{mobilecontent},
+			</if>
+			goodsno = goodsno
+		</set>
+		<where>
+			<if test="goodsnolist != null and goodsnolist.size > 0">
+				AND goodsno IN
+				<foreach collection="goodsnolist" item="goodsno" index="index" open="(" separator="," close=")">
+					#{goodsno}
+				</foreach>
+			</if>
+		</where>
+	</update>
+</mapper>

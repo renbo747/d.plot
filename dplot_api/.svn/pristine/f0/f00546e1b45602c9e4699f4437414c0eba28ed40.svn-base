@@ -1,0 +1,87 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.dplot.mapper.GoodsKccertMapper">
+	
+	<!-- 상품KC인증 목록 조회 -->
+	<select id="selectGoodsKccertList" parameterType="somap" resultType="somap" >
+		SELECT	/* GoodsKccertMapper.xml - selectGoodsKccertList 상품KC인증 목록 조회 */
+			  tgk.idx, tgk.goodsno, tgk.kccerttype, tgk.kccertno, tgk.iscert
+		FROM t_goods_kccert tgk
+		WHERE tgk.goodsno = #{goodsno}
+		ORDER BY tgk.regdate DESC
+	</select>
+	
+	<!-- 상품KC인증 추가 -->
+	<insert id="insertGoodsKccert" parameterType="somap">
+		/* GoodsKccertMapper.xml - insertGoodsKccert 상품KC인증 추가 */
+		INSERT INTO t_goods_kccert (
+			  goodsno  		/*상품번호*/
+			, kccertno  	/*kc인증번호*/
+			, iscert  		/*인증여부*/
+			, reguserid  	/*등록자id*/
+			, regdate  		/*등록일시*/
+			, moduserid  	/*수정자id*/
+			, moddate  		/*수정일시*/
+		)
+		<choose>
+			<when test="kccertlist != null and kccertlist.size > 0">
+				VALUES
+				<foreach collection="kccertlist" item="data" index="index" open="" separator="," close="">
+			    (	  #{goodsno}
+					, #{data.kccertno}
+					, #{data.iscert}
+					, #{authuserid}
+					, NOW()
+					, #{authuserid}
+					, NOW()
+			    )
+			    </foreach>
+			</when>
+			<otherwise>
+			VALUES (
+				  #{goodsno}
+				, #{kccertno}
+				, #{iscert}
+				, #{authuserid}
+				, NOW()
+				, #{authuserid}
+				, NOW()
+	
+			)
+			</otherwise>
+		</choose>
+	</insert>
+	
+	<!-- 상품KC인증 삭제 -->
+	<delete id="deleteGoodsKccert" parameterType="somap">
+		/* GoodsKccertMapper.xml - deleteGoodsKccert 상품KC인증 삭제 */
+		DELETE FROM t_goods_kccert
+		WHERE 1 = 1
+		<choose>
+			<when test='goodsnolist != null and goodsnolist.size > 0'>
+				AND goodsno IN
+				<foreach collection="goodsnolist" item="goodsno" index="index" open="(" separator="," close=")">
+					#{goodsno}
+				</foreach>
+			</when>
+			<otherwise>
+				AND goodsno = #{goodsno}
+				<if test='idx != null and idx != ""'>
+				AND idx = #{idx}
+				</if>
+			</otherwise>
+		</choose>
+	</delete>
+
+	<select id="selectGoodsKccertListERP" parameterType="somap" resultType="somap">
+		SELECT
+			idx,
+			goodsno,
+			kccerttype,
+			kccertno,
+			iscert
+		FROM T_GOODS_KCCERT
+		WHERE GOODSNO = #{goodsno}
+	</select>
+</mapper>

@@ -1,0 +1,84 @@
+.event-banner-wrap {
+  width: 100%;
+  height: 100%;
+  background-repeat: no-repeat;
+  background-position: center;
+  background-size: cover;
+  img {
+    width: 100%;
+  }
+  .event-banner__txt-area {
+    padding: 32px 20px;
+    @include media-breakpoint-up(xl) {
+      padding: 50px 40px;
+    }
+    .event-banner__best {
+      font-size: 12px;
+      letter-spacing: -.36px;
+      line-height: 14px;
+      font-weight: 600;
+      padding-bottom: 4px;
+      color: #fff;
+      @include media-breakpoint-up(xl) {
+        font-size: 18px;
+        letter-spacing: -.54px;
+        line-height: 21px;
+        padding-bottom: 10px;
+      }
+    }
+    .event-banner__tit {
+      font-size: 16px;
+      letter-spacing: -.64px;
+      line-height: 24px;
+      padding-bottom: 44px;
+      color: #fff;
+      @include media-breakpoint-up(xl) {
+        font-size: 22px;
+        letter-spacing: -.88px;
+        line-height: 34px;
+        padding-bottom: 58px;
+      }
+    }
+    .event-banner__shortcuts {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      width: 67px;
+      height: 26px;
+      font-size: 12px;
+      line-height: 17px;
+      letter-spacing: -.48px;
+      border: 1px solid rgba(255,255,255,.5);
+      cursor: pointer;
+      color: #fff;
+      @include media-breakpoint-up(xl) {
+        width: 110px;
+        height: 46px;
+        font-size: 18px;
+        line-height: 26px;
+        letter-spacing: -.72px;
+        opacity: 1;
+      }
+    }
+  }
+}
+
+.event-banner-wrap.black {
+  .event-banner__best {
+    color: #111;
+  }
+  .event-banner__tit {
+    color: #111;
+  }
+  .event-banner__shortcuts {
+    border: 1px solid rgba(0,0,0,.5);
+    color: #111;
+  }
+}
+
+.event-banner-wrap.bg-event {
+  background-color: #629a95;
+  &.white {
+    background-color: #f8f8f8;
+  }
+}

@@ -1,0 +1,16 @@
+.instagram-item {
+  position: relative;
+
+  .item__img {
+    width: 265px;
+    height: 265px;
+    margin: 0;
+    @include media-breakpoint-up(xl) {
+      width: 295px;
+      height: 295px;
+    }
+    img{
+      width: 100%;
+    }
+  }
+}

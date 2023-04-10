@@ -1,0 +1,706 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.dplot.mapper.GoodsQnaMapper">
+
+    <!-- 상품 QA 리스트 조회 -->
+    <select id="selectQnaList" resultType="somap" parameterType="somap">
+        SELECT
+            @ROWNUM := @ROWNUM + 1  AS rn,
+            a.*
+        FROM (
+            SELECT 
+            	if(f.ispbgoods = 'F', '위탁', '직매입') as ispbgoods
+            	, if(a.issecret = 'T', '비공개', '공개') as issecret
+            	, b.name                                AS dealername -- 업체 이름
+                , fn_get_codename_str(a.qnatype, 'QNATYPE') AS qnatype
+                , a.qnatype as sortqnatype
+                , d.userid                                            -- 유저 아이디
+                , c.name                                AS username   -- 유저 이름
+                , c.mobile
+                , c.email
+                , f.goodsname                                         -- 상품 이름
+                , a.subject                                           -- 제목
+                , substr(a.content,1,15) as content
+                , date_format(a.regdate, '%Y-%m-%d')    AS regdate    -- 등록일
+                , ifnull(g.name, td.name)				AS repuname   -- 답변자
+                , date_format(a.repregdate, '%Y-%m-%d') AS repregdate -- 등록일
+                , i.filecount
+                , if(a.isreply = 'T', '완료', '대기')       AS isreply    -- 답변 상태
+                , if(a.isreply = 'T', 'bg', '')         AS style      -- 스타일
+                , a.idx
+                , a.repcontent
+                , d.no
+                , f.goodsno
+                , f.GOODSCODE
+                , FN_GET_OPTION_DETAIL(a.goodsno, a.optioncode, ' | ') as optionname
+            	FROM t_goods_qna a
+                LEFT JOIN (
+                	SELECT orgidx, count(*) as filecount
+                	FROM t_file i 
+                	WHERE imgtype = 'IGT099'
+                	GROUP BY orgidx
+                ) i ON a.idx = i.orgidx
+                LEFT JOIN t_user d ON a.userno = d.no
+                LEFT JOIN t_member c ON a.userno = c.userno
+                LEFT JOIN t_admin g ON a.repuserno = g.userno
+                LEFT JOIN t_goods f ON a.goodsno = f.goodsno
+                LEFT JOIN t_dealer b ON a.dealerno = b.userno
+                LEFT JOIN t_dealer td ON a.repuserno = td.userno
+            WHERE 1 = 1
+            AND a.istrash = 'F'
+            -- 검색 조건
+            <if test="sword != null and sword != ''">
+                <choose>
+                    <when test="skey == 'userid'">
+                        AND d.userid LIKE concat('%',#{sword}, '%') -- 유저 아이디
+                    </when>
+                    <when test="skey == 'username'">
+                        AND c.name LIKE concat('%', #{sword}, '%') -- 유저 이름
+                    </when>
+                    <when test="skey == 'productname'">
+                        AND (f.goodsname LIKE concat('%', #{sword}, '%') -- 상품명
+                        OR FN_GET_OPTION_DETAIL(a.goodsno, a.optioncode, ' | ')  LIKE concat('%', #{sword}, '%'))
+                    </when>
+                    <when test="skey == 'repusername'">
+                        AND ifnull(g.name, td.name) LIKE concat('%', #{sword}, '%') -- 내용
+                    </when>
+                    <otherwise>
+                        AND (
+                        c.name LIKE concat('%', #{sword}, '%') -- 직접 (작성자)
+                        <if test="isadmin == true">
+                        OR d.userid LIKE concat('%',#{sword}, '%') -- 직접 (제목)
+                        </if>
+                        OR (f.goodsname LIKE concat('%', #{sword}, '%') -- 상품명
+                        OR FN_GET_OPTION_DETAIL(a.goodsno, a.optioncode, ' | ')  LIKE concat('%', #{sword}, '%'))
+                        OR ifnull(g.name, td.name) LIKE concat('%', #{sword}, '%') -- 내용
+                        )
+                    </otherwise>
+                </choose>
+            </if>
+            <if test="sdate !=null and sdate !='' ">
+                <choose>
+                    <when test="sdate == 'start'">
+                        AND str_to_date(a.regdate, '%Y-%m-%d') BETWEEN #{startdate} AND #{enddate}
+                    </when>
+                    <when test="sdate == 'end'">
+                        AND str_to_date(a.repregdate, '%Y-%m-%d') BETWEEN #{startdate} AND #{enddate}
+                    </when>
+                </choose>
+            </if>
+            <if test='ispbgoods != null and ispbgoods != ""'>
+                AND f.ispbgoods = #{ispbgoods}
+            </if>
+            <if test='ispbgoods == "F" and dealerno != null and dealerno != ""'>
+                AND a.dealerno = #{dealerno}
+            </if>
+            <if test="userno != null and userno != ''">
+                AND a.userno = #{userno}
+            </if>
+            <if test="isreply != null and isreply != '' ">
+                AND a.isreply = #{isreply}
+            </if>
+            <if test="isadmin == false">
+            	AND a.dealerno = #{nowdealerno}
+            </if>
+			<if test='qnatype !=null and qnatype != ""'>
+				AND a.QNATYPE = #{qnatype}
+			</if>	
+            AND a.siteid = #{siteid}
+
+            -- /검색 조건
+         ) a, (SELECT @ROWNUM := #{startpage}) AS b
+        <choose>
+        	<when test="psort == 'dealername_desc'">
+                ORDER BY a.dealername DESC
+            </when>
+            <when test="psort == 'dealername_asc'">
+                ORDER BY a.dealername ASC
+            </when>
+            <when test="psort == 'qnatype_desc'">
+                ORDER BY a.sortqnatype DESC
+            </when>
+            <when test="psort == 'qnatype_asc'">
+                ORDER BY a.sortqnatype ASC
+            </when>
+            <when test="psort == 'userid_desc'">
+                ORDER BY a.userid DESC
+            </when>
+            <when test="psort == 'userid_asc'">
+                ORDER BY a.userid ASC
+            </when>
+            <when test="psort == 'username_desc'">
+                ORDER BY a.username DESC
+            </when>
+            <when test="psort == 'username_asc'">
+                ORDER BY a.username ASC
+            </when>
+            <when test="psort == 'mobile_desc'">
+                ORDER BY a.mobile DESC
+            </when>
+            <when test="psort == 'mobile_asc'">
+                ORDER BY a.mobile ASC
+            </when>
+            <when test="psort == 'email_desc'">
+                ORDER BY a.email DESC
+            </when>
+            <when test="psort == 'email_asc'">
+                ORDER BY a.email ASC
+            </when>
+            <when test="psort == 'goodsname_desc'">
+                ORDER BY a.goodsname DESC
+            </when>
+            <when test="psort == 'goodsname_asc'">
+                ORDER BY a.goodsname ASC
+            </when>
+            <when test="psort == 'content_desc'">
+                ORDER BY a.content DESC
+            </when>
+            <when test="psort == 'content_asc'">
+                ORDER BY a.content ASC
+            </when>
+            <when test="psort == 'regdate_desc'">
+                ORDER BY a.regdate DESC
+            </when>
+            <when test="psort == 'regdate_asc'">
+                ORDER BY a.regdate ASC
+            </when>
+            <when test="psort == 'repregdate_desc'">
+                ORDER BY a.repregdate DESC
+            </when>
+            <when test="psort == 'repregdate_asc'">
+                ORDER BY a.repregdate ASC
+            </when>
+            <when test="psort == 'repuname_desc'">
+                ORDER BY a.repuname DESC
+            </when>
+            <when test="psort == 'repuname_asc'">
+                ORDER BY a.repuname ASC
+            </when>
+            <when test="psort == 'issecret_desc'">
+                ORDER BY a.issecret DESC
+            </when>
+            <when test="psort == 'issecret_asc'">
+                ORDER BY a.issecret ASC
+            </when>
+            <when test="psort == 'isreply_desc'">
+                ORDER BY a.isreply DESC
+            </when>
+            <when test="psort == 'isreply_asc'">
+                ORDER BY a.isreply ASC
+            </when>
+            <otherwise>
+                ORDER BY idx DESC
+            </otherwise>
+        </choose>
+        LIMIT #{startpage}, #{endpage} -- 페이징
+    </select>
+
+    <!-- 상품 QA 상세 조회 -->
+    <select id="selectQnaDtl" resultType="somap" parameterType="somap">
+        SELECT
+        	a.writer                                                      																			-- 작성자
+            , b.name       
+            , b.userno                                                 																		-- 이름
+			, a.qnatype																																-- 문의유형
+			, c.codename as qnatypename             																								-- 문의유형이름
+            , concat(fn_get_codename_str(a.dadamembertype, 'dadamembertype'), '(', fn_get_codename_str(a.memlvtype, 'memlvtype'), ')') AS usertype  -- 유저 등급
+            , date_format(a.regdate, '%Y.%m.%d')    AS regdate     																					-- 등록일
+            , e.goodsno
+            , e.goodscode
+            , e.goodsname                                                   																		-- 상품명
+            , a.subject                                                     																		-- 제목
+            , a.content                                                     																		-- 내용
+            , g.userid as repuserid																													-- 답변자ID
+            , if(a.isreply = 'T', '답변완료', '답변대기')                AS isreply     																	-- 답변 상태
+            , ifnull(f.name, tdr.name)        AS repusername 																						-- 답변자 이름
+            , a.repcontent                                                 																			-- 답변 내용
+            , date_format(a.repregdate, '%Y.%m.%d') AS repregdate  																					-- 답변 등록일
+            , if(e.ispbgoods = 'F', '위탁', '직매입') as ispbgoods
+            , a.istrash																																-- 삭제여부
+            , td.name as dealername
+            , ifnull(a.tplidx,'') as tplidx
+            , e.GOODSNAME 																															-- 상품 이름
+            , FN_GET_OPTION_DETAIL(a.goodsno, a.optioncode, ' | ') as optionname																	-- 상품 옵션
+            , FN_GET_FILE_URL(a.goodsno, 'FLT001', #{imgtype}) AS fullpath																			-- 상품이미지
+        FROM t_goods_qna a
+                 LEFT JOIN t_member b ON a.userno = b.userno
+                 LEFT JOIN t_common_code c ON a.qnatype = c.cmcode AND c.cmclass = 'QNATYPE'
+                 LEFT JOIN t_admin f ON a.repuserno = f.userno
+                 LEFT JOIN t_user g ON a.repuserno = g.no
+                 LEFT JOIN t_goods e ON a.goodsno = e.goodsno
+                 LEFT JOIN t_dealer tdr ON a.repuserno = tdr.userno
+                 LEFT JOIN t_dealer td ON a.dealerno = td.userno
+        WHERE 1 = 1
+          	AND a.idx  = #{idx}
+          	AND a.siteid = #{siteid}
+          	<if test="dadamembertype != null and dadamembertype != ''">
+			AND a.dadamembertype = #{dadamembertype}
+          	</if>
+          	<if test="memlvtype != null and memlvtype != ''">
+			AND a.memlvtype = #{memlvtype}          	
+          	</if>
+          	<if test="userno != null and userno != ''">
+			AND a.userno = #{userno}
+          	</if>
+			AND a.istrash = 'F'
+    </select>
+    
+    <!-- 상품 QA 상세 조회 -->
+    <select id="selectAdminQnaDtl" resultType="somap" parameterType="somap">
+        SELECT a.writer                                                      -- 작성자
+             , b.name                                                        -- 이름
+             , b.userno
+             , b.mobile
+             , concat(
+                fn_get_codename_str(a.dadamembertype, 'dadamembertype')
+            , '('
+            , fn_get_codename_str(a.memlvtype, 'memlvtype'), ')'
+            )                                                  AS usertype  -- 유저 등급
+             , date_format(a.regdate, '%Y-%m-%d %H:%i:%S')    AS regdate     -- 등록일
+             , e.goodsname                                                   -- 상품명
+             , a.subject                                                     -- 제목
+             , a.content                                                     -- 내용
+             , ifnull(f.name, tdr.name)        AS repusername -- 답변자 이름
+             , g.userid as repuserid
+             , if(a.isreply = 'T', '완료', '대기')                AS isreply     -- 답변 상태
+             , a.repcontent                                                  -- 답변 내용
+             , date_format(a.repregdate, '%Y-%m-%d %H:%i:%S') AS repregdate  -- 답변 등록일
+             , if(e.ispbgoods = 'F', '위탁', '직매입') as ispbgoods
+             , td.name as dealername
+             , ifnull(a.tplidx,'') as tplidx
+             , FN_GET_OPTION_DETAIL(a.goodsno, a.optioncode, ' | ') as optionname
+             , fn_get_codename(#{siteid}, 'QNATYPE', a.qnatype) as qnatype
+        FROM t_goods_qna a
+                 LEFT JOIN t_member b ON a.userno = b.userno
+                 LEFT JOIN t_admin f ON a.repuserno = f.userno
+                 LEFT JOIN t_user g ON a.repuserno = g.no
+                 LEFT JOIN t_goods e ON a.goodsno = e.goodsno
+                 LEFT JOIN t_dealer tdr ON a.repuserno = tdr.userno
+                 LEFT JOIN t_dealer td ON a.dealerno = td.userno
+        WHERE 1 = 1
+          AND a.idx  = #{idx}
+          AND a.siteid = #{siteid}
+    </select>
+
+    <!-- 상품 QA 전체, 대기, 완료 갯수 -->
+    <select id="selectQnaListState" resultType="somap" parameterType="somap">
+        SELECT
+             count(*) AS total
+             ,  ifnull(sum(a.comp), 0) AS comp                                        -- 완료
+             , ifnull(sum(a.stay), 0) AS stay                                          -- 대기
+        FROM (
+                 SELECT if(a.isreply = 'T', 1, 0) AS comp
+                      , if(a.isreply = 'F', 1, 0) AS stay
+                 FROM t_goods_qna a
+                     LEFT JOIN t_user d ON a.userno = d.no
+                     LEFT JOIN t_member c ON a.userno = c.userno
+                     LEFT JOIN t_admin g ON a.repuserno = g.userno
+                     LEFT JOIN t_goods f ON a.goodsno = f.goodsno
+                     LEFT JOIN t_dealer td ON a.repuserno = td.userno
+                     LEFT JOIN t_dealer b ON a.dealerno = b.userno
+                 WHERE 1 = 1
+                 AND a.istrash = 'F'
+                 -- 검색 조건
+                 <if test="sword != null and sword != ''">
+                     <choose>
+                         <when test="skey == 'userid'">
+                             AND d.userid LIKE concat('%',#{sword}, '%') -- 유저 아이디
+                         </when>
+                         <when test="skey == 'username'">
+                             AND c.name LIKE concat('%', #{sword}, '%') -- 유저 이름
+                         </when>
+                         <when test="skey == 'productname'">
+                             AND (f.goodsname LIKE concat('%', #{sword}, '%') -- 상품명
+                        		OR FN_GET_OPTION_DETAIL(a.goodsno, a.optioncode, ' | ')  LIKE concat('%', #{sword}, '%'))
+                         </when>
+                         <when test="skey == 'repusername'">
+                             AND ifnull(g.name, td.name) LIKE concat('%', #{sword}, '%') -- 내용
+                         </when>
+                         <otherwise>
+                             AND (
+                             c.name LIKE concat('%', #{sword}, '%') -- 직접 (작성자)
+                             <if test="isadmin == true">
+                             OR d.userid LIKE concat('%',#{sword}, '%') -- 직접 (제목)
+                             </if>
+                             OR (f.goodsname LIKE concat('%', #{sword}, '%') -- 상품명
+                        		OR FN_GET_OPTION_DETAIL(a.goodsno, a.optioncode, ' | ')  LIKE concat('%', #{sword}, '%'))
+                             OR ifnull(g.name, td.name) LIKE concat('%', #{sword}, '%') -- 내용
+                             )
+                         </otherwise>
+                     </choose>
+                 </if>
+                 <if test="sdate !=null and sdate !='' ">
+                     <choose>
+                         <when test="sdate == 'start'">
+                             AND str_to_date(a.regdate, '%Y-%m-%d') BETWEEN #{startdate} AND #{enddate}
+                         </when>
+                         <when test="sdate == 'end'">
+                             AND str_to_date(a.repregdate, '%Y-%m-%d') BETWEEN #{startdate} AND #{enddate}
+                         </when>
+                     </choose>
+                 </if>
+                 <if test='isdealer != null and isdealer != ""'>
+	                AND e.isdealer = #{isdealer}
+	            </if>
+                 <if test='isdealer == "T" and dealerno != null and dealerno != ""'>
+                     AND a.dealerno = #{dealerno}
+                 </if>
+                 <if test="userno != null and userno != ''">
+                     AND a.userno = #{userno}
+                 </if>
+                 <if test="isreply != null and isreply != '' ">
+                     AND a.isreply = #{isreply}
+                 </if>
+                 <if test="isadmin == false">
+                 	 AND a.dealerno = #{nowdealerno}
+                 </if>
+                 <if test='qnatype !=null and qnatype != ""'>
+					AND a.QNATYPE = #{qnatype}
+				</if>
+                 AND a.siteid = #{siteid}
+                 -- /검색조건
+             ) a
+    </select>
+
+    <!-- 상품 QA 수정 -->
+    <update id="updateQna" parameterType="somap">
+        update t_goods_qna
+        <set>
+            <if test="isreply != null">
+                isreply = #{isreply},
+            </if>
+            <if test="repcontent != null">
+                repcontent = #{repcontent},
+            </if>
+            <if test="repuserno != null">
+                repuserno = #{repuserno},
+            </if>
+            <if test="repregdate != null">
+                repregdate = now(),
+            </if>
+            <if test="tplidx != null">
+            	tplidx = IF(#{tplidx}='', null, #{tplidx})
+            </if>
+        </set>
+        where idx = #{idx}
+    </update>
+    
+    
+    <select id="selectInquiryQna" parameterType="somap" resultType="somap">
+		/* GoodsQnaMapper.xml selectInquiryQna*/		
+		SELECT AA.* 
+			FROM (SELECT FLOOR((rnum-1) / #{perpage}+1) as PAGENUMBER, A.*
+		FROM (SELECT
+					<![CDATA[		
+					@rownum:=@rownum+1 as rnum	
+					]]>			
+					,tgq.IDX
+					,tgq.SITEID
+					,tgq.GOODSNO
+					,e.GOODSCODE
+					,tgq.CATEIDX
+					,tgq.USERNO
+					,tgq.WRITER
+					,tgq.SUBJECT
+					,tgq.CONTENT
+					,tgq.ISSECRET
+					,tgq.PARENT
+					, date_format(tgq.REGDATE, '%Y.%m.%d') as REGDATE 
+					,tgq.DADAMEMBERTYPE
+					,tgq.MEMLVTYPE
+					,tgq.DEALERNO
+					,tgq.REPUSERNO
+					,tgq.REPCONTENT
+		            , if(tgq.ISREPLY = 'T', '답변완료', '답변대기') as ISREPLY
+					,tgq.REPREGDATE
+					,tgq.OPTIONCODE
+					,(SELECT codename FROM t_common_code WHERE CMCLASS = 'QNATYPE' AND CMCODE = tgq.qnatype) as QNATYPENAME
+					,tgq.QNATYPE
+					,e.goodsname
+					,FN_GET_OPTION_DETAIL(tgq.goodsno, tgq.optioncode, ' | ') as optionname
+					,tgq.TPLIDX
+					,tgq.ISTRASH
+					,FN_GET_FILE_URL(tgq.GOODSNO, 'FLT001', #{imgtype}) AS fullpath	
+				FROM T_GOODS_QNA tgq
+	    		LEFT JOIN t_goods e ON tgq.goodsno = e.goodsno						
+		WHERE 1=1
+		<![CDATA[		
+		AND	(@rownum:=0)=0
+			]]>			
+		AND tgq.ISTRASH = 'F'
+		<if test='qnatype !=null and qnatype != "" and qnatype !="all"'>
+		AND tgq.QNATYPE = #{qnatype}
+		</if>		
+		AND tgq.USERNO = #{userno}
+		AND tgq.SITEID = #{siteid}
+		AND tgq.REGDATE BETWEEN DATE_ADD(NOW(),INTERVAL -#{lastmonth} MONTH ) AND NOW()
+		ORDER BY tgq.REGDATE DESC) A) AA
+		<if test='startpage != null and startpage != ""'>
+		WHERE PAGENUMBER = #{startpage}
+		</if>		    
+	</select>
+	
+	<select id="selectInquiryQnaCount" parameterType="somap" resultType="Integer">
+		/* GoodsQnaMapper.xml selectInquiryQnaCount 상품 목록 전체 카운팅 */		
+		SELECT count(*) 
+			FROM (SELECT FLOOR((rnum-1) / #{perpage}+1) as PAGENUMBER, A.*
+		FROM (SELECT
+			<![CDATA[		
+			@rownum:=@rownum+1 as rnum	
+			]]>			
+			, tgq.*
+			, FN_GET_OPTION_DETAIL(tgq.goodsno, tgq.optioncode, ' | ') as optionname
+		FROM T_GOODS_QNA tgq
+   		LEFT JOIN t_goods e ON tgq.goodsno = e.goodsno				
+		WHERE 1=1
+		<![CDATA[		
+		AND	(@rownum:=0)=0
+			]]>			
+		AND tgq.ISTRASH = 'F'
+		<if test='qnatype !=null and qnatype != "" and qnatype !="all"'>
+		AND tgq.QNATYPE = #{qnatype}
+		</if>				
+		AND tgq.USERNO = #{userno}
+		AND tgq.SITEID = #{siteid}
+		AND tgq.REGDATE BETWEEN DATE_ADD(NOW(),INTERVAL -#{lastmonth} MONTH ) AND NOW()
+		ORDER BY tgq.REGDATE DESC) A) AA	
+	</select>
+	
+    
+	<!-- 삭제 전 내 문의 인지 확인 -->
+	<select id="selectMyQna" parameterType="somap" resultType="somap">
+		SELECT /* GoodsQnaMapper.xml selectMyQna 삭제전 확인*/
+			USERNO 
+			, ISREPLY
+		FROM t_goods_qna 
+		WHERE idx = #{idx}
+		AND userno = #{userno}
+		AND DADAMEMBERTYPE = #{dadamembertype}
+		AND MEMLVTYPE = #{memlvtype}
+	</select>
+	
+	<!-- 상품별 문의 - 내문의 삭제하기 -->
+	<update id="deleteMyQna" parameterType="somap">
+		UPDATE /* GoodsQnaMapper.xml deleteMyQna 삭제*/
+			t_goods_qna 
+		SET ISTRASH = 'T' 
+		WHERE IDX = #{idx}	
+		AND userno = #{userno}
+		AND DADAMEMBERTYPE = #{dadamembertype}
+		AND MEMLVTYPE = #{memlvtype}
+	</update>
+	
+	<!-- 상품 Q&A 내 문의 수정 -->
+	<update id="updateMyQna" parameterType="somap">
+		UPDATE 
+			t_goods_qna 
+		SET 
+			qnatype = #{type}
+			,content = #{content}
+		WHERE idx = #{idx}	
+		AND userno = #{userno}
+		AND DADAMEMBERTYPE = #{dadamembertype}
+		AND MEMLVTYPE = #{memlvtype}		
+	</update>
+	
+	<!-- 상품별 문의 전체 목록 가져오기 -->
+	<select id="selectQnaGoods" parameterType="somap" resultType="somap">
+		SELECT AA.* 
+			FROM (SELECT FLOOR((rnum-1) / #{perpage}+1) as PAGENUMBER, A.*
+		FROM (SELECT
+			<![CDATA[		
+			@rownum:=@rownum+1 as rnum	
+			]]>			
+			, tgq.IDX
+			, tgq.SITEID
+			, tgq.GOODSNO
+			, tg.GOODSCODE
+			, tgq.CATEIDX
+			, tgq.USERNO
+			, tgq.WRITER
+			, tgq.SUBJECT
+			, tgq.CONTENT
+			, tgq.ISSECRET
+			, tgq.PARENT
+			, date_format(tgq.REGDATE, '%Y-%m-%d') as REGDATE 
+			, tgq.DADAMEMBERTYPE
+			, tgq.MEMLVTYPE
+			, tgq.DEALERNO
+			, tgq.REPCONTENT
+			,
+			CASE 
+				WHEN ISREPLY = 'T' 
+				THEN '답변완료'
+				ELSE '미답변'
+			END AS ISREPLY
+			,tgq.REPUSERNO 
+			,(select userid from t_user where no = tgq.REPUSERNO) as REPUSERID			
+			,tgq.REPREGDATE
+			,tgq.OPTIONCODE
+			,tgq.QNATYPE
+			,tgq.TPLIDX
+			,tgq.ISTRASH
+			,tb.name as brname
+		FROM T_GOODS_QNA tgq
+		LEFT JOIN t_goods tg ON tgq.goodsno = tg.goodsno
+		LEFT JOIN t_brand tb ON tg.brandidx = tb.idx
+		WHERE 1=1
+		<![CDATA[		
+		AND	(@rownum:=0)=0
+			]]>			
+		AND tgq.ISTRASH = 'F'
+		<choose>
+			<when test='goodsno != null and goodsno !=""'>
+			AND tgq.GOODSNO = #{goodsno}
+			</when>
+			<otherwise>
+			AND tg.GOODSCODE = #{goodscode}
+			</otherwise>
+		</choose>
+		<!-- 	
+		AND SITEID = #{siteid}
+ 		-->		
+ 		<if test='searchtype != "all" and searchtype != null and searchtype != ""'>
+ 			<if test='searchtype == "F"'>
+ 			AND ISREPLY = 'F'
+ 			</if>
+ 			<if test='searchtype == "T"'>
+ 			AND ISREPLY = 'T'
+ 			</if>
+ 			<if test='searchtype == "My"'>
+ 			AND USERNO = #{userno}
+ 			</if>
+ 		</if>
+		ORDER BY tgq.REGDATE DESC) A) AA
+		<if test='startpage != null and startpage != ""'>
+		WHERE PAGENUMBER = #{startpage}
+		</if>	
+	</select>	
+	
+	<!-- 상품별 문의 전체 목록 총 갯수 가져오기 -->
+	<select id="selectQnaGoodsCount" parameterType="somap" resultType="Integer">
+		SELECT count(*)  
+			FROM (SELECT FLOOR((rnum-1) / #{perpage}+1) as PAGENUMBER, A.*
+		FROM (SELECT
+			<![CDATA[		
+			@rownum:=@rownum+1 as rnum	
+			]]>			
+			,tgq.*
+		FROM T_GOODS_QNA tgq
+		LEFT OUTER JOIN T_GOODS tg on tgq.goodsno = tg.goodsno
+		WHERE 1=1
+		<![CDATA[		
+		AND	(@rownum:=0)=0
+			]]>			
+		AND tgq.ISTRASH = 'F'
+		<choose>
+			<when test='goodsno != null and goodsno !=""'>
+			AND tgq.GOODSNO = #{goodsno}
+			</when>
+			<otherwise>
+			AND tg.GOODSCODE = #{goodscode}
+			</otherwise>
+		</choose>
+		<!-- 	
+		AND SITEID = #{siteid}
+ 		-->		
+ 		<if test='searchtype != "all" and searchtype != null and searchtype != ""'>
+ 			<if test='searchtype == "F"'>
+ 			AND ISREPLY = 'F'
+ 			</if>
+ 			<if test='searchtype == "T"'>
+ 			AND ISREPLY = 'T'
+ 			</if>
+ 			<if test='searchtype == "My"'>
+ 			AND USERNO = #{userno}
+ 			</if>
+ 		</if> 		
+		ORDER BY tgq.REGDATE DESC) A) AA	
+	</select>	
+	
+    <insert id="insertGoodsQna" parameterType="somap" useGeneratedKeys="true" keyProperty="idx">
+		INSERT INTO T_GOODS_QNA 
+		(
+			SITEID
+			, GOODSNO
+			, USERNO
+			, WRITER
+			, SUBJECT
+			, CONTENT
+			, ISSECRET
+			, REGDATE
+			, DADAMEMBERTYPE
+			, MEMLVTYPE
+			<if test='dealerno != null and dealerno != ""'>
+			, DEALERNO			
+			</if>
+			<if test='optioncode != null and optioncode != ""'>
+			, OPTIONCODE
+			</if>			
+			, QNATYPE
+			, ISTRASH
+		) VALUES
+		(
+			#{siteid}
+			, #{goodsno}
+			, #{userno}
+			, #{writer}
+			<choose>
+				<when test='optioncode != null and optioncode != ""'>
+				<![CDATA[
+				,(
+				select concat((goodsname), if(concat(' (',FN_GET_OPTION_DETAIL(#{goodsno}, #{optioncode}, ','),')') = ' ()','',concat(' (',FN_GET_OPTION_DETAIL(#{goodsno}, #{optioncode}, ','),')'))) as subject
+				from t_goods where goodsno = #{goodsno}	
+				)
+				]]>
+				</when>
+				<otherwise>
+				<![CDATA[
+				, (
+				select goodsname from t_goods where goodsno = #{goodsno}
+				)
+				]]>						
+				</otherwise>
+			</choose>
+			, #{content}
+			, #{issecret}
+			, now()
+			, #{dadamembertype}
+			, #{memlvtype}
+			<if test='dealerno != null and dealerno != ""'>
+			, #{dealerno}		
+			</if>			
+			<if test='optioncode != null and optioncode != ""'>
+			, #{optioncode}			
+			</if>
+			, #{qnatype}
+			, 'F'
+		)    
+    </insert>
+    
+    <update id="updateGoodsQna" parameterType="somap">
+		UPDATE t_goods_qna 
+		SET
+		subject =
+			<![CDATA[
+			(
+			select concat((goodsname), if(concat(' (',FN_GET_OPTION_DETAIL(#{goodsno}, #{optioncode}, ','),')') = ' ()','',concat(' (',FN_GET_OPTION_DETAIL(#{goodsno}, #{optioncode}, ','),')'))) as subject
+			from t_goods where goodsno = #{goodsno}	
+			)
+			]]>
+		,content = #{content}
+		,issecret = #{issecret}
+		,qnatype = #{qnatype}
+		<choose>
+			<when test='optioncode != null and optioncode != ""'>
+			,optioncode = #{optioncode}
+			</when>
+			<when test='optioncode == null and optioncode == ""'>
+			,optioncode = ''
+			</when>
+		</choose>
+		where idx = #{idx}
+    </update>
+
+</mapper>

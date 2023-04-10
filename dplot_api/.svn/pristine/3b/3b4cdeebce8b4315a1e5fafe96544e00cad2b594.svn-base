@@ -1,0 +1,48 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.dplot.mapper.GoodsHistoryMapper">
+
+<select id="selectGoodsHistory" parameterType="somap" resultType="somap">
+	SELECT /* GoodsHistoryMapper.xml - selectGoodsHistory 상품이력 조회 */
+		  GH.IDX
+		, GH.GOODSNO
+		, G.GOODSCODE
+		, G.GOODSNAME
+		, GH.KIND
+		, FN_GET_CODENAME(#{siteid}, 'GOODS_HISTORY', GH.KIND) AS KINDNAME
+		, GH.USERNO
+		, U.USERID
+		, IFNULL(A.NAME, D.NAME) AS USERNAME
+		, GH.SUMMARY
+		, DATE_FORMAT(GH.REGDATE, '%Y-%m-%d %H:%s:%i') AS REGDATE
+	FROM
+		T_GOODS_HISTORY GH
+		LEFT OUTER JOIN T_GOODS G  ON GH.GOODSNO = G.GOODSNO 
+		LEFT OUTER JOIN T_USER U   ON GH.USERNO  = U.NO 
+		LEFT OUTER JOIN T_ADMIN A  ON GH.USERNO  = A.USERNO 
+		LEFT OUTER JOIN T_DEALER D ON GH.USERNO  = D.USERNO
+	WHERE GH.GOODSNO = #{goodsno}
+	ORDER BY GH.REGDATE DESC
+</select>
+
+<insert id="insertGoodsHistory" parameterType="somap" useGeneratedKeys="true" keyColumn="IDX" keyProperty="idx">
+	INSERT INTO /* GoodsHistoryMapper.xml - insertGoodsHistory" 상품이력 등록 */
+	    T_GOODS_HISTORY (
+	    GOODSNO,
+	    KIND,
+	    USERKIND,
+	    USERNO,
+	    SUMMARY,
+	    REGDATE)
+	VALUES(
+	    #{goodsno},
+	    #{kind},
+	    0,
+	    #{userno},
+	    #{summary},
+	    sysdate()
+	)
+</insert>
+
+</mapper>

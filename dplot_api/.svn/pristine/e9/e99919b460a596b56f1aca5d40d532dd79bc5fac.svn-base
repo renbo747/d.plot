@@ -1,0 +1,103 @@
+package com.dplot.security.handler;
+
+import java.io.IOException;
+import java.util.Map;
+
+import javax.servlet.ServletException;
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
+
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Qualifier;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.web.authentication.AuthenticationSuccessHandler;
+import org.springframework.security.web.context.SecurityContextRepository;
+import org.springframework.stereotype.Component;
+
+import com.dplot.common.Response;
+import com.dplot.common.SOMap;
+import com.dplot.common.service.MallConfigService;
+import com.dplot.mapper.ComCartMapper;
+import com.dplot.mapper.MemberMapper;
+import com.dplot.mapper.UserLogMapper;
+import com.dplot.mapper.UserTotalMapper;
+import com.dplot.security.model.Member;
+import com.dplot.util.ServletRequestInfoUtil;
+import com.fasterxml.jackson.databind.ObjectMapper;
+
+@Component
+public class RememberMeAuthenticationSuccessHandler implements AuthenticationSuccessHandler {
+	
+	@Autowired
+	private MallConfigService cs;
+	
+	@Autowired
+	private UserTotalMapper userTotalMapper;
+	
+	@Autowired
+	private MemberMapper memberMapper;
+	
+	@Autowired
+	private UserLogMapper userLogMapper;
+
+	@Autowired
+	private ComCartMapper comCartMapper;
+	
+	@Autowired
+	@Qualifier("memberSecurityContextRepository")
+	private SecurityContextRepository memberSecurityContextRepository;
+	
+	@Override
+	public void onAuthenticationSuccess(HttpServletRequest request, HttpServletResponse response,
+			Authentication authentication) throws IOException, ServletException {
+		
+		//자동로그인 콜백
+		//자동로그인 성공하고 뭐 할일있으면 여기서 처리한다.
+		try {
+			Member authedMember = (Member) authentication.getPrincipal();
+			
+			//이곳에서 로그인후 로그쌓고 하는것들 넣어야함.
+//			SOMap userTotal = new SOMap();
+//			userTotal.put("securecode", authedMember.getSecurecode());
+//			userTotal.put("visitip", ServletRequestInfoUtil.getRequestIp());
+//			userTotal.put("userno", authedMember.getUserno());
+//			userTotalMapper.updateUserTotal(userTotal);
+
+			SOMap member = new SOMap();
+			member.put("userno", authedMember.getUserno());
+			memberMapper.updateMemberAutoDeleteNull(member);
+			
+			SOMap userLog = new SOMap();
+			userLog.put("userno", authedMember.getUserno());
+			userLog.put("ip", ServletRequestInfoUtil.getRequestIp());
+			userLogMapper.insertUserLog(userLog);
+			
+			// 오래된 장바구니 정리
+			SOMap cart = new SOMap();
+			cart.put("siteid", cs.getStr("siteid"));
+			cart.put("userno",authedMember.getUserno());
+			cart.put("lifetime", 3);
+			comCartMapper.deleteCartByMonth(cart);
+
+			
+			/*SecurityContext securityContext = SecurityContextHolder.getContext();
+			securityContext.setAuthentication(authentication);
+			memberSecurityContextRepository.saveContext(securityContext, request, response);*/
+			
+			authedMember.setAutoLogin(true);
+			
+			ObjectMapper objectMapper = new ObjectMapper();
+			Map<String, Object> memberMap = objectMapper.convertValue(authedMember, Map.class);
+			
+			Response res = new Response(memberMap);
+							
+			response.setContentType("application/json");
+			response.setCharacterEncoding("utf-8");
+			response.getWriter().write(objectMapper.writeValueAsString(res));
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
+		
+	}
+
+}

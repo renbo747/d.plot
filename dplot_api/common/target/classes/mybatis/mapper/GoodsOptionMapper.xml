@@ -1,0 +1,79 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.dplot.mapper.GoodsOptionMapper">
+	<select id="selectGoodsOptionList" parameterType="somap" resultType="somap">
+		/* GoodsOptionMapper.xml - selectGoodsOptionList 상품옵션 조회 */
+		select
+			  o.goodsno
+			, o.optionno 
+			, o.optionname 
+			, o.sort 
+			, 'N' as status
+		from t_goods_option o
+		left outer join t_goods tg on o.goodsno = tg.goodsno
+		where o.istrash = 'F'
+		<choose>
+			<when test='goodsno != null and goodsno !=""'>
+			and o.goodsno = #{goodsno}
+			</when>
+			<otherwise>
+			and tg.goodscode = #{goodscode}
+			</otherwise>
+		</choose>
+		order by o.sort 
+	</select>
+	
+	<!-- 상품옵션 추가/수정 -->
+	<insert id="mergeGoodsOption" parameterType="somap" useGeneratedKeys="true" keyProperty="optionno">
+		/* GoodsOptionMapper.xml - mergeGoodsOption 상품옵션 추가/수정 */
+		INSERT INTO t_goods_option (
+			  optionno		/* 옵션번호 */
+			, goodsno  		/* 상품_번호 */
+			, optionname	/* 옵션명 */
+			, sort  		/* 순서 */
+			, istrash		/* 삭제여부 */
+			, reguserid  	/* 등록자ID */
+			, regdate  		/* 등록일시 */
+		) VALUES (
+			  #{optionno}
+			, #{goodsno}
+			, #{optionname}
+			, #{sort}
+			, 'F'
+			, #{authuserid}
+			, NOW()
+		)
+		ON DUPLICATE KEY UPDATE
+			  optionname = #{optionname}
+			, sort = #{sort}
+	</insert>
+	
+	<!-- 상품옵션 삭제 -->
+	<update id="updateGoodsOptionUse" parameterType="somap">
+		/* GoodsOptionMapper.xml - updateGoodsOptionUse 상품옵션 삭제 */
+		UPDATE t_goods_option
+		SET istrash = 'T'
+		WHERE goodsno = #{goodsno}
+		<choose>
+			<when test="deloptionnolist != null and deloptionnolist.size > 0">
+			AND optionno IN
+			<foreach collection="deloptionnolist" item="_optionno" index="index" open="(" separator="," close=")">
+				#{_optionno}
+			</foreach>
+			</when>
+			<otherwise>
+			AND optionno = #{optionno}
+			</otherwise>
+		</choose>
+	</update>
+
+	<select id="selectGoodsOptionListERP" parameterType="somap" resultType="somap">
+		SELECT GOODSNO
+			 , OPTIONNO
+			 , OPTIONNAME
+		FROM T_GOODS_OPTION
+		WHERE GOODSNO = #{goodsno}
+	</select>
+	
+</mapper>

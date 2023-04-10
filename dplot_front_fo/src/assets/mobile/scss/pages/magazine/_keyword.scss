@@ -1,0 +1,69 @@
+.magazine-keyword {
+  width: 100%;
+  height: calc((var(--vh, 1vh) * 100) - 110px);
+
+  // 키워드 없을 때
+  .magazine-keyword__section {
+    position: relative;
+    width: 100%;
+    height: 100%;
+    background: url('~@/assets/mobile/img/main/img-keyword02.jpg') no-repeat center/cover;
+    &::before {
+      position: absolute;
+      content: "";
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      opacity: 0.2;
+      background-color: #000;
+      width: 100%;
+      height: 100%;
+    }
+    .keyword__wrap {
+      position: relative;
+      .keyword__ul__wrap {
+        padding-top: 98px;
+        .keyword__li {
+          font-size: 20px;
+          letter-spacing: -.8px;
+          line-height: 18px;
+          font-weight: 700;
+        }
+        li + li {
+          padding-top: 14px;
+        }
+      }
+    }
+  }
+  // 키워드 없을 때
+  .empty-keyword__section {
+    position: relative;
+    width: 100%;
+    height: 100%;
+    background: url('~@/assets/mobile/img/main/img-keyword.jpg') no-repeat center/cover;
+    &::before {
+      position: absolute;
+      content: "";
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      opacity: 0.2;
+      background-color: #000;
+      width: 100%;
+      height: 100%;
+    }
+    .empty__keyword__wrap {
+      position: relative;
+      padding-top: 100px;
+      .empty__keywords__P {
+        //text-transform: uppercase;
+        color: #ffffff;
+        font-size: 20px;
+        letter-spacing: -0.4px;
+        font-weight: 600;
+      }
+    }
+  }
+}

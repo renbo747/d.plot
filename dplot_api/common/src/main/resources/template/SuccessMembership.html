@@ -1,0 +1,125 @@
+<!doctype html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport"
+        content="width=device-width, user-scalable=no, initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0">
+  <meta http-equiv="X-UA-Compatible" content="ie=edge">
+  <title>회원가입 축하</title>
+
+  <!--font-->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@100;300;400;500;700;900&display=swap" rel="stylesheet">
+
+  <link th:each="font : ${fontList}" th:href="${font}" rel="stylesheet">
+</head>
+<body style="margin: 0;">
+  <div id="email-success-membership" style="width: 800px; padding: 0 40px; margin: 0 auto; font-family: 'Noto Sans KR', sans-serif;">
+    <!-- 헤더 -->
+    <table style="width: 100%; padding: 30px 0 70px 0">
+      <tr>
+        <td>
+          <div>
+            <img th:src="${topLogo}" alt="로고">
+          </div>
+        </td>
+      </tr>
+    </table>
+    <table style="width: 100%;">
+      <tr>
+        <td style="text-align: center">
+          <span style="font-size: 26px; letter-spacing: -1.04px; font-weight: 500; color: #111111;">회원가입 축하</span>
+        </td>
+      </tr>
+    </table>
+    <table style="width: 100%; padding: 80px 0 40px 0">
+      <tr>
+        <td>
+            <span style="font-size: 16px; letter-spacing: -.64px; line-height: 26px; font-weight: 400; color:#111111;">
+              안녕하세요. [$NAME] 회원님<br />
+              D.PLOT에 회원가입 해주셔서 감사합니다. 회원님의 소중한 정보를 안전하게 관리하겠습니다.
+            </span>
+        </td>
+      </tr>
+    </table>
+    <table style="width: 600px; margin: 0 auto;">
+      <tr>
+        <td>
+          <div style="width: 100%; padding: 50px 0; border: solid 1px #dddddd;">
+            <div style="padding: 0 50px;">
+              <div style="vertical-align: center;">
+                <span style="display:block; font-size: 14px; letter-spacing: -.56px; color:#111111; margin-bottom: 6px;">ㆍ아이디 : <span style="font-family: 'AttenNew', sans-serif; font-weight: 500;">[$NOTE1]</span> </span>
+                <span style="display:block; font-size: 14px; letter-spacing: -.56px; color:#111111; margin-bottom: 6px;">ㆍ가입일자 :  <span style="font-weight: 500;">[$NOTE2]</span></span>
+                <span style="display:block; padding-top: 20px; font-size: 14px;letter-spacing: -.56px; color:#666666;">자세한 정보는 D.PLOT > 마이페이지 > 회원정보에서 확인 및 수정하실 수 있습니다.</span>
+              </div>
+            </div>
+          </div>
+        </td>
+      </tr>
+    </table>
+    <!-- 버튼 -->
+    <table style="width: 100%; padding: 80px 0;">
+      <tr style="width: 100%; vertical-align: middle">
+        <td>
+          <a th:href="${loginUrl}" style="display: block; text-decoration: none;">
+            <div style="width: 360px; height: 48px; margin: 0 auto; background-color: #333333; text-align: center; line-height: 48px;">
+              <span style="font-size: 16px; letter-spacing: -.64px; color: #ffffff;"><span style="font-family: 'AttenNew', sans-serif; ">D.PLOT</span> 로그인</span>
+            </div>
+          </a>
+        </td>
+      </tr>
+    </table>
+<!--    <table style="width: 100%;">-->
+<!--        <tr style="background-color: #f8f8f8;">-->
+<!--          <td style="text-align: center; padding: 50px 0;">-->
+<!--            <span style="font-size: 20px; letter-spacing: -.8px; color:#111111;" th:text="${content}"></span>-->
+<!--          </td>-->
+<!--        </tr>-->
+<!--    </table>-->
+    <table style="width: 100%; padding-top: 40px;">
+      <tr>
+        <td>
+          <span style="font-size: 14px; letter-spacing: -.56px; color: #666666;">* 본 메일은 이메일 마케팅 정보 수신동의 여부와 관계없이 운영상 공지 목적으로 발송되는 발신 전용 메일이며 문의에 대한<br /> 회신 처리되지 않습니다.</span>
+        </td>
+      </tr>
+    </table>
+    <!-- 메일 푸터 -->
+    <table class="mail-footer" style="width: 100%; margin-top: 80px; background-color: #f8f8f8; padding: 40px 40px;">
+      <colgroup>
+        <col width="20%">
+        <col width="80%">
+      </colgroup>
+      <tr style="vertical-align: top; width: 100%;">
+        <td>
+          <div style="text-align: left; width: 100%;">
+            <img th:src="${footerLogo}" alt="footer logo">
+          </div>
+        </td>
+        <td>
+          <div style="margin-bottom: 10px; line-height: 1;">
+            <span style="color: #666666; font-size: 14px; letter-spacing: -.42px;">
+              본 메일은 발신 전용으로 회신이 되지 않습니다.<br />
+              문의사항은 [<a th:href="${mainUrl}" style="color:#666666;">D.PLOT 홈페이지</a>]를 이용해주시기 바랍니다.
+            </span>
+          </div>
+          <div style="margin-bottom: 4px;">
+            <span style="font-size: 14px; letter-spacing: -.42px; color: #666666;">주식회사 다다엠엔씨</span>
+            <span style="display:inline-block; margin: 0 10px; width: 1px; height: 10px; background-color: #dddddd;"></span>
+            <span style="font-size: 14px; letter-spacing: -.42px; color: #666666;">고객센터 1666-3642</span>
+<!--            <span style="display:inline-block; margin: 0 10px; width: 1px; height: 10px; background-color: #dddddd;"></span>-->
+<!--            <span style="font-size: 14px; letter-spacing: -.42px; color: #666666;">1:1 문의</span>-->
+          </div>
+          <div style="margin-bottom: 4px;">
+            <span style="font-size: 14px; letter-spacing: -.42px; color: #666666;">04377 서울특별시 용산구 한강대로23길 55 (한강로3가) 아이파크몰 6층</span>
+          </div>
+
+          <div>
+            <span style="font-size: 14px; letter-spacing: -.42px; color: #666666;">COPYRIGHT © D.PLOT. ALL RIGHTS RESERVED.</span>
+          </div>
+        </td>
+      </tr>
+    </table>
+  </div>
+</body>
+</html>

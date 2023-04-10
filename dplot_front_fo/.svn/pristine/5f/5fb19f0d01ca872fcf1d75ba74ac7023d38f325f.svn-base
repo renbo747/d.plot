@@ -1,0 +1,398 @@
+.magazine {
+  .dp-section + .dp-section {
+    margin-top: 140px;
+  }
+
+  // -- magazine slide --
+
+  .magazine__slide {
+    position: relative;
+    width: 100%;
+    height: 800px;
+
+    .swiper {
+      position: relative;
+      width: 100%;
+      height: 100%;
+    }
+
+    .swiper-slide {
+      display: block;
+
+    }
+
+    .magazine__item {
+      position: absolute;
+      left: 0;
+      top: 0;
+      width: 100%;
+      height: 800px;
+      background-repeat: no-repeat;
+      background-position: center;
+      background-size: cover !important;
+    }
+    .item__info {
+      position: absolute;
+      top: 341px;
+      left: 50%;
+      margin-left: -640px;
+      color: #ffffff;
+      transform: translateX(154px);
+    }
+
+    .info__title {
+      font-size: 48px;
+      line-height: 64px;
+      letter-spacing: 0;
+      font-weight: 600;
+      margin-bottom: 26px;
+    }
+
+    .info__text {
+      font-size: 16px;
+      letter-spacing: -.64px;
+      line-height: 26px;
+      font-weight: 400;
+      margin-bottom: 0;
+    }
+
+    .info__sub {
+      display: flex;
+      font-size: 24px;
+      margin-bottom: 0;
+      margin-top: 40px;
+      img {
+        margin-left: 16px;
+      }
+    }
+
+    .slide__btn {
+      line-height: 26px;
+      letter-spacing: 0.6px;
+      font-weight: 400;
+    }
+
+    .slide__btn {
+      display: flex;
+      justify-content: space-between;
+      position: absolute;
+      top: 50%;
+      transform: translateY(-50%);
+      z-index: 100;
+    }
+
+    .swiper-btn-prev {
+      left: 50%;
+      margin-left: -640px;
+      top: 50%;
+      transform: translate(-50%, -50%);
+    }
+
+    .swiper-btn-prev {
+      width: 64px;
+      height: 64px;
+      background-color: rgba(0,0,0,.2);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      img {
+        object-fit: cover;
+      }
+    }
+    .swiper-btn-next {
+      right: 50%;
+      margin-right: -640px;
+      width: 64px;
+      height: 64px;
+      background-color: rgba(0,0,0,.2);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      img {
+        object-fit: cover;
+      }
+    }
+  }
+  // -- magazine slide end --
+
+  .content {
+
+    .magazine__menu {
+      padding-top: 50px;
+      padding-bottom: 50px;
+    }
+    .menu__list {
+      display: flex;
+      align-items: center;
+      padding: 0 20px;
+      height: 100px;
+      overflow-x: auto;
+      &.fixed {
+        top:80px;
+        position:fixed;
+        background-color: #ffffff;
+        z-index: 6;
+        width: 1240px;
+      }
+
+      li + li {
+        margin-left: 30px;
+      }
+      .menu__name {
+        font-size: 24px;
+        letter-spacing: -.96px;
+        line-height: 24px;
+        font-weight: 700;
+      }
+    }
+
+
+    // -- magazine section --
+    .main-section {
+      display: flex;
+
+      .magazine-card {
+        display: flex;
+        flex-direction: column;
+
+        .card__label {
+          min-width: 100px;
+          height: 70px;
+          font-size: 16px;
+          letter-spacing: 0;
+          line-height: 48px;
+          //text-transform: uppercase;
+        }
+
+        .card__img {
+          //width: 610px;
+          //height: 450px;
+
+          img {
+            width: 100%;
+            object-fit: cover;
+          }
+        }
+
+        .card__contents {
+          width: 610px;
+          display: flex;
+          flex-direction: column;
+          padding: 0;
+        }
+
+        .card__title {
+          font-size: 36px;
+          letter-spacing: -1.8px;
+          line-height: 46px;
+          margin-bottom: 20px;
+
+          span {
+            font-size: 44px;
+            letter-spacing: -1.32px;
+            line-height: 46px;
+            font-weight: 800;
+          }
+        }
+
+        .card__text {
+          font-size: 18px;
+          letter-spacing: -.72px;
+          line-height: 26px;
+          margin-bottom: 80px;
+          color: #666;
+        }
+
+        .card__tag-group {
+          font-size: 16px;
+          letter-spacing: -.48px;
+          line-height: 24px;
+          span {
+            margin-right: 10px;
+
+            &:last-child {
+              margin-right: 0;
+            }
+          }
+        }
+      }
+
+      //magazine-card end
+
+      .sub__ref {
+        display: flex;
+        flex-direction: column;
+        justify-content: space-between;
+        margin-left: 20px;
+
+        .main__ul {
+          display: flex;
+          flex-direction: row;
+          li {
+            width: 295px;
+          }
+          li + li {
+            margin-left: 20px;
+          }
+        }
+
+        .product__rating {
+          font-size: 18px;
+          letter-spacing: -.72px;
+          line-height: 25px;
+          font-weight: 600;
+          color: #333;
+          padding-left: 26px;
+          background: url('~@/assets/common/icon/icon-star-black-22px.svg') no-repeat left -1px;
+          background-size: 24px;
+          span {
+            font-weight: 400;
+            color: #999;
+          }
+        }
+
+        .product__like {
+          width: 24px;
+          height: 24px;
+          background: url('~@/assets/common/icon/icon-wish-gray-24px.svg') no-repeat center;
+          background-size: 24px !important;
+          &.like {
+            background: url('~@/assets/mobile/img/icon/icon-heart-red-24px.svg') no-repeat center;
+          }
+        }
+      }
+
+      .magazine-product {
+        flex-direction: column;
+        margin-right: 0;
+        .product__thumbnail {
+          width: 295px;
+          height: 295px;
+          margin: 0;
+          img {
+            width: 100%;
+          }
+        }
+
+        .product__detail {
+          margin-top: 12px;
+          width: 100%;
+        }
+
+        .product__ctg {
+          font-size: 16px;
+          letter-spacing: -.48px;
+          line-height: 22px;
+          font-weight: 600;
+          margin-bottom: 2px;
+        }
+
+        .product__text {
+          font-size: 18px;
+          letter-spacing: -.72px;
+          line-height: 26px;
+          color: #666666;
+          margin-bottom: 10px;
+        }
+
+        .product__tag {
+          min-height: 50px;
+          max-height: 50px;
+          overflow-y: hidden;
+          margin-bottom: 13px;
+          font-size: 16px;
+          letter-spacing: -.48px;
+          line-height: 24px;
+
+          span {
+            display: inline-block;
+            margin-bottom: 2px;
+            margin-right: 10px;
+          }
+        }
+
+        .product__footer {
+          display: flex;
+          justify-content: space-between;
+        }
+      }
+    }
+  }
+  // -- magazine section end --
+
+  // -- magazine instagram slide --
+  .instagram__section {
+    margin-top: 120px;
+    margin-bottom: 200px;
+
+    .instagram-header__container {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    .instagram__title {
+      font-size: 40px;
+      letter-spacing: -1.2px;
+      line-height: 40px;
+      font-weight: 900;
+      margin-bottom: 50px;
+    }
+
+    .instagram__slide {
+      position: relative;
+    }
+
+    .swiper-btn-prev {
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%,-50%);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      width: 64px;
+      height: 64px;
+      background-color: rgba(0,0,0,.2);
+      margin-left: -604px;
+      z-index: 100;
+    }
+
+    .swiper-btn-next {
+      position: absolute;
+      top: 50%;
+      right: 50%;
+      transform: translate(-50%,-50%);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      width: 64px;
+      height: 64px;
+      background-color: rgba(0,0,0,.2);
+      margin-right: -670px;
+      z-index: 100;
+    }
+  }
+  // -- magazine section end --
+
+  // 메인 섹션, 인스타 섹션 공통
+  .card__link {
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+    margin-bottom: 28px;
+    .link__text {
+      font-size: 18px;
+      letter-spacing: -.54px;
+      line-height: 24px;
+      margin-right: 2px;
+    }
+    .link__more {
+      display: block;
+      width: 40px;
+      height: 40px;
+      background: url('~@/assets/mobile/img/icon/icon-more-black-32px.svg') no-repeat 0;
+      background-size: 40px;
+    }
+  }
+}

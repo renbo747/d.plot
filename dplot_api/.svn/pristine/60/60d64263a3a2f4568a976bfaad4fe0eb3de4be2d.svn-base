@@ -1,0 +1,607 @@
+package com.dplot.front.service;
+
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Map;
+
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Propagation;
+import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.multipart.MultipartFile;
+import org.springframework.web.util.HtmlUtils;
+
+import com.dplot.common.CMConst;
+import com.dplot.common.Response;
+import com.dplot.common.SOMap;
+import com.dplot.common.service.CommonClaimService;
+import com.dplot.common.service.CommonOrderService;
+import com.dplot.common.service.util.FileService;
+import com.dplot.common.service.util.MallBaseService;
+import com.dplot.exception.BizException;
+import com.dplot.mapper.AsInquiryMapper;
+import com.dplot.mapper.BannedMapper;
+import com.dplot.mapper.ClaimGoodsMapper;
+import com.dplot.mapper.ClaimMapper;
+import com.dplot.mapper.ComOrderGoodsMapper;
+import com.dplot.mapper.ComOrderMapper;
+import com.dplot.mapper.CommonCodeMapper;
+import com.dplot.mapper.FileMapper;
+import com.dplot.mapper.GoodsMapper;
+import com.dplot.mapper.TossreceiptMapper;
+import com.dplot.util.Util;
+
+@Service
+public class NoneMemberServiceImpl extends MallBaseService implements NoneMemberService{
+	
+	@Autowired
+	private FileMapper fileMapper;
+	
+	@Autowired
+	private AsInquiryMapper asInquiryMapper;
+	
+	@Autowired
+	private ComOrderMapper comOrderMapper;
+	
+	@Autowired
+	private ComOrderGoodsMapper comOrderGoodsMapper;
+	
+	@Autowired
+	private TossreceiptMapper tossreceiptMapper;
+	
+	@Autowired
+	private CommonCodeMapper commonCodeMapper;
+	
+	@Autowired
+	private ClaimMapper claimMapper;
+	
+	@Autowired
+	private ClaimGoodsMapper claimGoodsMapper;
+	
+	@Autowired
+	private FileService fileService;
+	
+	@Autowired
+	private CommonOrderService commonOrderService;
+	
+	@Autowired
+	private CommonClaimService commonClaimService;
+	
+	@Autowired
+	private GoodsMapper goodsMapper;
+	
+	@Autowired
+	private BannedMapper bannedMapper;
+	
+	/**
+	 * 비회원 대쉬보드 조회
+	 */
+	@Override
+	public Response selectNoneMemberInfo(SOMap param) throws Exception {
+		SOMap resultMap = new SOMap();
+		
+		param.put("siteid", cs.getStr("siteid"));
+		param.put("userno", 0);
+		param.put("orderidx", getOrderIdx());
+		
+		/*******************************************************
+		 * 주문상태별 갯수 조회
+		 *******************************************************/
+		SOMap orderCntList = comOrderGoodsMapper.selectOrderGoodsCnt(param);
+		orderCntList.putAll(claimGoodsMapper.selectClaimGoodsCnt(param));
+		resultMap.put("ordercntinfo", orderCntList);
+		
+		return new Response(resultMap);
+	}
+	
+	@Override
+	public SOMap applyAs(SOMap param) throws Exception {
+		SOMap result = new SOMap();
+		param.put("userno",cs.getInt("authmemberno"));
+		param.put("siteid", cs.getStr("siteid"));
+		param.put("imgtype",Util.flag2Bool(cs.getStr("ismobile")) ? CMConst.IMG_TYPE_GOODS_IMG_MO_M : CMConst.IMG_TYPE_GOODS_IMG_PC_M);
+		param.put("orderidx", comOrderGoodsMapper.selectComOrderGoods(param).get("orderidx"));
+		param.put("ordno", getOrdno());
+		param.put("state", "ODS009");
+		
+		//로그인 권한 체크 ( URL 직접 접근 제한 )
+		if(param.getInt("userno") == 0){
+			if(!param.getStr("orderidx").equals(cs.getStr("authguestorderidx"))){
+				result.put("auth", "fail");
+				return result;
+			}
+		}else{
+			if(param.getInt("userno") != comOrderMapper.selectComOrderInfo(param).getInt("userno")){
+				result.put("auth", "fail");
+				return result;				
+			}
+		}
+		
+		result.put("auth", "success");
+		result.put("list", comOrderGoodsMapper.selectComOrderGoods(param));
+		return result;
+	}
+	
+	@Override
+    @Transactional(propagation = Propagation.REQUIRED, rollbackFor = {Exception.class})	
+	public SOMap applySave(SOMap param, Map<String, MultipartFile> uploadFile) throws Exception {
+		SOMap result = new SOMap();
+		
+		param.put("userno", 0);
+		
+		param.put("siteid", cs.getStr("siteid"));
+		param.put("ordno", getOrdno());
+		param.put("membertype","DMT001");
+		param.put("memlvtype","MDL001");
+		
+		param.put("ordno", comOrderMapper.selectComOrderInfo(param).get("ordno"));
+		param.put("dealerno", goodsMapper.selectGoodsJoinGoodsContent(param).get("dealerno"));
+
+		Util util = new Util();
+		String badWordList = bannedMapper.badWordList();
+		
+		String filterText = util.filterText(badWordList, param.getStr("content"));
+		if(!filterText.equals("")){
+			throw new BizException("금칙어가 포함되어 있습니다. " + filterText);
+		}
+
+		String content = HtmlUtils.htmlEscape(param.getStr("content"));
+		content = content.replaceAll("\n", "<br/>");
+		param.put("content", content);
+		
+		int save = asInquiryMapper.insertAsApplySave(param);
+		int asidx = 0;
+		if(save > 0){
+			result.put("msg", "success");
+			asidx = param.getInt("asidx");
+			result.put("asidx", param.get("ordno"));
+		}else{
+			result.put("msg", "fail");			
+		}
+		
+		if(asidx != 0){
+			//이미지 처리
+			/*********************************
+			 * 파일 업로드 처리
+			 *********************************/
+			for (String key : uploadFile.keySet()) {
+				MultipartFile file = uploadFile.get(key);
+				if (key.contains("filelist")) {
+					if (file.getContentType().contains("image")) {
+						fileService.uploadImage(file, asidx, CMConst.IMG_TYPE_AS_INQUIRY);
+					}else if (file.getContentType().contains("video")) {
+						fileService.uploadMov(file, asidx, CMConst.IMG_TYPE_AS_INQUIRY);
+					}else{
+						throw new Exception("지원하지 않는 파일 형식입니다.");
+					}
+				}
+			}
+			/************************************
+			 * 파일  삭제 처리
+			 ***********************************/
+			List<Integer> deleteFiles = param.getArrayList("deletefilelist");
+			for(int fileIdx : deleteFiles) {
+				fileService.delete(fileIdx);
+			}					
+		}
+	
+		return result;
+	}
+
+	@Override
+	public List<SOMap> applyList(SOMap param) throws Exception {
+		param.put("userno", 0);
+		param.put("ordno", getOrdno());
+		param.put("membertype","DMT001");
+		param.put("memlvtype","MDL001");
+		param.put("asstatus", "all");
+		
+		param.put("siteid", cs.getStr("siteid"));
+		param.put("imgtype",Util.flag2Bool(cs.getStr("ismobile")) ? CMConst.IMG_TYPE_GOODS_IMG_MO_M : CMConst.IMG_TYPE_GOODS_IMG_PC_M);
+		
+		return asInquiryMapper.selectAsApplyList(param);
+	}
+
+	@Override
+	public SOMap applyDetail(SOMap param) throws Exception {
+		SOMap result = new SOMap();
+		param.put("imgtype",Util.flag2Bool(cs.getStr("ismobile")) ? CMConst.IMG_TYPE_GOODS_IMG_MO_M : CMConst.IMG_TYPE_GOODS_IMG_PC_M);
+		param.put("siteid", cs.getStr("siteid"));
+		param.put("ordno", getOrdno());
+		param.put("userno", 0);
+		
+		
+		result.put("list",asInquiryMapper.selectAsApplyDetail(param));
+		
+		String[] imgtypes = {CMConst.IMG_TYPE_AS_INQUIRY};
+		SOMap dbParam = new SOMap();
+		dbParam.put("imgtypes", imgtypes);
+		 
+		dbParam.put("orgidx", param.get("asidx"));
+		List<SOMap> uploadedfileList = fileMapper.selectFileList(dbParam);
+
+		
+		result.put("files", uploadedfileList);
+		
+		return result;
+	}
+
+	@Override
+    @Transactional(propagation = Propagation.REQUIRED, rollbackFor = {Exception.class})	
+	public SOMap applyDelete(SOMap param) throws Exception {
+		SOMap result = new SOMap();
+		param.put("asstatus", CMConst.AS_CANCEL);
+		int delete = asInquiryMapper.deleteAsApply(param);
+		
+		if(delete > 0){
+			result.put("msg", "success");
+		}else{
+			result.put("msg", "fail");
+		}
+		return result;
+	}
+	
+	@Override
+    @Transactional(propagation = Propagation.REQUIRED, rollbackFor = {Exception.class})	
+	public SOMap applyRevise(SOMap param, Map<String, MultipartFile> uploadFile) throws Exception {
+		SOMap result = new SOMap();
+		
+		param.put("userno", 0);
+		param.put("membertype","DMT001");
+		param.put("memlvtype","MDL001");
+		
+		/************************************
+		 * 파일  삭제 처리
+		 ***********************************/
+		List<Integer> deleteFiles = param.getArrayList("deletefilelist");
+		for(int fileIdx : deleteFiles) {
+			fileService.delete(fileIdx);
+		}
+		//이미지 처리
+		/*********************************
+		 * 파일 업로드 처리
+		 *********************************/
+		for (String key : uploadFile.keySet()) {
+			MultipartFile file = uploadFile.get(key);
+			if (key.contains("filelist")) {
+				if (file.getContentType().contains("image")) {
+					fileService.uploadImage(file, param.getDbInt("asidx"), CMConst.IMG_TYPE_AS_INQUIRY);
+				}else if (file.getContentType().contains("video")) {
+					fileService.uploadMov(file, param.getDbInt("asidx"), CMConst.IMG_TYPE_AS_INQUIRY);
+				}else{
+					throw new Exception("지원하지 않는 파일 형식입니다.");
+				}
+			}
+		}
+		
+		Util util = new Util();
+		String badWordList = bannedMapper.badWordList();
+		
+		String filterText = util.filterText(badWordList, param.getStr("content"));
+		if(!filterText.equals("")){
+			throw new BizException("금칙어가 포함되어 있습니다. " + filterText);
+		}
+
+		String content = HtmlUtils.htmlEscape(param.getStr("content"));
+		content = content.replaceAll("\n", "<br/>");
+		param.put("content", content);
+		
+		int revise = asInquiryMapper.updateAsApply(param);
+		
+		if(revise > 0){
+			result.put("msg", "success");
+		}else{
+			result.put("msg", "fail");
+		}
+		
+		return result;
+	}
+
+	@Override
+	public List<SOMap> applyMyOrder(SOMap params) throws Exception {
+		params.put("ordno",getOrdno());
+		params.put("userno", 0);
+		params.put("asinquiry", "T");
+		params.put("state", CMConst.ORDER_PURCH_CONFIRM);
+		params.put("imgtype",Util.flag2Bool(cs.getStr("ismobile")) ? CMConst.IMG_TYPE_GOODS_IMG_MO_M : CMConst.IMG_TYPE_GOODS_IMG_PC_M);		
+		
+		
+		return comOrderMapper.selectMyOrderList(params);
+	}
+	
+	/**
+	 * 마이페이지_주문목록 조회
+	 */
+	@Override
+	public SOMap selectOrderList(SOMap param) throws Exception {
+		SOMap resultMap = new SOMap();
+		
+		param.put("siteid", cs.getStr("siteid"));
+		param.put("ordno", getOrdno());
+		if (Util.flag2Bool(cs.getStr("ismobile"))) {
+			param.put("imgtype", CMConst.IMG_TYPE_GOODS_IMG_MO_M);
+		} else {
+			param.put("imgtype", CMConst.IMG_TYPE_GOODS_IMG_PC_M);
+		}
+		
+		/*************************
+		 * 페이징 처리
+		 *************************/
+		int page = param.getInt("currentpage");
+		int startPage = (page > 1) ? ((page -1 ) * param.getInt("listcnt")) : 0;
+		param.put("startpage", startPage);
+		param.put("endpage", param.getInt("listcnt"));
+		
+		int listtotal = 0;
+		List<SOMap> orderList = comOrderMapper.selectMyOrderList(param);
+		if(orderList.size() > 0) {
+			listtotal = orderList.get(0).getDbInt("totcnt");
+		}
+		resultMap.put("list", orderList);
+		resultMap.put("listtotal", listtotal);
+		return resultMap;
+	}
+	
+	/**
+	 * 마이페이지_주문상세 내역 조회
+	 */
+	@Override
+	public SOMap selectOrderDetail(SOMap param) throws Exception {
+		
+		SOMap resultMap = new SOMap();
+		
+		param.put("siteid", cs.getStr("siteid"));
+		param.put("ordno", getOrdno());
+		
+		if (Util.flag2Bool(cs.getStr("ismobile"))) {
+			param.put("imgtype", CMConst.IMG_TYPE_GOODS_IMG_MO_M);
+		} else {
+			param.put("imgtype", CMConst.IMG_TYPE_GOODS_IMG_PC_M);
+		}
+		
+		//주문정보
+		SOMap orderInfo = comOrderMapper.selectComOrderInfo(param);
+		if(orderInfo == null) {
+			throw new BizException("주문내역이 없습니다.");
+		}
+		
+		param.put("orderidx", orderInfo.getDbInt("orderidx"));
+		param.put("status", "DETAIL");
+		
+		//주문상품 목록
+		List<SOMap> orderGoods = comOrderGoodsMapper.selectComOrderGoodsList(param);
+		//클레임정보 목록
+		List<SOMap> claimList = claimMapper.selectClaimListForPrev(param);
+		//클레임상품 목록
+		List<SOMap> claimGoods = claimGoodsMapper.selectMyClaimGoodsList(param);
+		
+		//결제정보
+		SOMap payInfo = tossreceiptMapper.selectTossreceipt(param);
+		if(payInfo == null) {
+			payInfo = new SOMap();
+		}
+		resultMap.put("order", orderInfo);
+		resultMap.put("ordergoods", orderGoods);
+		resultMap.put("claim", claimList);
+		resultMap.put("claimgoods", claimGoods);
+		resultMap.put("payinfo", payInfo);
+		return resultMap;
+	}
+	
+	/**
+	 * 마이페이지_클레임목록 조회
+	 */
+	@Override
+	public SOMap selectClaimList(SOMap param) throws Exception {
+		SOMap resultMap = new SOMap();
+		
+		param.put("siteid", cs.getStr("siteid"));
+		param.put("ordno", getOrdno());
+		if (Util.flag2Bool(cs.getStr("ismobile"))) {
+			param.put("imgtype", CMConst.IMG_TYPE_GOODS_IMG_MO_M);
+		} else {
+			param.put("imgtype", CMConst.IMG_TYPE_GOODS_IMG_PC_M);
+		}
+		
+		/*************************
+		 * 페이징 처리
+		 *************************/
+		int page = param.getInt("currentpage");
+		int startPage = (page > 1) ? ((page -1 ) * param.getInt("listcnt")) : 0;
+		param.put("startpage", startPage);
+		param.put("endpage", param.getInt("listcnt"));
+		
+		int listtotal = 0;
+		List<SOMap> orderList = claimMapper.selectMyClaimList(param);
+		if(orderList.size() > 0) {
+			listtotal = orderList.get(0).getDbInt("totcnt");
+		}
+		resultMap.put("list", orderList);
+		resultMap.put("listtotal", listtotal);
+		return resultMap;
+	}
+	
+	@Override
+	public SOMap selectClaimApply(SOMap params) throws Exception{
+		if(CMConst.CLM_CANCEL.equals(params.getDbStr("clmtype"))) {
+			params.put("cmclass", "CNCTYPE");
+		} else if(CMConst.CLM_RETURN.equals(params.getDbStr("clmtype"))) {
+			params.put("cmclass", "RTNTYPE");
+		} else {
+			params.put("cmclass", "EXCTYPE");
+		}
+		
+		//취소/반품/교환사유
+		List<SOMap> claimReason = commonCodeMapper.selectCodeList(params);
+		
+				
+		//클레임 계산
+		SOMap result = commonClaimService.selectClaimApply(params);
+		result.put("rslist", claimReason);
+		
+		if(CMConst.PAYWAY_TYPE_VIRACCOUNT.equals(result.getSOMap("bforder").getDbStr("paywaytype"))) {
+			//배송요청사항
+			params.put("cmclass", "TBANKTYPE");
+			params.put("istrash", "F");
+			List<SOMap> reqlist = commonCodeMapper.selectCodeList(params);
+			result.put("banklist", reqlist);
+		} else {
+			result.put("banklist", new ArrayList<SOMap>());
+		}
+		
+		if(CMConst.CLM_RETURN.equals(params.getDbStr("clmtype")) || CMConst.CLM_EXCHANGE.equals(params.getDbStr("clmtype"))) {
+			//배송요청사항
+			params.put("cmclass", "RCVREQTYPE");
+			params.put("istrash", "F");
+			List<SOMap> reqlist = commonCodeMapper.selectCodeList(params);
+			result.put("reqlist", reqlist);
+			
+			//결제수단
+			params.put("cmclass", "PAYWAYTYPE");
+			List<SOMap> paywaylist = commonCodeMapper.selectCodeList(params);
+			
+			//카드종류
+			params.put("cmclass", "CARDCOMPANY");
+			List<SOMap> cardlist = commonCodeMapper.selectCodeList(params);
+			result.put("paywaylist", paywaylist);
+			result.put("cardlist", cardlist);
+			
+		} else {
+			result.put("reqlist", new ArrayList<SOMap>());
+			result.put("paywaylist", new ArrayList<SOMap>());
+			result.put("cardlist", new ArrayList<SOMap>());
+		}
+		
+		return result;
+	}
+	
+	@Override
+	public SOMap calClaimApply(SOMap params) throws Exception{
+		return commonClaimService.selectClaimApply(params);
+	}
+
+	@Override
+	public SOMap saveClaimApply(Map<String, MultipartFile> files, SOMap params) throws Exception{
+		return commonClaimService.saveClaimApply(files, params);
+	}
+	
+	@Override
+	public SOMap detailClaim(SOMap params) throws Exception{
+		SOMap resultMap = new SOMap();
+		
+		params.put("siteid", cs.getStr("siteid"));
+		params.put("isnonemember", "T");
+		params.put("orderidx", getOrderIdx());
+		
+		//클레임정보
+		SOMap claim = claimMapper.selectClaimInfo(params);
+		if(claim == null) {
+			throw new BizException("클레임 내역이 존재하지 않습니다.");
+		}
+		
+		params.remove("orderidx");
+		
+		//클레임 상품정보
+		params.put("clmidx", claim.getDbInt("clmidx"));
+		if (Util.flag2Bool(cs.getStr("ismobile"))) {
+			params.put("imgtype", CMConst.IMG_TYPE_GOODS_IMG_MO_M);
+		} else {
+			params.put("imgtype", CMConst.IMG_TYPE_GOODS_IMG_PC_M);
+		}
+		
+		List<SOMap> claimGoodsList = claimGoodsMapper.selectMyClaimGoodsList(params);
+		
+		//주문정보
+		params.put("orderidx", claim.getDbInt("orderidx"));
+		SOMap order = comOrderMapper.selectComOrderInfo(params);
+		
+		if(claim.getDbInt("addrpaytotprice") > 0) {
+			//결제수단
+			params.put("istrash", "F");
+			params.put("cmclass", "PAYWAYTYPE");
+			List<SOMap> paywaylist = commonCodeMapper.selectCodeList(params);
+			
+			//카드종류
+			params.put("cmclass", "CARDCOMPANY");
+			List<SOMap> cardlist = commonCodeMapper.selectCodeList(params);
+			resultMap.put("paywaylist", paywaylist);
+			resultMap.put("cardlist", cardlist);
+		} else {
+			resultMap.put("paywaylist", new ArrayList<SOMap>());
+			resultMap.put("cardlist", new ArrayList<SOMap>());
+		}
+		
+		resultMap.put("order", order);
+		resultMap.put("claim", claim);
+		resultMap.put("list", claimGoodsList);
+		
+		return resultMap;
+	}
+	
+	/**
+	 * 주문결재정보 저장
+	 * @param param
+	 * @return
+	 * @throws Exception
+	 */
+	@Override
+	public SOMap saveClaimPayment(SOMap param) throws Exception{
+		
+		param.put("clmprctype", "CPR002");
+		
+		return commonClaimService.paymentClaim(param);
+	}
+	
+	/**
+	 * 마이페이지_클레임철회
+	 * @param param
+	 * @return
+	 * @throws Exception
+	 */
+	@Override
+	public SOMap cancelClaim(SOMap param) throws Exception {
+		return commonClaimService.saveClaimStatus(param);
+	}
+	
+	@Override
+	public SOMap updateOrderRcvInfo(SOMap params) throws Exception{
+		
+		SOMap result = new SOMap();
+		commonOrderService.updateOrderRcvInfo(params);
+		
+		return result;
+	}
+
+	@Override
+	public int applyListCount(SOMap param) throws Exception {
+		param.put("userno", 0);
+		param.put("ordno", getOrdno());
+		param.put("membertype","DMT001");
+		param.put("memlvtype","MDL001");
+		param.put("siteid", cs.getStr("siteid"));
+		param.put("asstatus", "all");
+		return asInquiryMapper.selectAsApplyListCount(param);
+	}
+	
+	
+	/**
+	 * 클레임 정보조회
+	 * @param params
+	 * @return
+	 * @throws Exception
+	 */
+	@Override
+	public SOMap selectClaimInfo(SOMap param) throws Exception{
+		param.put("siteid", cs.getStr("siteid"));
+		param.put("isnonemember", "T");
+		param.put("orderidx", getOrderIdx());
+		
+		SOMap claimInfo = claimMapper.selectClaimInfo(param);
+		
+		if(claimInfo == null) {
+			throw new BizException("클레임 내역이 존재하지 않습니다.");
+		}
+		
+		return claimInfo;
+	}
+}

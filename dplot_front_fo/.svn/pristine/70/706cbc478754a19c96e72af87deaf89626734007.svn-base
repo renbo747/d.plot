@@ -1,0 +1,156 @@
+.dp-member-modify-pc {
+  width: 400px;
+  margin-left: 230px;
+  .btn.dp-btn {
+    font-size: 14px;
+  }
+  .form-group {
+    margin-bottom: 20px;
+  }
+  .dp-hr {
+    height: 1px;
+    margin-left: 0;
+    margin-right: 0;
+  }
+  .info-modify__title__area {
+    padding-bottom: 40px;
+    .info-modify__title {
+      font-size: 26px;
+      letter-spacing: -1.04px;
+      line-height: 22px;
+      font-weight: 700;
+    }
+  }
+  .info-modify__area {
+    padding-bottom: 40px;
+    .info-modify__header {
+      .member-info__title {
+        padding-bottom: 32px;
+      }
+      .member-name {
+        font-size: 18px;
+        letter-spacing: -.72px;
+        line-height: 26px;
+        font-weight: 400;
+        padding-right: 12px;
+      }
+      .member-info-area {
+        padding-bottom: 32px;
+        li {
+          color: $gray-700;
+          font-size: 16px;
+          letter-spacing: -.64px;
+          line-height: 22px;
+          span:first-child {
+            width: 60px;
+            margin-right: 32px;
+            display: inline-block;
+          }
+          p {
+            padding-top: 12px;
+          }
+        }
+      }
+    }
+    .phone-input__area {
+      width: calc(100% - 110px);
+    }
+    .modify-btn__area {
+      width: 110px;
+      margin-left: 12px;
+    }
+    .address-input__area {
+      width: calc(100% - 110px);
+    }
+    .address-search-btn__area {
+      width: 110px;
+      margin-left: 12px;
+    }
+  }
+  .easyLogin__area {
+    padding-top: 40px;
+    padding-bottom: 38px;
+    .easyLogin__title {
+      font-size: 18px;
+      letter-spacing: -.72px;
+      line-height: 26px;
+      font-weight: 600;
+      padding-bottom: 24px;
+    }
+    .easyLogin__ul {
+      label {
+        margin-bottom: 0;
+      }
+      li {
+        display: flex;
+        justify-content: space-between;
+        font-size: 16px;
+        letter-spacing: -.64px;
+        line-height: 28px;
+      }
+      li + li {
+        padding-top: 16px;
+      }
+    }
+  }
+
+  .reception-agree__area {
+    padding: 40px 0;
+    .reception-agree__title {
+      margin-bottom: 24px;
+      p {
+        font-size: 18px;
+        letter-spacing: -.72px;
+        line-height: 26px;
+        font-weight: 600;
+      }
+    }
+    .reception-agree__ul {
+      li {
+        margin-right: 20px;
+      }
+    }
+  }
+  .lifetime-member__area {
+    padding-top: 40px;
+  }
+  .lifetime-member__header {
+    padding-bottom: 17px;
+    .lifetime-member__title {
+      font-weight: 500;
+    }
+    .benefit-view {
+      i {
+        margin-top: 5px;
+        margin-left: 3px;
+      }
+    }
+  }
+  .lifetime-member__body {
+    .lifetime-member__radio-area {
+      margin-bottom: 15px;
+      .base-radio:first-child {
+        margin-right: 20px;
+      }
+      .magic-radio + label, .magic-checkbox + label {
+        color: $black;
+      }
+    }
+    .lifetime-member__join-text {
+      color: $gray-700;
+    }
+  }
+  .lifetime-member__footer {
+    padding-top: 40px;
+    .btn-group {
+      padding-bottom: 80px;
+      .dp-btn:first-child {
+        margin-right: 10px;
+      }
+    }
+    .member-withdraw__area {
+      text-align: center;
+      text-decoration: underline;
+    }
+  }
+}

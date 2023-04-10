@@ -1,0 +1,564 @@
+
+import VueSlider from "vue-slider-component";
+import "vue-slider-component/theme/default.css";
+import BrandPlusModal from '@views.pc/shop/popup/BrandPlusModal.vue';
+
+export default {
+    components: {
+        VueSlider
+    },
+    data() {
+        return {
+            setCateidx: 0,
+            sortActive: 'best',
+            searchData: {
+                idx: "",  //카테고리
+                platform: window.sessionStorage.getItem('platform'), //사용 플랫폼 
+                fBrandList: [],    //브랜드목록
+                colorList: [],    //컬러목록
+                benefitList: [],  //혜택목록
+                ratingList: [],   //별점목록
+                giconList: [], // 아이콘설정목록
+                recomList: [], // 추천유형목록
+                minprice: 0,      //최소가격
+                maxprice: 0,      //최대가격
+                sort: 'best'      //정렬기준
+            },
+            platform: window.sessionStorage.getItem('platform'),
+            parentInfo: this.$store.state.parentInfo,
+            cateList: this.$store.state.cateList,
+            colorList: this.$store.state.colorList,
+            fBrandList: this.$store.state.fBrandList,
+            goodsList: this.$store.state.goodsList,
+            priceList: this.$store.state.priceList,
+            ratingList: this.$store.state.ratingList,
+            benefitList: this.$store.state.benefitList,
+            giconList: this.$store.state.giconList,
+            recomList: this.$store.state.recomList,
+            sortList: [
+                {
+                    id: "best",
+                    label: "인기순",
+                },
+                {
+                    id: "new",
+                    label: "최신순",
+                },
+                {
+                    id: "highscore",
+                    label: "평점높은순",
+                },
+                {
+                    id: "lowscore",
+                    label: "평점낮은순",
+                },
+                {
+                    id: "highprice",
+                    label: "가격높은순",
+                },
+                {
+                    id: "lowprice",
+                    label: "가격낮은순",
+                },
+            ],
+            brandGroup: [], //브랜드목록 10개씩 그룹
+            brandListAll: [], //브랜드 전체
+            setPriceValue: this.$store.state.setPriceValue,
+            brandShowMax: 10,
+            setFilterList: [],  //선택 필터옵션
+            setOption: "",      //선택 정렬순
+            setCateList: [],    //선택 카테고리 리스트
+            setBrandList: [],   //선택 브랜드 리스트
+            setColorList: [],   //선택 색상 리스트
+            setBenefitList: [], //선택 혜택 리스트
+            setPriceList: [],   //선택 가격 리스트
+            setRatingList: [],  //선택 별점 리스트
+            setGiconList: [], // 선택 아이콘설정 리스트
+            setRecomList: [], // 선택 추천유형 리스트
+            brandIdx: 0,
+            maxBrandIdx: 0,
+            pagingData: {
+                currentPage: 1,  // 현재 페이지
+                listTotal: 0,   // 조회목록 전체 수
+                listCnt: 9,   // 한페이지에 노출할 목록수
+                init: 'F'
+            },
+            initMaxPrice: 0,
+            initMinPrice: 0,
+            dragEnd: false,
+            isEnd:false,
+            
+            metaDescription:'',
+            metaTitle:'',
+        };
+    },
+    /*****************
+     * 참고:: setCateidx가 최종 조회 카테고리 대상임
+     *****************/
+    methods: {
+        /************************
+         * 필터정보 초기화
+         ************************/
+        getFilterInit() {
+            this.$router.push({ name: 'shop-list', params: { idx: this.$route.params.idx, init: true } });
+        },
+        /*****************************
+         * 페이지 변경시
+         ****************************/
+        changePage(page) {
+            this.$util.debug(page);
+            this.pagingData.currentPage = page;
+            this.filterRouterChange();
+        },
+        /**************************
+         * 카테고리 변경시 처리 
+         **************************/
+        changeCate(idx) {
+            this.$router.push({ name: 'shop-list', params: { idx: idx, init: true } });
+        },
+        /**************************
+         * 상품목록 조회
+         **************************/
+        getGoodsList() {
+            this.isEnd = false;
+            //조회조건 셋팅
+            let param = Object.assign(this.pagingData, this.searchData);
+            param.iskeep = true;
+            param.reqname = this.$route.name;
+            this.$util.debug("상품목록조회");
+            this.$http.post('/goods/list', param).then(result => {
+                if (result.statusCode == 200) {
+                    this.goodsList = result.data.goodslist;
+                    this.goodsList.forEach(item => {
+                        item.saleamt = item.saleamt - item.goodscpnamt;
+                    });
+                    this.pagingData.listTotal = result.data.listtotal;
+                    this.$util.debug(this.goodsList);
+                    this.$store.commit("goodsList", this.goodsList);
+                }
+                this.isEnd=true;
+            });
+        },
+        /**************************
+         * 필터정보 조회
+         **************************/
+        getFilterInfo() {
+            this.$http.post('/shop/filter/list', { idx: this.$route.params.idx, isloading: true }).then(result => {
+                if (result.statusCode == 200) {
+                    /***********************************
+                     * 카테고리 셋팅
+                     ***********************************/
+                    //1)상위 카테고리 정보
+                    this.parentInfo = result.data.parentinfo;
+                    //2)하위 카테고리 목록 - '전체' 추가
+                    let cate = {
+                        cateidx: this.parentInfo.idx,
+                        catename: "전체"
+                    }
+                    this.cateList = result.data.catelist;
+                    this.$nextTick(() => {
+                        this.cateList.unshift(cate);
+                    })
+                    
+                    /** vue-meta tag 셋팅 (2022-11-30, James)
+                        CREATED로 이전
+                     */
+                    /*this.metaTitle = this.parentInfo.name + ' - 전체';
+                    for (let i = 0; i < this.cateList.length; i++) {
+                        if(this.cateList[i].cateidx == this.$route.params.idx) {
+                            this.metaTitle = this.parentInfo.name + ' - ' + this.cateList[i].catename;
+                            break;
+                        }
+                    }*/
+                    /** vue-meta tag 셋팅 종료
+                     */
+
+                    /***********************************
+                     * 색상 셋팅
+                     ***********************************/
+                    this.colorList = result.data.colorlist;
+                    /***********************************
+                     * 브랜드 목록 셋팅
+                     ***********************************/
+                    this.fBrandList = result.data.brandlist;
+                    //기 선택된 브랜드수
+                    for (let i = 0; i < this.fBrandList.length; i++) {
+                        if (this.setBrandList.length > 0) {
+                            if (this.setBrandList.filter((x) => x == this.fBrandList[i].idx).length > 0) {
+                                this.fBrandList[i].sort = 0;
+                            } else {
+                                this.fBrandList[i].sort = 1;
+                            }
+                        }
+                    }
+
+                    if (this.fBrandList.length > 0) {
+                        this.fBrandList = this.fBrandList.sort((a, b) => a.sort - b.sort);
+
+                        let len = this.fBrandList.length <= this.brandShowMax?this.fBrandList.length:this.brandShowMax;
+                        for (let i = 0; i < len; i++) {
+                            this.fBrandList[i].show = true;
+                            this.metaDescription += this.fBrandList[i].name + ' ';    // vue-meta tag 셋팅 (2022-11-30, James)
+                        }
+                    }
+
+                    /***********************************
+                     * 혜택 목록 셋팅
+                     ***********************************/
+                    this.benefitList = result.data.benefitlist;
+                    /***********************************
+                    * 평점 목록 셋팅
+                    ***********************************/
+                    this.ratingList = result.data.ratinglist.filter((x) => x.rating > 0);
+                    /***********************************
+                     * 아이콘설정 목록 셋팅
+                     ***********************************/
+                    this.giconList = result.data.giconlist;
+                    /***********************************
+                     * 추천유형 목록 셋팅
+                     ***********************************/
+                    this.recomList = result.data.recomlist;
+                    /******************
+                    * 필터 가격 지정
+                    * ****************/
+                    this.priceInfo = result.data.priceinfo;
+                    this.initMinPrice = this.priceInfo.minamt;
+                    this.initMaxPrice = this.priceInfo.maxamt;
+                    this.setPriceValue.min = this.priceInfo.minamt;
+                    this.setPriceValue.max = this.priceInfo.maxamt;
+                    this.setPriceValue.interval = (this.setPriceValue.max - this.setPriceValue.min) / 10;
+                    if (this.$util.isNull(this.searchData.maxprice) || this.$util.isNull(this.searchData.minprice)) {
+                        this.setPriceValue.currentValue[0] = this.priceInfo.minamt;
+                        this.setPriceValue.currentValue[1] = this.priceInfo.maxamt;
+                    } else {
+                        this.setPriceValue.currentValue[0] = this.searchData.minprice;
+                        this.setPriceValue.currentValue[1] = this.searchData.maxprice;
+                    }
+                    /*********************
+                     * 가격 슬라이더 증가값 설정
+                     * =>최고 금액자리수의 -1자리수로 일단 지정함
+                     ********************/
+                    if (this.priceInfo.maxamt == 0) {
+                        //최대가격이 0일경우 기본값 셋팅
+                        this.setPriceValue.interval = 100000;
+                        this.setPriceValue.currentValue[0] = 0;
+                        this.setPriceValue.currentValue[1] = 1000000;
+                        this.setPriceValue.min = 0;
+                        this.setPriceValue.max = 1000000;
+                    }
+                    /*********************
+                     * 5분위 가격 목록 생성
+                     ********************/
+                    this.$front.getPriceList(this, 6);
+
+                    this.$store.commit("parentInfo", this.parentInfo);
+                    this.$store.commit("cateList", this.cateList);
+                    this.$store.commit("fBrandList", this.fBrandList);
+                    this.$store.commit("colorList", this.colorList);
+                    this.$store.commit("benefitList", this.benefitList);
+                    this.$store.commit("ratingList", this.ratingList);
+                    this.$store.commit("priceList", this.priceList);
+                    this.$store.commit("giconList", this.giconList);
+                    this.$store.commit("recomList", this.recomList);
+                    this.$store.commit("setPriceValue", this.setPriceValue);
+                } else {
+                    this.$eventBus.$emit('alert', '알림', "존재하지 않는 상품 입니다.", () => {
+                        this.$router.replace({ name: 'shop' });
+                    })
+                }
+            });
+        },
+        /*************************
+        * 가격 라디오 버튼 클릭에 따른 가격바 셋팅
+        **************************/
+        setPrice(list) {
+            this.$util.debug("setPrice()...");
+            this.$nextTick(() => {
+                let valueList = [];
+                valueList[0] = list.startPrice;
+                if (this.$util.isNull(list.endPrice)) {
+                    if(list.endPrice > this.setPriceValue.max) {
+                        valueList[1] = this.setPriceValue.max;
+                      } else {
+                        valueList[1] = list.endPrice;
+                      }
+                } else {
+                    valueList[1] = list.endPrice;
+                }
+                this.$refs.slider.setValue(valueList);
+                this.updateValue(this.setPriceValue.currentValue);
+            });
+        },
+        /*************************
+         * 가격바 변경시 가격라디오에 해당하는 값
+         * 없으면 라디오 리스트 비우기
+         **************************/
+        updateValue(priceList) {
+            this.$util.debug("updateValue()...");
+            let isSame = false;
+            let price = "";
+            this.priceList.forEach((item) => {
+                if (item.startPrice == priceList[0] && item.endPrice == priceList[1]) {
+                    isSame = true;
+                    price = this.$util.maskComma(item.startPrice) + "원" + "~" + this.$util.maskComma(item.endPrice) + "원"
+                }
+            });
+            if (!isSame) {
+                this.setPriceList = [];
+                this.setFilter('setPriceList', this.$util.maskComma(priceList[0]) + "원" + "~" + this.$util.maskComma(priceList[1]) + "원");
+            } else {
+                this.setFilter('setPriceList', price);
+            }
+            this.dragEnd = true;
+        },
+        /************************
+         * 필터 리스트 추가
+         *************************/
+        setFilter(target, value) {
+            this.$front.setFilter(this, target, value);
+            this.pagingData.currentPage = 1;
+            this.filterRouterChange();
+
+        },
+        /**************************
+         * 필터 항목 삭제
+         *************************/
+        delFilter(item) {
+            this.$front.delFilter(this, item);
+            this.pagingData.currentPage = 1;
+            this.filterRouterChange();
+        },
+        /**********************
+         * 정렬 selectBox 변경시 이벤트 처리
+         *********************/
+        setSortActive(index) {
+            this.$util.debug("setSortActive()");
+            this.sortActive = index;
+            this.pagingData.currentPage = 1;
+            this.filterRouterChange();
+        },
+        /**********************
+         * 브랜드 더보기 결과 처리
+         *********************/
+        // addBrandReturn() {
+        //     let brandfilterinfo = this.$store.state.brandfilterinfo;
+        //     this.fBrandList = brandfilterinfo.fBrandList;
+        //     this.setBrandList = brandfilterinfo.setBrandList;
+        //     this.$nextTick(() => {
+
+        //         this.setFilterList = brandfilterinfo.setFilterList;
+        //     })
+        // },
+        /**********************
+        * 브랜드 추가 모달 오픈
+        *********************/
+        addBrandList() {
+            this.$eventBus.$emit('showModal', BrandPlusModal, 'brandPlusModal', { fBrandList: this.fBrandList });
+        },
+        /**********************
+        * 필터 변경으로 인한 페이지이동
+        *********************/
+        filterRouterChange() {
+            //this.pagingData.init="F";
+            //this.$storage.removeSessionStorage('param-' + this.$route.name);
+            this.$front.setSearchData(this);
+            const searchStr = encodeURIComponent(JSON.stringify(this.searchData));
+            this.$router.push({ name: this.$route.name, query: { search: searchStr }, params: { idx: this.$route.params.idx, init: true } });
+        }
+    },
+    mounted() {
+        this.$util.debug("mounted()");
+        if (this.$util.isBlank(this.$route.query.search)) {
+            this.$front.setSearchData(this);
+            this.getGoodsList();
+        } else {
+            this.$front.queryStrToParam(this);
+            this.getGoodsList();
+        }
+        this.getFilterInfo();
+    },
+    updated() {
+        this.$nextTick(() => {
+            if (this.goodsList.length > 0) {
+                this.$eventBus.$emit('scrollTo', this.$route.name, (flag) => {
+                    if (!flag && this.dragEnd) {
+                        window.scrollTo(0, 0);
+                    }
+                });
+            } else if (this.dragEnd) {
+                window.scrollTo(0, 0);
+            } else {
+                return;
+            }
+        })
+    },
+    metaInfo() {
+      return {
+        meta: [
+          {
+            vmid: 'og:description',
+            property: 'og:description',
+            content: 'D.PLOT의 브랜드 셀렉션 - ' + this.metaDescription,
+          },
+          {
+            vmid: 'og:title',
+            property: 'og:title',
+            content: this.metaTitle + ' | 디플롯',
+          },
+          {
+            vmid: 'og:image',
+            property: 'og:image',
+            content: 'https://www.dplot.co.kr/assets/dplot_logo.jpg',
+          },
+        ],
+      };
+    },
+    created() {
+            alert("created called");
+            this.$util.debug("&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&& created called");
+            this.$http.post('/shop/filter/list', { idx: this.$route.params.idx, isloading: true }).then(result => {
+                if (result.statusCode == 200) {
+                    /***********************************
+                     * 카테고리 셋팅
+                     ***********************************/
+                    //1)상위 카테고리 정보
+                    this.parentInfo = result.data.parentinfo;
+                    //2)하위 카테고리 목록 - '전체' 추가
+                    let cate = {
+                        cateidx: this.parentInfo.idx,
+                        catename: "전체"
+                    }
+                    this.cateList = result.data.catelist;
+                    this.$nextTick(() => {
+                        this.cateList.unshift(cate);
+                    })
+                    
+                    /** vue-meta tag 셋팅 (2022-11-30, James)
+                        CREATED로 이전
+                     */
+                    this.metaTitle = this.parentInfo.name + ' - 전체';
+                    for (let i = 0; i < this.cateList.length; i++) {
+                        if(this.cateList[i].cateidx == this.$route.params.idx) {
+                            this.metaTitle = this.parentInfo.name + ' - ' + this.cateList[i].catename;
+                            break;
+                        }
+                    }
+                    /** vue-meta tag 셋팅 종료
+                     */
+
+                    /***********************************
+                     * 색상 셋팅
+                     ***********************************/
+                    this.colorList = result.data.colorlist;
+                    /***********************************
+                     * 브랜드 목록 셋팅
+                     ***********************************/
+                    this.fBrandList = result.data.brandlist;
+                    //기 선택된 브랜드수
+                    for (let i = 0; i < this.fBrandList.length; i++) {
+                        if (this.setBrandList.length > 0) {
+                            if (this.setBrandList.filter((x) => x == this.fBrandList[i].idx).length > 0) {
+                                this.fBrandList[i].sort = 0;
+                            } else {
+                                this.fBrandList[i].sort = 1;
+                            }
+                        }
+                    }
+
+                    if (this.fBrandList.length > 0) {
+                        this.fBrandList = this.fBrandList.sort((a, b) => a.sort - b.sort);
+
+                        let len = this.fBrandList.length <= this.brandShowMax?this.fBrandList.length:this.brandShowMax;
+                        for (let i = 0; i < len; i++) {
+                            this.fBrandList[i].show = true;
+                            this.metaDescription += this.fBrandList[i].name + ' ';    // vue-meta tag 셋팅 (2022-11-30, James)
+                        }
+                    }
+
+                    /***********************************
+                     * 혜택 목록 셋팅
+                     ***********************************/
+                    this.benefitList = result.data.benefitlist;
+                    /***********************************
+                    * 평점 목록 셋팅
+                    ***********************************/
+                    this.ratingList = result.data.ratinglist.filter((x) => x.rating > 0);
+                    /***********************************
+                     * 아이콘설정 목록 셋팅
+                     ***********************************/
+                    this.giconList = result.data.giconlist;
+                    /***********************************
+                     * 추천유형 목록 셋팅
+                     ***********************************/
+                    this.recomList = result.data.recomlist;
+                    /******************
+                    * 필터 가격 지정
+                    * ****************/
+                    this.priceInfo = result.data.priceinfo;
+                    this.initMinPrice = this.priceInfo.minamt;
+                    this.initMaxPrice = this.priceInfo.maxamt;
+                    this.setPriceValue.min = this.priceInfo.minamt;
+                    this.setPriceValue.max = this.priceInfo.maxamt;
+                    this.setPriceValue.interval = (this.setPriceValue.max - this.setPriceValue.min) / 10;
+                    if (this.$util.isNull(this.searchData.maxprice) || this.$util.isNull(this.searchData.minprice)) {
+                        this.setPriceValue.currentValue[0] = this.priceInfo.minamt;
+                        this.setPriceValue.currentValue[1] = this.priceInfo.maxamt;
+                    } else {
+                        this.setPriceValue.currentValue[0] = this.searchData.minprice;
+                        this.setPriceValue.currentValue[1] = this.searchData.maxprice;
+                    }
+                    /*********************
+                     * 가격 슬라이더 증가값 설정
+                     * =>최고 금액자리수의 -1자리수로 일단 지정함
+                     ********************/
+                    if (this.priceInfo.maxamt == 0) {
+                        //최대가격이 0일경우 기본값 셋팅
+                        this.setPriceValue.interval = 100000;
+                        this.setPriceValue.currentValue[0] = 0;
+                        this.setPriceValue.currentValue[1] = 1000000;
+                        this.setPriceValue.min = 0;
+                        this.setPriceValue.max = 1000000;
+                    }
+                    /*********************
+                     * 5분위 가격 목록 생성
+                     ********************/
+                    this.$front.getPriceList(this, 6);
+
+                    this.$store.commit("parentInfo", this.parentInfo);
+                    this.$store.commit("cateList", this.cateList);
+                    this.$store.commit("fBrandList", this.fBrandList);
+                    this.$store.commit("colorList", this.colorList);
+                    this.$store.commit("benefitList", this.benefitList);
+                    this.$store.commit("ratingList", this.ratingList);
+                    this.$store.commit("priceList", this.priceList);
+                    this.$store.commit("giconList", this.giconList);
+                    this.$store.commit("recomList", this.recomList);
+                    this.$store.commit("setPriceValue", this.setPriceValue);
+                } else {
+                    this.$eventBus.$emit('alert', '알림', "존재하지 않는 상품 입니다.", () => {
+                        this.$router.replace({ name: 'shop' });
+                    })
+                }
+            });
+    }
+    /*computed: {
+        metaTitle() {
+            let title = '';
+            this.cateList.some((value) => {
+                if(value.cateidx == this.route.params.idx) {
+                    title = value;
+                    return true;
+                }
+            });
+            return this.parentInfo.name + ' - ' + title; 
+        },
+        metaDescription() {
+            let description = '';
+            Array.from(this.searchData.fBrandList).forEach(function(value) {
+                description += value + ' ';
+            });
+            
+            return description; 
+        },
+	}*/
+}

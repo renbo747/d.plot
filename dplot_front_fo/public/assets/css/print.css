@@ -1,0 +1,202 @@
+.modal-header {
+    position: -webkit-sticky;
+    position: sticky;
+    top: 0;
+    left: 0;
+    z-index: 10;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    height: 50px;
+    padding: 0 20px;
+    border-bottom: 1px solid #dddddd;
+    background: #fff;
+}
+
+.modal-header .modal-title {
+    font-size: 20px;
+    letter-spacing: -.8px;
+}
+
+.page-layer .modal-body .page-layer__body {
+    display: flex;
+    flex-direction: column;
+}
+
+/* .modal-body {
+    padding: 30px;
+} */
+
+.page-layer__body {
+    display: flex;
+    flex-direction: column;
+}
+
+.list-style-none {
+    list-style: none;
+    margin-bottom: 0;
+    padding-left: 0;
+}
+
+/* .dp-panel {
+    padding-top: 20px;
+} */
+
+.transaction-detail__title {
+    font-size: 16px;
+    letter-spacing: -.64px;
+    font-weight: 500;
+    margin-bottom: 20px;
+}
+  
+.transaction-detail__ul li + li {
+    margin-top: 6px;
+}
+  
+
+.transaction-detail__ul p {
+    font-size: 14px;
+    letter-spacing: -.56px;
+    line-height: 20px;
+    margin-bottom: 0;
+    word-break: keep-all;
+}
+
+.transaction-detail__text {
+    display: flex;
+    align-items: flex-start;
+}
+
+.transaction-detail__text p:first-child {
+    width: 70px;
+    margin-right: 20px;
+}
+
+.transaction-detail__text p:last-child {
+    width: calc(100% - 90px);
+}
+  
+/* 구매내역 테이블 */
+.buy-history__table {
+    width: 100%;
+}
+
+.buy-history__table thead tr {
+    border-bottom: 1px solid;
+}
+
+.buy-history__table thead th {
+    padding-bottom: 14px;
+}
+
+  
+.buy-history__table tbody {
+        margin-top: 14px;
+        padding-top: 20px;
+}
+
+.buy-history__table tbody .atten-new {
+    font-size: 14px;
+    letter-spacing: -.42px;
+    line-height: 17px;
+}
+  
+.buy-history__table tbody tr:first-child td {
+    padding-top: 20px;
+}
+
+.buy-history__table tbody td {
+    padding-top: 10px;
+    vertical-align: baseline;
+
+    
+
+}
+
+.buy-history__table tbody td .dp-bar {
+    margin-right: 6px;
+    margin-left: 6px;
+    height: 10px;
+}
+
+.buy-history__table tbody .unit {
+    font-size: 12px;
+    letter-spacing: -.48px;
+    line-height: 17px;
+}
+
+  
+.buy-history__table tbody th,td {
+    font-size: 14px;
+    letter-spacing: -.56px;
+    line-height: 20px;
+    font-weight: 400;
+}
+  
+.buy-history__table tbody .dp-price-info {
+      padding-bottom: 20px;
+      margin-bottom: 20px;
+      border-bottom: 1px solid;
+  
+      
+}
+
+.buy-history__table tbody .dp-price-info li + li {
+    margin-top: 10px;
+}
+
+.buy-history__table tbody .total-price {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+}
+  
+.buy-history__table tbody .total-price__text {
+    font-size: 16px;
+    letter-spacing: -.64px;
+    line-height: 24px;
+    font-weight: 700;
+}
+  
+.buy-history__table tbody .atten-new {
+    font-size: 18px;
+    letter-spacing: -.54px;
+    line-height: 21px;
+    font-weight: 600;
+    margin-right: 2px;
+}
+  
+.buy-history__table tbody .unit {
+    font-size: 14px;
+    letter-spacing: -.56px;
+    line-height: 20px;
+}
+
+.dp-price-info {
+    padding-bottom: 20px;
+    margin-bottom: 20px;
+    border-bottom: 1px solid #dddddd;
+}
+
+.dp-price-info li {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.dp-price-info .price-info__key {
+    display: flex;
+    align-items: center;
+    font-size: 14px;
+    letter-spacing: -.56px;
+}
+
+.dp-price-info .price-info__unit {
+    font-size: 12px;
+    letter-spacing: -.48px;
+    font-weight: 400;
+    margin-left: 2px;
+}
+
+.modal-close {display:none;}
+.print-btn {display:none;}

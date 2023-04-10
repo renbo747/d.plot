@@ -1,0 +1,49 @@
+.dp-accordion {
+  & > li {
+    border-bottom: 1px solid $border-color;
+  }
+  & > li + li {
+    margin-top: 20px;
+    @include media-breakpoint-up(xl) {
+      margin-top: 0;
+    }
+  }
+  .accordion-item {}
+  .accordion__header {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    padding-bottom: 20px;
+    @include media-breakpoint-up(xl) {
+      min-height: 86px;
+      align-items: center;
+      padding: 20px 0;
+    }
+    .header__text {
+      font-size: 14px;
+      letter-spacing: -.56px;
+      color: $gray-800;
+      word-break: keep-all;
+      width: calc(100% - 36px);
+      @include media-breakpoint-up(xl) {
+        font-size: 18px;
+        letter-spacing: -.72px;
+      }
+    }
+    &.not-collapsed .icon-arrow-down {
+      transform: rotate(180deg);
+    }
+  }
+  .accordion__body {
+    padding: 20px;
+    background: $gray-100;
+    margin-bottom: 20px;
+    @include media-breakpoint-up(xl) {
+      padding: 30px;
+      margin-bottom: 30px;
+    }
+  }
+  .accordion__body * {
+    word-break: break-all;
+  }
+}

@@ -1,0 +1,332 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.dplot.mapper.ConfigMapper">
+<!--
+<cache eviction="FIFO" flushInterval="60000" size="512" readOnly="true"/>
+-->
+<select id="selectConfig" parameterType="String" resultType="somap" >
+	SELECT	/* ConfigMapper.xml - selectConfig 환경설정 조회 (domain으로 조회)*/
+		C.SITEID, C.SERVICE CFGSERVICE, C.STARTDATE CFGSTARTDATE, C.ENDDATE CFGENDDATE, C.SITENAME CFGSITENAME, C.POSTWORD CFGPOSTWORD, C.SITEEMAIL CFGSITEEMAIL, C.BROWSERTITLE CFGBROWSERTITLE,
+		C.STARTPAGE CFGSTARTPAGE, C.CATEDEPTH CFGCATEDEPTH, C.APIKEY CFGAPIKEY, C.NOINTEREST CFGNOINTEREST, C.ISOPENHTML CFGISOPENHTML, C.UPLOADMETHOD CFGUPLOADMETHOD,
+		C.ISCERTIFY CFGISCERTIFY, C.CERTIFYNICEID CFGCERTIFYNICEID, C.CERTIFYNICEPW CFGCERTIFYNICEPW, C.CERTIFYIPINID CFGCERTIFYIPINID, C.CERTIFYIPINPW CFGCERTIFYIPINPW,
+		C.ISOUTSIDESMTP CFGISOUTSIDESMTP, C.SMTPSERVER CFGSMTPSERVER, C.SMTPID CFGSMTPID, C.SMTPPW CFGSMTPPW, C.INSTATOKEN,
+		C.IMGSWIDTH CFGIMGSWIDTH, C.IMGSHEIGHT CFGIMGSHEIGHT, C.IMGMWIDTH CFGIMGMWIDTH, C.IMGMHEIGHT CFGIMGMHEIGHT, C.IMGBWIDTH CFGIMGBWIDTH, C.IMGBHEIGHT CFGIMGBHEIGHT,
+		C.ISCHOICELISTCART CFGISCHOICELISTCART, C.ISDISPLAYSOLDOUT CFGISDISPLAYSOLDOUT, C.METATAG CFGMETATAG, C.DESCRIPTION CFGDESCRIPTION, C.KEYWORD CFGKEYWORD,
+		C.SITEALIGN CFGSITEALIGN, C.BGCOLOR CFGBGCOLOR, C.CSSPRICE CFGCSSPRICE, C.CSSHIGHLIGHT CFGCSSHIGHLIGHT, C.ISFAVICON CFGISFAVICON, C.GOODSICONS CFGGOODSICONS,
+		C.DECISIONPERIOD CFGDECISIONPERIOD, C.DELIVERYPERIOD CFGDELIVERYPERIOD, C.ISADMINACCESSIP CFGISADMINACCESSIP, C.ISALLOWMOBILE CFGISALLOWMOBILE, C.ISGOODSLOGINFO CFGISGOODSLOGINFO,
+		CD.FLATFORM CFGFLATFORM,C.AUTOWITHDRAWTARGET CFGAUTOWITHDRAWTARGET,C.AUTOWITHDRAWPERIOD CFGAUTOWITHDRAWPERIOD, C.OGIMAGE CFGOGIMAGE, C.STAMPIMAGE CFGSTAMPIMAGE,
+		CD.HTTP CFGHTTP, CD.HTTPS CFGHTTPS, C.ISSEARCHLINK, C.SEARCHTEXT, C.SEARCHLINKPC, C.SEARCHLINKMO, C.ISNEWLINKPC, C.ISNEWLINKMO, C.BENENOTE, C.INTERNOTE,
+    	(
+      		SELECT A.Domain from ( 	SELECT Domain,Flatform,SiteID 
+      								FROM T_CONFIG_DOMAIN
+      								WHERE Domain = CD.domain
+      								ORDER BY Priority DESC, Idx ASC
+      							 ) A 
+      		WHERE A.SiteID=C.SiteID 
+      		AND IFNULL(A.Flatform, ' ') = IFNULL(CD.Flatform, ' ') 
+      		LIMIT 0,1
+    	) AS CFGDOMAIN
+	FROM T_CONFIG C 
+	JOIN T_CONFIG_DOMAIN CD ON C.SiteID=CD.SiteID
+	WHERE 1 = 1
+	<if test="domain != null and domain != ''">
+	AND Domain=#{domain}
+	</if>
+</select>
+
+<select id="selectConfigSiteId" parameterType="String" resultType="somap" >
+	SELECT /* ConfigMapper.xml - selectConfigSiteId 환경설정 조회 (siteId로 조회)*/
+		C.SITEID , C.SERVICE CFGSERVICE, C.STARTDATE CFGSTARTDATE, C.ENDDATE CFGENDDATE, C.SITENAME CFGSITENAME, C.POSTWORD CFGPOSTWORD, C.SITEEMAIL CFGSITEEMAIL, C.BROWSERTITLE CFGBROWSERTITLE,
+		C.STARTPAGE CFGSTARTPAGE, C.CATEDEPTH CFGCATEDEPTH, C.APIKEY CFGAPIKEY, C.NOINTEREST CFGNOINTEREST, C.ISOPENHTML CFGISOPENHTML, C.UPLOADMETHOD CFGUPLOADMETHOD,
+		C.ISCERTIFY CFGISCERTIFY, C.CERTIFYNICEID CFGCERTIFYNICEID, C.CERTIFYNICEPW CFGCERTIFYNICEPW, C.CERTIFYIPINID CFGCERTIFYIPINID, C.CERTIFYIPINPW CFGCERTIFYIPINPW,
+		C.ISOUTSIDESMTP CFGISOUTSIDESMTP, C.SMTPSERVER CFGSMTPSERVER, C.SMTPID CFGSMTPID, C.SMTPPW CFGSMTPPW, C.INSTATOKEN,
+		C.IMGSWIDTH CFGIMGSWIDTH, C.IMGSHEIGHT CFGIMGSHEIGHT, C.IMGMWIDTH CFGIMGMWIDTH, C.IMGMHEIGHT CFGIMGMHEIGHT, C.IMGBWIDTH CFGIMGBWIDTH, C.IMGBHEIGHT CFGIMGBHEIGHT,
+		C.ISCHOICELISTCART CFGISCHOICELISTCART, C.ISDISPLAYSOLDOUT CFGISDISPLAYSOLDOUT, C.METATAG CFGMETATAG, C.DESCRIPTION CFGDESCRIPTION, C.KEYWORD CFGKEYWORD,
+		C.SITEALIGN CFGSITEALIGN, C.BGCOLOR CFGBGCOLOR, C.CSSPRICE CFGCSSPRICE, C.CSSHIGHLIGHT CFGCSSHIGHLIGHT, C.ISFAVICON CFGISFAVICON, C.GOODSICONS CFGGOODSICONS,
+		C.DECISIONPERIOD CFGDECISIONPERIOD, C.DELIVERYPERIOD CFGDELIVERYPERIOD, C.ISADMINACCESSIP CFGISADMINACCESSIP, C.ISALLOWMOBILE CFGISALLOWMOBILE, C.ISGOODSLOGINFO CFGISGOODSLOGINFO,
+		CD.FLATFORM CFGFLATFORM,C.AUTOWITHDRAWTARGET CFGAUTOWITHDRAWTARGET,C.AUTOWITHDRAWPERIOD CFGAUTOWITHDRAWPERIOD, C.OGIMAGE CFGOGIMAGE, C.STAMPIMAGE CFGSTAMPIMAGE,
+		CD.HTTP CFGHTTP, CD.HTTPS CFGHTTPS, C.ISSEARCHLINK, C.SEARCHTEXT, C.SEARCHLINKPC, C.SEARCHLINKMO, C.ISNEWLINKPC, C.ISNEWLINKMO
+	FROM T_CONFIG C 
+	JOIN T_CONFIG_DOMAIN CD ON C.SiteID=CD.SiteID 
+		AND C.SITEID=#{siteid}
+</select>
+<select id="selectConfigForDecisionPeriod" parameterType="String" resultType="somap" >
+	SELECT  /* ConfigMapper.xml - selectConfigForDecisionPeriod 환경설정 구매확정기간 */
+		DECISIONPERIOD 
+	FROM T_CONFIG 
+	WHERE SiteID=#{siteid}
+</select>
+
+<select id="selectConfigForDeliveryPeriod" parameterType="String" resultType="somap" >
+	SELECT  /* ConfigMapper.xml - selectConfigForDeliveryPeriod 환경설정 자동배송완료기간 */
+		DELIVERYPERIOD 
+	FROM T_CONFIG 
+	WHERE SiteID=#{siteid}
+</select>
+
+<select id="selectConfigAppVersion" parameterType="somap" resultType="somap" >
+	SELECT  /* ConfigMapper.xml - selectConfigAppVersion 앱버전조회 */
+		APPVERSION 
+	FROM T_CONFIG 
+	WHERE SiteID=#{siteid}
+</select>
+
+
+<update id="updateConfig" parameterType="somap" >
+		UPDATE T_CONFIG /* ConfigMapper.xml - updateConfig 환경설정 수정 */
+		<set>
+			<if test="cfgsitename != null">
+				SiteName=#{cfgsitename},
+			</if>		
+			<if test="cfgsiteemail != null">
+				SiteEmail=#{cfgsiteemail},
+			</if>
+			<if test="cfgpostword != null">
+				PostWord=#{cfgpostword},
+			</if>
+			<if test="cfgbrowsertitle != null">
+				BrowserTitle=#{cfgbrowsertitle},
+			</if>
+			<if test="cfgstartpage != null">
+				StartPage=#{cfgstartpage},
+			</if>
+			<if test="cfgapikey != null">
+				ApiKey=#{cfgapikey},
+			</if>				
+			<if test="cfgnointerest != null">
+				NoInterest=#{cfgnointerest},
+			</if>		
+			<if test="cfgisopenhtml != null">
+				IsOpenHtml=#{cfgisopenhtml},
+			</if>			
+			<if test="cfguploadmethod != null">
+				UploadMethod=#{cfguploadmethod},
+			</if>
+			<if test="cfgiscertify != null">
+				IsCertify=#{cfgiscertify},
+			</if>		
+			<if test="cfgcertifyniceid != null">
+				CertifyNiceID=#{cfgcertifyniceid},
+			</if>
+			<if test="cfgcertifynicepw != null">
+				CertifyNicePw=#{cfgcertifynicepw},
+			</if>
+			<if test="cfgcertifyipinid != null">
+				CertifyIpinID=#{cfgcertifyipinid},
+			</if>
+			<if test="cfgcertifyipinpw != null">
+				CertifyIpinPw=#{cfgcertifyipinpw},
+			</if>
+			<if test="cfgisoutsidesmtp != null">
+				IsOutsideSmtp=#{cfgisoutsidesmtp},
+			</if>
+			<if test="cfgsmtpserver != null">
+				SmtpServer=#{cfgsmtpserver},
+			</if>
+			<if test="cfgsmtpid != null">
+				SmtpId=#{cfgsmtpid},
+			</if>
+			<if test="cfgsmtppw != null">
+				SmtpPw=#{cfgsmtppw},
+			</if>
+			<if test="cfgimgswidth != null">
+				ImgSWidth=#{cfgimgswidth},
+			</if>
+			<if test="cfgimgsheight != null">
+				ImgSHeight=#{cfgimgsheight},
+			</if>
+			<if test="cfgimgmwidth != null">
+				ImgMWidth=#{cfgimgmwidth},
+			</if>
+			<if test="cfgimgmheight != null">
+				ImgMHeight=#{cfgimgmheight},
+			</if>
+			<if test="cfgimgbwidth != null">
+				ImgBWidth=#{cfgimgbwidth},
+			</if>						
+			<if test="cfgimgbheight != null">
+				ImgBHeight=#{cfgimgbheight},
+			</if>
+			<if test="cfgischoicelistcart != null">
+				IsChoiceListCart=#{cfgischoicelistcart},
+			</if>																				
+			<if test="cfgisdisplaysoldout != null">
+				IsDisplaySoldOut=#{cfgisdisplaysoldout},
+			</if>
+			<if test="cfgmetatag != null">
+				MetaTag=#{cfgmetatag},
+			</if>
+			<if test="cfgdescription != null">
+				Description=#{cfgdescription},
+			</if>
+			<if test="cfgkeyword != null">
+				Keyword=#{cfgkeyword},
+			</if>
+			<if test="cfgdecisionperiod !=null ">
+				DecisionPeriod=#{cfgdecisionperiod},
+			</if>
+			<if test="cfgdeliveryperiod !=null ">
+				DELIVERYPERIOD=#{cfgdeliveryperiod},
+			</if>
+			<if test="cfgisgoodsloginfo != null">
+				IsGoodsLogInfo=#{cfgisgoodsloginfo},
+			</if>
+			<if test="cfgisadminaccessip != null">
+				IsAdminAccessIp=#{cfgisadminaccessip},
+			</if>		
+			<if test="cfgisfavicon != null">
+				IsFavicon=#{cfgisfavicon},
+			</if>
+			<if test="cfgogimage != null">
+				OgImage=#{cfgogimage},
+			</if>
+			<if test="cfgstampimage != null">
+				StampImage=#{cfgstampimage},
+			</if>
+			<if test="cfgsitealign != null">
+				SiteAlign=#{cfgsitealign},
+			</if>
+			<if test="cfgbgcolor != null">
+				BgColor=#{cfgbgcolor},
+			</if>
+			<if test="cfgcssprice != null">
+				CssPrice=#{cfgcssprice},
+			</if>
+			<if test="cfgcsshighlight != null">
+				CssHighlight=#{cfgcsshighlight},
+			</if>
+			<if test="cfggoodsicons != null">
+				GoodsIcons=#{cfggoodsicons},
+			</if>				
+			<if test="cfgautowithdrawtarget != null ">
+				AutoWithdrawTarget=#{cfgautowithdrawtarget},
+			</if>				
+			<if test="cfgautowithdrawperiod != null ">
+				AutoWithdrawPeriod=#{cfgautowithdrawperiod},
+			</if>
+			<if test="instatoken != null ">
+				instatoken=#{instatoken},
+			</if>
+			<if test="cfmstday != null ">
+				CFMSTDAY=#{cfmstday},
+			</if>
+			<if test="cfmedday != null ">
+				CFMEDDAY=#{cfmedday},
+			</if>
+			<if test="cfmmulti != null ">
+				CFMMULTI=#{cfmmulti},
+			</if>
+			<if test="frstreviewamt != null ">
+				FRSTREVIEWAMT=#{frstreviewamt},
+			</if>
+			<if test="issearchlink != null">
+				issearchlink=#{issearchlink},
+			</if>
+			<if test="searchtext != null">
+				searchtext=#{searchtext},
+			</if>
+			<if test="searchlinkpc != null">
+				searchlinkpc=#{searchlinkpc},
+			</if>
+			<if test="searchlinkmo != null">
+				searchlinkmo=#{searchlinkmo},
+			</if>
+			<if test="isnewlinkpc != null">
+				isnewlinkpc=#{isnewlinkpc},
+			</if>
+			<if test="isnewlinkmo != null">
+				isnewlinkmo=#{isnewlinkmo},
+			</if>
+			<if test="benenote != null">
+				benenote=#{benenote},
+			</if>
+			<if test="internote != null">
+				internote=#{internote},
+			</if>
+		</set>
+	<where>
+		AND SiteID= #{siteid}
+	</where>		 
+</update>
+
+<resultMap type="somap" id="selectConfigJoinConfigCompanyResult">
+	<result property="MAILTOP" column="MAILTOP" jdbcType="CLOB" javaType="java.lang.String" />
+	<result property="MAILFOOT" column="MAILFOOT" jdbcType="CLOB" javaType="java.lang.String" />
+</resultMap>
+<select id="selectConfigJoinConfigCompany" parameterType="somap" resultMap="selectConfigJoinConfigCompanyResult" >
+	SELECT   /* ConfigMapper.xml - updateConfig 환경설정 상점정보 조회 */
+		  C.ISOUTSIDESMTP
+		, C.SMTPSERVER
+		, C.SMTPID
+		, C.SMTPPW
+		, CC.COMNAME
+		, CC.CEONAME
+		, CC.SECURITYNAME
+		, CC.SECURITYEMAIL
+		, CC.COMPOST
+		, CC.COMADDR
+		, CC.COMADDRDETAIL
+		, CC.COMTEL
+		, CC.COMFAX
+		, CC.BIZNO
+		, CC.TONGSINNO
+	FROM T_CONFIG C
+		JOIN T_CONFIG_COMPANY CC
+			ON C.SiteID = CC.SiteID
+	<where>
+		AND C.SiteID=#{siteid}
+	</where>		 
+</select>
+
+
+<select id="selectConfigCateDepth" parameterType="somap" resultType="somap" >
+	SELECT  /* ConfigMapper.xml - updateConfig 환경설정 카테고리 단계 */
+		CATEDEPTH
+  	FROM T_CONFIG 
+  	WHERE SiteID=#{siteid}		 
+</select>
+
+<select id="selectConfigForReserveConfig" parameterType="somap" resultType="somap" >
+	SELECT  /* ConfigMapper.xml - selectConfigForReserveConfig 환경설정 적립금설정 조회 */
+		  CFMSTDAY
+		, CFMEDDAY
+		, IFNULL(DATE_FORMAT(STR_TO_DATE(SUBSTR(CFMSTDAY, 1, 8), '%Y%m%d'), '%Y-%m-%d'), '') AS CFMSTDATE
+		, SUBSTR(CFMSTDAY, 9, 2)  AS CFMSTHOUR
+		, SUBSTR(CFMSTDAY, 11, 2) AS CFMSTMIN
+		, IFNULL(DATE_FORMAT(STR_TO_DATE(SUBSTR(CFMEDDAY, 1, 8), '%Y%m%d'), '%Y-%m-%d'), '') AS CFMEDDATE
+		, SUBSTR(CFMEDDAY, 9, 2)  AS CFMEDHOUR
+		, SUBSTR(CFMEDDAY, 11, 2) AS CFMEDMIN
+		, CFMMULTI
+		, FRSTREVIEWAMT
+	FROM T_CONFIG
+	WHERE SiteID=#{siteid}
+</select>
+
+<select id="selectConfigCardBenefit" parameterType="somap" resultType="somap" >
+	SELECT  /* ConfigMapper.xml - selectConfigCardBenefit 환경설정 카드혜택 유의사항 조회 */
+		ifnull(benenote, '') as benenote
+		, ifnull(internote, '') as internote
+  	FROM T_CONFIG 
+  	WHERE SiteID=#{siteid}		 
+</select>
+
+<select id="selectConfigForSearchLink" parameterType="somap" resultType="somap" >
+	SELECT  /* ConfigMapper.xml - selectConfigForSearchLink 환경설정 검색창링크 조회 */
+		ISSEARCHLINK
+		, SEARCHTEXT
+		, SEARCHLINKPC
+		, SEARCHLINKMO
+		, ISNEWLINKPC
+		, ISNEWLINKMO
+  	FROM T_CONFIG 
+  	WHERE SiteID=#{siteid}		 
+</select>
+
+<select id="selectConfigForInsta" parameterType="somap" resultType="somap" >
+	SELECT  /* ConfigMapper.xml - selectConfigForInsta 환경설정 인스타토큰 조회 */
+		INSTATOKEN
+  	FROM T_CONFIG 
+  	WHERE SiteID=#{siteid}		 
+</select>
+</mapper>

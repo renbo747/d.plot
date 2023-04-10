@@ -1,0 +1,46 @@
+#운영환경변수 설정(변수선언시 VUE_APP으로 시작 ex. VUE_APP_PORT = 4000 )
+
+NODE_ENV = "prod"
+BASE_URL = "/"
+
+# 서버설정
+VUE_APP_SERVER_URL = "https://www.dplot.co.kr"
+VUE_APP_LOG_LEVEL = "OFF"
+
+#카카오 다다픽 API KEY
+VUE_APP_KAKAO_ADMIN_KEY = "83072613b35f5c28d574eb08b23221df"
+VUE_APP_KAKAO_API_KEY = "2a9254fbc2c664e88cb64cee775bf196"
+VUE_APP_KAKAO_SCRIPT_KEY = "bb4acfca2fd4e5ebdf07e13c6c46b35d"
+VUE_APP_KAKAO_REDIRECT_URI = "/kakao-auth"
+
+# 네이버 API KEY
+VUE_APP_NAVER_CLIENT_KEY = "IuiI7XI6HTs7h9AyZk4k"
+VUE_APP_NAVER_REDIRECT_URI = "/naver-auth"
+
+# APPLE API KEY
+VUE_APP_APPLE_CLIENT_KEY = "dadapick.signin"
+VUE_APP_APPLE_REDIRECT_URI = "/apple-auth"
+VUE_APP_APPLE_NONCE = "dplot.apple.login"
+
+# 토스 결제
+#VUE_APP_TOSS_CLIENT_KEY = "test_ck_ODnyRpQWGrNW62Dqa778Kwv1M9EN"
+VUE_APP_TOSS_CLIENT_KEY = "live_ck_4vZnjEJeQVxODQLz9jO3PmOoBN0k"
+
+# NAVER PAY 결제
+VUE_APP_NAVER_PAY_CLIENT_KEY = "e3Y07DxqZHdywWv5et7b"
+VUE_APP_NAVER_PAY_MODE = "production"
+
+# KMC 본인인증
+VUE_APP_KMC_CERT_CPID = "DNCM1001"
+VUE_APP_KMC_CERT_REDIRECT_URI = "/api/common/kmcResult"
+VUE_APP_KMC_CERT_REDIRECT_URI_POPUP = "/api/common/kmcResult/popup"
+VUE_APP_KMC_CERT_SIGN_UP_MO = "011002"
+VUE_APP_KMC_CERT_SIGN_UP_PC = "012002"
+
+# RECOPICK
+VUE_APP_RECOPICK_DOMAIN = "dplot.co.kr"
+VUE_APP_RECOPICK_SHOP = "KTpRr7iG"
+VUE_APP_RECOPICK_CART = "8czg5gTn"
+
+# 인스타계정 메인화면 주소
+VUE_APP_INSTA_MAIN_URL = "https://www.instagram.com/pick_dada/"

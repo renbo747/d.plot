@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.dplot.mapper.ConfigManageMapper">
+
+	<select id="selectConfigManage" parameterType="somap" resultType="somap" >
+		SELECT /* ConfigManageMapper.xml - 환경설정_운영 조회  */ 
+			deliverymethod
+			, deliveryfee
+			, deliverylimit
+			, cmoneysavejoin
+			, cmoneyreview
+			, cmoneyreviewimg
+		FROM t_config_manage
+		WHERE siteid=#{siteid}
+	</select>
+		
+</mapper>

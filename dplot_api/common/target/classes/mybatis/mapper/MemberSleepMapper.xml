@@ -1,0 +1,543 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.dplot.mapper.MemberSleepMapper">
+
+	<select id="selectMemberSleepCount" parameterType="somap" resultType="int" >
+		SELECT   /* MemberSleepMapper.xml - selectMemberSleepCount 휴면계정 여부 */ 
+			COUNT(*) 
+		FROM T_MEMBER_SLEEP
+		WHERE USERNO = #{userno}
+	</select>
+	
+	<select id="selectMemberSleep" parameterType="somap" resultType="somap" >
+		SELECT /* MemberSleepMapper.xml - selectMemberSleep 휴면회원정보조회 */ 
+	        MS.USERNO, U.USERID, U.USERTYPE, U.PWMODDATE, MS.STATE,
+	        MS.NAME, MS.VIRTUALNO, MS.SAFEID, MS.GENDER, MS.BIRTHDATE, MS.ISLUNAR,
+	        MS.COMPANY, MS.BIZNO, MS.BIZCONDITION, MS.BIZITEM, MS.TEL, MS.FAX, MS.MOBILE, 
+	        MS.EMAIL, MS.POST, MS.ADDR, MS.ADDRDETAIL,
+	        MS.ETC1, MS.ETC2, MS.ETC3, MS.ETC4, MS.ETC5, MS.ETC6, MS.MEMO, MS.LEVELIDX, MS.NOTE, MS.REGDATE,
+	        MS.LEVELMANUAL, MS.CHANGESLEEPDATE, 
+	        MS.MEMLVTYPE,
+			FN_GET_CODENAME(U.SITEID, 'MEMLVTYPE', MS.MEMLVTYPE) AS MEMLVTYPENM
+	    FROM T_MEMBER_SLEEP MS
+	    INNER JOIN T_USER U
+	    ON MS.USERNO = U.NO
+	    WHERE MS.USERNO = #{userno}
+	</select>
+
+	<insert id="insertMemberToSleep" parameterType="somap">
+		INSERT INTO T_MEMBER_SLEEP (USERNO, NAME, MEMBERTYPE, VIRTUALNO, DUPINFO, SAFEID, GENDER, BIRTHDATE, ISLUNAR, COMPANY,
+									BIZNO, BIZCONDITION, BIZITEM, TEL, FAX, MOBILE, ISSMS, ISADSMS, EMAIL, ISMAILING,
+									ISADMAILING, POST, ADDR, ADDRDETAIL, ETC1, ETC2, ETC3, ETC4, ETC5, ETC6, MEMO, LEVELIDX,
+									STATE, NOTE, CONNINFO, LEVELMANUAL, CHANGESLEEPDATE, SLEEPWITHDRAWEMAILDATE,
+									AUTOWITHDRAWEMAILDATE, AUTOWITHDRAWSMSDATE, ADEMAILAGREEDATE, ADSMSAGREEDATE,
+									DADAMEMBERTYPE, JOINTYPE, COMPANYTYPE, ISDOMASTIC, JOINCHTYPE, LASTLOGINDATE, FRSTBUYDATE,
+									LASTBUYDATE, ISIFSMS, IFSMSAGREEDATE, ISIFMAILING, IFEMAILAGREEDATE, ISIFPUSH,
+									IFPUSHAGREEDATE, MEMLVTYPE, REGDATE, RECUSERNO, ISBLKMEMBER, WITHDRAWTYPE, WITHDRAWREASON,
+									WITHDRAWDATE, ISADPUSH, ADPUSHAGREEDATE, MEMBERNO, ADDRROAD, ADDRDETAILROAD, SIGUNGUCODE,
+									BUILDINGCODE, ROADNAMECODE, DIVAL, ENCBIO, WITHDRAWRTYPE)
+		SELECT USERNO, NAME, MEMBERTYPE, VIRTUALNO, DUPINFO, SAFEID, GENDER, BIRTHDATE, ISLUNAR, COMPANY,
+			   BIZNO, BIZCONDITION, BIZITEM, TEL, FAX, MOBILE, ISSMS, ISADSMS, EMAIL, ISMAILING,
+			   ISADMAILING, POST, ADDR, ADDRDETAIL, ETC1, ETC2, ETC3, ETC4, ETC5, ETC6, MEMO, LEVELIDX,
+			   STATE, NOTE, CONNINFO, LEVELMANUAL, CHANGESLEEPDATE, SLEEPWITHDRAWEMAILDATE,
+			   AUTOWITHDRAWEMAILDATE, AUTOWITHDRAWSMSDATE, ADEMAILAGREEDATE, ADSMSAGREEDATE,
+			   DADAMEMBERTYPE, JOINTYPE, COMPANYTYPE, ISDOMASTIC, JOINCHTYPE, LASTLOGINDATE, FRSTBUYDATE,
+			   LASTBUYDATE, ISIFSMS, IFSMSAGREEDATE, ISIFMAILING, IFEMAILAGREEDATE, ISIFPUSH,
+			   IFPUSHAGREEDATE, MEMLVTYPE, REGDATE, RECUSERNO, ISBLKMEMBER, WITHDRAWTYPE, WITHDRAWREASON,
+			   WITHDRAWDATE, ISADPUSH, ADPUSHAGREEDATE, MEMBERNO, ADDRROAD, ADDRDETAILROAD, SIGUNGUCODE,
+			   BUILDINGCODE, ROADNAMECODE, DIVAL, ENCBIO, WITHDRAWRTYPE
+		FROM T_MEMBER
+		WHERE USERNO IN <foreach index="index" collection="usernoarr" item="_idx" open="(" close=")" separator="," >#{_idx}</foreach>
+	</insert>
+	
+	<update id="updateMemberSleep" parameterType="somap">
+		UPDATE /* MemberSleepMapper.xml - updateMemberSleep 휴면회원정보 NULL처리 */
+    		T_MEMBER
+		SET
+		    NAME 		= '휴면회원',
+		    MEMBERTYPE 	= 0,
+		    VIRTUALNO 	= null,
+		    DUPINFO 	= null,
+		    SAFEID 		= null,
+		    GENDER 		= null,
+		    BIRTHDATE 	= null,
+		    ISLUNAR 	= null,
+		    COMPANY 	= null,
+		    BIZNO 		= null,
+		    BIZCONDITION = null,
+		    BIZITEM 	= null,
+		    TEL 		= null,
+		    FAX 		= null,
+		    MOBILE 		= null,
+		    EMAIL 		= null,
+		    POST 		= null,
+		    ADDR 		= null,
+		    ADDRDETAIL 	= null,
+			SIGUNGUCODE 	= NULL,
+			BUILDINGCODE 	= NULL,
+			ROADNAMECODE 	= NULL,
+		    ETC1 		= null,
+		    ETC2 		= null,
+		    ETC3 		= null,
+		    ETC4 		= null,
+		    ETC5 		= null,
+		    ETC6 		= null,
+		    MEMO 		= null,
+		    LEVELIDX 	= 0,
+		    STATE 		= 'MST002',
+		    NOTE 		= null,
+		    CONNINFO 	= null,
+		    LEVELMANUAL = 0,
+		    AUTOWITHDRAWEMAILDATE = null,
+		    AUTOWITHDRAWSMSDATE = null,
+		    CHANGESLEEPDATE = SYSDATE(),
+		    SLEEPWITHDRAWEMAILDATE = null,
+		    ISADSMS 	= null,
+		    ISADMAILING = null,
+		    ADAGREEDATE = null,
+		    ADEMAILAGREEDATE = null,
+		    ADSMSAGREEDATE = null,
+		    DADAMEMBERTYPE = '',
+		    JOINTYPE 	= '',
+		    COMPANYTYPE = null,
+		    ISDOMASTIC 	= '',
+		    JOINCHTYPE 	= '',
+		    LASTLOGINDATE = null,
+		    FRSTBUYDATE = null,
+		    LASTBUYDATE = null,
+		    ISIFSMS 	= '',
+		    IFSMSAGREEDATE = null,
+		    ISIFMAILING = '',
+		    IFEMAILAGREEDATE = null,
+		    ISIFPUSH 	= '',
+		    IFPUSHAGREEDATE = null,
+		    MEMLVTYPE 	= '',
+		    REGDATE = CURRENT_TIMESTAMP
+		WHERE USERNO = #{userno}
+	</update>
+	
+	<update id="updateMemberSleepCancel" parameterType="somap">
+		UPDATE /* MemberSleepMapper.xml - updateMemberSleep 휴면회원정보 복원처리 */
+		    T_MEMBER TM, T_MEMBER_SLEEP TMS
+		SET
+            TM.NAME        = TMS.NAME,
+            TM.MEMBERTYPE  = TMS.MEMBERTYPE,
+            TM.VIRTUALNO   = TMS.VIRTUALNO,
+            TM.DUPINFO     = TMS.DUPINFO,
+            TM.SAFEID      = TMS.SAFEID,
+            TM.GENDER      = TMS.GENDER,
+            TM.BIRTHDATE   = TMS.BIRTHDATE,
+            TM.ISLUNAR     = TMS.ISLUNAR,
+            TM.COMPANY     = TMS.COMPANY,
+            TM.BIZNO       = TMS.BIZNO,
+            TM.BIZCONDITION = TMS.BIZCONDITION,
+            TM.BIZITEM     = TMS.BIZITEM,
+            TM.TEL         = TMS.TEL,
+            TM.FAX         = TMS.FAX,
+            TM.MOBILE      = TMS.MOBILE,
+            TM.EMAIL       = TMS.EMAIL,
+            TM.POST        = TMS.POST,
+            TM.ADDR        = TMS.ADDR,
+            TM.ADDRDETAIL  = TMS.ADDRDETAIL,
+			TM.SIGUNGUCODE  = TMS.SIGUNGUCODE,
+			TM.BUILDINGCODE  = TMS.BUILDINGCODE,
+			TM.ROADNAMECODE  = TMS.ROADNAMECODE,
+            TM.ETC1        = TMS.ETC1,
+            TM.ETC2        = TMS.ETC2,
+            TM.ETC3        = TMS.ETC3,
+            TM.ETC4        = TMS.ETC4,
+            TM.ETC5        = TMS.ETC5,
+            TM.ETC6        = TMS.ETC6,
+            TM.MEMO        = TMS.MEMO,
+            TM.LEVELIDX    = TMS.LEVELIDX,
+            TM.STATE       = TMS.STATE,
+            TM.NOTE        = TMS.NOTE,
+            TM.CONNINFO    = TMS.CONNINFO,
+            TM.LEVELMANUAL = TMS.LEVELMANUAL,
+            TM.AUTOWITHDRAWEMAILDATE = TMS.AUTOWITHDRAWEMAILDATE,
+            TM.AUTOWITHDRAWSMSDATE = TMS.AUTOWITHDRAWSMSDATE,
+            TM.CHANGESLEEPDATE = null,
+            TM.SLEEPWITHDRAWEMAILDATE = TMS.SLEEPWITHDRAWEMAILDATE,
+            TM.ISADSMS     = TMS.ISADSMS,
+            TM.ISADMAILING = TMS.ISADMAILING,
+            TM.ADEMAILAGREEDATE = TMS.ADEMAILAGREEDATE,
+            TM.ADSMSAGREEDATE = TMS.ADSMSAGREEDATE,
+            TM.DADAMEMBERTYPE = TMS.DADAMEMBERTYPE,
+            TM.JOINTYPE    = TMS.JOINTYPE,
+            TM.COMPANYTYPE = TMS.COMPANYTYPE,
+            TM.ISDOMASTIC  = TMS.ISDOMASTIC,
+            TM.JOINCHTYPE  = TMS.JOINCHTYPE,
+            TM.LASTLOGINDATE = TMS.LASTLOGINDATE,
+            TM.FRSTBUYDATE = TMS.FRSTBUYDATE,
+            TM.LASTBUYDATE = TMS.LASTBUYDATE,
+            TM.ISIFSMS     = TMS.ISIFSMS,
+            TM.IFSMSAGREEDATE = TMS.IFSMSAGREEDATE,
+            TM.ISIFMAILING = TMS.ISIFMAILING,
+            TM.IFEMAILAGREEDATE = TMS.IFEMAILAGREEDATE,
+            TM.ISIFPUSH    = TMS.ISIFPUSH,
+            TM.IFPUSHAGREEDATE = TMS.IFPUSHAGREEDATE,
+            TM.MEMLVTYPE   = TMS.MEMLVTYPE,
+            TM.REGDATE = TMS.REGDATE
+		WHERE TM.USERNO = #{userno}
+		AND TM.USERNO = TMS.USERNO
+	</update>
+	
+	<delete id="deleteMemberSleep" parameterType="somap" >
+	    DELETE /* MemberSleepMapper.xml - deleteMemberSleep 휴면계정 삭제 */ 
+	    FROM T_MEMBER_SLEEP
+	    WHERE USERNO = #{userno}
+	</delete>
+
+	<select id="selectMemberSleepList" parameterType="somap" resultType="somap">
+		SELECT /* MemberSleepMapper.xml - selectMemberSleepList 휴면회원정보 리스트 */
+			M.USERNO, DATE_FORMAT(M.CHANGESLEEPDATE, '%Y-%m-%d %H:%i:%s') AS CHANGESLEEPDATE
+			 , U.USERID, M.NAME, U.NO
+			 , MS.DADAMEMBERTYPE, FN_GET_CODENAME(#{siteid}, 'DADAMEMBERTYPE', MS.DADAMEMBERTYPE) AS DADAMEMBERTYPENAME
+			 , MS.MEMLVTYPE, FN_GET_CODENAME(#{siteid}, 'MEMLVTYPE', MS.MEMLVTYPE) AS MEMLVTYPENAME
+			 , MS.EMAIL, MS.MOBILE
+			 , DATEDIFF(CURRENT_TIMESTAMP, M.CHANGESLEEPDATE) AS SLEEPDURINGDATE
+			 , FN_GET_ORDER_CLAIM_PROCEEDING_COUNT(M.USERNO) AS PROCNT
+		FROM T_MEMBER M INNER JOIN T_MEMBER_SLEEP MS ON M.USERNO = MS.USERNO
+						INNER JOIN T_USER U ON MS.USERNO = U.NO
+		<where>
+			AND U.SITEID = #{siteid}
+			<if test="sword == null or sword == '' ">
+			AND M.CHANGESLEEPDATE BETWEEN DATE_FORMAT(CONCAT(#{startdate}, ' 00:00:00'), '%Y-%m-%d %H:%i:%s') AND DATE_FORMAT(CONCAT(#{enddate}, ' 23:59:59'), '%Y-%m-%d %H:%i:%s')
+			</if>
+			AND M.STATE = 'MST002'
+			<if test="sword != null and sword != '' ">
+				<choose>
+					<when test="skey == 'id'">
+						AND U.USERID LIKE CONCAT('%', #{sword}, '%')
+					</when>
+					<when test="skey == 'name'">
+						AND MS.NAME LIKE CONCAT('%', #{sword}, '%')
+					</when>
+					<when test="skey == 'mobile'">
+						AND MS.MOBILE LIKE CONCAT('%', #{sword}, '%')
+					</when>
+					<when test="skey == 'email'">
+						AND MS.EMAIL LIKE CONCAT('%', #{sword}, '%')
+					</when>
+					<otherwise>
+						AND ( U.USERID LIKE CONCAT('%', #{sword}, '%')
+						OR MS.NAME LIKE CONCAT('%', #{sword}, '%')
+						OR MS.MOBILE LIKE CONCAT('%', #{sword}, '%')
+						OR MS.EMAIL LIKE CONCAT('%', #{sword}, '%') )
+					</otherwise>
+				</choose>
+			</if>
+	    </where>
+		<choose>
+			<when test="psort == 'sleepdate_asc'">
+				ORDER BY M.CHANGESLEEPDATE ASC, MS.USERNO DESC
+			</when>
+			<when test="psort == 'sleepdate_desc'">
+				ORDER BY M.CHANGESLEEPDATE DESC, MS.USERNO DESC
+			</when>
+			<when test="psort == 'id_asc'">
+				ORDER BY U.USERID ASC, MS.USERNO DESC
+			</when>
+			<when test="psort == 'id_desc'">
+				ORDER BY U.USERID DESC, MS.USERNO DESC
+			</when>
+			<when test="psort == 'membertype_asc'">
+				ORDER BY MS.DADAMEMBERTYPE ASC, MS.USERNO DESC
+			</when>
+			<when test="psort == 'membertype_desc'">
+				ORDER BY MS.DADAMEMBERTYPE DESC, MS.USERNO DESC
+			</when>
+			<when test="psort == 'memlvtype_asc'">
+				ORDER BY MS.MEMLVTYPE ASC, MS.USERNO DESC
+			</when>
+			<when test="psort == 'memlvtype_desc'">
+				ORDER BY MS.MEMLVTYPE DESC, MS.USERNO DESC
+			</when>
+			<when test="psort == 'mobile_asc'">
+				ORDER BY MS.MOBILE ASC, MS.USERNO DESC
+			</when>
+			<when test="psort == 'mobile_desc'">
+				ORDER BY MS.MOBILE DESC, MS.USERNO DESC
+			</when>
+			<otherwise>
+				ORDER BY M.CHANGESLEEPDATE DESC
+			</otherwise>
+		</choose>
+		<if test='startpage != null and endpage != null'>
+			LIMIT #{startpage}, #{endpage}
+		</if>
+	</select>
+
+	<select id="selectMemberSleepListCount" parameterType="somap" resultType="somap">
+		SELECT /* MemberSleepMapper.xml - selectMemberSleepListCount 휴면회원정보 리스트 총건수 */
+			COUNT(*) AS TOTAL,
+			SUM(IF(DATEDIFF(M.CHANGESLEEPDATE, CURRENT_TIMESTAMP) = 0, 1, 0)) AS TODAY
+		FROM T_MEMBER M INNER JOIN T_MEMBER_SLEEP MS ON M.USERNO = MS.USERNO
+		INNER JOIN T_USER U ON MS.USERNO = U.NO
+		<where>
+			AND U.SITEID = #{siteid}
+			<if test="sword == null or sword == '' ">
+			AND M.CHANGESLEEPDATE BETWEEN DATE_FORMAT(CONCAT(#{startdate}, ' 00:00:00'), '%Y-%m-%d %H:%i:%s') AND DATE_FORMAT(CONCAT(#{enddate}, ' 23:59:59'), '%Y-%m-%d %H:%i:%s')
+			</if>
+		    AND M.STATE = 'MST002'
+			<if test="sword != null and sword != '' ">
+				<choose>
+					<when test="skey == 'id'">
+						AND U.USERID LIKE CONCAT('%', #{sword}, '%')
+					</when>
+					<when test="skey == 'name'">
+						AND MS.NAME LIKE CONCAT('%', #{sword}, '%')
+					</when>
+					<when test="skey == 'mobile'">
+						AND MS.MOBILE LIKE CONCAT('%', #{sword}, '%')
+					</when>
+					<when test="skey == 'email'">
+						AND MS.EMAIL LIKE CONCAT('%', #{sword}, '%')
+					</when>
+					<otherwise>
+						AND ( U.USERID LIKE CONCAT('%', #{sword}, '%')
+						OR MS.NAME LIKE CONCAT('%', #{sword}, '%')
+						OR MS.MOBILE LIKE CONCAT('%', #{sword}, '%')
+						OR MS.EMAIL LIKE CONCAT('%', #{sword}, '%') )
+					</otherwise>
+				</choose>
+			</if>
+		</where>
+	</select>
+
+	<update id="memberSleepRestore" parameterType="somap">
+		UPDATE /* MemberSleepMapper.xml - memberSleepRestore 휴면회원정보 복원처리(IN 쿼리 처리)  */
+			T_MEMBER TM, T_MEMBER_SLEEP TMS
+		SET
+			TM.NAME        = TMS.NAME,
+			TM.MEMBERTYPE  = TMS.MEMBERTYPE,
+			TM.VIRTUALNO   = TMS.VIRTUALNO,
+			TM.DUPINFO     = TMS.DUPINFO,
+			TM.SAFEID      = TMS.SAFEID,
+			TM.GENDER      = TMS.GENDER,
+			TM.BIRTHDATE   = TMS.BIRTHDATE,
+			TM.ISLUNAR     = TMS.ISLUNAR,
+			TM.COMPANY     = TMS.COMPANY,
+			TM.BIZNO       = TMS.BIZNO,
+			TM.BIZCONDITION = TMS.BIZCONDITION,
+			TM.BIZITEM     = TMS.BIZITEM,
+			TM.TEL         = TMS.TEL,
+			TM.FAX         = TMS.FAX,
+			TM.MOBILE      = TMS.MOBILE,
+			TM.EMAIL       = TMS.EMAIL,
+			TM.POST        = TMS.POST,
+			TM.ADDR        = TMS.ADDR,
+			TM.ADDRDETAIL  = TMS.ADDRDETAIL,
+			TM.SIGUNGUCODE  = TMS.SIGUNGUCODE,
+			TM.BUILDINGCODE  = TMS.BUILDINGCODE,
+			TM.ROADNAMECODE  = TMS.ROADNAMECODE,
+			TM.ETC1        = TMS.ETC1,
+			TM.ETC2        = TMS.ETC2,
+			TM.ETC3        = TMS.ETC3,
+			TM.ETC4        = TMS.ETC4,
+			TM.ETC5        = TMS.ETC5,
+			TM.ETC6        = TMS.ETC6,
+			TM.MEMO        = TMS.MEMO,
+			TM.LEVELIDX    = TMS.LEVELIDX,
+			TM.STATE       = 'MST001',
+			TM.NOTE        = TMS.NOTE,
+			TM.CONNINFO    = TMS.CONNINFO,
+			TM.LEVELMANUAL = TMS.LEVELMANUAL,
+			TM.AUTOWITHDRAWEMAILDATE = TMS.AUTOWITHDRAWEMAILDATE,
+			TM.AUTOWITHDRAWSMSDATE = TMS.AUTOWITHDRAWSMSDATE,
+			TM.CHANGESLEEPDATE = NULL,
+			TM.SLEEPWITHDRAWEMAILDATE = TMS.SLEEPWITHDRAWEMAILDATE,
+			TM.ISADSMS     = TMS.ISADSMS,
+			TM.ISADMAILING = TMS.ISADMAILING,
+			TM.ADEMAILAGREEDATE = TMS.ADEMAILAGREEDATE,
+			TM.ADSMSAGREEDATE = TMS.ADSMSAGREEDATE,
+			TM.DADAMEMBERTYPE = TMS.DADAMEMBERTYPE,
+			TM.JOINTYPE    = TMS.JOINTYPE,
+			TM.COMPANYTYPE = TMS.COMPANYTYPE,
+			TM.ISDOMASTIC  = TMS.ISDOMASTIC,
+			TM.JOINCHTYPE  = TMS.JOINCHTYPE,
+			TM.LASTLOGINDATE = CURRENT_TIMESTAMP,
+			TM.FRSTBUYDATE = TMS.FRSTBUYDATE,
+			TM.LASTBUYDATE = TMS.LASTBUYDATE,
+			TM.ISIFSMS     = TMS.ISIFSMS,
+			TM.IFSMSAGREEDATE = TMS.IFSMSAGREEDATE,
+			TM.ISIFMAILING = TMS.ISIFMAILING,
+			TM.IFEMAILAGREEDATE = TMS.IFEMAILAGREEDATE,
+			TM.ISIFPUSH    = TMS.ISIFPUSH,
+			TM.IFPUSHAGREEDATE = TMS.IFPUSHAGREEDATE,
+			TM.MEMLVTYPE   = TMS.MEMLVTYPE,
+		    TM.MEMBERNO = TMS.MEMBERNO,
+			TM.DIVAL = TMS.DIVAL,
+			TM.ENCBIO = TMS.ENCBIO,
+		    TM.ADDRDETAILROAD = TMS.ADDRDETAILROAD,
+			TM.ADDRROAD = TMS.ADDRROAD,
+			TM.ISADPUSH = TMS.ISADPUSH,
+			TM.ISBLKMEMBER = TMS.ISBLKMEMBER,
+			TM.ISMAILING = TMS.ISMAILING,
+			TM.ISSMS = TMS.ISSMS,
+			TM.RECUSERNO = TMS.RECUSERNO,
+		    TM.WITHDRAWTYPE = NULL,
+			TM.WITHDRAWRTYPE = NULL,
+		    TM.WITHDRAWREASON = NULL,
+			TM.WITHDRAWDATE = NULL
+		<where>
+			<if test="user_no_arr != null and user_no_arr != ''">
+				AND TM.USERNO IN <foreach index="index" collection="user_no_arr" item="_idx" open="(" close=")" separator="," >#{_idx}</foreach>
+			</if>
+			<if test="userno != null and userno != ''">
+				AND TM.USERNO = #{userno}
+			</if>
+			AND TM.USERNO = TMS.USERNO
+		</where>
+	</update>
+
+	<delete id="deleteMemberSleepArray" parameterType="somap" >
+		<if test="user_no_arr != null and user_no_arr != ''">
+			DELETE /* MemberSleepMapper.xml - deleteMemberSleepArray 휴면계정 삭제 (IN 쿼리 처리) */
+			FROM T_MEMBER_SLEEP
+			WHERE USERNO IN <foreach index="index" collection="user_no_arr" item="_idx" open="(" close=")" separator="," >#{_idx}</foreach>
+		</if>
+		<if test="userno != null and userno != ''">
+			DELETE /* MemberSleepMapper.xml - deleteMemberSleepArray 휴면계정 삭제 (IN 쿼리 처리) */
+			FROM T_MEMBER_SLEEP
+			WHERE USERNO = #{userno}
+		</if>
+	</delete>
+
+	<update id="memberSleepResign" parameterType="somap">
+		UPDATE T_MEMBER_SLEEP SET
+			NAME 		= '탈퇴회원',
+			MEMBERTYPE 	= 0,
+			VIRTUALNO 	= NULL,
+			DUPINFO 	= NULL,
+			SAFEID 		= NULL,
+			GENDER 		= NULL,
+			BIRTHDATE 	= NULL,
+			ISLUNAR 	= NULL,
+			COMPANY 	= NULL,
+			BIZNO 		= NULL,
+			BIZCONDITION = NULL,
+			BIZITEM 	= NULL,
+			TEL 		= NULL,
+			FAX 		= NULL,
+			MOBILE 		= NULL,
+			EMAIL 		= NULL,
+			POST 		= NULL,
+			ADDR 		= NULL,
+			ADDRDETAIL 	= NULL,
+			SIGUNGUCODE 	= NULL,
+			BUILDINGCODE 	= NULL,
+			ROADNAMECODE 	= NULL,
+			ETC1 		= NULL,
+			ETC2 		= NULL,
+			ETC3 		= NULL,
+			ETC4 		= NULL,
+			ETC5 		= NULL,
+			ETC6 		= NULL,
+			MEMO 		= NULL,
+			LEVELIDX 	= 0,
+			STATE 		= 'MST003',
+			NOTE 		= NULL,
+			CONNINFO 	= NULL,
+			LEVELMANUAL = 0,
+			AUTOWITHDRAWEMAILDATE = NULL,
+			AUTOWITHDRAWSMSDATE = NULL,
+			CHANGESLEEPDATE = NULL,
+			SLEEPWITHDRAWEMAILDATE = NULL,
+			ISADSMS 	= NULL,
+			ISADMAILING = NULL,
+			ADEMAILAGREEDATE = NULL,
+			ADSMSAGREEDATE = NULL,
+			DADAMEMBERTYPE = '',
+			JOINTYPE 	= '',
+			COMPANYTYPE = NULL,
+			ISDOMASTIC 	= '',
+			JOINCHTYPE 	= '',
+			LASTLOGINDATE = NULL,
+			FRSTBUYDATE = NULL,
+			LASTBUYDATE = NULL,
+			ISIFSMS 	= '',
+			IFSMSAGREEDATE = NULL,
+			ISIFMAILING = '',
+			IFEMAILAGREEDATE = NULL,
+			ISIFPUSH 	= '',
+			IFPUSHAGREEDATE = NULL,
+			MEMLVTYPE 	= '',
+			DIVAL 	= NULL,
+			ENCBIO	= NULL
+		WHERE USERNO IN <foreach index="index" collection="user_no_arr" item="_idx" open="(" close=")" separator="," >#{_idx}</foreach>
+	</update>
+
+	<update id="memberStateUpdateForResign" parameterType="somap">
+		UPDATE T_MEMBER SET
+            NAME = '탈퇴회원',
+            STATE = 'MST003',
+			WITHDRAWDATE = CURRENT_TIMESTAMP,
+			WITHDRAWREASON = '관리자 강제 탈퇴 처리',
+			WITHDRAWTYPE = 'WDT003',
+			WITHDRAWRTYPE = 'WDR010'
+		WHERE USERNO IN <foreach index="index" collection="user_no_arr" item="_idx" open="(" close=")" separator="," >#{_idx}</foreach>
+	</update>
+	
+	<select id="selectSleepEmailCheck" parameterType="somap" resultType="int">
+		SELECT /*MemberSleepMapper.xml - selectSleepEmailCheck:: 기탈퇴회원id인지 체크*/ 
+		      count(*) as cnt
+		FROM t_member a 
+		INNER JOIN t_member_sleep b ON a.USERNO  = b.USERNO 
+		WHERE b.EMAIL = #{email}
+	</select>
+	
+	<select id="selectWithdrawMemberCnt" parameterType="somap" resultType="int">
+		select /*MemberSleepMapper.xml - selectWithdrawMemberCnt::탈퇴회원수조회*/
+		       count(*)
+		from t_user a
+		inner join t_member_sleep b
+		on a.no = b.userno
+		where a.siteid = #{siteid}
+		<choose>
+			<when test='ci != null and ci != "" and di != "" and di != null'>
+			AND b.CONNINFO = #{ci} OR b.dival = #{di}
+			</when>
+			<when test='ci != null and ci != ""'>
+			AND b.CONNINFO = #{ci}
+			</when>
+			<when test='mobile != null and mobile != "" and email != null and email != ""'>
+			AND b.MOBILE= #{mobile} 
+			AND b.EMAIL= #{email}
+			</when>
+			<otherwise>
+			AND b.MOBILE= #{mobile}
+			</otherwise> 
+		</choose>
+	</select>
+
+	<select id="selectMemberSleepWithdraw" parameterType="somap" resultType="somap" >
+		SELECT /* MemberSleepMapper.xml - selectMemberSleepWithdraw 휴면/탈퇴회원정보조회 휴면해제용 조회 */ 
+	        	MS.USERNO, 
+	        	U.USERID, 
+	        	M.STATE
+	    FROM 	T_MEMBER_SLEEP MS
+	    INNER JOIN T_USER U
+	    ON 		MS.USERNO = U.NO
+	    LEFT JOIN T_MEMBER M
+	    ON 		MS.USERNO = M.USERNO
+	    WHERE 	U.SITEID = #{siteid}
+		<choose>
+			<when test='ci != null and ci != "" and di != "" and di != null'>
+		AND		MS.CONNINFO = #{ci} OR MS.dival = #{di}
+			</when>
+			<when test='ci != null and ci != ""'>
+		AND		MS.CONNINFO = #{ci}
+			</when>
+			<when test='mobile != null and mobile != "" and email != null and email != ""'>
+		AND 	MS.MOBILE= #{mobile} 
+		AND 	MS.EMAIL= #{email}
+			</when>
+			<otherwise>
+		AND 	MS.MOBILE= #{mobile}
+			</otherwise> 
+		</choose>
+		LIMIT 1
+	</select>
+</mapper>

@@ -1,0 +1,31 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="28" height="28" viewBox="0 0 28 28">
+    <g data-name="그룹 21765">
+        <path data-name="사각형 6330" style="fill:none" d="M0 0h28v28H0z"/>
+        <g data-name="그룹 21770">
+            <g data-name="사각형 6828" style="stroke:#111;stroke-miterlimit:10;fill:#fff" transform="translate(4.75 5.717)">
+                <rect width="8.049" height="8.049" rx="1.5" style="stroke:none"/>
+                <rect x=".5" y=".5" width="7.049" height="7.049" rx="1" style="fill:none"/>
+            </g>
+            <g data-name="사각형 6829" transform="translate(4.75 15.109)" style="stroke:#111;stroke-miterlimit:10;fill:#fff">
+                <rect width="8.049" height="8.049" rx="1.5" style="stroke:none"/>
+                <rect x=".5" y=".5" width="7.049" height="7.049" rx="1" style="fill:none"/>
+            </g>
+            <g data-name="사각형 6830" transform="translate(14.951 5.717)" style="stroke:#111;stroke-miterlimit:10;fill:#fff">
+                <rect width="8.049" height="8.049" rx="1.5" style="stroke:none"/>
+                <rect x=".5" y=".5" width="7.049" height="7.049" rx="1" style="fill:none"/>
+            </g>
+            <g data-name="사각형 6831" transform="translate(15.479 15.846)" style="fill:#111;stroke:#111;stroke-miterlimit:10">
+                <rect width="6.993" height="1.207" rx=".5" style="stroke:none"/>
+                <path style="fill:none" d="M.5.5h5.993v.207H.5z"/>
+            </g>
+            <g data-name="사각형 6832" transform="translate(15.479 18.603)" style="fill:#111;stroke:#111;stroke-miterlimit:10">
+                <rect width="6.993" height="1.207" rx=".5" style="stroke:none"/>
+                <path style="fill:none" d="M.5.5h5.993v.207H.5z"/>
+            </g>
+            <g data-name="사각형 6833" transform="translate(15.479 21.347)" style="fill:#111;stroke:#111;stroke-miterlimit:10">
+                <rect width="6.993" height="1.207" rx=".5" style="stroke:none"/>
+                <path style="fill:none" d="M.5.5h5.993v.207H.5z"/>
+            </g>
+        </g>
+    </g>
+</svg>

@@ -1,0 +1,754 @@
+.login {
+  padding-top: 40px;
+  padding-bottom: 80px;
+
+  .dp-bar {
+    height: 10px;
+    margin-right: 16px;
+    margin-left: 16px;
+  }
+
+  .dp-icon {
+    width: 16px;
+    height: 16px;
+    background-size: 16px !important;
+    margin-right: 2px;
+
+    &.icon-naver {
+      width: 13px;
+      height: 13px;
+      background-size: 13px !important;
+    }
+  }
+
+  //로그인 헤더
+  .login__header {
+    display: flex;
+    align-items: center;
+    flex-direction: column;
+    text-align: center;
+    margin-bottom: 30px;
+
+    .login__logo {
+      width: 116px;
+      margin-bottom: 14px;
+    }
+  }
+
+  //로그인 폼 영역
+  .login__form {
+
+    .form-group {
+      margin-bottom: 0;
+    }
+
+    .form-group + .form-group {
+      margin-top: 10px;
+    }
+
+    .login__input {
+      margin-bottom: 20px;
+    }
+
+    //로그인 보안문자 영역
+    .login__security {
+      display: flex;
+      flex-direction: column;
+      margin-bottom: 10px;
+
+      .security-description {
+        margin-bottom: 10px;
+      }
+
+      .description__text {
+        margin: 0;
+        color: $gray-700;
+      }
+
+      .security-box {
+        display: flex;
+        margin-bottom: 10px;
+      }
+
+      .security__img {
+        width: 200px;
+        height: 92px;
+        background-color: $gray-500;
+        margin-right: 20px;
+      }
+
+      .security__btn {
+        display: flex;
+        flex-direction: column;
+        width: calc(100% - 220px);
+
+        li + li {
+          margin-top: 12px;
+        }
+      }
+
+      .dp-btn-security {
+        display: flex;
+        justify-content: center;
+        align-items: center;
+
+
+        span {
+          font-size: 14px;
+          margin-left: 0;
+          color: $gray-800;
+        }
+      }
+
+      .icon-reset {
+        background-image: url("~@/assets/common/icon/icon-reset-black-16px.svg");
+      }
+
+      .icon-play {
+        background-image: url("~@/assets/common/icon/icon-play-black-16px.svg");
+      }
+    }
+
+    // 로그인 체크박스 영역
+    .login__checkbox {
+      display: flex;
+      align-items: center;
+      margin-bottom: 30px;
+
+      div + div {
+        margin-left: 20px;
+      }
+    }
+
+    // 회원가입 영역
+    .login__btn {
+      margin-bottom: 30px;
+
+      .btn-signin {
+        margin-bottom: 20px;
+      }
+
+      .btn.login-btn__confirm {
+        margin: 0;
+      }
+
+      .btn__signin-login {
+        display: flex;
+        justify-content: center;
+        align-items: center;
+      }
+
+      .signin__list {
+        background: none;
+        border: 0;
+        padding: 0;
+        height: 20px;
+        font-size: 14px;
+        letter-spacing: -.56px;
+        font-weight: 400;
+        color: $gray-700;
+      }
+    }
+
+    .non-member__button {
+      text-align: center;
+      margin-bottom: 30px;
+      a {
+        font-size: 14px;
+        letter-spacing: -.56px;
+        text-decoration: underline;
+      }
+    }
+  }
+
+  //sns 로그인 영역
+  .sns-login {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+
+    //sns 로그인 헤더
+    .sns-login__header {
+      position: relative;
+      width: 100%;
+      height: 20px;
+      margin-bottom: 30px;
+
+      &:before {
+        position: absolute;
+        top: 50%;
+        left: 0;
+        transform: translateY(-50%);
+        width: 100%;
+        content: "";
+        border-top: 1px solid $gray-400;
+      }
+
+      .sns-title {
+        position: absolute;
+        left: 50%;
+        top: 50%;
+        transform: translate(-50%, -50%);
+        font-weight: 400;
+        margin: 0;
+        padding: 0 12px;
+        background: #fff;
+      }
+    }
+
+    //AOS WEB 간편로그인
+    .sns-login__list {
+      width: 100%;
+
+      & + .sns-login__circle {
+        margin-top: 30px;
+      }
+
+      li + li {
+        margin-top: 10px;
+      }
+
+
+      .sns-login__kakao {
+        background-color: #ffe500;
+        border: 0;
+
+        .btn-secondary {
+          background-color: #ffe500;
+        }
+      }
+
+      .sns-login__naver {
+        background-color: #03c75a;
+        border: 0;
+
+        .btn-secondary {
+          background-color: #03c75a;
+        }
+      }
+
+      .icon-kakao {
+        background-image: url("~@/assets/common/icon/icon-kakao-black-16px.png");
+      }
+
+      .icon-naver {
+        background-image: url("~@/assets/common/icon/icon-naver-56px.svg");
+      }
+
+      .login__kakao {
+        color: $black;
+        line-height: .56px;
+        font-weight: 400;
+        margin-left: 8px;
+      }
+
+      .login__naver {
+        color: $white;
+        line-height: .56px;
+        font-weight: 400;
+        margin-left: 8px;
+
+      }
+    }
+
+    //AOS 앱, IOS 웹앱 간편로그인
+    .sns-login__circle {
+      display: flex;
+      align-items: center;
+
+      li + li {
+        margin-left: 22px;
+      }
+
+      .circle-list {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+      }
+
+      .sns-circle-list {
+        width: 56px;
+        height: 56px;
+        margin-bottom: 8px;
+      }
+
+      .circle__kakao {
+        background-image: url("~@/assets/common/icon/icon-kakaotalk-circle-56px.svg");
+      }
+
+      .circle__naver {
+        background-image: url("~@/assets/common/icon/icon-naver-circle-56px.svg");
+      }
+
+      .circle__apple {
+        background-image: url("~@/assets/common/icon/icon-apple-black-circle-56px.svg");
+      }
+
+      .circle__faceid {
+        background-image: url("~@/assets/common/icon/icon-face-id-black056px.svg");
+      }
+
+      .circle__fingerprint {
+        background-image: url("~@/assets/common/icon/icon-fingerprint-black-56px.svg");
+      }
+
+      .circle-list__text {
+        display: none;
+        color: $gray-700;
+        font-size: 14px;
+        letter-spacing: -.56px;
+        font-weight: 400;
+      }
+    }
+  }
+}
+
+// 회원가입 모달
+.signup-modal {
+  .modal-content {
+    border: 0;
+  }
+
+  .btn.login-btn__close {
+    border-color: $gray-400;
+    color: $gray-800;
+  }
+
+  .btn.login-btn__confirm {
+    border: 0;
+    padding-left: 11px;
+    padding-right: 11px;
+  }
+}
+
+// 아이디 찾기 모달
+.id-find {
+  color: $black;
+  .modal-title {
+    font-weight: 400;
+  }
+  .id-find__description {
+    font-size: 18px;
+    letter-spacing: -.72px;
+    line-height: 28px;
+    margin-bottom: 30px;
+    word-break: keep-all;
+  }
+  .id-find__title {
+    font-size: 16px;
+    letter-spacing: -.64px;
+    line-height: 24px;
+    font-weight: 500;
+    margin-bottom: 20px;
+  }
+  .form-group {
+    margin-bottom: 20px;
+  }
+  .id-find__email-phone {
+    margin-bottom: 50px;
+  }
+  .id-find__label {
+    font-size: 14px;
+    letter-spacing: -.56px;
+    line-height: 20px;
+    margin-bottom: 10px;
+  }
+  .email-phone-find {
+    display: flex;
+    .base-select {
+      width: 118px;
+      margin-right: 10px;
+    }
+  }
+}
+
+// 카카오 회원가입 완료 모달
+.kakao-signup__success {
+  .kakao-signup__success__desc {
+    font-size: 18px;
+    letter-spacing: -.72px;
+    line-height: 28px;
+    margin-bottom: 30px;
+  }
+  .now-name {
+    width: 100%;
+    padding: 16px 20px;
+    margin-bottom: 30px;
+    background-color: $gray-100;
+    font-size: 14px;
+    letter-spacing: -.56px;
+    line-height: 20px;
+  }
+  .input-label {
+    word-break: keep-all;
+  }
+  .base-input {
+    margin-bottom: 50px;
+  }
+  .dp-btn {
+    margin-bottom: 20px;
+  }
+  .kakao-signup__info {
+    color: $gray-700;
+    font-size: 14px;
+    letter-spacing: -.56px;
+    line-height: 22px;
+  }
+}
+
+// 네이버 가입시 이용약관 동의 모달
+.naver-signup__success {
+  .dp-signup-modal {
+
+    .agree-service__description {
+      font-size: 16px;
+      letter-spacing: -.64px;
+      line-height: 24px;
+      padding-top: 40px;
+      margin-bottom: 0;
+    }
+    .agree-service__box {
+      margin-top: 30px;
+      padding: 0 14px;
+      color: $black;
+      font-size: 14px;
+
+      & > li {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+      }
+
+      li + li {
+        padding-top: 14px;
+      }
+
+      li:first-child {
+        margin-bottom: 10px;
+      }
+
+      li:last-child {
+        border: 1px solid $gray-400 ;
+        padding: 16px;
+        margin-left: -16px;
+        margin-right: -16px;
+        margin-top: 30px;
+
+        .magic-checkbox + label {
+          color: $black;
+          line-height: 20px;
+          font-weight: 600;
+        }
+
+        span {
+          font-style: normal;
+          padding-right: 4px;
+          line-height: 20px;
+        }
+
+        img {
+          margin-bottom: 3px;
+        }
+      }
+    }
+
+    .dp-signup__btn-box {
+      padding-top: 50px;
+    }
+  }
+}
+
+// 아이디 찾기 성공 모달
+.id-find__success01 {
+  hr {
+    background: $gray-400;
+    margin-top: 20px;
+    margin-bottom: 20px;
+  }
+
+  .id-find__description {
+    font-size: 18px;
+    letter-spacing: -.72px;
+    line-height: 26px;
+    margin-bottom: 20px;
+    word-break: keep-all;
+  }
+
+  .id-find__box {
+    width: 100%;
+    height: 98px;
+    background: $gray-100;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    padding: 24px 0;
+    margin-bottom: 24px;
+  }
+
+  .id-find__id {
+    font-size: 18px;
+    letter-spacing: -.72px;
+    line-height: 26px;
+    font-weight: 600;
+    margin-bottom: 4px;
+  }
+
+  .id-find__date {
+    color: $gray-700;
+    font-size: 14px;
+    letter-spacing: -.56px;
+    line-height: 20px;
+    margin-bottom: 0;
+  }
+
+  .id-find__email {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    .id-find__email-text {
+      font-size: 14px;
+      letter-spacing: -.56px;
+      line-height: 20px;
+      margin-bottom: 0;
+    }
+    .dp-btn {
+      width: 100px;
+      height: 40px;
+      font-size: 14px;
+      letter-spacing: -.56px;
+      line-height: 20px;
+    }
+  }
+
+  .id-find__phone {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 20px;
+    .id-find__phone-text {
+      font-size: 14px;
+      letter-spacing: -.56px;
+      line-height: 20px;
+      margin-bottom: 0;
+    }
+    .dp-btn {
+      width: 100px;
+      height: 40px;
+      font-size: 14px;
+      letter-spacing: -.56px;
+      line-height: 20px;
+    }
+
+  }
+
+  .id-find__send-info {
+    color: $gray-700;
+    font-size: 14px;
+    letter-spacing: -.56px;
+    line-height: 22px;
+    margin-bottom: 46px;
+  }
+
+  .id-find__success-buttons {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    .dp-btn {
+      &:nth-child(1) {
+        border: 1px solid $gray-400;
+      }
+    }
+  }
+}
+
+// 아이디 찾기 성공 모달 (SNS 가입)
+.id-find__success02 {
+  .id-find__description {
+    font-size: 18px;
+    letter-spacing: -.72px;
+    line-height: 28px;
+    margin-bottom: 50px;
+    word-break: keep-all;
+  }
+}
+
+// 아이디 찾기 실패 모달
+.id-find__fail {
+  .id-find__description {
+    font-size: 18px;
+    letter-spacing: -.72px;
+    line-height: 28px;
+    margin-bottom: 20px;
+    word-break: keep-all;
+  }
+
+  .id-find__description2 {
+    word-break: keep-all;
+
+    & > p {
+      color: $gray-700;
+      font-size: 14px;
+      letter-spacing: -.56px;
+      line-height: 22px;
+      margin-bottom: 0;
+    }
+
+    & > p + p {
+      margin-top: 20px;
+    }
+  }
+
+  .customer-center {
+    padding-bottom: 50px;
+  }
+
+  .customer-center__title {
+    color: $gray-700;
+    font-size: 14px;
+    letter-spacing: -.56px;
+    line-height: 20px;
+    margin-bottom: 4px;
+  }
+
+  .customer-center__number {
+    font-size: 24px;
+    letter-spacing: -.96px;
+    line-height: 35px;
+    font-weight: 600;
+    margin-bottom: 16px;
+  }
+
+  .customer-center__time {
+    display: flex;
+    align-items: center;
+    font-size: 14px;
+    letter-spacing: -.56px;
+    line-height: 20px;
+    margin-bottom: 8px;
+    .center-title {
+      color: $gray-700;
+      margin-bottom: 0;
+      margin-right: 12px;
+    }
+    .center-time {
+      margin-bottom: 0;
+    }
+  }
+
+  .btn-group {
+    .dp-btn {
+      width: 50%;
+    }
+
+    .btn-outline-gray-400 {
+      color: $gray-800;
+    }
+  }
+}
+
+// 비밀번호 재설정 모달
+.password-find {
+  color: $black;
+  .modal-title {
+    font-weight: 400;
+  }
+  .password-find__description {
+    font-size: 18px;
+    letter-spacing: -.72px;
+    line-height: 28px;
+    margin-bottom: 30px;
+    word-break: keep-all;
+  }
+  .password-find__title {
+    font-size: 16px;
+    letter-spacing: -.64px;
+    line-height: 24px;
+    font-weight: 500;
+    margin-bottom: 20px;
+  }
+  .password-find__title02 {
+    margin-bottom: 24px;
+  }
+  .form-group {
+    margin-bottom: 0;
+  }
+  .form-group + .form-group {
+    margin-top: 20px;
+  }
+  .password-find__email-phone {
+    margin-top: 20px;
+    margin-bottom: 10px;
+  }
+  .password-find__label {
+    font-size: 14px;
+    letter-spacing: -.56px;
+    line-height: 22px;
+    margin-bottom: 10px;
+  }
+  .password-find__p {
+    word-break: keep-all;
+  }
+  .email-phone-find {
+    display: flex;
+    .base-select {
+      width: 118px;
+      margin-right: 10px;
+    }
+    .base-input {
+      width: 100%;
+    }
+  }
+  .auth-btn {
+    margin-bottom: 20px;
+  }
+  .auth-number {
+    position: relative;
+    margin-bottom: 10px;
+    .icon-input-remove {
+      display: none !important;
+    }
+    &::after {
+      content: attr(data-timer);
+      position: absolute;
+      top: 50%;
+      right: 16px;
+      transform: translateY(-50%);
+      font-size: 14px;
+      letter-spacing: -.56px;
+      line-height: 20px;
+    }
+  }
+  .auth-number-button {
+    margin-bottom: 50px;
+  }
+  .dp-btn__gray-800 {
+    color: $gray-800;
+  }
+}
+
+// 새 비밀번호 설정 모달
+.password-find__new-password {
+  .dp-p-sm {
+    margin-bottom: 30px;
+  }
+  .modal-title {
+    font-weight: 400;
+  }
+  .password-find__description {
+    font-size: 18px;
+    letter-spacing: -.72px;
+    line-height: 26px;
+    margin-bottom: 30px;
+  }
+  .form-group {
+    margin-bottom: 0;
+  }
+  .form-group + .form-group {
+    margin-top: 20px;
+  }
+  .new-password-repeat {
+    margin-bottom: 50px;
+  }
+}

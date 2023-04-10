@@ -1,0 +1,1205 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.dplot.mapper.DadaEventMapper">
+
+	<!-- 이벤트 수정 -->
+	<update id="updateEvent" parameterType="somap">
+		UPDATE t_dadaevent /* updateEvent */
+		<set>
+			<if test="subject != null">
+				subject = #{subject},
+			</if>
+			<if test="evdesc != null">
+				evdesc = #{evdesc},
+			</if>
+			<if test="evsttime != null">
+				evsttime = #{evsttime},
+			</if>
+			<if test="evedtime != null">
+				evedtime = #{evedtime},
+			</if>
+			<if test="muappchtype != null">
+				muappchtype = #{muappchtype},
+			</if>
+			<if test="mumembertype != null">
+				mumembertype = #{mumembertype},
+			</if>
+			<if test="mumemlvtype != null">
+				mumemlvtype = #{mumemlvtype},
+			</if>
+			<if test="disptype != null">
+				disptype = #{disptype},
+			</if>
+			<if test="iscomment != null">
+				iscomment = #{iscomment},
+			</if>
+			<if test="isseccomment != null">
+				isseccomment = #{isseccomment},
+			</if>
+			<if test="moduserid != null">
+				moduserid = #{moduserid},
+			</if>
+			<if test="pubtime != null">
+				pubtime = #{pubtime},
+			</if>
+			<if test="postidx != null">
+				postidx = #{postidx},
+			</if>
+			<if test="postidxdelete != null">
+				postidx = null,
+			</if>
+			<if test="istrash != null">
+				istrash = #{istrash},
+			</if>
+			<if test="isdisplay != null">
+				isdisplay = #{isdisplay},
+			</if>
+			<if test="evinfo != null">
+				evinfo = #{evinfo},
+			</if>
+			<if test="evinfomobile != null">
+				evinfomobile = #{evinfomobile},
+			</if>
+			<if test="readcnt != null">
+				readcnt = #{readcnt},
+			</if>
+			<if test="readcnt != null">
+				readcnt = #{readcnt},
+			</if>
+			<if test="isevent != null">
+				isevent = #{isevent},
+			</if>
+			<if test="modifycheck != null">
+				brandidx = #{brandidx},
+			</if>
+			<if test="isselectcomplete != null">
+				isselectcomplete = #{isselectcomplete},
+			</if>
+			<if test='winnercount != null and winnercount != ""'>
+			   winnercount = #{winnercount},
+			</if>
+			moddate = now()
+		</set>
+		WHERE 1 = 1
+		<choose>
+			<when test="idxlist == null or idxlist.size == 0">
+				<if test="eventidx != null and eventidx != ''">
+					AND eventidx = #{eventidx}
+				</if>
+			</when>
+		    <otherwise>
+				AND eventidx IN
+				<foreach collection="idxlist" index="index" item="item" separator="," open="(" close=")">
+					#{item}
+				</foreach>
+			</otherwise>
+		</choose>
+	</update>
+
+	<!-- 이벤트 등록 -->
+	<insert id="insertEvent" parameterType="somap" useGeneratedKeys="true" keyProperty="eventidx">
+		INSERT INTO t_dadaevent /* insertEvent */
+		(eventidx, siteid, subject, evdesc, evsttime, evedtime, muappchtype, mumembertype, mumemlvtype, disptype, eventtype,
+		 iscomment, isseccomment, isenter, isdupenter, isperagree, ismktagree, iscontattend, winattendcnt, postidx, reguserid,
+		 regdate, pubtime, istrash, evinfo, evinfomobile, readcnt, isevent, brandidx,isdisplay,isselect,winnercount)
+		VALUES (null,
+				#{siteid},
+				#{subject},
+				#{evdesc, jdbcType=VARCHAR},
+				#{evsttime},
+				#{evedtime},
+				#{muappchtype, jdbcType=VARCHAR},
+				#{mumembertype, jdbcType=VARCHAR},
+				#{mumemlvtype, jdbcType=VARCHAR},
+				#{disptype},
+				'EVT001',
+				#{iscomment},
+				#{isseccomment},
+				'T',
+				'T',
+				'T',
+				'T',
+				'T',
+				0,
+				#{postidx, jdbcType=INTEGER},
+				#{reguserid},
+				now(),
+				#{pubtime},
+				'F',
+				#{evinfo, jdbcType=VARCHAR},
+				#{evinfomobile, jdbcType=VARCHAR},
+				0,
+				#{isevent},
+				#{brandidx},
+				#{isdisplay},
+				#{isselect},
+				<if test='winnercount != null and winnercount != ""'>
+				#{winnercount}
+				</if>
+				<if test='winnercount == null or winnercount == ""'>
+				NULL
+				</if>
+			  )
+	</insert>
+
+	<!-- 조회수 증가 -->
+	<insert id="updateReadCnt" parameterType="String">
+		UPDATE t_dadaevent /* updateReadCnt */
+		SET readcnt = (readcnt + 1)
+		WHERE eventidx = #{eventidx}
+	</insert>
+
+	<!-- 매인 리스트 -->
+	<select id="selectEventFrontListSQL" parameterType="somap" resultType="somap">
+		SELECT
+			tde.EVENTIDX,
+			tde.SUBJECT,
+			tde.EVDESC,
+			tde.EVSTTIME,
+			tde.EVEDTIME,
+			tde.EVENTTYPE,
+			tde.PUBTIME
+		FROM t_dadaevent tde
+		WHERE 1=1
+			AND DISPTYPE = 'DPT001'  -- 전시항목만 조회
+			AND ISTRASH = 'F' -- 제거되지 않은 항목 한정
+		LIMIT
+		<if test='page != null and page != ""'>
+		#{page} ,
+		</if>5
+	</select>
+
+	<select id="selectEventFrontDetailSQL" parameterType="somap" resultType="somap">
+		SELECT
+			tde.EVENTIDX,
+			tde.SUBJECT,
+			tde.EVDESC,
+			tde.EVSTTIME,
+			tde.EVEDTIME,
+			tde.PUBTIME, -- 발표일
+		-- 	tde.MUAPPCHTYPE, -- 디바이스
+		--  tde.MUMEMBERTYPE, -- 회원 유형
+		--  tde.MUMEMLVTYPE, -- 회원등급
+		--     tde.DISPTYPE, 일반검색조건
+			tde.EVENTTYPE,
+			tde.ISCOMMENT,
+			tde.ISSECCOMMENT,
+			tde.ISENTER,
+			tde.ISDUPENTER,
+			tde.ISPERAGREE,
+			tde.ISMKTAGREE,
+			tde.ISCONTATTEND,
+			tde.WINATTENDCNT
+		FROM t_dadaevent tde
+		WHERE 1=1
+			AND tde.EVENTIDX = #{idx}
+			AND DISPTYPE = 'DPT001'
+	</select>
+
+	<!-- 게시글의 덧글을 확인함 -->
+	<select id="selectEventFrontDetailCommetLenthSQL" parameterType="somap" resultType="somap">
+		-- 전체항목 개수
+		SELECT count(*) AS length
+		FROM dadamall_dev.t_dadaevent_comment
+		WHERE 1=1
+			AND EVENTIDX = #{idx}
+	</select>
+
+	<!-- 게시글의 덧글 페이징용 -->
+	<select id="selectEventFrontDetailCommetPage" parameterType="somap" resultType="somap">
+		SELECT count(*) AS page
+		FROM dadamall_dev.t_dadaevent_comment
+		WHERE 1=1
+			AND EVENTIDX = #{idx}
+			AND DEPTH = 0
+	</select>
+
+	<!-- 게시글 덧글을 조회함 -->
+	<select id="selectEventFrontDetailCommetSQL" parameterType="somap" resultType="somap">
+		SELECT
+			COMMENTIDX -- 인덱스
+		-- 	, EVENTIDX -- 매인글
+			, COMMENT -- 내용
+			, ISSECRET -- 비밀글?
+			, UPCOMMENTIDX -- 상위글
+		-- 	, `DEPTH` -- 깊이
+			, REGUSERID -- 등록자
+			, REGDATE -- 등록일시
+		FROM dadamall_dev.t_dadaevent_comment
+		WHERE 1=1
+			AND EVENTIDX = #{idx}
+			AND DEPTH = 0
+		LIMIT
+		<if test='page != null and page != ""'>
+		#{page} ,
+		</if>5
+	</select>
+
+	<!-- 대댓글 -->
+	<select id="selectEventFrontDetailCommentSubSQL" parameterType="somap" resultType="somap">
+		SELECT
+			COMMENTIDX -- 인덱스
+		-- 	, EVENTIDX -- 매인글
+			, COMMENT -- 내용
+			, ISSECRET -- 비밀글?
+			, UPCOMMENTIDX -- 상위글
+			, `DEPTH` -- 깊이
+			, REGUSERID -- 등록자
+			, REGDATE -- 등록일시
+		FROM dadamall_dev.t_dadaevent_comment
+		WHERE 1=1
+			AND UPCOMMENTIDX = #{idx}
+			<![CDATA[
+			AND DEPTH <> 0
+			]]>
+	</select>
+
+<!--
+	*****************************************************************
+	*
+	*  ADMIN 영역
+	*
+	*****************************************************************
+-->
+	<!-- 이벤트 관리 조회 -->
+	<select id="selectAdminEventList" parameterType="somap" resultType="somap">
+	SELECT /* selectAdminEventList */
+		 a.eventidx,                                                                                -- 인덱스
+         a.subject,
+         muappcode,
+         mumembercode,
+         mumemlvcode,
+         hits,
+         commentcount,
+         date_format(evsttime,'%Y-%m-%d') as evsttime,
+         date_format(evedtime,'%Y-%m-%d') as evedtime,
+         date_format(pubtime,'%Y-%m-%d') as pubtime,
+         date_format(regdate,'%Y-%m-%d') as regdate,
+         isdisplay,
+         sortdisplay,
+         disptype,
+         iscomplete,
+         nopubtimecomplete,
+         postidx,
+         isannounce,
+         dbregdate
+	FROM
+	(
+		<![CDATA[
+         SELECT a.eventidx,                                                                                -- 인덱스
+                a.subject,                                                                                 -- 이벤트명
+                fn_get_codename_str(a.muappchtype, 'MUAPPCHTYPE') AS muappcode,             -- 적용 채널
+                fn_get_codename_str(a.mumembertype, 'MUMEMBERTYPE') AS mumembercode,        -- 유형
+                fn_get_codename_str(a.mumemlvtype, 'MUMEMLVTYPE') AS mumemlvcode,           -- 등급
+                if(a.readcnt = 0, '-', a.readcnt)                                    AS hits,              -- 조회
+				b.count 															AS commentcount,	-- 댓글수,
+                str_to_date(a.evsttime, '%Y%m%d')                                    AS evsttime,          -- 시작일자
+                str_to_date(a.evedtime, '%Y%m%d')                                    AS evedtime,          -- 종료일자
+                str_to_date(if(a.pubtime='',NULL,a.pubtime), '%Y%m%d')                                     AS pubtime,           -- 발표일자
+                str_to_date(a.regdate, '%Y-%m-%d')                                   AS regdate,           -- 등록일자
+                if(a.isdisplay = 'T', '노출', '미노출')                                     AS isdisplay,           -- 노출상태
+                a.isdisplay as sortdisplay,
+                fn_get_codename(#{siteid}, 'DISPTYPE', a.disptype)                     AS disptype,          -- 노출여부
+                CASE
+                    WHEN (a.evedtime <= date_format(now(), '%Y%m%d%H%i'))
+                        THEN '종료'
+                    WHEN (a.evsttime > date_format(now(), '%Y%m%d%H%i')) THEN '진행전'
+                    WHEN (a.evsttime <= date_format(now(), '%Y%m%d%H%i'))
+                        AND (a.evedtime > date_format(now(), '%Y%m%d%H%i')) THEN '진행중'
+                    END                                                              AS iscomplete,        -- 진행상태
+                CASE
+                    WHEN (a.evsttime > date_format(now(), '%Y%m%d%H%i')) THEN '진행전'
+                    WHEN (a.evsttime <= date_format(now(), '%Y%m%d%H%i'))
+                        AND (a.evedtime > date_format(now(), '%Y%m%d%H%i')) THEN '진행중'
+                    ELSE '종료'
+                    END                                                              AS nopubtimecomplete, -- 진행상태(발표일이 없는 경우)
+                a.postidx,                                                                                 -- 담청자 게시판 idx
+                if(a.postidx is not null, 'Y', 'N')                                  AS isannounce,        -- 이벤트 발표
+                str_to_date(a.regdate, '%Y-%m-%d')                                   AS dbregdate          -- 비교용 생성일
+         FROM t_dadaevent a
+			LEFT JOIN (
+				 SELECT eventidx, count(*) as count
+				 FROM t_dadaevent_comment
+				 WHERE 1 = 1
+				   AND istrash = 'F'
+				 group by eventidx
+			 ) b ON a.eventidx = b.eventidx
+         WHERE 1 = 1
+		]]>
+		AND istrash = 'F'
+		AND siteid = #{siteid}
+		AND eventtype = #{eventtype}
+		<if test="isdisplay != null and isdisplay != ''">
+			AND a.isdisplay = #{isdisplay}
+		</if>
+		<if test="muappchtypechecked.size != 0">
+			AND (
+			<foreach collection="muappchtypechecked" item="item" separator="OR">
+				a.muappchtype like concat('%',#{item},'%')
+			</foreach>
+			<if test='isallmuappch == "T"'>
+				OR a.muappchtype is null
+				OR a.muappchtype = ''
+			</if>
+			)
+		</if>
+		<if test="mumembertypechecked.size != 0">
+			AND (
+			<foreach collection="mumembertypechecked" item="item" separator="OR">
+				a.mumembertype like concat('%',#{item},'%')
+			</foreach>
+			<if test='isallmumember == "T"'>
+				OR a.mumembertype is null
+				OR a.mumembertype = ''
+			</if>
+			)
+		</if>
+		<if test="mumemlvtypechecked.size != 0">
+			AND (
+			<foreach collection="mumemlvtypechecked" item="item" separator="OR">
+				a.mumemlvtype like concat('%',#{item},'%')
+			</foreach>
+			<if test='isallmumemlv == "T"'>
+				OR a.mumemlvtype is null
+				OR a.mumemlvtype = ''
+			</if>
+			)
+		</if>
+		<if test="disptypechecked.size != 0">
+			AND (
+			<foreach collection="disptypechecked" item="item" separator="OR">
+				a.disptype like concat('%',#{item},'%')
+			</foreach>
+			<if test='isalldispt == "T"'>
+				OR a.disptype is null
+				OR a.disptype = ''
+			</if>
+			)
+		</if>
+	) a
+	WHERE 1 = 1
+	<if test="sdate != null">
+		<choose>
+			<when test="sdate == 'evsttime'">
+				AND date_format(str_to_date(a.evsttime, '%Y-%m-%d'), '%Y-%m-%d') BETWEEN #{startdate} AND #{enddate}
+			</when>
+			<when test="sdate == 'evedtime'">
+				AND date_format(str_to_date(a.evedtime, '%Y-%m-%d'), '%Y-%m-%d') BETWEEN #{startdate} AND #{enddate}
+			</when>
+			<when test="sdate == 'pubtime'">
+				AND date_format(str_to_date(a.pubtime, '%Y-%m-%d'), '%Y-%m-%d') BETWEEN #{startdate} AND #{enddate}
+			</when>
+			<when test="sdate == 'regdate'">
+				AND date_format(a.dbregdate, '%Y-%m-%d') BETWEEN #{startdate} AND #{enddate}
+			</when>
+	  		<otherwise>
+				AND (date_format(str_to_date(a.evsttime, '%Y-%m-%d'), '%Y-%m-%d') BETWEEN #{startdate} AND #{enddate}
+				OR date_format(str_to_date(a.evedtime, '%Y-%m-%d'), '%Y-%m-%d') BETWEEN #{startdate} AND #{enddate}
+				OR date_format(str_to_date(a.pubtime, '%Y-%m-%d'), '%Y-%m-%d') BETWEEN #{startdate} AND #{enddate}
+				OR date_format(a.dbregdate, '%Y-%m-%d') BETWEEN #{startdate} AND #{enddate})
+			</otherwise>
+		</choose>
+	</if>
+	<if test="sword != null and sword != ''">
+		AND a.subject like concat('%', #{sword}, '%')
+	</if>
+	<if test='isallcomplete != "T" and completechecked.size != 0'>
+	  	AND
+		<foreach collection="completechecked" item="item" open="(" separator="OR" close=")">
+			<if test="item == 'COM001'">
+				a.iscomplete = '진행전'
+			</if>
+			<if test="item == 'COM002'">
+				a.iscomplete = '진행중'
+			</if>
+			<if test="item == 'COM003'">
+				a.iscomplete = '종료'
+			</if>
+		</foreach>
+	</if>
+	<choose>
+		<when test="psort == 'hits_desc'">
+			ORDER BY a.sortdisplay DESC, a.hits*1 DESC
+		</when>
+		<when test="psort == 'hits_asc'">
+			ORDER BY a.sortdisplay DESC, a.hits*1 ASC
+		</when>
+		<when test="psort == 'commentcount_desc'">
+			ORDER BY a.sortdisplay DESC, a.commentcount*1 DESC
+		</when>
+		<when test="psort == 'commentcount_asc'">
+			ORDER BY a.sortdisplay DESC, a.commentcount*1 ASC
+		</when>
+		<when test="psort == 'evsttime_desc'">
+			ORDER BY a.sortdisplay DESC, a.evsttime DESC
+		</when>
+		<when test="psort == 'evsttime_desc'">
+			ORDER BY a.sortdisplay DESC, a.evsttime ASC
+		</when>
+		<when test="psort == 'evedtime_desc'">
+			ORDER BY a.sortdisplay DESC, a.evedtime DESC
+		</when>
+		<when test="psort == 'evedtime_desc'">
+			ORDER BY a.sortdisplay DESC, a.evedtime ASC
+		</when>
+		<when test="psort == 'pubtime_desc'">
+			ORDER BY a.sortdisplay DESC, a.pubtime DESC
+		</when>
+		<when test="psort == 'pubtime_desc'">
+			ORDER BY a.sortdisplay DESC, a.pubtime ASC
+		</when>
+		<when test="psort == 'regdate_desc'">
+			ORDER BY a.sortdisplay DESC, a.regdate DESC
+		</when>
+		<when test="psort == 'regdate_asc'">
+			ORDER BY a.sortdisplay DESC, a.regdate ASC
+		</when>
+		<otherwise>
+			ORDER BY a.sortdisplay DESC, a.evsttime
+		</otherwise>
+	</choose>
+	LIMIT #{startpage}, #{endpage} -- 페이징
+	</select>
+
+	<!-- 종료 이벤트 조회 -->
+	<select id="selectAdminEndEventList" resultType="somap">
+		SELECT eventidx, subject, evedtime
+			FROM t_dadaevent
+		WHERE 1 = 1
+			AND (postidx IS NULL
+				OR eventidx = #{eventidx})
+			AND siteid = #{siteid}
+			AND eventtype = #{eventtype}
+			AND istrash = 'F'
+		  	<![CDATA[
+			AND ((pubtime < date_format(now(), '%Y%m%d%H%i'))
+				OR (evedtime <= date_format(now(), '%Y%m%d%H%i')))
+			]]>
+	</select>
+
+	<!-- 이벤트 건별 조회 -->
+	<select id="selectAdminEventStateList" parameterType="somap" resultType="somap">
+		SELECT
+			count(*)                AS total
+			, ifnull(sum(a.showcnt), 0)   AS showcnt
+			, ifnull(sum(a.hidecnt), 0) AS hidecnt
+		FROM
+		(
+		<![CDATA[
+         SELECT if(a.isdisplay = 'T', 1, 0) AS showcnt,
+					if(a.isdisplay = 'F', 1, 0) AS hidecnt,
+			       	a.subject,
+					CASE
+				   WHEN (a.pubtime < date_format(now(), '%Y%m%d%H%i'))
+				       	OR (a.evedtime <= date_format(now(), '%Y%m%d%H%i'))
+					   THEN '종료'
+				   WHEN (a.evsttime > date_format(now(), '%Y%m%d%H%i')) THEN '진행전'
+				   WHEN (a.evsttime <= date_format(now(), '%Y%m%d%H%i'))
+					   AND (a.evedtime > date_format(now(), '%Y%m%d%H%i')) THEN '진행중'
+			       END                                                                                           		AS iscomplete,		-- 진행상태
+				   a.siteid,
+			       str_to_date(a.regdate, '%Y-%m-%d') AS regdate,
+			       a.eventtype,
+                   str_to_date(a.evsttime, '%Y%m%d')                                    AS evsttime,          -- 시작일자
+               	   str_to_date(a.evedtime, '%Y%m%d')                                    AS evedtime,          -- 종료일자
+               	   str_to_date(if(a.pubtime='',NULL,a.pubtime), '%Y%m%d')                                     AS pubtime,           -- 발표일자
+               	   str_to_date(a.regdate, '%Y-%m-%d')                                   AS dbregdate           -- 등록일자
+         FROM t_dadaevent a
+         WHERE 1 = 1
+		]]>
+		AND siteid = #{siteid}
+		AND eventtype = #{eventtype}
+		AND istrash = 'F'
+		<if test="isdisplay != null and isdisplay != ''">
+			AND a.isdisplay = #{isdisplay}
+		</if>
+		<if test="muappchtypechecked.size != 0">
+			AND (
+			<foreach collection="muappchtypechecked" item="item" separator="OR">
+				a.muappchtype like concat('%',#{item},'%')
+			</foreach>
+			<if test='isallmuappch == "T"'>
+				OR a.muappchtype is null
+				OR a.muappchtype = ''
+			</if>
+			)
+		</if>
+		<if test="mumembertypechecked.size != 0">
+			AND (
+			<foreach collection="mumembertypechecked" item="item" separator="OR">
+				a.mumembertype like concat('%',#{item},'%')
+			</foreach>
+			<if test='isallmumember == "T"'>
+				OR a.mumembertype is null
+				OR a.mumembertype = ''
+			</if>
+			)
+		</if>
+		<if test="mumemlvtypechecked.size != 0">
+			AND (
+			<foreach collection="mumemlvtypechecked" item="item" separator="OR">
+				a.mumemlvtype like concat('%',#{item},'%')
+			</foreach>
+			<if test='isallmumemlv == "T"'>
+				OR a.mumemlvtype is null
+				OR a.mumemlvtype = ''
+			</if>
+			)
+		</if>
+		<if test="disptypechecked.size != 0">
+			AND (
+			<foreach collection="disptypechecked" item="item" separator="OR">
+				a.disptype like concat('%',#{item},'%')
+			</foreach>
+			<if test='isalldispt == "T"'>
+				OR a.disptype is null
+				OR a.disptype = ''
+			</if>
+			)
+		</if>
+		) a
+		WHERE 1 = 1
+		<if test="sdate != null">
+			<choose>
+				<when test="sdate == 'evsttime'">
+					AND date_format(str_to_date(a.evsttime, '%Y-%m-%d'), '%Y-%m-%d') BETWEEN #{startdate} AND #{enddate}
+				</when>
+				<when test="sdate == 'evedtime'">
+					AND date_format(str_to_date(a.evedtime, '%Y-%m-%d'), '%Y-%m-%d') BETWEEN #{startdate} AND #{enddate}
+				</when>
+				<when test="sdate == 'pubtime'">
+					AND date_format(str_to_date(a.pubtime, '%Y-%m-%d'), '%Y-%m-%d') BETWEEN #{startdate} AND #{enddate}
+				</when>
+				<when test="sdate == 'regdate'">
+					AND date_format(a.dbregdate, '%Y-%m-%d') BETWEEN #{startdate} AND #{enddate}
+				</when>
+		  		<otherwise>
+					AND (date_format(str_to_date(a.evsttime, '%Y-%m-%d'), '%Y-%m-%d') BETWEEN #{startdate} AND #{enddate}
+					OR date_format(str_to_date(a.evedtime, '%Y-%m-%d'), '%Y-%m-%d') BETWEEN #{startdate} AND #{enddate}
+					OR date_format(str_to_date(a.pubtime, '%Y-%m-%d'), '%Y-%m-%d') BETWEEN #{startdate} AND #{enddate}
+					OR date_format(a.dbregdate, '%Y-%m-%d') BETWEEN #{startdate} AND #{enddate})
+				</otherwise>
+			</choose>
+		</if>
+		<if test="sword != null and sword != ''">
+			AND a.subject like concat('%', #{sword}, '%')
+		</if>
+		<if test='isallcomplete != "T" and completechecked.size != 0'>
+			AND
+			<foreach collection="completechecked" item="item" open="(" separator="OR" close=")">
+				<if test="item == 'COM001'">
+					a.iscomplete = '진행전'
+				</if>
+				<if test="item == 'COM002'">
+					a.iscomplete = '진행중'
+				</if>
+				<if test="item == 'COM003'">
+					a.iscomplete = '종료'
+				</if>
+			</foreach>
+		</if>
+	</select>
+
+	<!-- 이벤트 상세 조회 -->
+	<!-- 시작, 종료 일시 -->
+	<resultMap id="eventtimeinfo" type="somap">
+		<result column="startYYYYMMDD" property="startYYYYMMDD"/>
+		<result column="startHH" property="startHH"/>
+		<result column="startMM" property="startMM"/>
+		<result column="toYYYYMMDD" property="toYYYYMMDD"/>
+		<result column="toHH" property="toHH"/>
+		<result column="toMM" property="toMM"/>
+	</resultMap>
+	<!-- 발표 일시 -->
+	<resultMap id="pubtimeinfo" type="somap">
+		<result column="pubToYYYYMMDD" property="toYYYYMMDD"/>
+		<result column="pubToHH" property="toHH"/>
+		<result column="pubToMM" property="toMM"/>
+	</resultMap>
+	<!-- 브랜드 정보 맵 -->
+	<resultMap id="brandinfo" type="somap">
+		<result column="brcode" property="brcode"/>
+		<result column="brandname" property="brandname"/>
+	</resultMap>
+	<!-- 기본 데이터 맵 -->
+	<resultMap id="eventdtlinfo" type="somap">
+		<result property="eventidx" column="eventidx"/>
+		<result property="subject" column="subject"/>
+		<result property="isinfo" column="isinfo" jdbcType="CHAR"/>
+		<result property="evdesc" column="evdesc"/>
+		<result property="evsttime" column="evsttime"/>
+		<result property="evedtime" column="evedtime"/>
+		<result property="muappchtype" column="muappchtype"/>
+		<result property="mumembertype" column="mumembertype"/>
+		<result property="mumemlvtype" column="mumemlvtype"/>
+		<result property="disptype" column="disptype"/>
+		<result property="eventtype" column="eventtype"/>
+		<result property="iscomment" column="iscomment"/>
+		<result property="isseccomment" column="isseccomment"/>
+		<result property="postidx" column="postidx"/>
+		<result property="reguserid" column="reguserid"/>
+		<result property="regdate" column="regdate"/>
+		<result property="moddate" column="moddate"/>
+		<result property="isdisplay" column="isdisplay"/>
+		<result property="evinfo" column="evinfo"/>
+		<result property="evinfomobile" column="evinfomobile"/>
+		<result property="readcnt" column="readcnt"/>
+		<result property="isevent" column="isevent"/>
+		<result property="brandidx" column="brandidx"/>
+		<result property="isselect" column="isselect"/>
+		<result property="isselectcomplete" column="isselectcomplete"/>
+		<result property="winnercount" column="winnercount"/>
+	</resultMap>
+	<!-- 최종 맵 -->
+	<resultMap id="dtlresultmap" type="somap">
+		<collection property="eventdtlinfo" resultMap="eventdtlinfo"/>
+		<collection property="eventtimeinfo" resultMap="eventtimeinfo"/>
+		<collection property="pubtimeinfo" resultMap="pubtimeinfo"/>
+		<collection property="brandinfo" resultMap="brandinfo"/>
+	</resultMap>
+	<select id="selectAdminEventDtl" parameterType="somap" resultMap="dtlresultmap">
+		SELECT date_format(a.format_evsttime, '%Y-%m-%d') AS startYYYYMMDD, /* selectAdminEventDtl */
+			   date_format(a.format_evsttime, '%H')       AS startHH,
+			   date_format(a.format_evsttime, '%i')       AS startMM,
+			   date_format(a.format_evedtime, '%Y-%m-%d') AS toYYYYMMDD,
+			   date_format(a.format_evedtime, '%H')       AS toHH,
+			   date_format(a.format_evedtime, '%i')       AS toMM,
+			   ifnull(date_format(a.pubtime, '%Y-%m-%d'), '')  AS pubToYYYYMMDD,
+			   ifnull(date_format(a.pubtime, '%H'), '')        AS pubToHH,
+			   ifnull(date_format(a.pubtime, '%i'), '')        AS pubToMM,
+			   a.*
+		FROM (
+				 SElECT a.eventidx,
+						str_to_date(a.evsttime, '%Y%m%d%H%i%s') AS format_evsttime,		-- 진행 시작일
+						str_to_date(a.evedtime, '%Y%m%d%H%i%s') AS format_evedtime,		-- 진행 종료일
+						a.evsttime,                                                 -- 진행 시작일
+						a.evedtime,                                                 -- 진행 종료일
+						a.subject,													-- 제목
+						a.evdesc,													-- 설명
+						a.muappchtype,												-- 다중적용채널
+						a.mumembertype,												-- 회원유형
+						a.mumemlvtype,												-- 회원등급
+						a.disptype,													-- 노출구분
+						a.eventtype,												-- 이벤트구분
+						a.iscomment,												-- 댓글 사용여부
+						a.isseccomment,												-- 비밀댓글사용여부
+						a.postidx,													-- 게시물IDX
+						a.reguserid,												-- 등록자ID
+						date_format(a.regdate, '%Y-%m-%d')      AS regdate,			-- 생성일
+						a.moduserid,												-- 수정자ID
+						ifnull(date_format(a.moddate, '%Y-%m-%d'), '')      AS moddate, -- 수정일
+						str_to_date(if(a.pubtime = '', NULL, a.pubtime), '%Y%m%d%H%i%s')  AS pubtime,			-- 발표일
+						a.isdisplay,													-- 노출여부
+						a.isevent,													-- 이벤트여부
+				        a.evinfo,													-- 내용 pc
+				        a.evinfomobile,												-- 내용 mobile
+				        a.readcnt,													-- 조회수
+				        a.brandidx,
+				        b.brcode,
+				        b.name as brandname,
+				        a.isselect,
+				        a.isselectcomplete,
+				        a.winnercount
+				 FROM t_dadaevent a
+				 LEFT JOIN t_brand b ON a.brandidx = b.idx
+				 WHERE 1 = 1
+				   AND a.eventidx = #{eventidx}
+		    	   AND a.siteid = #{siteid}
+			 ) a
+	</select>
+
+	<!-- 이벤트관리, 출첵이벤트 저장 가능 여부 -->
+	<select id="isAdminCanSaveCheckEventAndCheckEvent" parameterType="somap" resultType="somap">
+	<![CDATA[
+		SELECT if(str_to_date(evedtime, '%Y%m%d%H%i') > now(), true, false) AS `check`
+		FROM t_dadaevent
+		WHERE 1 = 1
+			AND siteid = #{siteid}
+			AND eventidx = #{eventidx}
+	]]>
+	</select>
+
+<!--	<select id="isAdminCanSaveCheckEventAndCheckEvent" parameterType="somap" resultType="somap">-->
+<!--	<![CDATA[-->
+<!--		SELECT if(a.iscomplete = '진행전', true, false) AS iscomplete-->
+<!--			 , if(a.nopubtimecomplete = '진행전', true, false) AS nopubtimecomplete-->
+<!--		FROM (-->
+<!--				 SELECT CASE-->
+<!--							WHEN (a.pubtime < date_format(now(), '%Y%m%d%H%i'))-->
+<!--								OR (a.evedtime <= date_format(now(), '%Y%m%d%H%i'))-->
+<!--								THEN '종료'-->
+<!--							WHEN (a.evsttime > date_format(now(), '%Y%m%d%H%i')) THEN '진행전'-->
+<!--							WHEN (a.evsttime <= date_format(now(), '%Y%m%d%H%i'))-->
+<!--								AND (a.evedtime > date_format(now(), '%Y%m%d%H%i')) THEN '진행중'-->
+<!--							END AS iscomplete,       &#45;&#45; 진행상태-->
+<!--						CASE-->
+<!--							WHEN (a.evsttime > date_format(now(), '%Y%m%d%H%i')) THEN '진행전'-->
+<!--							WHEN (a.evsttime <= date_format(now(), '%Y%m%d%H%i'))-->
+<!--								AND (a.evedtime > date_format(now(), '%Y%m%d%H%i')) THEN '진행중'-->
+<!--							ELSE '종료'-->
+<!--							END AS nopubtimecomplete &#45;&#45; 진행상태(발표일이 없는 경우)-->
+<!--				 FROM t_dadaevent a-->
+<!--				 WHERE 1 = 1-->
+<!--				   AND siteid = #{siteid}-->
+<!--				   AND eventidx = #{eventidx}-->
+<!--			 ) a-->
+<!--	]]>-->
+<!--	</select>-->
+    <!-- 프로모션 노출 수량 체크  -->
+	<select id="checkDisplayCnt" resultType="Integer" parameterType="somap">
+        /* DadaEventMapper.xml - checkDisplayCnt 프로모션 노출 수량 체크  */
+        SELECT count(*) as count
+        FROM t_dadaevent
+        <where>
+        	AND siteid = #{siteid}
+        	AND istrash = 'F'
+        	AND isdisplay = 'T'
+        	AND date_format(now(),'%Y%m%d%H%i') between evsttime and evedtime
+        	<choose>
+	            <when test="idxlist == null or idxlist.size == 0">
+	                <if test="idx != null and idx != ''">
+	                    AND eventidx != #{idx}
+	                </if>
+	            </when>
+	            <otherwise>
+	                AND eventidx NOT IN
+	                <foreach collection="idxlist" index="index" item="item" separator="," open="(" close=")">
+	                    #{item}
+	                </foreach>
+	            </otherwise>
+	        </choose>
+        </where>
+    </select>
+
+    <!-- FRONT 프로모션 쪽 노출할 리스트 -->
+
+    <select id="selectEventList" parameterType="somap" resultType="somap">
+		SELECT /* DadaEventMapper.xml - selectEventList 프로모션 쪽 노출할 리스트  */
+				AA.*
+				, if(concat('D',DATEDIFF(now(),str_to_date(AA.EVEDTIME, '%Y%m%d%H%i%s'))) <![CDATA[=]]> 'D0', 'D-day',concat('D',DATEDIFF(now(),str_to_date(AA.EVEDTIME, '%Y%m%d%H%i%s')))) as dday
+				/* day 화면에 노출 결정여부  */
+				, if(((TIMESTAMPDIFF(second,str_to_date(AA.EVEDTIME, '%Y%m%d%H%i%s'),now())  <![CDATA[<=]]>  0)  <![CDATA[&&]]>  (TIMESTAMPDIFF(second,str_to_date(AA.EVEDTIME, '%Y%m%d%H%i%s'),now())  <![CDATA[>=]]>  -604800)), 'true', 'false') as usedday
+				/* 이벤트가 진행중인지 여부  */
+				, if((TIMESTAMPDIFF(second,str_to_date(AA.EVEDTIME, '%Y%m%d%H%i%s'),now()) <![CDATA[>=]]> 0),'종료','진행중') as eventday
+				, if(AA.isevent = 'T', '이벤트', '기획전') as eventname
+			FROM (SELECT  a.EVENTIDX
+						, a.SITEID
+						, a.SUBJECT
+						, a.EVDESC
+						, a.EVSTTIME
+						, a.EVEDTIME
+						, date_format(str_to_date(a.EVSTTIME, '%Y%m%d'), '%Y.%m.%d') as startdate
+						, date_format(str_to_date(a.EVEDTIME, '%Y%m%d'), '%Y.%m.%d') as enddate
+						, ifnull(a.POSTIDX,'null') as postidx
+						, a.DISPTYPE
+						, a.EVENTTYPE
+						, a.ISCOMMENT
+						, a.ISSECCOMMENT
+						, a.ISENTER
+						, a.ISDUPENTER
+						, a.ISPERAGREE
+						, a.ISMKTAGREE
+						, a.ISCONTATTEND
+						, a.WINATTENDCNT
+						, a.REGUSERID
+						, a.REGDATE
+						, a.MODUSERID
+						, a.MODDATE
+						, date_format(str_to_date(if(a.pubtime='',NULL,a.pubtime), '%Y%m%d'), '%Y.%m.%d') as pubtime
+						, a.ISTRASH
+						, a.DUPENTERTYPE
+						, a.DUPENTERCNT
+						, a.EVINFO
+						, a.EVINFOMOBILE
+						, a.READCNT
+						, a.GOODSTITLE
+						, a.ISWAGESTOP
+						, a.BENEFITTYPE
+						, a.PAYPOINT
+						, a.ISEPOINTDUP
+						, a.COMCPNIDX
+						, a.ISEVENT
+						, a.BRANDIDX
+						, a.ISDISPLAY
+						, FN_GET_FILE_URL(a.EVENTIDX ,'FLT001', #{imgtype}) as fullpath
+					FROM t_dadaevent a
+					WHERE a.siteid = #{siteid}
+					AND a.istrash = 'F'
+					AND a.MUAPPCHTYPE LIKE concat('%',#{platform},'%')
+					AND a.MUMEMBERTYPE LIKE concat('%',#{membertype},'%')
+					AND a.MUMEMLVTYPE LIKE concat('%',#{memlvtype},'%')
+					AND a.disptype = 'DPT001'
+					AND a.isdisplay = 'T'
+					<if test='reqname != all and reqname != null and reqname != ""'>
+						<choose>
+							<when test='reqname == "event"'>
+								AND a.isevent = 'T'
+							</when>
+							<when test='reqname == "special"'>
+								AND a.isevent = 'F'
+							</when>
+						</choose>
+					</if>
+					ORDER BY A.EVSTTIME desc, A.REGDATE desc
+					) AA
+			<if test='startpage != null and !startpage.equals("") and endpage != null and !endpage.equals("")'>
+				LIMIT #{startpage},#{endpage}
+			</if>
+    </select>
+
+    <select id="selectEventListCount" parameterType="somap" resultType="Integer">
+		    /* DadaEventMapper.xml - selectEventListCount 프로모션 전체 목록 수  */
+		    SELECT count(*)
+			FROM t_dadaevent a
+			WHERE a.siteid = #{siteid}
+			AND a.istrash = 'F'
+			AND a.MUAPPCHTYPE LIKE concat('%',#{platform},'%')
+			AND a.MUMEMBERTYPE LIKE concat('%',#{membertype},'%')
+			AND a.MUMEMLVTYPE LIKE concat('%',#{memlvtype},'%')
+			AND a.disptype = 'DPT001'
+			AND a.isdisplay = 'T'
+			<if test='reqname != all and reqname != null and reqname != ""'>
+				<choose>
+					<when test='reqname == "event"'>
+						AND a.isevent = 'T'
+					</when>
+					<when test='reqname == "special"'>
+						AND a.isevent = 'F'
+					</when>
+				</choose>
+			</if>
+    </select>
+
+	<select id="selectEventDetail" parameterType="somap" resultType="somap">
+		SELECT /* DadaEventMapper.xml - selectEventDetail 프로모션 상세 보기 */
+			a.EVENTIDX
+			, a.SITEID
+			, if(a.isevent = 'T', '이벤트', '기획전') as eventname
+			, a.SUBJECT
+			, a.EVDESC
+			, a.EVSTTIME
+			, a.EVEDTIME
+			, date_format(str_to_date(a.EVSTTIME, '%Y%m%d'), '%Y.%m.%d') as startdate
+			, date_format(str_to_date(a.EVEDTIME, '%Y%m%d'), '%Y.%m.%d') as enddate
+			, ifnull(a.POSTIDX,'null') as postidx
+			, a.DISPTYPE
+			, a.EVENTTYPE
+			, a.ISCOMMENT
+			, a.ISSECCOMMENT
+			, a.ISENTER
+			, a.ISDUPENTER
+			, a.ISPERAGREE
+			, a.ISMKTAGREE
+			, a.ISCONTATTEND
+			, a.WINATTENDCNT
+			, a.REGUSERID
+			, a.REGDATE
+			, a.MODUSERID
+			, a.MODDATE
+			, date_format(str_to_date(if(a.pubtime='',NULL,a.pubtime), '%Y%m%d'), '%Y.%m.%d') as pubtime
+			, a.ISTRASH
+			, a.DUPENTERTYPE
+			, a.DUPENTERCNT
+			, a.EVINFO
+			, a.EVINFOMOBILE
+			, a.READCNT
+			, a.GOODSTITLE
+			, a.ISWAGESTOP
+			, a.BENEFITTYPE
+			, a.PAYPOINT
+			, a.ISEPOINTDUP
+			, a.COMCPNIDX
+			, a.ISEVENT
+			, a.ISDISPLAY
+			, FN_GET_FILE_URL(a.brandidx ,'FLT001', #{imgtype}) as brandpath
+			, FN_GET_FILE_URL(a.EVENTIDX ,'FLT001', #{imgtype2}) as fullpath
+			, b.idx as brandidx
+			, b.NAME as brandnm
+			, b.DETAIL as branddtl
+			, b.headcopy
+		FROM
+			t_dadaevent a
+		left outer join t_brand b
+		on a.BRANDIDX = b.IDX
+		and b.ISTRASH ='F'
+		WHERE
+		a.EVENTIDX = #{eventidx}
+		AND a.siteid = #{siteid}
+		AND a.MUAPPCHTYPE LIKE concat('%',#{platform},'%')
+		AND a.MUMEMBERTYPE LIKE concat('%',#{membertype},'%')
+		AND a.MUMEMLVTYPE LIKE concat('%',#{memlvtype},'%')
+		AND a.disptype IN ('DPT001','DPT003')
+		AND a.isdisplay = 'T'
+	</select>
+
+	<select id="selectEventSimpleDetail" parameterType="somap" resultType="somap">
+		SELECT
+			CONCAT('[', IF(ISEVENT = 'T', '이벤트', '기획전'), ']', ' ', SUBJECT) AS NAME
+			 , FN_GET_FILE_URL(EVENTIDX ,'FLT001', #{imgtype}) as FULLPATH
+			 , EVDESC
+		FROM T_DADAEVENT
+		WHERE ISTRASH = 'F'
+		AND EVENTIDX = #{eventidx}
+	</select>
+
+	<select id="selectPromotionJoinCount" parameterType="somap" resultType="somap">
+		SELECT	/* DadaEventMapper.xml - selectPromotionJoinCount 스크래치 이벤트 해당 유저 참여횟수 (James, 2022-08-22) */
+				COUNT(*) AS TODAY
+		FROM	T_PROMOTION_JOIN
+		WHERE 	USERNO = #{userno}
+		AND		PROMOIDX = #{promoidx}
+		AND 	JOINDATE >= CURDATE()
+		AND		JOINDATE &lt; DATE_ADD(CURDATE(), INTERVAL 1 DAY)
+	</select>
+
+	<insert id="insertPromotionJoin" parameterType="somap" useGeneratedKeys="true" keyProperty="joinidx">
+		/* DadaEventMapper.xml - insertPromotionJoin */
+		INSERT INTO T_PROMOTION_JOIN (
+			JOINIDX,
+			PROMOIDX,
+			USERNO,
+			JOINDATE
+		) VALUES (
+			NULL,
+			#{promoidx},
+			#{userno},
+			NOW()
+		)
+	</insert>
+
+	<select id="selectPromotionWinningCondition" parameterType="somap" resultType="somap">
+		/* DadaEventMapper.xml - selectPromotionWinningCondition 스크래치 이벤트 조건 및 금액 (James, 2022-08-22) */
+		SELECT	REWARDIDX,
+				REWARDORDER,
+				PAYPOINT,
+				PROMOIDX,
+				USERNO,
+				REWARDDATE
+		FROM	T_PROMOTION_WINNING_CONDITION A
+		WHERE 	REWARDORDER &lt;= #{joinidx}	/* 해당 IDX번호가 중복으로 당첨이 안되었을때는 그 이후 지원자가 당첨자가 된다 */
+		AND		PROMOIDX = #{promoidx}
+		AND 	USERNO IS NULL
+		AND		(PAYPOINT = 500 OR NOT EXISTS (
+			SELECT	1
+			FROM	T_PROMOTION_WINNING_CONDITION B
+			WHERE	PROMOIDX = #{promoidx}
+			AND		USERNO = #{userno}
+			AND		PAYPOINT > 500	/* 500 이상 적립금은 ID당 1회밖에 부여 안함 */
+		))
+		ORDER BY REWARDORDER DESC
+		LIMIT 1
+	</select>
+
+	<update id="updatePromotionWinningCondition" parameterType="somap">
+		/* DadaEventMapper.xml - updatePromotionWinningCondition 스크래치 이벤트 당첨자 update (James, 2022-08-22) */
+		UPDATE	T_PROMOTION_WINNING_CONDITION
+		SET		USERNO = #{userno},
+				REWARDDATE = NOW()
+		WHERE 	REWARDORDER = #{joinidx}
+		AND		PROMOIDX = #{promoidx}
+		AND 	USERNO IS NULL
+	</update>
+
+	<select id="selectLotteryIsCompleted" parameterType="somap" resultType="int">
+		/* DadaEventMapper.xml - selectLotteryIsCompleted 래플이벤트 당첨자추첨 (Ethan, 2022-09-01) */
+		SELECT COUNT(1)
+		FROM   T_DADAEVENT A
+		and   A.ISSELECTCOMPLETE ='F'
+		and   A.ISSELECT ='T'
+		and   A.EVENTIDX = #{eventidx}
+	</select>
+
+	<select id="selectRaffleEvent" parameterType="somap" resultType="somap">
+		/* DadaEventMapper.xml - raffleEventInquire 래플이벤트 조회 (Ethan, 2022-09-01) */
+		select
+			@ROWNUM := @ROWNUM + 1 as rownum,
+			cast(SUBSTR(A.EVSTTIME, 5, 2) as unsigned) as month,
+			WEEK(SUBSTR(A.EVSTTIME, 1, 8)) - WEEK(CONCAT(SUBSTR(A.EVSTTIME, 1, 6), '01')) + 1 as week,
+			A.EVENTIDX AS eventidx,
+			A.SUBJECT AS subject,
+			A.EVSTTIME AS evsttime,
+			A.EVEDTIME AS evedtime,
+			SUBSTR(A.EVSTTIME, 1, 4) as startyy,
+			SUBSTR(A.EVSTTIME, 5, 2) as startmm,
+			SUBSTR(A.EVSTTIME, 7, 2) as startdd,
+			SUBSTR(A.EVSTTIME, 9, 2) as starthh,
+			SUBSTR(A.EVSTTIME, 11, 2) as startmi,
+			SUBSTR(A.EVEDTIME, 1, 4) as endyy,
+			SUBSTR(A.EVEDTIME, 5, 2) as endmm,
+			SUBSTR(A.EVEDTIME, 7, 2) as enddd,
+			SUBSTR(A.EVEDTIME, 9, 2) as endhh,
+			SUBSTR(A.EVEDTIME, 11, 2) as endmi,
+			SUBSTR(A.PUBTIME, 1, 4) as pubyy,
+			SUBSTR(A.PUBTIME, 5, 2) as pubmm,
+			SUBSTR(A.PUBTIME, 7, 2) as pubdd,
+			SUBSTR(A.PUBTIME, 9, 2) as pubhh,
+			SUBSTR(A.PUBTIME, 11, 2) as pubmi,
+			case
+				when DATE_FORMAT(now(), '%Y%m%d%H%i') >= A.EVSTTIME
+				and DATE_FORMAT(now(), '%Y%m%d%H%i') &lt; A.EVEDTIME
+		     then 'T'
+				else 'F'
+			end as statusreal,
+			case
+				when DATE_FORMAT(now(), '%Y%m%d%H%i') >= @fromDate
+				and DATE_FORMAT(now(), '%Y%m%d%H%i') &lt; A.EVEDTIME
+		     then 'T'
+				else 'F'
+			end as status,
+			@fromDate := A.EVEDTIME as tmpfromdate
+		from
+			t_dadaevent A,
+			(select@rownum :=-1) TMP1,
+			(select@fromDate :='000000000000') TMP2
+		where
+			A.SUBJECT like '%래플%'
+			AND A.SUBJECT like '%주차%'
+			AND A.ISTRASH = 'F'
+		order by
+			EVSTTIME
+	</select>
+
+	<select id="selectLotteryWinner" parameterType="somap" resultType="int">
+		/* DadaEventMapper.xml - selectLotteryWinner 래플이벤트 당첨자추첨 (Ethan, 2022-09-01) */
+		SELECT B.IDX
+		FROM   T_DADAEVENT A, T_DADAEVENT_ENTER B, T_MEMBER C
+		WHERE A.EVENTIDX  = B.EVENTIDX
+		AND   B.USERNO = C.USERNO
+		and   A.EVENTIDX = #{eventidx}
+		and   A.ISSELECTCOMPLETE ='F'
+		and   A.ISSELECT ='T'
+		AND   C.DADAMEMBERTYPE != 'DMT003'
+		order by rand()
+		LIMIT #{winnercount}
+	</select>
+
+	<select id="selectRaffleEventItem" parameterType="somap" resultType="somap">
+		SELECT A.goodsno,
+		       CONCAT(C.host, C.imgpath, C.imgfname) AS brandlogoimg,
+		       CONCAT(D.host, D.imgpath, D.imgfname) AS itemimg,
+		       CONCAT(E.host, E.imgpath, E.imgfname) AS itemthumb,
+		       B.GOODSNAME AS name,
+		       B.MARKETPRICE AS price,
+		       B.PRICE AS salePrice,
+		       100 - ROUND((B.PRICE/B.MARKETPRICE)*100) as salePercent
+		  FROM T_DADAEVENT_GOODS A
+		   INNER JOIN t_goods B on A.GOODSNO = B.GOODSNO
+		   LEFT OUTER JOIN t_file C /*LOG IMG*/
+		   ON a.goodsno = C.orgidx
+		   AND C.istrash = 'F'
+		   AND C.imgtype = 'IGT032'
+		   LEFT OUTER JOIN t_file D /*ITEM IMG*/
+		   ON a.goodsno = D.orgidx
+		   AND D.istrash = 'F'
+		   AND D.imgtype = 'IGT001'
+		   LEFT OUTER JOIN t_file E /*THUMB IMG*/
+		   ON a.goodsno = E.orgidx
+		   AND E.istrash = 'F'
+		   AND E.imgtype = 'IGT004'
+		  WHERE A.EVENTIDX = #{eventidx}
+		  limit 1
+	</select>
+
+	<select id="selectResultWinning" parameterType="somap" resultType="somap">
+		SELECT A.ISSELECTCOMPLETE as isselectcomplete
+		  from t_dadaevent A
+		 WHERE A.eventidx = #{eventidx}
+	</select>
+
+	<select id="selectraffleWinList" parameterType="somap" resultType="somap">
+		select B.USERNO AS userno,
+		       C.USERID AS userid,
+		       B.NAME AS name,
+		       substr(B.MOBILE, LENGTH(B.MOBILE)-3, LENGTH(B.MOBILE)) AS phone
+		from t_dadaevent_enter A
+		inner join t_member B
+		on A.userno = b.userno
+		inner join t_user c
+		on A.userno = C.no
+		where A.eventidx = #{eventidx}
+		and A.ISSUCC = 'T'
+		and A.ISTRASH = 'F'
+	</select>
+
+	<select id="selectRaffle2Event" parameterType="somap" resultType="somap">
+		/* DadaEventMapper.xml - raffleEventInquire 래플2이벤트 조회 (Ethan, 2022-11-14) */
+		select
+			@ROWNUM := @ROWNUM + 1 as rownum,
+			cast(SUBSTR(A.EVSTTIME, 5, 2) as unsigned) as month,
+			WEEK(SUBSTR(A.EVSTTIME, 1, 8)) - WEEK(CONCAT(SUBSTR(A.EVSTTIME, 1, 6), '01')) + 1 as week,
+			A.EVENTIDX AS eventidx,
+			A.SUBJECT AS subject,
+			A.EVSTTIME AS evsttime,
+			A.EVEDTIME AS evedtime,
+			SUBSTR(A.EVSTTIME, 1, 4) as startyy,
+			SUBSTR(A.EVSTTIME, 5, 2) as startmm,
+			SUBSTR(A.EVSTTIME, 7, 2) as startdd,
+			SUBSTR(A.EVSTTIME, 9, 2) as starthh,
+			SUBSTR(A.EVSTTIME, 11, 2) as startmi,
+			SUBSTR(A.EVEDTIME, 1, 4) as endyy,
+			SUBSTR(A.EVEDTIME, 5, 2) as endmm,
+			SUBSTR(A.EVEDTIME, 7, 2) as enddd,
+			SUBSTR(A.EVEDTIME, 9, 2) as endhh,
+			SUBSTR(A.EVEDTIME, 11, 2) as endmi,
+			SUBSTR(A.PUBTIME, 1, 4) as pubyy,
+			SUBSTR(A.PUBTIME, 5, 2) as pubmm,
+			SUBSTR(A.PUBTIME, 7, 2) as pubdd,
+			SUBSTR(A.PUBTIME, 9, 2) as pubhh,
+			SUBSTR(A.PUBTIME, 11, 2) as pubmi,
+			case
+				when DATE_FORMAT(now(), '%Y%m%d%H%i') >= A.EVSTTIME
+				and DATE_FORMAT(now(), '%Y%m%d%H%i') &lt; A.EVEDTIME
+		     then 'T'
+				else 'F'
+			end as statusreal,
+			case
+				when DATE_FORMAT(now(), '%Y%m%d%H%i') >= @fromDate
+				and DATE_FORMAT(now(), '%Y%m%d%H%i') &lt; A.EVEDTIME
+		     then 'T'
+				else 'F'
+			end as status,
+			@fromDate := A.EVEDTIME as tmpfromdate
+		from
+			t_dadaevent A,
+			(select@rownum :=-1) TMP1,
+			(select@fromDate :='000000000000') TMP2
+		where
+			A.SUBJECT like '%래플%'
+			AND A.SUBJECT like '%주차%'
+			AND A.SUBJECT like '%11월%'
+			AND A.ISTRASH = 'F'
+		order by
+			EVSTTIME
+	</select>
+
+	<select id="selectRaffle2EventItem" parameterType="somap" resultType="somap">
+		SELECT A.goodsno,
+		       CONCAT(C.host, C.imgpath, C.imgfname) AS brandlogoimg,
+		       CONCAT(D.host, D.imgpath, D.imgfname) AS itemimg,
+		       CONCAT(E.host, E.imgpath, E.imgfname) AS itemthumb,
+		       B.GOODSNAME AS name,
+		       B.MARKETPRICE AS price,
+		       B.PRICE AS salePrice,
+		       100 - ROUND((B.PRICE/B.MARKETPRICE)*100) as salePercent,
+		       TD.WINNERCOUNT AS person
+		  FROM T_DADAEVENT_GOODS A
+		   INNER JOIN t_goods B on A.GOODSNO = B.GOODSNO
+		   LEFT OUTER JOIN t_file C /*LOG IMG*/
+		   ON a.goodsno = C.orgidx
+		   AND C.istrash = 'F'
+		   AND C.imgtype = 'IGT032'
+		   LEFT OUTER JOIN t_file D /*ITEM IMG*/
+		   ON a.goodsno = D.orgidx
+		   AND D.istrash = 'F'
+		   AND D.imgtype = 'IGT001'
+		   LEFT OUTER JOIN t_file E /*THUMB IMG*/
+		   ON a.goodsno = E.orgidx
+		   AND E.istrash = 'F'
+		   AND E.imgtype = 'IGT004'
+		   INNER JOIN t_dadaevent TD
+		   ON A.EVENTIDX = TD.EVENTIDX
+		  WHERE A.EVENTIDX = #{eventidx}
+		  limit 1
+	</select>
+</mapper>

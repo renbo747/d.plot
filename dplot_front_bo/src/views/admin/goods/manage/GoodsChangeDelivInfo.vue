@@ -1,0 +1,302 @@
+<template>
+    <!-- 배송정보 일괄변경 팝업 -->
+    <div id="modal-wrap" class="modal" style="display: block;">
+        <div class="modal-content" style="width: 1400px;">
+            <div class="pop-header">
+                <h2>배송정보 일괄변경</h2>
+                <button type="button" class="pop-close" @click="$emit('closePopup');"></button>
+            </div>
+            <div class="pop-body">
+                <div class="blue-box mg0">총 {{ goodsnoList.length }}개 상품의 배송정보를 일괄 변경합니다.</div>
+                <div class="clearfix mt10">
+                    <div class="bar-title fl">배송정보
+                        <span class="txt-orange ml10"><i class="icon-alert"></i>수정을 원하는 항목을 체크하신 후 일괄변경 하시기 바랍니다.</span>
+                    </div>
+                </div>
+                <div class="boxing mt10">
+                    <div class="form-area" style="display: block;">
+                        <dl>
+                            <dt><input type="checkbox" id="ischkdelividx" v-model="chkObject.delividx.ischecked" true-value="T" false-value="F"><label for="ischkdelividx">배송템플릿</label></dt>
+                            <dd>
+                                <select style="width: 400px;" v-model="info.delividx">
+                                    <option value="">배송템플릿 선택</option>
+                                    <option v-for="item in info.delivTempList" :key="item.delividx" :value="item.delividx">[{{ item.iscombdelivname }}]{{ item.delivbname }}</option>
+                                </select>
+                                <button type="button" class="btn blue" @click="openDelivTempListPopup">배송템플릿</button>
+                                <span class="txt-orange"><i class="icon-alert"></i>자주 쓰는 배송정보는 템플릿으로 관리하시면 편리합니다.</span>                                
+                            </dd>
+                        </dl>
+                        <!-- <dl>
+                            <dt><input type="checkbox" id="ischkcombdeliv" v-model="chkObject.iscombdeliv.ischecked" true-value="T" false-value="F"><label for="ischkcombdeliv">배송유형</label></dt>
+                            <dd class="clearfix">
+                                <div class="radio_wrap wide">
+                                    <input type="radio" name="iscombdelivD" id="iscombdelivDF" v-model="info.iscombdeliv" value="F"/>
+                                    <label for="iscombdelivDF">개별배송</label>
+                                    <input type="radio" name="iscombdelivD" id="iscombdelivDT" v-model="info.iscombdeliv" value="T"/>
+                                    <label for="iscombdelivDT">묶음배송</label>
+                                </div>
+                            </dd>
+                        </dl> -->
+                        <div class="col2" style="padding: 0 10px;">
+                            <div class="left" style="padding: 0 10px;">
+                                <div class="bar-title small">배송정보</div>
+                                <table cellpadding="0" cellspacing="0" class="gray-tb">
+                                    <colgroup>
+                                        <col width="170px">
+                                        <col width="">
+                                    </colgroup>
+                                    <tbody>
+                                        <tr>
+                                            <th>배송비</th>
+                                            <td>
+                                                {{ info.delivTemp.delivfaretypename }} 
+                                                {{ info.delivTemp.delivfaretype==$store.getters['ADMIN'].DELIV_FARE_DCT002? info.delivTemp.delivfare + '원' : '' }}
+                                                {{ info.delivTemp.delivfaretype==$store.getters['ADMIN'].DELIV_FARE_DCT003? 
+                                                        info.delivTemp.delivfare + '원 ('+info.delivTemp.delivfreefare + '원 이상 무료)' : '' }}
+                                            </td>
+                                        </tr>
+                                        <tr>
+                                            <th>배송방법</th>
+                                            <td>{{ info.delivTemp.delivtypename }}</td>
+                                        </tr>
+                                        <tr>
+                                            <th>택배사</th>
+                                            <td>{{ info.delivTemp.logistypename }}</td>
+                                        </tr>
+                                        <tr>
+                                            <th>배송일정</th>
+                                            <td>
+                                                {{ info.delivTemp.delivschtypename }}
+                                                {{ info.delivTemp.delivschtype == $store.getters['ADMIN'].DELIV_SCH_TYPE_DSC001? '(주문확인 후 최대 1~2일 내 배송완료)':'' }}
+                                                {{ info.delivTemp.delivschtype == $store.getters['ADMIN'].DELIV_SCH_TYPE_DSC002? '(주문확인 후 최대 2~3일 내 배송완료)':'' }}
+                                                {{ info.delivTemp.delivschtype == $store.getters['ADMIN'].DELIV_SCH_TYPE_DSC003? '(주문확인 후 최대 4~5일 내 배송완료)':'' }}
+                                                {{ info.delivTemp.delivschtype == $store.getters['ADMIN'].DELIV_SCH_TYPE_DSC004? '(주문확인 후 최대 7~10일 내 배송완료)':'' }}
+                                                {{ info.delivTemp.delivschtype == $store.getters['ADMIN'].DELIV_SCH_TYPE_DSC005? '(주문확인 후 최대 7~14일 내 배송완료)':'' }}
+                                            </td>
+                                        </tr>
+                                        <tr>
+                                            <th>배송가능지역</th>
+                                            <td>{{ info.delivTemp.nationdelivconts }}</td>
+                                        </tr>
+                                        <tr>
+                                            <th>도서산간 추가배송비(편도)</th>
+                                            <td>{{ $util.isNull(info.delivTemp.chejufare)? '':'제주 '+info.delivTemp.chejufare+'원' }}/
+                                                {{ $util.isNull(info.delivTemp.isolfare)? '':'도서산간 '+info.delivTemp.isolfare+'원' }}
+                                            </td>
+                                        </tr>
+                                    </tbody>
+                                </table>
+                            </div>
+                            <div class="right" style="padding: 0 10px;">
+                                <div class="bar-title small">교환/반품</div>
+                                <table cellpadding="0" cellspacing="0" class="gray-tb">
+                                    <colgroup>
+                                        <col width="170px">
+                                        <col width="">
+                                    </colgroup>
+                                    <tbody>
+                                        <tr>
+                                            <th>반품택배사</th>
+                                            <td>{{ info.delivTemp.rtnlogistypename }}</td>
+                                        </tr>
+                                        <tr>
+                                            <th>교환 배송비</th>
+                                            <td>
+                                                <span>편도 <input type="text" class="short right" readonly v-model="info.delivTemp.exowfare">원</span>
+                                                <span class="left-bar">왕복 <input type="text" class="short right" readonly v-model="info.delivTemp.exrtnfare">원</span>
+                                            </td>
+                                        </tr>
+                                        <tr>
+                                            <th>반품 배송비</th>
+                                            <td>
+                                                <span>편도 <input type="text" class="short right" readonly v-model="info.delivTemp.rfowfare">원</span>
+                                                <span class="left-bar">왕복 <input type="text" class="short right" readonly v-model="info.delivTemp.rfrtnfare">원</span>
+                                            </td>
+                                        </tr>
+                                        <tr>
+                                            <th>출고지 주소</th>
+                                            <td>
+                                                <input type="text" class="dpb short" readonly v-model="info.delivTemp.relpost">
+                                                <input type="text" class="dpb" style="width: 100%;" readonly v-model="info.delivTemp.reladdr">
+                                                <input type="text" class="dpb" style="width: 100%;" readonly v-model="info.delivTemp.reladdrdetail">
+                                                <span class="small-txt">
+                                                    [{{ $util.isNull(info.delivTemp.reladdr)? ' ':'도로명' }}] 
+                                                    {{ info.delivTemp.reladdr }} {{ info.delivTemp.reladdrdetail }}
+                                                </span>
+                                            </td>
+                                        </tr>
+                                        <tr>
+                                            <th>교환/반품 주소</th>
+                                            <td>
+                                                <input type="text" class="dpb short" readonly v-model="info.delivTemp.rfpost">
+                                                <input type="text" class="dpb" style="width: 100%;" readonly v-model="info.delivTemp.rfaddr">
+                                                <input type="text" class="dpb" style="width: 100%;" readonly v-model="info.delivTemp.rfaddrdetail">
+                                                <span class="small-txt">
+                                                    [{{ $util.isNull(info.delivTemp.rfaddr)? ' ':'도로명' }}] 
+                                                    {{ info.delivTemp.rfaddr }} {{ info.delivTemp.rfaddrdetail }}
+                                                </span>
+                                            </td>
+                                        </tr>
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="btn-group">
+                    <button type="button" class="btn big blue" @click="openConfirmPopup">일괄변경</button>
+                    <button type="button" class="btn big darkgray" @click="$emit('closePopup');">닫기</button>
+                </div>
+            </div>
+        </div>
+    </div>
+    <!-- /배송정보 일괄변경 팝업 -->
+</template>
+
+<script>
+import GoodsChangeConfirmPopup from '@views.admin/goods/popup/GoodsChangeConfirmPopup.vue';
+import DelivTempListPopup from '@views.admin/goods/popup/DelivTempListPopup.vue';
+
+export default {
+    name: 'admin.goods.manage.goodsChangeDelivInfo',
+    props : ['checkedList', 'ckey', 'dealerno'],
+    mounted() {
+        // 초기화
+        this.onInit();
+    },
+    data() {
+        return {
+            goodsnoList: [],    // 상품번호 목록
+            chkObject: {        // 체크항목 목록
+                delividx: { key: 'delividx', name:'배송템플릿', ischecked:'T' },
+                iscombdeliv: { key: 'iscombdeliv', name:'배송유형', ischecked:'T' }
+            },
+            info: {
+                delividx: '',       // 배송템플릿 idx
+                delivTempList: [],  // 배송템플릿 목록
+                iscombdeliv: '',    // 묶음배송여부
+                delivTemp: {}       // 선택한 배송템플릿 정보
+            }
+        }
+    },
+    methods: {
+        // 화면초기화
+        onInit: function() {
+            // 넘어온 파라미터 세팅
+            this.goodsnoList = this.checkedList;
+            // 배송템플릿 목록 조회
+            this.getDelivTempList();
+        },
+        // 일괄변경 확인팝업 오픈
+        openConfirmPopup: function() {
+            // 파라미터 세팅
+            let checkItemList = [];
+            for (const [key, value] of Object.entries(this.chkObject)) {
+                if (this.chkObject[key].ischecked === 'T') {
+                    checkItemList.push(value);
+                }
+            }
+            // 선택한 항목 체크
+            if (checkItemList.length == 0) {
+                alert("변경할 항목을 선택해주세요.");
+                return;
+            }
+
+            // 일괄변경 확인팝업 오픈
+            if (this.checkValidation()) {
+                this.$eventBus.$emit('modalShow', GoodsChangeConfirmPopup, { checkItemList: checkItemList},
+                    (result) => {
+                        if (result.isconfirm === 'T') {
+                            this.changeAll();
+                        }
+                    }
+                );
+            }
+        },
+        // 일괄변경
+        changeAll: function() {
+            let params = {
+                ckey: this.ckey,
+                isdelividxchange: this.chkObject.delividx.ischecked,
+                iscombdelivchange: this.chkObject.iscombdeliv.ischecked,
+                goodsnoList: this.goodsnoList
+            }
+            params = Object.assign({}, params, this.info);
+            this.$http.post("/admin/goods/manage/update", params)
+                .then(result => {
+                    if (result.statusCode === 200) {
+                        alert("일괄변경이 완료되었습니다.");
+                        this.$emit('closePopup', 'T');
+                    }
+                })
+                .catch(error => {
+                    this.$util.debug(error);
+                });
+        },
+        // 입력 validation 체크
+        checkValidation: function() {
+            let checkResult = true;
+
+            // // 배송템플릿
+            // if (this.chkObject.delividx.ischecked === 'T') {
+            //     // 필수체크
+            //     if (this.$util.isNull(this.info.delividx)) {
+            //         alert('배송템플릿을 선택해주세요.');
+            //         checkResult = false;
+            //     }
+            // }
+            // 배송유형
+//             if (checkResult && this.chkObject.iscombdeliv.ischecked === 'T') {
+//                 // 필수체크
+//                 if (this.$util.isNull(this.info.iscombdeliv)) {
+//                     alert('배송유형을 선택해주세요.');
+//                     checkResult = false;
+//                 }
+//             }
+
+            return checkResult;
+        },
+        // 배송템플릿 목록 조회
+        getDelivTempList: function() {
+            let param = { istrash: 'F', dealerno: this.dealerno, isloading: false };
+            this.$http.post('/admin/goods/regist/delivtemp/list', param)
+                .then(result => {
+                    this.$util.debug(result);
+                    this.info.delivTempList = result.data.list;
+                    this.info.delivTemp = {};
+                    this.info.delivTempList.forEach(item => {
+                        if (item.delividx == this.info.delividx) {
+                            this.info.delivTemp = item;
+                            return;
+                        }
+                    });
+                })
+                .catch(error => {
+                    this.$util.debug(error);
+                });
+        },
+        // 배송템플릿 팝업 오픈
+        openDelivTempListPopup: function() {
+            let param = { dealerno: this.dealerno };
+            this.$eventBus.$emit('modalShow', DelivTempListPopup, param,
+                () => {
+                    this.getDelivTempList();
+                }
+            );
+        },
+    },
+    watch: {
+        // 배송템플릿 선택
+        'info.delividx': function(value) {
+            this.info.delivTemp = {};
+            this.info.delivTempList.forEach(item => {
+                if (item.delividx == value) {
+                    this.info.delivTemp = item;
+                    this.info.iscombdeliv = item.iscombdeliv;
+                    return;
+                }
+            });
+        },
+    }
+}
+</script>

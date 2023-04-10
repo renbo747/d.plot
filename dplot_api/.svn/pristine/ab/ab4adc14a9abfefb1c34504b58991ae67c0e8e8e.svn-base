@@ -1,0 +1,209 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.dplot.mapper.OrderMapper">
+	
+	<select id="selectOrderNo" parameterType="somap" resultType="string">
+		SELECT FN_GET_ORDER_NO() /* OrderMapper - selectOrderNo 주문번호 조회*/
+	</select>
+	
+	<select id="selectOrderCnt" parameterType="somap" resultType="int">
+		SELECT  /* OrderMapper - selectIsFristOrder 주문건수 조회*/
+			COUNT(*)
+		FROM T_COMORDER
+		WHERE USERNO = #{userno}
+		AND ISTRASH = 'F'
+	</select>
+	
+	<select id="selectOrderList" parameterType="somap" resultType="somap">
+		/* OrderMapper - selectOrderList 주문목록 조회 */
+		WITH orderlist AS (
+			<foreach item="item" collection="items" separator="UNION ALL">
+			select
+				  #{item.goodsno}		as goodsno
+				, #{item.optioncode}	as optioncode
+				, #{item.isaddgoods} 	as isaddgoods
+				, #{item.cateidx}		as cateidx
+				, #{item.ordcnt}		as ordcnt
+				, #{item.istrash}		as istrash
+				, #{item.orggoodsno}	as orggoodsno
+			</foreach>
+		)
+		SELECT tt.*
+		FROM (
+			SELECT
+			      IFNULL(a.cartidx, 0) as cartidx
+			    , t.goodsno
+			    , t.orggoodsno
+			    , t.optioncode
+			    , t.cateidx
+			    , t.ordcnt
+			    , c.goodsname
+			    , c.goodscode
+			    , case
+			    	when a.isaddgoods = 'F' then c.goodsname 
+			    	else o.goodsname
+			      end as orggoodsname
+			    , FN_GET_OPTION_CONCAT(t.goodsno, t.optioncode, ' | ') as optionname
+			    , FN_GET_OPTION_CONCAT(t.goodsno, t.optioncode, ', ') as fulloptionnm
+			    , fullcategoryname
+			    , FN_GET_OPTION_MARKETPRICE(#{siteid}, t.goodsno, t.optioncode) as marketprice
+				, FN_GET_OPTION_PRICE(#{siteid}, t.goodsno, t.optioncode) as price
+				, FN_GET_GOODS_SALEPROMO(#{siteid}, t.goodsno, t.optioncode, #{userno}, #{platform}) as salepromo
+				, FN_GET_OPTION_STOCK(#{siteid}, t.goodsno, t.optioncode) as stockcnt 
+			    , if(c.dealerno is null , 0, c.dealerno) as dealerno
+			    , case 
+			    	when c.dealerno is null then 'D.PLOT'
+			    	else (select name from t_dealer where userno = c.dealerno)
+			      end as dealernm
+			    , c.delividx	/* 배송템플릿일련번호 */ 
+			    , c.iscombdeliv /* 묶음배송여부 */ 
+			    , c.isfrstsale	/* 첫구매할인적용여부 */
+			    , d.delivtype	
+			    , FN_GET_CODENAME(#{siteid}, 'DELIVTYPE', d.delivtype) as delivtypename
+			    , IFNULL(d.delivfaretype, '') as delivfaretype
+			    , FN_GET_CODENAME(#{siteid}, 'DELIVFARETYPE', d.delivfaretype) AS delivfaretypename
+			    , isnationdeliv									/* 전국배송여부*/
+			    , IFNULL(d.delivfare, 0) as delivfare 			/* 배송비 */
+			    , IFNULL(d.chejufare, 0) as chejufare 			/* 제주배송비 */
+			    , IFNULL(d.isolfare, 0) as isolfare	 			/* 도서산간배송비 */
+			    , IFNULL(d.delivfreefare, 0) as delivfreefare	/* 조건부주문금액 */
+			    , FN_GET_FILE_URL(t.goodsno, 'FLT001', #{imgtype}) as fullpath
+			    , t.isaddgoods
+			    , e.enname as brandname
+				, 0 as delivcpnamt		/* 배송비 쿠폰할인금액 */ 
+				, 0 as realgoodsamt 	/* 할인 적용후 급액 */
+				, 0 as reserveamt		/* 적립금 안분금액 */
+				, 0 as epointamt		/* E포인트 안분금액 */
+				, 0 as empreserveamt	/* 임직원적립금 안분금액 */
+				, c.minordcnt
+				, c.maxordcnt
+				, c.daymaxordcnt
+				, c.permaxordcnt
+				, c.ispbgoods
+				, c.goodsselltype
+				, FN_GET_ORDER_COUNT(#{siteid}, t.goodsno, #{userno}, 'D') as dayordcnt
+				, FN_GET_ORDER_COUNT(#{siteid}, t.goodsno, #{userno}, null) as allordcnt
+				, (select commrate from t_goods_option_detail where goodsno = t.goodsno and optioncode = t.optioncode) as commrate
+			FROM orderlist t
+			LEFT OUTER JOIN t_comcart a
+			ON t.goodsno = a.goodsno
+			AND t.optioncode = a.optioncode
+			AND a.istrash = 'F'
+			AND a.siteid = #{siteid}
+			AND a.userno = #{userno}
+			INNER JOIN t_goods c
+			ON t.goodsno = c.goodsno
+			LEFT OUTER JOIN t_goods o
+			ON t.orggoodsno = o.goodsno
+			LEFT OUTER JOIN (
+				WITH CATEGORY AS (
+					SELECT IDX, NAME, DEPTH, PARENT
+					FROM T_CATEGORY
+				)
+				SELECT
+					T.CATEIDX, T.DEPTH1IDX, T.DEPTH2IDX, T.DEPTH3IDX, T.DEPTH4IDX, T.FULLCATEGORYNAME
+				FROM (
+					SELECT
+						  A.IDX AS DEPTH1IDX, B.IDX AS DEPTH2IDX, C.IDX AS DEPTH3IDX, D.IDX AS DEPTH4IDX
+						, CONCAT_WS(', ', A.NAME, B.NAME, C.NAME, D.NAME) AS FULLCATEGORYNAME
+						, (CASE WHEN D.IDX IS NOT NULL THEN D.IDX
+								WHEN C.IDX IS NOT NULL THEN C.IDX
+								WHEN B.IDX IS NOT NULL THEN B.IDX
+								ELSE A.IDX
+							END) AS CATEIDX
+					FROM CATEGORY A
+					LEFT OUTER JOIN CATEGORY B ON A.IDX = B.PARENT
+					LEFT OUTER JOIN CATEGORY C ON B.IDX = C.PARENT
+					LEFT OUTER JOIN CATEGORY D ON C.IDX = D.PARENT
+					WHERE A.DEPTH = 1
+				) T
+			) F ON F.CATEIDX = a.CATEIDX
+			LEFT OUTER JOIN t_deliv_template d
+			ON c.delividx = d.idx
+			LEFT OUTER JOIN t_brand e
+			ON c.brandidx = e.idx
+			WHERE t.istrash = 'F'
+			AND c.goodsselltype = 'GST002' /* 판매중 */
+		) tt
+		WHERE stockcnt > 0
+		ORDER BY dealerno, orggoodsno, isaddgoods, goodsno, optioncode, delividx
+	</select>
+	
+	<select id="selectCheckOrderList" parameterType="somap" resultType="somap">
+		/* OrderMapper - selectCheckOrderList 주문목록 체크조회 */
+		WITH orderlist AS (
+			<foreach item="item" collection="orderlist" separator="UNION ALL">
+			select
+				  #{item.goodsno}		as goodsno
+				, #{item.optioncode}	as optioncode
+				, #{item.isaddgoods} 	as isaddgoods
+				, #{item.cateidx}		as cateidx
+				, #{item.ordcnt}		as ordcnt
+				, #{item.orggoodsno}	as orggoodsno
+				, #{item.goodscpnidx}	as goodscpnidx
+				, #{item.usecnt}		as usecnt
+			</foreach>
+		)
+		SELECT tt.*
+		FROM (
+			SELECT
+			      IFNULL(a.cartidx, 0) as cartidx
+			    , t.goodsno
+			    , t.orggoodsno
+			    , t.optioncode
+			    , t.cateidx
+			    , t.ordcnt
+			    , t.goodscpnidx
+			    , t.usecnt
+			    , c.goodsname
+			    , c.goodscode
+			    , FN_GET_OPTION_MARKETPRICE(#{siteid}, t.goodsno, t.optioncode) as marketprice
+				, FN_GET_OPTION_PRICE(#{siteid}, t.goodsno, t.optioncode) as price
+				, FN_GET_GOODS_SALEPROMO(#{siteid}, t.goodsno, t.optioncode, #{userno}, #{platform}) as salepromo
+				, FN_GET_OPTION_STOCK(#{siteid}, t.goodsno, t.optioncode) as stockcnt 
+			    , if(c.dealerno is null , 0, c.dealerno) as dealerno
+			    , c.delividx	/* 배송템플릿일련번호 */ 
+			    , c.iscombdeliv /* 묶음배송여부 */ 
+			    , c.isfrstsale	/* 첫구매할인적용여부 */
+			    , d.delivtype	
+			    , IFNULL(d.delivfaretype, '') as delivfaretype
+			    , isnationdeliv									/* 전국배송여부*/
+			    , IFNULL(d.delivfare, 0) as delivfare 			/* 배송비 */
+			    , IFNULL(d.chejufare, 0) as chejufare 			/* 제주배송비 */
+			    , IFNULL(d.isolfare, 0) as isolfare	 			/* 도서산간배송비 */
+			    , IFNULL(d.delivfreefare, 0) as delivfreefare	/* 조건부주문금액 */
+			    , t.isaddgoods
+			    , 0 as delivcpnamt		/* 배송비 쿠폰할인금액 */ 
+				, 0 as realgoodsamt 	/* 할인 적용후 급액 */
+				, 0 as reserveamt		/* 적립금 안분금액 */
+				, 0 as epointamt		/* E포인트 안분금액 */
+				, 0 as empreserveamt	/* 임직원적립금 안분금액 */
+				, c.minordcnt
+				, c.maxordcnt
+				, c.daymaxordcnt
+				, c.permaxordcnt
+				, c.ispbgoods
+				, c.goodsselltype
+				, FN_GET_ORDER_COUNT(#{siteid}, t.goodsno, #{userno}, 'D') as dayordcnt
+				, FN_GET_ORDER_COUNT(#{siteid}, t.goodsno, #{userno}, null) as allordcnt
+				, (select commrate from t_goods_option_detail where goodsno = t.goodsno and optioncode = t.optioncode) as commrate
+			FROM orderlist t
+			LEFT OUTER JOIN t_comcart a
+			ON t.goodsno = a.goodsno
+			AND t.optioncode = a.optioncode
+			AND a.istrash = 'F'
+			AND a.siteid = #{siteid}
+			AND a.userno = #{userno}
+			INNER JOIN t_goods c
+			ON t.goodsno = c.goodsno
+			LEFT OUTER JOIN t_goods o
+            ON t.orggoodsno = o.goodsno
+			LEFT OUTER JOIN t_deliv_template d
+			ON c.delividx = d.idx
+			LEFT OUTER JOIN t_brand e
+			ON c.brandidx = e.idx
+		) tt
+		ORDER BY dealerno, orggoodsno, isaddgoods, goodsno, optioncode, delividx
+	</select>
+</mapper>

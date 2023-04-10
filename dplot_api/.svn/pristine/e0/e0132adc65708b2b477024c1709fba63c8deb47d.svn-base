@@ -1,0 +1,2862 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.dplot.mapper.GoodsMapper">
+	<resultMap type="somap" id="selectGoodsJoinGoodsContentResult">
+		<result property="CONTENT" column="CONTENT" jdbcType="NCLOB" javaType="java.lang.String" />
+		<result property="DELIVERYCONTENT" column="DELIVERYCONTENT" jdbcType="NCLOB" javaType="java.lang.String" />
+		<result property="MOBILE_CONTENT" column="MOBILE_CONTENT" jdbcType="NCLOB" javaType="java.lang.String" />
+	</resultMap>
+	<select id="selectGoodsJoinGoodsContent" parameterType="somap" resultMap="selectGoodsJoinGoodsContentResult">
+		/* GoodsMapper.xml - selectGoodsJoinGoodsContent 상품상세 조회 */
+		select
+			g.goodsno -- 상품번호
+			, g.dealerno -- 입점업체번호
+			-- , goodskind 상품유형(삭제)
+			, g.goodscode -- 상품코드 
+			, g.goodsname -- 상품명
+			, g.summary -- 상품요약설명
+			-- , imgb 상품이미지_대(삭제)
+			-- , imgm 상품이미지_중(삭제)
+			-- , imgs 상품이미지_소(삭제)
+			-- , imgborg Big 이미지 원본파일명(삭제)
+			-- , imgmorg Middle 이미지 원본파일명(삭제)
+			-- , imgsorg Small 이미지 원본파일명(삭제)
+			, g.imgautochk -- 이미지자동체크
+			-- , attach 첨부파일(삭제)
+			-- , attachorgname 첨부파일 원본 파일이(삭제)
+			-- , isdelattach 첨부파일_삭제여부(삭제)
+			, g.keyword -- 검색키워드
+			, g.price -- 판매가
+			-- , originalprice 공급가(삭제)
+			, g.marketprice -- 정상가
+			, g.pricesplit -- 가격입력기준
+			, g.cmstype -- 수수료설정구분
+			, g.margin -- 마진율
+			, g.istaxfree -- 면세여부
+			, g.cmoneypolicy -- 적립금_정책
+			, g.cmoneyvalue -- 적립금_지급폭
+			, g.brandidx -- 브랜드_일련번호
+			, g.product -- 제조사
+			, g.origin -- 원산지
+			, g.deliverypolicy -- 배송비정책
+			, g.deliverymethod -- 배송비구분
+			, g.deliveryfee -- 배송비
+			, g.deliverylimit -- 배송비_무료한도
+			, g.optionkind -- 옵션종류
+			, g.icons -- 아이콘_설정
+			, gc.content -- 상세내용
+			, gc.deliverycontent -- 배송정책
+			, g.isdisplay -- 전시여부
+			-- , state 상품상태(삭제)
+			, g.orgno -- 원본_상품_번호
+			-- , reviewrate -- 상품평비율(v)
+			-- , quantity -- 재고수량STOCK과차이뭔지모르겠음!(v)
+			, fn_get_goods_stock(g.siteid, g.goodsno) as stock  
+			-- , sort -- 정렬(안쓰는듯)
+			-- 함수 오류나서 주석함 fn_get_goods_price(g.siteid, g.goodsno) as eventdiscountprice
+			, fn_get_goods_price(g.siteid, g.goodsno) as discountprice
+			, (select name from t_brand where idx = g.brandidx) as brandname -- 브랜드명
+			, (select count(*) from t_goods_review where goodsno = g.goodsno) as reviewsize -- 리뷰갯수
+			, ifnull((select avg(totpoint) from t_goods_review where goodsno = g.goodsno), 0) as reviewvalue -- 리뷰
+			, (select count(*) from t_goods_qna where goodsno = g.goodsno) as qnasize -- qna갯수
+			, g.isuseaddition -- 추가구성품사용여부
+			, g.ispbgoods -- 직매입여부(T:자사, F:위탁사)
+			, (select count(0) from t_goods_category gc, t_category c where gc.cateidx = c.idx and c.hidden = 0 and gc.goodsno = g.goodsno) as catecnt -- 카테고리개수
+			, (select cateidx from t_goods_category where goodsno = g.goodsno and isrepre = 'T') as cateidx -- 대표카테고리
+			, g.disstdate -- 전시시작일자(이아래부터는 NEW)
+			, g.diseddate -- 전시종료일자
+			, goodsselltype -- 상품판매상태
+			, minordcnt -- 최소주문수량
+			, maxordcnt -- 최대주문수량
+			, daymaxordcnt -- 일최대주문수량
+			, isfrstsale -- 첫구매할인적용여부
+			, iscncappr -- 취소승인필요여부
+			, goodsdivtype -- 상품구분상태(새상품, 중고, 리퍼, 해외직구)
+			, FN_GET_CODENAME(#{siteid}, 'GOODSDIVTYPE', g.goodsdivtype) as goodsdivtypename
+			, iscombdeliv -- 묶음배송여부
+			, g.kcdivtype -- KC대상구분
+			, isopenreview -- 리뷰공개여부
+			, g.goodsapprtype -- 상품승인상태(임시저장, 승인요청, 반려, 승인완료)
+			, isdeal -- 딜상품여부
+			, muappchtype -- 다중적용채널(PC, 모바일, 모바일PC)
+			, mumembertype -- 다중대상회원유형(일반, 평생,임직원 등)
+			, mumemlvtype -- 다중대상회원등급(BRONZE, SILVER 등)
+			, gc.deliverycontent -- 배송정책
+			, gc.mobile_content -- 모바일상세내용
+			, gc.notice_content -- 공지이미지
+			, gc.intro_content -- 인트로이미지
+			, g.delividx -- 배송템플릿
+			, g.istempsave -- 임시저장여부(임시저장일떄는 관리자만 볼수있어야함)
+		from
+			t_goods g
+		join t_goods_content gc on
+			g.goodsno = gc.goodsno
+		where 1=1
+			and g.goodsno = #{goodsno}
+			and g.siteid = #{siteid}
+			<!-- and g.disstdate &lt;= now()
+			and g.diseddate &gt;= now() -->
+	</select>
+	
+	<select id="selectGoodsCount" parameterType="somap" resultType="int">
+		/* GoodsMapper.xml - selectGoodsCount 상품개수 조회 */
+		SELECT COUNT(*)
+		FROM T_GOODS
+		WHERE goodsno = #{goodsno}
+		AND goodsselltype in
+		<foreach collection="list" item="state" open="(" separator="," close=")">
+    		#{state}
+    	</foreach>
+	</select>
+
+	<update id="updateGoodsDisplay" parameterType="somap">
+		UPDATE t_goods SET	  /* GoodsMapper.xml - updateGoodsDisplay 상품 전시상태 수정 */
+			  isdisplay = #{isdisplay}
+			, moddate 	= NOW()
+		<where>
+		AND siteid = #{siteid}
+		<if test="user_no_arr != null and user_no_arr.size > 0">
+			AND dealerno IN
+			<foreach collection="user_no_arr" item="userno" index="index" open="(" separator="," close=")">
+				#{userno}
+			</foreach>
+		</if>
+		<if test="goodsnolist != null and goodsnolist.size > 0">
+			AND goodsno IN
+			<foreach collection="goodsnolist" item="goodsno" index="index" open="(" separator="," close=")">
+				#{goodsno}
+			</foreach>
+		</if>
+		</where>
+	</update>
+
+	<!-- 상품 판매상태 수정 -->
+	<update id="updateGoodsSellType" parameterType="somap">
+		UPDATE t_goods SET 	/* GoodsMapper.xml - updateGoodsSellType 상품 판매상태 수정 */
+			  goodsselltype = #{goodsselltype}
+			, moddate 	    = NOW()
+		<where>
+		AND siteid = #{siteid}
+		<if test="goodsnolist != null and goodsnolist.size > 0">
+			AND goodsno IN
+			<foreach collection="goodsnolist" item="goodsno" index="index" open="(" separator="," close=")">
+				#{goodsno}
+			</foreach>
+		</if>
+		</where>
+	</update>
+
+	<!-- 상품 승인상태 수정 -->
+	<update id="updateGoodsApprType" parameterType="somap">
+		UPDATE t_goods SET 	/* GoodsMapper.xml - updateGoodsApprType 상품 승인상태 수정 */
+			  goodsapprtype = #{goodsapprtype}
+			<choose>
+				<when test='goodsapprtype != null and goodsapprtype=="GAT004"'>
+				, istempsave = 'F'
+				, isdisplay = 'F'
+				, goodsselltype = 'GST002'
+				</when>
+				<otherwise>
+					<if test='istempsave != null and istempsave != ""'>
+					, istempsave = #{istempsave}
+					</if>
+				</otherwise>
+			</choose>
+			, moddate 	    = NOW()
+		<where>
+		AND siteid = #{siteid}
+		<choose>
+			<when test="goodsnolist != null and goodsnolist.size > 0">
+				AND goodsno IN
+				<foreach collection="goodsnolist" item="_goodsno" index="index" open="(" separator="," close=")">
+					#{_goodsno}
+				</foreach>
+			</when>
+			<otherwise>
+				AND goodsno = #{goodsno}
+			</otherwise>
+		</choose>
+		</where>
+	</update>
+	
+	<!-- 상품코드 채번 -->
+	<select id="selectGoodsCode" parameterType="somap" resultType="String">
+		/* GoodsMapper.xml - selectGoodsCode 상품코드 채번 */
+		SELECT FN_GET_GOODS_CODE() FROM DUAL
+	</select>
+	
+	<!-- 상품 신규등록 -->
+	<insert id="insertGoods" parameterType="somap" useGeneratedKeys="true" keyProperty="goodsno">
+		/* GoodsMapper.xml - insertGoods 상품 신규등록 */
+		INSERT INTO t_goods (
+			  siteid		/* 사이트ID */
+			, dealerno  	/* 입점업체번호 */
+			, goodscode  	/* 상품코드 */
+			, goodsname  	/* 상품명 */
+			, summary  		/* 상품요약설명*/
+			, keyword  		/* 검색키워드 */
+			, marketprice  	/* 시중가 */
+			, price  		/* 판매가 */
+			, istaxfree  	/* 면세여부 */
+			, brandidx  	/* 브랜드_일련번호 */
+			, isdisplay  	/* 전시여부 */
+			, ispbgoods  	/* 직매입여부 */
+			, mdifidx		/* MD정보IDX */
+			, goodsselltype /* 상품판매상태 */
+			, disstdate  	/* 전시시작일자 */
+			, diseddate  	/* 전시종료일자 */
+			, minordcnt  	/* 최소주문수량 */
+			, maxordcnt  	/* 최대주문수량 */
+			, daymaxordcnt  /* 일최대주문수량 */
+			, permaxordcnt  /* 1인당최대구매수량 */
+			, isfrstsale  	/* 첫구매할일적용여부 */
+			, iscncappr 	/* 취소승인필요여부 */
+			, goodsdivtype  /* 상품구분상태 */
+			, iscombdeliv  	/* 묶음배송여부 */
+			, kcdivtype  	/* KC대상구분 */
+			, isopenreview  /* 리뷰공개여부 */
+			, goodsapprtype	/* 상품승인상태 */
+			, isdeal  		/* 딜상품여부 */
+			, muappchtype  	/* 다중적용채널 */
+			, mumembertype  /* 다중대상회원유형 */
+			, mumemlvtype  	/* 다중대상회원등급 */
+			, delividx  	/* 배송템플릿일련번호 */
+			, istempsave  	/* 임시저장여부 */
+			, aswarmonth	/* as보증기간_월 */
+			, asnotice		/* as안내문구 */
+			, mugicontype	/* 다중아이콘설정 */
+			, isepif		/* EP연동여부 */
+			, moddate  		/* 수정일자 */
+			, regdate  		/* 등록일자 */
+		) VALUES (
+			  #{siteid}
+			, IF(#{dealerno}='', null, #{dealerno})
+			, #{goodscode}
+			, #{goodsname}
+			, #{summary}
+			, #{keyword}
+			, COALESCE(IF(#{marketprice}='', null, #{marketprice}), 0)
+			, COALESCE(IF(#{price}='', null, #{price}), 0)
+			, #{istaxfree}
+			, IF(#{brandidx}='', null, #{brandidx})
+			, #{isdisplay}
+			, #{ispbgoods}
+			, #{mdifidx}
+			, #{goodsselltype}
+			, DATE_FORMAT(CONCAT(#{disstday},'00') , '%Y%m%d%H%i%s')
+			, DATE_FORMAT(CONCAT(#{disedday},'59') , '%Y%m%d%H%i%s')
+			, COALESCE(IF(#{minordcnt}='', null, #{minordcnt}), 0)
+			, COALESCE(IF(#{maxordcnt}='', null, #{maxordcnt}), 0)
+			, COALESCE(IF(#{daymaxordcnt}='', null, #{daymaxordcnt}), 0)
+			, COALESCE(IF(#{permaxordcnt}='', null, #{permaxordcnt}), 0)
+			, #{isfrstsale}
+			, #{iscncappr}
+			, #{goodsdivtype}
+			, #{iscombdeliv}
+			, #{kcdivtype}
+			, #{isopenreview}
+			, #{goodsapprtype}
+			, #{isdeal}
+			, #{muappchtype}
+			, #{mumembertype}
+			, #{mumemlvtype}
+			, IF(#{delividx}='', null, #{delividx})
+			, #{istempsave}
+			, IF(#{aswarmonth}='', null, #{aswarmonth})
+			, #{asnotice}
+			, #{mugicontype}
+			, #{isepif}
+			, NOW()
+			, NOW()
+		)
+	</insert>
+	 
+	<!-- 상품정보 갱신 -->
+	<update id="updateGoods" parameterType="somap">
+		UPDATE t_goods	/* GoodsMapper.xml - updateGoods 상품정보 갱신 */
+		SET	  dealerno 		= IF(#{dealerno}='', null, #{dealerno})
+			, goodsname 	= #{goodsname}
+			, summary 		= #{summary}
+			, keyword 		= #{keyword}
+			, marketprice	= COALESCE(IF(#{marketprice}='', null, #{marketprice}), 0)
+			, price 		= COALESCE(IF(#{price}='', null, #{price}), 0)
+			, istaxfree 	= #{istaxfree}
+			, brandidx 		= IF(#{brandidx}='', null, #{brandidx})
+			, isdisplay 	= #{isdisplay}
+			, ispbgoods 	= #{ispbgoods}
+			, mdifidx 		= #{mdifidx}
+			, goodsselltype = #{goodsselltype}
+			, disstdate 	= DATE_FORMAT(CONCAT(#{disstday},'00') , '%Y%m%d%H%i%s')
+			, diseddate 	= DATE_FORMAT(CONCAT(#{disedday},'59') , '%Y%m%d%H%i%s')
+			, minordcnt 	= COALESCE(IF(#{minordcnt}='', null, #{minordcnt}), 0)
+			, maxordcnt	 	= COALESCE(IF(#{maxordcnt}='', null, #{maxordcnt}), 0)
+			, daymaxordcnt 	= COALESCE(IF(#{daymaxordcnt}='', null, #{daymaxordcnt}), 0)
+			, permaxordcnt 	= COALESCE(IF(#{permaxordcnt}='', null, #{permaxordcnt}), 0)
+			, isfrstsale 	= #{isfrstsale}
+			, iscncappr 	= #{iscncappr}
+			, goodsdivtype 	= #{goodsdivtype}
+			, iscombdeliv 	= #{iscombdeliv}
+			, kcdivtype 	= #{kcdivtype}
+			, isopenreview 	= #{isopenreview}
+			, goodsapprtype = #{goodsapprtype}
+			, isdeal 		= #{isdeal}
+			, muappchtype 	= #{muappchtype}
+			, mumembertype 	= #{mumembertype}
+			, mumemlvtype 	= #{mumemlvtype}
+			, delividx 		= IF(#{delividx}='', null, #{delividx})
+			, istempsave 	= #{istempsave}
+			, aswarmonth 	= IF(#{aswarmonth}='', null, #{aswarmonth})
+			, asnotice	 	= #{asnotice}
+			, mugicontype	= #{mugicontype}
+			, isepif		= #{isepif}
+			, moddate 		= NOW()
+		WHERE siteid = #{siteid}
+		AND goodsno = #{goodsno}
+	</update>
+	
+	<!-- 상품정보 일괄수정 -->
+	<update id="updateGoodsAll" parameterType="somap">
+		UPDATE t_goods	/* GoodsMapper.xml - updateGoodsAll 상품정보 일괄수정 */
+		<set>
+		<choose>
+			<when test = 'ckey != null and ckey == "basic"'>
+				<if test='isgoodsnamechange != null and isgoodsnamechange == "T"'>
+				goodsname = #{goodsname},
+				</if>
+				<if test='issummarychange != null and issummarychange == "T"'>
+				summary = #{summary},
+				</if>
+				<if test='iskeywordchange != null and iskeywordchange == "T"'>
+				keyword = #{keyword},
+				</if>
+				<if test='isbrandchange != null and isbrandchange == "T"'>
+				brandidx = IF(#{brandidx}='', null, #{brandidx}),
+				</if>
+				<if test='ismdifidxchange != null and ismdifidxchange == "T"'>
+				mdifidx = #{mdifidx},
+				</if>
+				<if test='ismuappchtypechange != null and ismuappchtypechange == "T"'>
+				muappchtype = #{muappchtype},
+				</if>
+				moddate = NOW()
+			</when>
+			<when test = 'ckey != null and ckey == "sell"'>
+				<if test='istaxfreechange != null and istaxfreechange == "T"'>
+				istaxfree = #{istaxfree},
+				</if>
+				<if test='isgoodsselltypechange != null and isgoodsselltypechange == "T"'>
+				goodsselltype = #{goodsselltype},
+				</if>
+				<if test='isdisperiodchange != null and isdisperiodchange == "T"'>
+				disstdate = DATE_FORMAT(CONCAT(#{disstday},'00') , '%Y%m%d%H%i%s'),
+				diseddate = DATE_FORMAT(CONCAT(#{disedday},'59') , '%Y%m%d%H%i%s'),
+				</if>
+				<if test='ispricechange != null and ispricechange == "T"'>
+				marketprice	= COALESCE(IF(#{marketprice}='', null, #{marketprice}), 0),
+				price = COALESCE(IF(#{price}='', null, #{price}), 0),
+				</if>
+				<if test='isordcntchange != null and isordcntchange == "T"'>
+				minordcnt = COALESCE(IF(#{minordcnt}='', null, #{minordcnt}), 0),
+				maxordcnt = COALESCE(IF(#{maxordcnt}='', null, #{maxordcnt}), 0),
+				</if>
+				<if test='isdaymaxordcntchange != null and isdaymaxordcntchange == "T"'>
+				daymaxordcnt = COALESCE(IF(#{daymaxordcnt}='', null, #{daymaxordcnt}), 0),
+				</if>
+				<if test='ispermaxordcntchange != null and ispermaxordcntchange == "T"'>
+				permaxordcnt = COALESCE(IF(#{permaxordcnt}='', null, #{permaxordcnt}), 0),
+				</if>
+				<if test='isdisplaychange != null and isdisplaychange == "T"'>
+				isdisplay = #{isdisplay},
+				</if>
+				<if test='isfrstsalechange != null and isfrstsalechange == "T"'>
+				isfrstsale = #{isfrstsale},
+				</if>
+				<if test='iscncapprchange != null and iscncapprchange == "T"'>
+				iscncappr = #{iscncappr},
+				</if>
+				<if test='isgoodsdivtypechange != null and isgoodsdivtypechange == "T"'>
+				goodsdivtype = #{goodsdivtype},
+				</if>
+				moddate = NOW()
+			</when>
+			<when test = 'ckey != null and ckey == "delivery"'>
+				<if test='isdelividxchange != null and isdelividxchange == "T"'>
+				delividx = IF(#{delividx}='', null, #{delividx}),
+				</if>
+				<if test='iscombdelivchange != null and iscombdelivchange == "T"'>
+				iscombdeliv = #{iscombdeliv},
+				</if>
+				moddate = NOW()
+			</when>
+			<when test = 'ckey != null and ckey == "notify"'>
+				<if test='iskcdivtypechange != null and iskcdivtypechange == "T"'>
+				kcdivtype = #{kcdivtype},
+				</if>
+				moddate = NOW()
+			</when>
+			<when test = 'ckey != null and ckey == "etc"'>
+				<if test='isaswarmonthchange != null and isaswarmonthchange == "T"'>
+				aswarmonth = IF(#{aswarmonth}='', null, #{aswarmonth}),
+				</if>
+				<if test='isasnoticechange != null and isasnoticechange == "T"'>
+				asnotice = #{asnotice},
+				</if>
+				<if test='ismumembertypehange != null and ismumembertypehange == "T"'>
+				mumembertype = #{mumembertype},
+				</if>
+				<if test='isopenreviewchange != null and isopenreviewchange == "T"'>
+				isopenreview = #{isopenreview},
+				</if>
+				<if test='isepifchange != null and isepifchange == "T"'>
+				isepif = #{isepif},
+				</if>
+				moddate = NOW()
+			</when>
+			<otherwise>
+			dealerno = IF(#{dealerno}='', null, #{dealerno}),
+			goodsname = #{goodsname},
+			summary = #{summary},
+			keyword = #{keyword},
+			marketprice= COALESCE(IF(#{marketprice}='', null, #{marketprice}), 0),
+			price = COALESCE(IF(#{price}='', null, #{price}), 0),
+			istaxfree = #{istaxfree},
+			brandidx = IF(#{brandidx}='', null, #{brandidx}),
+			isdisplay = #{isdisplay},
+			ispbgoods = #{ispbgoods},
+			mdifidx = #{mdifidx},
+			goodsselltype = #{goodsselltype},
+			disstdate = DATE_FORMAT(CONCAT(#{disstday},'00') , '%Y%m%d%H%i%s'),
+			diseddate = DATE_FORMAT(CONCAT(#{disedday},'59') , '%Y%m%d%H%i%s'),
+			minordcnt = COALESCE(IF(#{minordcnt}='', null, #{minordcnt}), 0),
+			maxordcnt = COALESCE(IF(#{maxordcnt}='', null, #{maxordcnt}), 0),
+			daymaxordcnt = COALESCE(IF(#{daymaxordcnt}='', null, #{daymaxordcnt}), 0),
+			permaxordcnt = COALESCE(IF(#{permaxordcnt}='', null, #{permaxordcnt}), 0),
+			isfrstsale = #{isfrstsale},
+			iscncappr = #{iscncappr},
+			goodsdivtype = #{goodsdivtype},
+			iscombdeliv = #{iscombdeliv},
+			kcdivtype = #{kcdivtype},
+			isopenreview = #{isopenreview},
+			goodsapprtype = #{goodsapprtype},
+			isdeal = #{isdeal},
+			muappchtype = #{muappchtype},
+			mumembertype = #{mumembertype},
+			mumemlvtype = #{mumemlvtype},
+			delividx = IF(#{delividx}='', null, #{delividx}),
+			isepif = #{isepif},
+			moddate = NOW()
+			</otherwise>
+		</choose>
+		</set>
+		WHERE siteid = #{siteid}
+		<if test="goodsnolist != null and goodsnolist.size > 0">
+			AND goodsno IN
+			<foreach collection="goodsnolist" item="goodsno" index="index" open="(" separator="," close=")">
+				#{goodsno}
+			</foreach>
+		</if>
+	</update>
+	
+	<!-- 관리자 공통상품목록 조회 -->
+	<select id="selectCommonGoodsList" parameterType="somap" resultType="somap">
+		SELECT /* GoodsMapper.xml - selectCommonGoodsList 관리자 공통상품목록 조회 */
+			  ta.goodsno
+			, ta.goodscode
+			, ta.goodsname
+			, ta.optioncode
+			, ta.optionconts
+			, ta.ispbgoods
+			, (CASE WHEN ta.ispbgoods='T' THEN '직매입'
+					WHEN ta.ispbgoods='F' THEN '위탁'
+					ELSE ''
+			   END) AS ispbgoodsname
+			, ta.isdeal
+			, ta.isdisplay
+			, (CASE WHEN ta.isdisplay='T' THEN '전시'
+					WHEN ta.isdisplay='F' THEN '미 전시'
+					ELSE ''
+			   END) AS isdisplayname
+			, ta.marketprice
+			, ta.price
+			, ta.goodsdivtype
+			, ta.goodsdivtypename
+			, ta.goodsselltype
+			, ta.goodsselltypename
+			, ta.istempsave
+			, ta.stockcnt
+			, ta.cateidx
+			, ta.fullcategoryname
+			, ta.fullpath
+			, ta.goodsapprtype
+			, ta.goodsapprtypename
+			, ta.dealerno
+			, ta.dealername
+			, ta.mdifidx
+			, ta.mdname
+			, ta.brandidx
+			, ta.brandname
+			, ta.keyword
+			, ta.frstkeyword
+			, DATE_FORMAT(ta.regdate, '%Y-%m-%d') AS regdate
+			, DATE_FORMAT(ta.moddate, '%Y-%m-%d') AS moddate
+		FROM (	SELECT
+					  a.goodsno, a.goodscode, a.goodsname, a.istempsave, a.isdeal, a.isdisplay, a.ispbgoods
+					, a.goodsdivtype, a.goodsselltype, a.goodsapprtype
+					, a.dealerno, a.mdifidx, a.brandidx, b.commrate, c.cateidx, d.fullcategoryname
+					, FN_GET_CODENAME(#{siteid}, 'GOODSDIVTYPE', a.goodsdivtype) AS goodsdivtypename
+					, FN_GET_CODENAME(#{siteid}, 'GOODSSELLTYPE', a.goodsselltype) AS goodsselltypename
+					, FN_GET_CODENAME(#{siteid}, 'GOODSAPPRTYPE', a.goodsapprtype) AS goodsapprtypename
+					, (CASE WHEN a.dealerno IS NOT NULL AND a.dealerno != 0 THEN (SELECT name FROM t_dealer WHERE userno = a.dealerno) ELSE '' END) AS dealername
+					, (CASE WHEN a.mdifidx IS NOT NULL AND a.mdifidx != '' THEN (SELECT empname FROM t_mdinfo WHERE mdifidx = a.mdifidx) ELSE '' END) AS mdname
+					, (CASE WHEN a.brandidx IS NOT NULL AND a.brandidx != 0 THEN (SELECT name FROM t_brand WHERE idx = a.brandidx) ELSE '' END) AS brandname
+					, FN_GET_FILE_URL(a.goodsno, 'FLT001', #{imgtype}) AS fullpath
+					, b.optioncode
+					, FN_GET_OPTION_DETAIL(a.goodsno, b.optioncode, '\n') AS optionconts
+					, a.keyword
+					, SUBSTRING_INDEX(a.keyword, ',', 1) AS frstkeyword
+					<choose>
+						<when test='isshowoption != null and isshowoption == "T"'>
+						, b.marketprice, b.price, b.regdate, b.moddate, b.stockcnt
+						</when>
+						<otherwise>
+						, a.marketprice, a.price, a.regdate, a.moddate
+						, (SELECT sum(stockcnt) FROM t_goods_option_detail WHERE goodsno = a.goodsno AND isoptdisplay = 'T' AND istrash = 'F') AS stockcnt
+						</otherwise>
+					</choose>
+				FROM t_goods a
+				LEFT OUTER JOIN t_goods_option_detail b
+						ON a.goodsno = b.goodsno
+					   AND b.istrash = 'F'
+					   AND b.isoptdisplay = 'T'
+					<if test='(isshowoption == null or isshowoption == "") or (isshowoption != null and isshowoption == "F")'>
+					   AND b.ismaingoods = 'T'
+					</if>
+				LEFT OUTER JOIN t_goods_category c
+						ON a.goodsno = c.goodsno
+					   AND c.isrepre = 'T'
+				LEFT OUTER JOIN (
+					WITH RECURSIVE CATEGORY AS (
+					    SELECT ta.idx AS cateidx, ta.name, ta.depth, ta.parent, ta.name AS path, CONCAT(ta.idx, '') AS depth1idx
+					    	, cast(null AS char(10)) AS depth2idx, cast(null AS char(10)) AS depth3idx, cast(null AS char(10)) AS depth4idx
+					    FROM T_CATEGORY ta
+					    WHERE depth = 1
+					    UNION ALL
+					    SELECT ta.idx AS cateidx, ta.name, ta.depth, ta.parent, CONCAT_WS(' > ', tb.path, ta.name) AS path, tb.depth1idx
+					    	, IF(tb.depth2idx IS NULL AND ta.depth <![CDATA[>]]> 1, CAST(ta.idx AS char(10)), tb.depth2idx) AS depth2idx
+					    	, IF(tb.depth3idx IS NULL AND ta.depth <![CDATA[>]]> 2, CAST(ta.idx AS char(10)), tb.depth3idx) AS depth3idx
+					    	, IF(tb.depth4idx IS NULL AND ta.depth <![CDATA[>]]> 3, CAST(ta.idx AS char(10)), tb.depth4idx) AS depth4idx
+					    FROM T_CATEGORY ta
+					    INNER JOIN CATEGORY tb ON ta.parent = tb.cateidx
+					)
+					SELECT cateidx, name, depth, parent, path AS fullcategoryname, depth1idx, depth2idx, depth3idx, depth4idx
+					FROM CATEGORY
+				) d ON c.cateidx = d.cateidx
+				WHERE a.siteid = #{siteid}
+				<if test="goodsnolist != null and goodsnolist.size > 0">
+					AND a.goodsno IN 
+					<foreach collection="goodsnolist" item="_goodsno" open="(" close=")" separator=",">
+						#{_goodsno}
+					</foreach>
+				</if>
+				<if test="goodscodelist != null and goodscodelist.size > 0">
+					AND a.goodscode IN 
+					<foreach collection="goodscodelist" item="_goodscode" open="(" close=")" separator=",">
+						#{_goodscode}
+					</foreach>
+				</if>
+				<if test="istempsave != null and istempsave != '' ">
+				AND a.istempsave = #{istempsave}	/* 임시저장여부 */
+				</if>
+				<if test="ispbgoods != null and ispbgoods != '' ">
+				AND a.ispbgoods = #{ispbgoods}		/* 직매입상품여부 */
+				</if>
+				<if test="isdeal != null and isdeal != '' ">
+				AND a.isdeal = #{isdeal}			/* 딜상품여부 */
+				</if>
+				<if test="isdisplay != null and isdisplay != '' ">
+				AND a.isdisplay = #{isdisplay}		/* 전시여부 */
+				</if>
+				<if test="dealerno != null and dealerno != '' ">
+				AND a.dealerno = #{dealerno}		/* 입점업체번호 */
+				</if>
+				<if test="(startdate != null and startdate != '') and (enddate == null or enddate == '') ">
+				AND DATEDIFF(a.regdate, STR_TO_DATE(#{startdate},'%Y-%m-%d')) <![CDATA[>=]]> 0
+				</if>
+				<if test="(startdate == null or startdate == '') and (enddate != null and enddate != '') ">
+				AND DATEDIFF(STR_TO_DATE(#{enddate},'%Y-%m-%d'), a.regdate) <![CDATA[>=]]> 0
+				</if>
+				<if test="(startdate != null and startdate != '') and (enddate != null and enddate != '') ">
+				AND a.regdate BETWEEN STR_TO_DATE(CONCAT(#{startdate},' 000000'), '%Y-%m-%d %H%i%s') AND STR_TO_DATE(CONCAT(#{enddate},' 235959'), '%Y-%m-%d %H%i%s')
+				</if>
+				<if test="depth1cateidx != null and depth1cateidx != '' ">
+				AND d.depth1idx = #{depth1cateidx}	/* 대분류카테고리 */
+				</if>
+				<if test="depth2cateidx != null and depth2cateidx != '' ">
+				AND d.depth2idx = #{depth2cateidx}	/* 중분류카테고리 */
+				</if>
+				<if test="depth3cateidx != null and depth3cateidx != '' ">
+				AND d.depth3idx = #{depth3cateidx}	/* 소분류카테고리 */
+				</if>
+				<if test="depth4cateidx != null and depth4cateidx != '' ">
+				AND d.depth4idx = #{depth4cateidx}	/* 세분류카테고리 */
+				</if>
+				<if test='goodsdivtypearr != null and goodsdivtypearr.size > 0'>
+				AND a.goodsdivtype IN				/* 상품구분상태 */
+					<foreach index="index" collection="goodsdivtypearr" item="item" open="(" close=")" separator="," >
+						#{item}
+					</foreach>
+				</if>
+				<if test='goodsselltypearr != null and goodsselltypearr.size > 0'>
+				AND a.goodsselltype IN				/* 상품판매상태 */
+					<foreach index="index" collection="goodsselltypearr" item="item" open="(" close=")" separator="," >
+						#{item}
+					</foreach>
+				</if>
+				<if test="goodsapprtypearr != null and goodsapprtypearr.size > 0">
+				AND IFNULL(a.goodsapprtype, '') IN	/* 상품승인상태 */
+					<foreach index="index" collection="goodsapprtypearr" item="item" open="(" close=")" separator="," >
+						#{item}
+					</foreach>
+				</if>
+			) ta
+		WHERE 1 = 1
+		<if test="sword != null and sword != '' ">
+			<choose>
+				<when test="skey == 'goodsname'">
+				AND ta.goodsname LIKE CONCAT('%', #{sword}, '%')
+				</when>
+				<when test="skey == 'goodscode'">
+				AND ta.goodscode LIKE CONCAT('%', #{sword}, '%')
+				</when>
+				<when test="skey == 'dealername'">
+				AND ta.dealername LIKE CONCAT('%', #{sword}, '%')
+				</when>
+				<when test="skey == 'brandname'">
+				AND ta.brandname LIKE CONCAT('%', #{sword}, '%')
+				</when>
+				<when test="skey == 'optioncode'">
+				AND ta.optioncode LIKE CONCAT('%', #{sword}, '%')
+				</when>
+				<when test="skey == 'optionconts'">
+				AND ta.optionconts LIKE CONCAT('%', #{sword}, '%')
+				</when>
+				<when test="skey == 'keyword'">
+				AND ta.frstkeyword LIKE CONCAT('%', #{sword}, '%')
+				</when>
+				<otherwise>
+				AND ( 
+					  ta.goodsname LIKE CONCAT('%', #{sword}, '%')
+				   OR ta.goodscode LIKE CONCAT('%', #{sword}, '%')
+				   OR ta.dealername LIKE CONCAT('%', #{sword}, '%')
+				   OR ta.brandname LIKE CONCAT('%', #{sword}, '%')
+				<if test='isshowoption != null and isshowoption == "T"'>
+				   OR ta.optioncode LIKE CONCAT('%', #{sword}, '%')
+				   OR ta.optionconts LIKE CONCAT('%', #{sword}, '%')
+				</if>
+				<if test='isshowkeyword != null and isshowkeyword == "T"'>
+				   OR ta.frstkeyword LIKE CONCAT('%', #{sword}, '%') 
+				</if>
+				)
+				</otherwise>
+			</choose>
+		</if>
+		<choose>
+			<when test="psort == 'code_asc'">
+			ORDER BY ta.goodsno ASC, ta.optioncode
+			</when>
+			<when test="psort == 'code_desc'">
+			ORDER BY ta.goodsno DESC, ta.optioncode
+			</when>
+			<when test="psort == 'goodsname_asc'">
+			ORDER BY ta.goodsname ASC, ta.goodsno, ta.optioncode
+			</when>
+			<when test="psort == 'goodsname_desc'">
+			ORDER BY ta.goodsname DESC, ta.goodsno, ta.optioncode
+			</when>
+			<when test="psort == 'optioncode_asc'">
+			ORDER BY ta.optioncode ASC, ta.goodsno, ta.optioncode
+			</when>
+			<when test="psort == 'optioncode_desc'">
+			ORDER BY ta.optioncode DESC, ta.goodsno, ta.optioncode
+			</when>
+			<when test="psort == 'optionconts_asc'">
+			ORDER BY ta.optionconts ASC, ta.goodsno, ta.optioncode
+			</when>
+			<when test="psort == 'optionconts_desc'">
+			ORDER BY ta.optionconts DESC, ta.goodsno, ta.optioncode
+			</when>
+			<when test="psort == 'keyword_asc'">
+			ORDER BY ta.frstkeyword ASC, ta.goodsno, ta.optioncode
+			</when>
+			<when test="psort == 'keyword_desc'">
+			ORDER BY ta.frstkeyword DESC, ta.goodsno, ta.optioncode
+			</when>
+			<when test="psort == 'price_asc'">
+			ORDER BY ta.price ASC, ta.goodsno, ta.optioncode
+			</when>
+			<when test="psort == 'price_desc'">
+			ORDER BY ta.price DESC, ta.goodsno, ta.optioncode
+			</when>
+			<when test="psort == 'selltype_asc'">
+			ORDER BY ta.goodsselltypename ASC, ta.goodsno, ta.optioncode
+			</when>
+			<when test="psort == 'selltype_desc'">
+			ORDER BY ta.goodsselltypename DESC, ta.goodsno, ta.optioncode
+			</when>
+			<when test="psort == 'stock_asc'">
+			ORDER BY ta.stockcnt ASC, ta.goodsno, ta.optioncode
+			</when>
+			<when test="psort == 'stock_desc'">
+			ORDER BY ta.stockcnt DESC, ta.goodsno, ta.optioncode
+			</when>
+			<when test="psort == 'regdate_asc'">
+			ORDER BY ta.regdate ASC, ta.goodsno, ta.optioncode
+			</when>
+			<when test="psort == 'regdate_desc'">
+			ORDER BY ta.regdate DESC, ta.goodsno, ta.optioncode
+			</when>
+			<otherwise>
+			ORDER BY ta.regdate DESC, ta.goodsno, ta.optioncode
+			</otherwise>
+		</choose>
+	</select>
+	
+	<!-- 관리자 상품목록 조회 -->
+	<select id="selectAdminGoodsList" parameterType="somap" resultType="somap">
+		SELECT /* GoodsMapper.xml - selectAdminGoodsList 관리자 상품목록 조회 */
+			  ta.goodsno
+			, ta.repregoodsno
+			, ta.goodscode
+			, ta.goodsname
+			, ta.ispbgoods
+			, (CASE WHEN ta.ispbgoods='T' THEN '직매입'
+					WHEN ta.ispbgoods='F' THEN '위탁'
+					ELSE ''
+			   END) AS ispbgoodsname
+			, ta.isdeal
+			, (CASE WHEN ta.isdeal='T' THEN '딜'
+					WHEN ta.isdeal='F' THEN '일반'
+					ELSE ''
+			   END) AS isdealname
+			, ta.isdisplay
+			, (CASE WHEN ta.isdisplay='T' THEN '전시'
+					WHEN ta.isdisplay='F' THEN '미 전시'
+					ELSE ''
+			   END) AS isdisplayname
+			, FORMAT(ta.marketprice, 0) AS marketprice
+			, FORMAT(ta.price, 0) AS price
+			, ta.goodsdivtype
+			, ta.goodsdivtypename
+			, ta.goodsselltype
+			, (CASE WHEN ta.istempsave='T' THEN '임시저장'
+					WHEN ta.istempsave='F' THEN ta.goodsselltypename
+					ELSE ''
+			   END) AS goodsselltypename
+			, ta.istempsave
+			, ta.stockcnt
+			, ROUND(ta.commrate, 1) AS commrate
+			, ta.hits
+			, ta.cateidx
+			, ta.fullcategoryname
+			, ta.fullpath
+			, ta.dealerno
+			, ta.dealername
+			, ta.mdifidx
+			, ta.mdname
+			, ta.brandidx
+			, ta.brandname
+			, ta.goodsapprtype
+			, ta.goodsapprtypename
+			, DATE_FORMAT(ta.regdate, '%Y-%m-%d') AS regdate
+			, DATE_FORMAT(ta.moddate, '%Y-%m-%d') AS moddate
+		FROM (	SELECT
+					  a.orggoodsno AS goodsno, a.goodsno AS repregoodsno, a.goodscode, a.goodsname, a.istempsave, a.isdeal, a.isdisplay, a.ispbgoods
+					, a.marketprice, a.price, a.goodsdivtype, a.goodsselltype, a.goodsapprtype, a.regdate, a.moddate, a.hits
+					, a.dealerno, a.mdifidx, a.brandidx, b.commrate, c.cateidx, d.fullcategoryname
+					, FN_GET_CODENAME(#{siteid}, 'GOODSDIVTYPE', a.goodsdivtype) AS goodsdivtypename
+					, FN_GET_CODENAME(#{siteid}, 'GOODSSELLTYPE', a.goodsselltype) AS goodsselltypename
+					, FN_GET_CODENAME(#{siteid}, 'GOODSAPPRTYPE', a.goodsapprtype) AS goodsapprtypename
+					, (SELECT sum(stockcnt) FROM t_goods_option_detail WHERE goodsno = a.goodsno AND isoptdisplay = 'T' AND istrash = 'F') AS stockcnt
+					, (CASE WHEN a.dealerno IS NOT NULL AND a.dealerno != 0 THEN (SELECT name FROM t_dealer WHERE userno = a.dealerno) ELSE '' END) AS dealername
+					, (CASE WHEN a.mdifidx IS NOT NULL AND a.mdifidx != 0 THEN (SELECT empname FROM t_mdinfo WHERE mdifidx = a.mdifidx) ELSE '' END) AS mdname
+					, (CASE WHEN a.brandidx IS NOT NULL AND a.brandidx != 0 THEN (SELECT name FROM t_brand WHERE idx = a.brandidx) ELSE '' END) AS brandname
+            		, FN_GET_FILE_URL(a.goodsno, 'FLT001', #{imgtype}) AS fullpath
+				FROM  (	SELECT /* 일반상품 */
+							  g.goodsno AS orggoodsno, g.goodsno, g.istempsave, g.isdeal, g.isdisplay, g.ispbgoods
+							, g.goodscode, g.goodsname, g.dealerno, g.mdifidx, g.marketprice, g.price, g.goodsapprtype
+							, g.goodsdivtype, g.goodsselltype, g.brandidx, g.regdate, g.moddate, g.hits
+						FROM t_goods g
+						WHERE g.siteid = #{siteid}
+						AND g.isdeal = 'F'
+						UNION 
+						SELECT /* 딜상품(대표상품의 정보) */
+							  g.goodsno AS orggoodsno, dgg.goodsno, g.istempsave, g.isdeal, g.isdisplay, dgg.ispbgoods
+							, g.goodscode, dgg.goodsname, dgg.dealerno, g.mdifidx, dgg.marketprice, dgg.price, g.goodsapprtype
+							, dgg.goodsdivtype, g.goodsselltype, dgg.brandidx, g.regdate, g.moddate, dgg.hits
+						FROM t_goods g
+						INNER JOIN t_deal_goods dg
+						   ON dg.dealno = g.goodsno
+						  AND dg.ISMAINGOODS = 'T'
+						INNER JOIN t_goods dgg
+						   ON dg.goodsno = dgg.goodsno
+						WHERE g.siteid = #{siteid}
+						AND g.isdeal = 'T'
+					 ) a
+				LEFT OUTER JOIN t_goods_option_detail b
+						ON a.goodsno = b.goodsno
+					   AND b.ismaingoods = 'T'
+					   AND b.isoptdisplay = 'T'
+					   AND b.istrash = 'F'
+				LEFT OUTER JOIN t_goods_category c
+						ON a.goodsno = c.goodsno
+					   AND c.isrepre = 'T'
+				LEFT OUTER JOIN (
+					WITH RECURSIVE CATEGORY AS (
+					    SELECT ta.idx AS cateidx, ta.name, ta.depth, ta.parent, ta.name AS path, CONCAT(ta.idx, '') AS depth1idx
+					    	, cast(null AS char(10)) AS depth2idx, cast(null AS char(10)) AS depth3idx, cast(null AS char(10)) AS depth4idx
+					    FROM T_CATEGORY ta
+					    WHERE depth = 1
+					    UNION ALL
+					    SELECT ta.idx AS cateidx, ta.name, ta.depth, ta.parent, CONCAT_WS(' > ', tb.path, ta.name) AS path, tb.depth1idx
+					    	, IF(tb.depth2idx IS NULL AND ta.depth <![CDATA[>]]> 1, CAST(ta.idx AS char(10)), tb.depth2idx) AS depth2idx
+					    	, IF(tb.depth3idx IS NULL AND ta.depth <![CDATA[>]]> 2, CAST(ta.idx AS char(10)), tb.depth3idx) AS depth3idx
+					    	, IF(tb.depth4idx IS NULL AND ta.depth <![CDATA[>]]> 3, CAST(ta.idx AS char(10)), tb.depth4idx) AS depth4idx
+					    FROM T_CATEGORY ta
+					    INNER JOIN CATEGORY tb ON ta.parent = tb.cateidx
+					)
+					SELECT cateidx, name, depth, parent, path AS fullcategoryname, depth1idx, depth2idx, depth3idx, depth4idx
+					FROM CATEGORY
+				) d ON c.cateidx = d.cateidx
+				WHERE 1 = 1
+				<choose>
+					<when test='gbn != null and gbn == "allgoods"'>
+					/* 전체상품목록 = 직매입상품 전체 + 승인완료 위탁상품 */
+					AND (a.ispbgoods = 'T' OR (a.ispbgoods = 'F' AND a.goodsapprtype = 'GAT004'))
+					</when>
+					<otherwise></otherwise>
+				</choose>
+				<if test="istempsave != null and istempsave != '' ">
+				AND a.istempsave = #{istempsave}	/* 임시저장여부 */
+				</if>
+				<if test="ispbgoods != null and ispbgoods != '' ">
+				AND a.ispbgoods = #{ispbgoods}		/* 직매입상품여부 */
+				</if>
+				<if test="isdeal != null and isdeal != '' ">
+				AND a.isdeal = #{isdeal}			/* 딜상품여부 */
+				</if>
+				<if test="isdisplay != null and isdisplay != '' ">
+				AND a.isdisplay = #{isdisplay}		/* 전시여부 */
+				</if>
+				<if test="dealerno != null and dealerno != '' ">
+				AND a.dealerno = #{dealerno}		/* 입점업체번호 */
+				</if>
+				<choose>
+					<when test="sdate != null and sdate == 'reg'">
+						<if test="(startdate != null and startdate != '') and (enddate == null or enddate == '') ">
+						AND DATEDIFF(a.regdate, STR_TO_DATE(#{startdate},'%Y-%m-%d')) <![CDATA[>=]]> 0
+						</if>
+						<if test="(startdate == null or startdate == '') and (enddate != null and enddate != '') ">
+						AND DATEDIFF(STR_TO_DATE(#{enddate},'%Y-%m-%d'), a.regdate) <![CDATA[>=]]> 0
+						</if>
+						<if test="(startdate != null and startdate != '') and (enddate != null and enddate != '') ">
+						AND a.regdate BETWEEN STR_TO_DATE(CONCAT(#{startdate},' 000000'), '%Y-%m-%d %H%i%s') AND STR_TO_DATE(CONCAT(#{enddate},' 235959'), '%Y-%m-%d %H%i%s')
+						</if>
+					</when>
+					<when test="sdate != null and sdate == 'mod'"> /* 처리(수정)일자 */
+						<if test="(startdate != null and startdate != '') and (enddate == null or enddate == '') ">
+						AND DATEDIFF(a.moddate, STR_TO_DATE(#{startdate},'%Y-%m-%d')) <![CDATA[>=]]> 0
+						</if>
+						<if test="(startdate == null or startdate == '') and (enddate != null and enddate != '') ">
+						AND DATEDIFF(STR_TO_DATE(#{enddate},'%Y-%m-%d'), a.moddate) <![CDATA[>=]]> 0
+						</if>
+						<if test="(startdate != null and startdate != '') and (enddate != null and enddate != '') ">
+						AND a.moddate BETWEEN STR_TO_DATE(CONCAT(#{startdate},' 000000'), '%Y-%m-%d %H%i%s') AND STR_TO_DATE(CONCAT(#{enddate},' 235959'), '%Y-%m-%d %H%i%s')
+						</if>
+					</when>
+					<otherwise></otherwise>
+				</choose>
+				<if test="depth1cateidx != null and depth1cateidx != '' ">
+				AND d.depth1idx = #{depth1cateidx}	/* 대분류카테고리 */
+				</if>
+				<if test="depth2cateidx != null and depth2cateidx != '' ">
+				AND d.depth2idx = #{depth2cateidx}	/* 중분류카테고리 */
+				</if>
+				<if test="depth3cateidx != null and depth3cateidx != '' ">
+				AND d.depth3idx = #{depth3cateidx}	/* 소분류카테고리 */
+				</if>
+				<if test="depth4cateidx != null and depth4cateidx != '' ">
+				AND d.depth4idx = #{depth4cateidx}	/* 세분류카테고리 */
+				</if>
+				<if test='goodsdivtypearr != null and goodsdivtypearr.size > 0'>
+				AND a.goodsdivtype IN				/* 상품구분상태 */
+					<foreach index="index" collection="goodsdivtypearr" item="item" open="(" close=")" separator="," >
+						#{item}
+					</foreach>
+				</if>
+				<if test='goodsselltypearr != null and goodsselltypearr.size > 0'>
+				AND a.goodsselltype IN				/* 상품판매상태 */
+					<foreach index="index" collection="goodsselltypearr" item="item" open="(" close=")" separator="," >
+						#{item}
+					</foreach>
+				</if>
+				<if test="goodsapprtypearr != null and goodsapprtypearr.size > 0">
+				AND IFNULL(a.goodsapprtype, '') IN	/* 상품승인상태 */
+					<foreach index="index" collection="goodsapprtypearr" item="item" open="(" close=")" separator="," >
+						#{item}
+					</foreach>
+				</if>
+				<choose>
+					<when test="sprice != null and sprice == 'marketprice'">
+						<if test="minprice != null and minprice != ''">
+						AND a.marketprice <![CDATA[>=]]> #{minprice}
+						</if>
+						<if test="maxprice != null and maxprice != ''">
+						AND a.marketprice <![CDATA[<=]]> #{maxprice}
+						</if>
+					</when>
+					<when test="sprice != null and sprice == 'price'">
+						<if test="minprice != null and minprice != ''">
+						AND a.price <![CDATA[>=]]> #{minprice}
+						</if>
+						<if test="maxprice != null and maxprice != ''">
+						AND a.price <![CDATA[<=]]> #{maxprice}
+						</if>
+					</when>
+					<otherwise></otherwise>
+				</choose>
+			) ta
+		WHERE 1 = 1
+		<if test="sword != null and sword != '' ">
+			<choose>
+				<when test="skey == 'goodsname'">
+				AND ta.goodsname LIKE CONCAT('%', #{sword}, '%')
+				</when>
+				<when test="skey == 'goodscode'">
+				AND ta.goodscode LIKE CONCAT('%', #{sword}, '%')
+				</when>
+				<when test="skey == 'dealername'">
+				AND ta.dealername LIKE CONCAT('%', #{sword}, '%')
+				</when>
+				<when test="skey == 'mdname'">
+				AND ta.mdname LIKE CONCAT('%', #{sword}, '%')
+				</when>
+				<when test="skey == 'brandname'">
+				AND ta.brandname LIKE CONCAT('%', #{sword}, '%')
+				</when>
+				<otherwise>
+					<if test="skeyarr != null and skeyarr.size > 0">
+					AND
+					<foreach index="index" collection="skeyarr" item="item" open="(" close=")" separator="OR" >
+						<if test="item.key == 'goodsname'">
+						ta.goodsname LIKE CONCAT('%', #{sword}, '%')
+						</if>
+						<if test="item.key == 'goodscode'">
+						ta.goodscode LIKE CONCAT('%', #{sword}, '%')
+						</if>
+						<if test="item.key == 'dealername'">
+						ta.dealername LIKE CONCAT('%', #{sword}, '%')
+						</if>
+						<if test="item.key == 'mdname'">
+						ta.mdname LIKE CONCAT('%', #{sword}, '%')
+						</if>
+						<if test="item.key == 'brandname'">
+						ta.brandname LIKE CONCAT('%', #{sword}, '%')
+						</if>
+					</foreach>
+					</if>
+				</otherwise>
+			</choose>
+		</if>
+		<choose>
+			<when test="psort == 'code_asc'">
+			ORDER BY ta.goodsno ASC, ta.regdate DESC
+			</when>
+			<when test="psort == 'code_desc'">
+			ORDER BY ta.goodsno DESC, ta.regdate DESC
+			</when>
+			<when test="psort == 'marketprice_asc'">
+			ORDER BY ta.marketprice ASC, ta.regdate DESC, ta.goodsno DESC
+			</when>
+			<when test="psort == 'marketprice_desc'">
+			ORDER BY ta.marketprice DESC, ta.regdate DESC, ta.goodsno DESC
+			</when>
+			<when test="psort == 'price_asc'">
+			ORDER BY ta.price ASC, ta.regdate DESC, ta.goodsno DESC
+			</when>
+			<when test="psort == 'price_desc'">
+			ORDER BY ta.price DESC, ta.regdate DESC, ta.goodsno DESC
+			</when>
+			<when test="psort == 'rate_asc'">
+			ORDER BY ta.commrate ASC, ta.regdate DESC, ta.goodsno DESC
+			</when>
+			<when test="psort == 'rate_desc'">
+			ORDER BY ta.commrate DESC, ta.regdate DESC, ta.goodsno DESC
+			</when>
+			<when test="psort == 'stock_asc'">
+			ORDER BY ta.stockcnt ASC, ta.regdate DESC, ta.goodsno DESC
+			</when>
+			<when test="psort == 'stock_desc'">
+			ORDER BY ta.stockcnt DESC, ta.regdate DESC, ta.goodsno DESC
+			</when>
+			<when test="psort == 'hits_asc'">
+			ORDER BY ta.hits ASC, ta.regdate DESC, ta.goodsno DESC
+			</when>
+			<when test="psort == 'hits_desc'">
+			ORDER BY ta.hits DESC, ta.regdate DESC, ta.goodsno DESC
+			</when>
+			<when test="psort == 'regdate_asc'">
+			ORDER BY ta.regdate ASC, ta.goodsno DESC
+			</when>
+			<when test="psort == 'regdate_desc'">
+			ORDER BY ta.regdate DESC, ta.goodsno DESC
+			</when>
+			<when test="psort == 'moddate_asc'">
+			ORDER BY ta.moddate ASC, ta.regdate DESC, ta.goodsno DESC
+			</when>
+			<when test="psort == 'moddate_desc'">
+			ORDER BY ta.moddate DESC, ta.regdate DESC, ta.goodsno DESC
+			</when>
+			<when test="psort == 'goodsapprtype_asc'">
+			ORDER BY ta.goodsapprtypename ASC, ta.regdate DESC, ta.goodsno DESC
+			</when>
+			<when test="psort == 'goodsapprtype_desc'">
+			ORDER BY ta.goodsapprtypename DESC, ta.regdate DESC, ta.goodsno DESC
+			</when>
+			<when test="psort == 'goodsselltype_asc'">
+			ORDER BY ta.goodsselltypename ASC, ta.regdate DESC, ta.goodsno DESC
+			</when>
+			<when test="psort == 'goodsselltype_desc'">
+			ORDER BY ta.goodsselltypename DESC, ta.regdate DESC, ta.goodsno DESC
+			</when>
+			<when test="psort == 'isdisplay_asc'">
+			ORDER BY ta.isdisplay ASC, ta.regdate DESC, ta.goodsno DESC
+			</when>
+			<when test="psort == 'isdisplay_desc'">
+			ORDER BY ta.isdisplay DESC, ta.regdate DESC, ta.goodsno DESC
+			</when>
+			<when test="psort == 'mdname_asc'">
+			ORDER BY ta.mdname ASC, ta.regdate DESC, ta.goodsno DESC
+			</when>
+			<when test="psort == 'mdname_desc'">
+			ORDER BY ta.mdname DESC, ta.regdate DESC, ta.goodsno DESC
+			</when>
+			<otherwise>
+			ORDER BY ta.regdate DESC, ta.goodsno DESC
+			</otherwise>
+		</choose>
+		<if test="startpage != null and !startpage.equals('') and endpage != null and !endpage.equals('')">
+		LIMIT #{startpage}, #{endpage}
+		</if>
+	</select>
+	
+	<!-- 관리자 상품목록(엑셀다운로드용) 조회 -->
+	<select id="selectAdminGoodsListForExcel" parameterType="somap" resultType="somap">
+		SELECT /* GoodsMapper.xml - selectAdminGoodsListForExcel 관리자 상품목록(엑셀다운로드용) 조회 */
+			  (CASE WHEN ta.ispbgoods='T' THEN '직매입'
+					WHEN ta.ispbgoods='F' THEN '위탁'
+					ELSE ''
+			   END) AS ispbgoodsname
+			, ta.dealername
+			, (CASE WHEN ta.isdeal='T' THEN '딜'
+					WHEN ta.isdeal='F' THEN '일반'
+					ELSE ''
+			   END) AS isdealname
+			, ta.goodscode
+			, ta.fullcategoryname
+			, ta.goodsname
+			, FORMAT(ta.marketprice, 0) AS marketprice
+			, FORMAT(ta.price, 0) AS price
+			, ROUND(ta.commrate, 1) AS commrate
+			, ta.stockcnt
+			, ta.hits
+			, (CASE WHEN ta.istempsave='T' THEN '임시저장'
+					WHEN ta.istempsave='F' THEN ta.goodsselltypename
+					ELSE ''
+			   END) AS goodsselltypename
+			, (CASE WHEN ta.isdisplay='T' THEN '전시'
+					WHEN ta.isdisplay='F' THEN '미 전시'
+					ELSE ''
+			   END) AS isdisplayname
+			, ta.mdname
+			, DATE_FORMAT(ta.regdate, '%Y-%m-%d') AS regdate
+			, DATE_FORMAT(ta.moddate, '%Y-%m-%d') AS moddate
+		FROM (	SELECT
+					  a.orggoodsno AS goodsno, a.goodscode, a.goodsname, a.istempsave, a.isdeal, a.isdisplay, a.ispbgoods, a.hits
+					, a.marketprice, a.price, a.regdate, a.moddate, b.commrate, d.fullcategoryname
+					, FN_GET_CODENAME(#{siteid}, 'GOODSDIVTYPE', a.goodsdivtype) AS goodsdivtypename
+					, FN_GET_CODENAME(#{siteid}, 'GOODSSELLTYPE', a.goodsselltype) AS goodsselltypename
+					, (SELECT sum(stockcnt) FROM t_goods_option_detail WHERE goodsno = a.goodsno AND isoptdisplay = 'T' AND istrash = 'F') AS stockcnt
+					, (CASE WHEN a.dealerno IS NOT NULL AND a.dealerno != 0 THEN (SELECT name FROM t_dealer WHERE userno = a.dealerno) ELSE '' END) AS dealername
+					, (CASE WHEN a.mdifidx IS NOT NULL AND a.mdifidx != '' THEN (SELECT empname FROM t_mdinfo WHERE mdifidx = a.mdifidx) ELSE '' END) AS mdname
+					, (CASE WHEN a.brandidx IS NOT NULL AND a.brandidx != 0 THEN (SELECT name FROM t_brand WHERE idx = a.brandidx) ELSE '' END) AS brandname
+				FROM  (	SELECT /* 일반상품 */
+							  g.goodsno AS orggoodsno, g.goodsno, g.istempsave, g.isdeal, g.isdisplay, g.ispbgoods
+							, g.goodscode, g.goodsname, g.dealerno, g.mdifidx, g.marketprice, g.price, g.goodsapprtype
+							, g.goodsdivtype, g.goodsselltype, g.brandidx, g.regdate, g.moddate, g.hits
+						FROM t_goods g
+						WHERE g.siteid = #{siteid}
+						AND g.isdeal = 'F'
+						UNION 
+						SELECT /* 딜상품(대표상품의 정보) */
+							  g.goodsno AS orggoodsno, dgg.goodsno, g.istempsave, g.isdeal, g.isdisplay, dgg.ispbgoods
+							, g.goodscode, dgg.goodsname, dgg.dealerno, g.mdifidx, dgg.marketprice, dgg.price, g.goodsapprtype
+							, dgg.goodsdivtype, g.goodsselltype, dgg.brandidx, g.regdate, g.moddate, dgg.hits
+						FROM t_goods g
+						INNER JOIN t_deal_goods dg
+						   ON dg.dealno = g.goodsno
+						  AND dg.ISMAINGOODS = 'T'
+						INNER JOIN t_goods dgg
+						   ON dg.goodsno = dgg.goodsno
+						WHERE g.siteid = #{siteid}
+						AND g.isdeal = 'T'
+					 ) a
+				LEFT OUTER JOIN t_goods_option_detail b
+						ON a.goodsno = b.goodsno
+					   AND b.ismaingoods = 'T'
+					   AND b.isoptdisplay = 'T'
+					   AND b.istrash = 'F'
+				LEFT OUTER JOIN t_goods_category c
+						ON a.goodsno = c.goodsno
+					   AND c.isrepre = 'T'
+				LEFT OUTER JOIN (
+					WITH RECURSIVE CATEGORY AS (
+					    SELECT ta.idx AS cateidx, ta.name, ta.depth, ta.parent, ta.name AS path, CONCAT(ta.idx, '') AS depth1idx
+					    	, cast(null AS char(10)) AS depth2idx, cast(null AS char(10)) AS depth3idx, cast(null AS char(10)) AS depth4idx
+					    FROM T_CATEGORY ta
+					    WHERE depth = 1
+					    UNION ALL
+					    SELECT ta.idx AS cateidx, ta.name, ta.depth, ta.parent, CONCAT_WS(' > ', tb.path, ta.name) AS path, tb.depth1idx
+					    	, IF(tb.depth2idx IS NULL AND ta.depth <![CDATA[>]]> 1, CAST(ta.idx AS char(10)), tb.depth2idx) AS depth2idx
+					    	, IF(tb.depth3idx IS NULL AND ta.depth <![CDATA[>]]> 2, CAST(ta.idx AS char(10)), tb.depth3idx) AS depth3idx
+					    	, IF(tb.depth4idx IS NULL AND ta.depth <![CDATA[>]]> 3, CAST(ta.idx AS char(10)), tb.depth4idx) AS depth4idx
+					    FROM T_CATEGORY ta
+					    INNER JOIN CATEGORY tb ON ta.parent = tb.cateidx
+					)
+					SELECT cateidx, name, depth, parent, path AS fullcategoryname, depth1idx, depth2idx, depth3idx, depth4idx
+					FROM CATEGORY
+				) d ON c.cateidx = d.cateidx
+				WHERE 1 = 1
+				<choose>
+					<when test='gbn != null and gbn == "allgoods"'>
+					/* 전체상품목록 = 직매입상품 전체 + 승인완료 위탁상품 */
+					AND (a.ispbgoods = 'T' OR (a.ispbgoods = 'F' AND a.goodsapprtype = 'GAT004'))
+					</when>
+					<otherwise></otherwise>
+				</choose>
+				<if test="istempsave != null and istempsave != '' ">
+				AND a.istempsave = #{istempsave}	/* 임시저장여부 */
+				</if>
+				<if test="ispbgoods != null and ispbgoods != '' ">
+				AND a.ispbgoods = #{ispbgoods}		/* 직매입상품여부 */
+				</if>
+				<if test="isdeal != null and isdeal != '' ">
+				AND a.isdeal = #{isdeal}			/* 딜상품여부 */
+				</if>
+				<if test="isdisplay != null and isdisplay != '' ">
+				AND a.isdisplay = #{isdisplay}		/* 전시여부 */
+				</if>
+				<if test="dealerno != null and dealerno != '' ">
+				AND a.dealerno = #{dealerno}	/* 임시저장여부 */
+				</if>
+				<choose>
+					<when test="sdate != null and sdate == 'reg'">
+						<if test="(startdate != null and startdate != '') and (enddate == null or enddate == '') ">
+						AND DATEDIFF(a.regdate, STR_TO_DATE(#{startdate},'%Y-%m-%d')) <![CDATA[>=]]> 0
+						</if>
+						<if test="(startdate == null or startdate == '') and (enddate != null and enddate != '') ">
+						AND DATEDIFF(STR_TO_DATE(#{enddate},'%Y-%m-%d'), a.regdate) <![CDATA[>=]]> 0
+						</if>
+						<if test="(startdate != null and startdate != '') and (enddate != null and enddate != '') ">
+						AND a.regdate BETWEEN STR_TO_DATE(CONCAT(#{startdate},' 000000'), '%Y-%m-%d %H%i%s') AND STR_TO_DATE(CONCAT(#{enddate},' 235959'), '%Y-%m-%d %H%i%s')
+						</if>
+					</when>
+					<when test="sdate != null and sdate == 'mod'"> /* 처리(수정)일자 */
+						<if test="(startdate != null and startdate != '') and (enddate == null or enddate == '') ">
+						AND DATEDIFF(a.moddate, STR_TO_DATE(#{startdate},'%Y-%m-%d')) <![CDATA[>=]]> 0
+						</if>
+						<if test="(startdate == null or startdate == '') and (enddate != null and enddate != '') ">
+						AND DATEDIFF(STR_TO_DATE(#{enddate},'%Y-%m-%d'), a.moddate) <![CDATA[>=]]> 0
+						</if>
+						<if test="(startdate != null and startdate != '') and (enddate != null and enddate != '') ">
+						AND a.moddate BETWEEN STR_TO_DATE(CONCAT(#{startdate},' 000000'), '%Y-%m-%d %H%i%s') AND STR_TO_DATE(CONCAT(#{enddate},' 235959'), '%Y-%m-%d %H%i%s')
+						</if>
+					</when>
+					<otherwise></otherwise>
+				</choose>
+				<if test="depth1cateidx != null and depth1cateidx != '' ">
+				AND d.depth1idx = #{depth1cateidx}	/* 대분류카테고리 */
+				</if>
+				<if test="depth2cateidx != null and depth2cateidx != '' ">
+				AND d.depth2idx = #{depth2cateidx}	/* 중분류카테고리 */
+				</if>
+				<if test="depth3cateidx != null and depth3cateidx != '' ">
+				AND d.depth3idx = #{depth3cateidx}	/* 소분류카테고리 */
+				</if>
+				<if test="depth4cateidx != null and depth4cateidx != '' ">
+				AND d.depth4idx = #{depth4cateidx}	/* 세분류카테고리 */
+				</if>
+				<if test='goodsdivtypearr != null and goodsdivtypearr.size > 0'>
+				AND a.goodsdivtype IN				/* 상품구분상태 */
+					<foreach index="index" collection="goodsdivtypearr" item="item" open="(" close=")" separator="," >
+						#{item}
+					</foreach>
+				</if>
+				<if test='goodsselltypearr != null and goodsselltypearr.size > 0'>
+				AND a.goodsselltype IN				/* 상품판매상태 */
+					<foreach index="index" collection="goodsselltypearr" item="item" open="(" close=")" separator="," >
+						#{item}
+					</foreach>
+				</if>
+				<if test="goodsapprtypearr != null and goodsapprtypearr.size > 0">
+				AND IFNULL(a.goodsapprtype, '') IN	/* 상품승인상태 */
+					<foreach index="index" collection="goodsapprtypearr" item="item" open="(" close=")" separator="," >
+						#{item}
+					</foreach>
+				</if>
+				<choose>
+					<when test="sprice != null and sprice == 'marketprice'">
+						<if test="minprice != null and minprice != ''">
+						AND a.marketprice <![CDATA[>=]]> #{minprice}
+						</if>
+						<if test="maxprice != null and maxprice != ''">
+						AND a.marketprice <![CDATA[<=]]> #{maxprice}
+						</if>
+					</when>
+					<when test="sprice != null and sprice == 'price'">
+						<if test="minprice != null and minprice != ''">
+						AND a.price <![CDATA[>=]]> #{minprice}
+						</if>
+						<if test="maxprice != null and maxprice != ''">
+						AND a.price <![CDATA[<=]]> #{maxprice}
+						</if>
+					</when>
+					<otherwise></otherwise>
+				</choose>
+			) ta
+		WHERE 1 = 1
+		<if test="sword != null and sword != '' ">
+			<choose>
+				<when test="skey == 'goodsname'">
+				AND ta.goodsname LIKE CONCAT('%', #{sword}, '%')
+				</when>
+				<when test="skey == 'goodscode'">
+				AND ta.goodscode LIKE CONCAT('%', #{sword}, '%')
+				</when>
+				<when test="skey == 'dealername'">
+				AND ta.dealername LIKE CONCAT('%', #{sword}, '%')
+				</when>
+				<when test="skey == 'mdname'">
+				AND ta.mdname LIKE CONCAT('%', #{sword}, '%')
+				</when>
+				<when test="skey == 'brandname'">
+				AND ta.brandname LIKE CONCAT('%', #{sword}, '%')
+				</when>
+				<otherwise>
+					<if test="skeyarr != null and skeyarr.size > 0">
+					AND
+					<foreach index="index" collection="skeyarr" item="item" open="(" close=")" separator="OR" >
+						<if test="item.key == 'goodsname'">
+						ta.goodsname LIKE CONCAT('%', #{sword}, '%')
+						</if>
+						<if test="item.key == 'goodscode'">
+						ta.goodscode LIKE CONCAT('%', #{sword}, '%')
+						</if>
+						<if test="item.key == 'dealername'">
+						ta.dealername LIKE CONCAT('%', #{sword}, '%')
+						</if>
+						<if test="item.key == 'mdname'">
+						ta.mdname LIKE CONCAT('%', #{sword}, '%')
+						</if>
+						<if test="item.key == 'brandname'">
+						ta.brandname LIKE CONCAT('%', #{sword}, '%')
+						</if>
+					</foreach>
+					</if>
+				</otherwise>
+			</choose>
+		</if>
+		<choose>
+			<when test="psort == 'code_asc'">
+			ORDER BY ta.goodsno ASC
+			</when>
+			<when test="psort == 'code_desc'">
+			ORDER BY ta.goodsno DESC
+			</when>
+			<when test="psort == 'marketprice_asc'">
+			ORDER BY ta.marketprice ASC, ta.goodsno DESC
+			</when>
+			<when test="psort == 'marketprice_desc'">
+			ORDER BY ta.marketprice DESC, ta.goodsno DESC
+			</when>
+			<when test="psort == 'price_asc'">
+			ORDER BY ta.price ASC, ta.goodsno DESC
+			</when>
+			<when test="psort == 'price_desc'">
+			ORDER BY ta.price DESC, ta.goodsno DESC
+			</when>
+			<when test="psort == 'rate_asc'">
+			ORDER BY ta.commrate ASC, ta.goodsno DESC
+			</when>
+			<when test="psort == 'rate_desc'">
+			ORDER BY ta.commrate DESC, ta.goodsno DESC
+			</when>
+			<when test="psort == 'stock_asc'">
+			ORDER BY ta.stockcnt ASC, ta.goodsno DESC
+			</when>
+			<when test="psort == 'stock_desc'">
+			ORDER BY ta.stockcnt DESC, ta.goodsno DESC
+			</when>
+			<when test="psort == 'hits_asc'">
+			ORDER BY ta.hits ASC, ta.goodsno DESC
+			</when>
+			<when test="psort == 'hits_desc'">
+			ORDER BY ta.hits DESC, ta.goodsno DESC
+			</when>
+			<when test="psort == 'regdate_asc'">
+			ORDER BY ta.regdate ASC, ta.goodsno DESC
+			</when>
+			<when test="psort == 'regdate_desc'">
+			ORDER BY ta.regdate DESC, ta.goodsno DESC
+			</when>
+			<when test="psort == 'moddate_asc'">
+			ORDER BY ta.moddate ASC, ta.goodsno DESC
+			</when>
+			<when test="psort == 'moddate_desc'">
+			ORDER BY ta.moddate DESC, ta.goodsno DESC
+			</when>
+			<otherwise>
+			ORDER BY ta.regdate DESC, ta.goodsno DESC
+			</otherwise>
+		</choose>
+	</select>
+	
+	<!-- 상품판매유형별 건수 조회 -->
+	<select id="selectAdminGoodsSellTypeCount" parameterType="somap" resultType="somap">
+		SELECT /* GoodsMapper.xml - selectAdminGoodsSellTypeCount 상품판매유형별 건수 조회 */
+			  COUNT(*) AS totalcnt
+			, SUM(gst001) AS gst001cnt
+			, SUM(gst002) AS gst002cnt
+			, SUM(gst003) AS gst003cnt
+			, SUM(gst004) AS gst004cnt
+			, SUM(gst005) AS gst005cnt
+			, SUM(gst006) AS gst006cnt
+			, SUM(gat001) AS gat001cnt
+			, SUM(gat002) AS gat002cnt
+			, SUM(gat003) AS gat003cnt
+			, SUM(gat004) AS gat004cnt
+		FROM (	SELECT
+					  (CASE WHEN a.goodsselltype = 'GST001' THEN 1 ELSE 0 END) AS gst001	/* 판매상태-판매대기 */
+					, (CASE WHEN a.goodsselltype = 'GST002' THEN 1 ELSE 0 END) AS gst002	/* 판매상태-판매중 */
+					, (CASE WHEN a.goodsselltype = 'GST003' THEN 1 ELSE 0 END) AS gst003	/* 판매상태-판매중지 */
+					, (CASE WHEN a.goodsselltype = 'GST004' THEN 1 ELSE 0 END) AS gst004	/* 판매상태-자동품절 */
+					, (CASE WHEN a.goodsselltype = 'GST005' THEN 1 ELSE 0 END) AS gst005	/* 판매상태-수기품절 */
+					, (CASE WHEN a.goodsselltype = 'GST006' THEN 1 ELSE 0 END) AS gst006	/* 판매상태-영구종료 */
+					, (CASE WHEN a.goodsapprtype = 'GAT001' THEN 1 ELSE 0 END) AS gat001	/* 승인상태-임시저장 */
+					, (CASE WHEN a.goodsapprtype = 'GAT002' THEN 1 ELSE 0 END) AS gat002	/* 승인상태-승인요청 */
+					, (CASE WHEN a.goodsapprtype = 'GAT003' THEN 1 ELSE 0 END) AS gat003	/* 승인상태-반려 */
+					, (CASE WHEN a.goodsapprtype = 'GAT004' THEN 1 ELSE 0 END) AS gat004	/* 승인상태-승인완료 */
+					, (CASE WHEN a.dealerno IS NOT NULL AND a.dealerno != 0 THEN (SELECT name FROM t_dealer WHERE userno = a.dealerno) ELSE '' END) AS dealername
+					, (CASE WHEN a.mdifidx IS NOT NULL AND a.mdifidx != '' THEN (SELECT empname FROM t_mdinfo WHERE mdifidx = a.mdifidx) ELSE '' END) AS mdname
+					, (CASE WHEN a.brandidx IS NOT NULL AND a.brandidx != 0 THEN (SELECT name FROM t_brand WHERE idx = a.brandidx) ELSE '' END) AS brandname
+					, a.goodscode, a.goodsname
+				FROM  (	SELECT /* 일반상품 */
+							  g.goodsno AS orggoodsno, g.goodsno, g.istempsave, g.isdeal, g.isdisplay, g.ispbgoods
+							, g.goodscode, g.goodsname, g.dealerno, g.mdifidx, g.marketprice, g.price, g.goodsapprtype
+							, g.goodsdivtype, g.goodsselltype, g.brandidx, g.regdate, g.moddate
+						FROM t_goods g
+						WHERE g.siteid = #{siteid}
+						AND g.isdeal = 'F'
+						UNION
+						SELECT /* 딜상품(대표상품의 정보) */
+							  g.goodsno AS orggoodsno, dgg.goodsno, g.istempsave, g.isdeal, g.isdisplay, dgg.ispbgoods
+							, g.goodscode, dgg.goodsname, dgg.dealerno, g.mdifidx, dgg.marketprice, dgg.price, g.goodsapprtype
+							, dgg.goodsdivtype, g.goodsselltype, dgg.brandidx, g.regdate, g.moddate
+						FROM t_goods g
+						INNER JOIN t_deal_goods dg
+						   ON dg.dealno = g.goodsno
+						  AND dg.ISMAINGOODS = 'T'
+						INNER JOIN t_goods dgg
+						   ON dg.goodsno = dgg.goodsno
+						WHERE g.siteid = #{siteid}
+						AND g.isdeal = 'T'
+					 ) a
+				LEFT OUTER JOIN t_goods_category b
+						ON a.goodsno = b.goodsno
+					   AND b.isrepre = 'T'
+				LEFT OUTER JOIN (
+					WITH RECURSIVE CATEGORY AS (
+					    SELECT ta.idx AS cateidx, ta.name, ta.depth, ta.parent, ta.name AS path, CONCAT(ta.idx, '') AS depth1idx
+					    	, cast(null AS char(10)) AS depth2idx, cast(null AS char(10)) AS depth3idx, cast(null AS char(10)) AS depth4idx
+					    FROM T_CATEGORY ta
+					    WHERE depth = 1
+					    UNION ALL
+					    SELECT ta.idx AS cateidx, ta.name, ta.depth, ta.parent, CONCAT_WS(' > ', tb.path, ta.name) AS path, tb.depth1idx
+					    	, IF(tb.depth2idx IS NULL AND ta.depth <![CDATA[>]]> 1, CAST(ta.idx AS char(10)), tb.depth2idx) AS depth2idx
+					    	, IF(tb.depth3idx IS NULL AND ta.depth <![CDATA[>]]> 2, CAST(ta.idx AS char(10)), tb.depth3idx) AS depth3idx
+					    	, IF(tb.depth4idx IS NULL AND ta.depth <![CDATA[>]]> 3, CAST(ta.idx AS char(10)), tb.depth4idx) AS depth4idx
+					    FROM T_CATEGORY ta
+					    INNER JOIN CATEGORY tb ON ta.parent = tb.cateidx
+					)
+					SELECT cateidx, name, depth, parent, path AS fullcategoryname, depth1idx, depth2idx, depth3idx, depth4idx
+					FROM CATEGORY
+				) c ON b.cateidx = c.cateidx
+				WHERE 1 = 1
+				<choose>
+					<when test='gbn != null and gbn == "allgoods"'>
+					/* 전체상품목록 = 직매입상품 전체 + 승인완료 위탁상품 */
+					AND (a.ispbgoods = 'T' OR (a.ispbgoods = 'F' AND a.goodsapprtype = 'GAT004'))
+					</when>
+					<otherwise></otherwise>
+				</choose>
+				<if test="istempsave != null and istempsave != '' ">
+				AND a.istempsave = #{istempsave}	/* 임시저장여부 */
+				</if>
+				<if test="ispbgoods != null and ispbgoods != '' ">
+				AND a.ispbgoods = #{ispbgoods}		/* 직매입상품여부 */
+				</if>
+				<if test="isdeal != null and isdeal != '' ">
+				AND a.isdeal = #{isdeal}			/* 딜상품여부 */
+				</if>
+				<if test="isdisplay != null and isdisplay != '' ">
+				AND a.isdisplay = #{isdisplay}		/* 전시여부 */
+				</if>
+				<if test="dealerno != null and dealerno != '' ">
+				AND a.dealerno = #{dealerno}	/* 임시저장여부 */
+				</if>
+				<choose>
+					<when test="sdate != null and sdate == 'reg'">
+						<if test="(startdate != null and startdate != '') and (enddate == null or enddate == '') ">
+						AND DATEDIFF(a.regdate, STR_TO_DATE(#{startdate},'%Y-%m-%d')) <![CDATA[>=]]> 0
+						</if>
+						<if test="(startdate == null or startdate == '') and (enddate != null and enddate != '') ">
+						AND DATEDIFF(STR_TO_DATE(#{enddate},'%Y-%m-%d'), a.regdate) <![CDATA[>=]]> 0
+						</if>
+						<if test="(startdate != null and startdate != '') and (enddate != null and enddate != '') ">
+						AND a.regdate BETWEEN STR_TO_DATE(CONCAT(#{startdate},' 000000'), '%Y-%m-%d %H%i%s') AND STR_TO_DATE(CONCAT(#{enddate},' 235959'), '%Y-%m-%d %H%i%s')
+						</if>
+					</when>
+					<when test="sdate != null and sdate == 'mod'"> /* 처리(수정)일자 */
+						<if test="(startdate != null and startdate != '') and (enddate == null or enddate == '') ">
+						AND DATEDIFF(a.moddate, STR_TO_DATE(#{startdate},'%Y-%m-%d')) <![CDATA[>=]]> 0
+						</if>
+						<if test="(startdate == null or startdate == '') and (enddate != null and enddate != '') ">
+						AND DATEDIFF(STR_TO_DATE(#{enddate},'%Y-%m-%d'), a.moddate) <![CDATA[>=]]> 0
+						</if>
+						<if test="(startdate != null and startdate != '') and (enddate != null and enddate != '') ">
+						AND a.moddate BETWEEN STR_TO_DATE(CONCAT(#{startdate},' 000000'), '%Y-%m-%d %H%i%s') AND STR_TO_DATE(CONCAT(#{enddate},' 235959'), '%Y-%m-%d %H%i%s')
+						</if>
+					</when>
+					<otherwise></otherwise>
+				</choose>
+				<if test="depth1cateidx != null and depth1cateidx != '' ">
+				AND c.depth1idx = #{depth1cateidx}	/* 대분류카테고리 */
+				</if>
+				<if test="depth2cateidx != null and depth2cateidx != '' ">
+				AND c.depth2idx = #{depth2cateidx}	/* 중분류카테고리 */
+				</if>
+				<if test="depth3cateidx != null and depth3cateidx != '' ">
+				AND c.depth3idx = #{depth3cateidx}	/* 소분류카테고리 */
+				</if>
+				<if test="depth4cateidx != null and depth4cateidx != '' ">
+				AND c.depth4idx = #{depth4cateidx}	/* 세분류카테고리 */
+				</if>
+				<if test='goodsdivtypearr != null and goodsdivtypearr.size > 0'>
+				AND a.goodsdivtype IN				/* 상품구분상태 */
+					<foreach index="index" collection="goodsdivtypearr" item="item" open="(" close=")" separator="," >
+						#{item}
+					</foreach>
+				</if>
+				<if test='goodsselltypearr != null and goodsselltypearr.size > 0'>
+				AND a.goodsselltype IN				/* 상품판매상태 */
+					<foreach index="index" collection="goodsselltypearr" item="item" open="(" close=")" separator="," >
+						#{item}
+					</foreach>
+				</if>
+				<if test="goodsapprtypearr != null and goodsapprtypearr.size > 0">
+				AND IFNULL(a.goodsapprtype, '') IN	/* 상품승인상태 */
+					<foreach index="index" collection="goodsapprtypearr" item="item" open="(" close=")" separator="," >
+						#{item}
+					</foreach>
+				</if>
+				<choose>
+					<when test="sprice != null and sprice == 'marketprice'">
+						<if test="minprice != null and minprice != ''">
+						AND a.marketprice <![CDATA[>=]]> #{minprice}
+						</if>
+						<if test="maxprice != null and maxprice != ''">
+						AND a.marketprice <![CDATA[<=]]> #{maxprice}
+						</if>
+					</when>
+					<when test="sprice != null and sprice == 'price'">
+						<if test="minprice != null and minprice != ''">
+						AND a.price <![CDATA[>=]]> #{minprice}
+						</if>
+						<if test="maxprice != null and maxprice != ''">
+						AND a.price <![CDATA[<=]]> #{maxprice}
+						</if>
+					</when>
+					<otherwise></otherwise>
+				</choose>
+			) ta
+		WHERE 1 = 1
+		<if test="sword != null and sword != '' ">
+			<choose>
+				<when test="skey == 'goodsname'">
+				AND ta.goodsname LIKE CONCAT('%', #{sword}, '%')
+				</when>
+				<when test="skey == 'goodscode'">
+				AND ta.goodscode LIKE CONCAT('%', #{sword}, '%')
+				</when>
+				<when test="skey == 'dealername'">
+				AND ta.dealername LIKE CONCAT('%', #{sword}, '%')
+				</when>
+				<when test="skey == 'mdname'">
+				AND ta.mdname LIKE CONCAT('%', #{sword}, '%')
+				</when>
+				<when test="skey == 'brandname'">
+				AND ta.brandname LIKE CONCAT('%', #{sword}, '%')
+				</when>
+				<otherwise>
+					<if test="skeyarr != null and skeyarr.size > 0">
+					AND
+					<foreach index="index" collection="skeyarr" item="item" open="(" close=")" separator="OR" >
+						<if test="item.key == 'goodsname'">
+						ta.goodsname LIKE CONCAT('%', #{sword}, '%')
+						</if>
+						<if test="item.key == 'goodscode'">
+						ta.goodscode LIKE CONCAT('%', #{sword}, '%')
+						</if>
+						<if test="item.key == 'dealername'">
+						ta.dealername LIKE CONCAT('%', #{sword}, '%')
+						</if>
+						<if test="item.key == 'mdname'">
+						ta.mdname LIKE CONCAT('%', #{sword}, '%')
+						</if>
+						<if test="item.key == 'brandname'">
+						ta.brandname LIKE CONCAT('%', #{sword}, '%')
+						</if>
+					</foreach>
+					</if>
+				</otherwise>
+			</choose>
+		</if>
+	</select>
+	
+	<!-- 관리자 상품상세 조회(카테고리, 파일포함) -->
+	<select id="selectAdminGoodsDetailAll" parameterType="somap" resultType="somap">
+		SELECT /* GoodsMapper.xml - selectAdminGoodsDetailAll 관리자 상품상세 조회(카테고리, 파일포함 ) */
+			ta.goodsno
+			, ta.goodscode
+			, ta.goodsname
+			, (CASE WHEN ta.ispbgoods='T' THEN '직매입'
+					WHEN ta.ispbgoods='F' THEN '위탁'
+					ELSE ''
+			   END) AS ispbgoodsname
+			, (CASE WHEN ta.isdeal='T' THEN '딜'
+					WHEN ta.isdeal='F' THEN '일반'
+					ELSE ''
+			   END) AS isdealname
+			, (CASE WHEN ta.isdisplay='T' THEN '전시'
+					WHEN ta.isdisplay='F' THEN '미 전시'
+					ELSE ''
+			   END) AS isdisplayname
+			, FORMAT(ta.marketprice, 0) AS marketprice
+			, FORMAT(ta.price, 0) AS price
+			, ta.goodsdivtype
+			, ta.goodsdivtypename
+			, ta.goodsselltype
+			, ta.muappchtype
+			, (CASE WHEN ta.istempsave='T' THEN '임시저장'
+					WHEN ta.istempsave='F' THEN ta.goodsselltypename
+					ELSE ''
+			   END) AS goodsselltypename
+			, ta.stockcnt
+			, ta.totalstockcnt
+			, ROUND(ta.commrate, 1) AS commrate
+			, ta.hits
+			, ta.summary
+			, ta.cateidx
+			, ta.fullcategoryname
+			, ta.fullpath
+			, ta.dealerno
+			, ta.dealername
+			, ta.mdifidx
+			, ta.mdname
+			, ta.brandidx
+			, ta.brandname
+			, DATE_FORMAT(ta.regdate, '%Y-%m-%d') AS regdate
+			, DATE_FORMAT(ta.moddate, '%Y-%m-%d') AS moddate
+		FROM (	SELECT
+					  a.orggoodsno AS goodsno, a.goodscode, a.goodsname, a.istempsave, a.isdeal, a.isdisplay, a.ispbgoods, a.summary, a.hits
+					, a.marketprice, a.price, a.goodsdivtype, a.goodsselltype, a.regdate, a.moddate
+					, a.dealerno, a.mdifidx, a.brandidx, b.stockcnt, b.commrate, c.cateidx, d.fullcategoryname
+					, FN_GET_CODENAME(#{siteid}, 'GOODSDIVTYPE', a.goodsdivtype) AS goodsdivtypename
+					, FN_GET_CODENAME(#{siteid}, 'GOODSSELLTYPE', a.goodsselltype) AS goodsselltypename
+					, FN_GET_CODENAME_STR( a.muappchtype, 'MUAPPCHTYPE') AS muappchtype
+					, (SELECT sum(stockcnt) FROM t_goods_option_detail WHERE goodsno = a.goodsno AND isoptdisplay = 'T' AND istrash = 'F') AS totalstockcnt
+					, (CASE WHEN a.dealerno IS NOT NULL AND a.dealerno != 0 THEN (SELECT name FROM t_dealer WHERE userno = a.dealerno) ELSE '' END) AS dealername
+					, (CASE WHEN a.mdifidx IS NOT NULL AND a.mdifidx != '' THEN (SELECT empname FROM t_mdinfo WHERE mdifidx = a.mdifidx) ELSE '' END) AS mdname
+					, (CASE WHEN a.brandidx IS NOT NULL AND a.brandidx != 0 THEN (SELECT name FROM t_brand WHERE idx = a.brandidx) ELSE '' END) AS brandname
+					, CONCAT(e.host, e.imgpath, e.imgfname) AS fullpath
+				FROM  (	SELECT /* 일반상품 */
+							  g.goodsno AS orggoodsno, g.goodsno, g.istempsave, g.isdeal, g.isdisplay, g.ispbgoods, g.summary
+							, g.goodscode, g.goodsname, g.dealerno, g.mdifidx, g.marketprice, g.price, g.muappchtype
+							, g.goodsdivtype, g.goodsselltype, g.brandidx, g.regdate, g.moddate, g.hits
+						FROM t_goods g
+						WHERE g.siteid = #{siteid}
+						AND g.isdeal = 'F'
+					 ) a
+				LEFT OUTER JOIN t_goods_option_detail b
+						ON a.goodsno = b.goodsno
+					   AND b.ismaingoods = 'T'
+					   AND b.isoptdisplay = 'T'
+					   AND b.istrash = 'F'
+				LEFT OUTER JOIN t_goods_category c
+						ON a.goodsno = c.goodsno
+					   AND c.isrepre = 'T'
+				LEFT OUTER JOIN (
+					WITH RECURSIVE CATEGORY AS (
+					    SELECT ta.idx AS cateidx, ta.name, ta.depth, ta.parent, ta.name AS path, CONCAT(ta.idx, '') AS depth1idx
+					    	, cast(null AS char(10)) AS depth2idx, cast(null AS char(10)) AS depth3idx, cast(null AS char(10)) AS depth4idx
+					    FROM T_CATEGORY ta
+					    WHERE depth = 1
+					    UNION ALL
+					    SELECT ta.idx AS cateidx, ta.name, ta.depth, ta.parent, CONCAT_WS(' > ', tb.path, ta.name) AS path, tb.depth1idx
+					    	, IF(tb.depth2idx IS NULL AND ta.depth <![CDATA[>]]> 1, CAST(ta.idx AS char(10)), tb.depth2idx) AS depth2idx
+					    	, IF(tb.depth3idx IS NULL AND ta.depth <![CDATA[>]]> 2, CAST(ta.idx AS char(10)), tb.depth3idx) AS depth3idx
+					    	, IF(tb.depth4idx IS NULL AND ta.depth <![CDATA[>]]> 3, CAST(ta.idx AS char(10)), tb.depth4idx) AS depth4idx
+					    FROM T_CATEGORY ta
+					    INNER JOIN CATEGORY tb ON ta.parent = tb.cateidx
+					)
+					SELECT cateidx, name, depth, parent, path AS fullcategoryname, depth1idx, depth2idx, depth3idx, depth4idx
+					FROM CATEGORY
+				) d ON c.cateidx = d.cateidx
+				LEFT OUTER JOIN t_file e
+						ON a.goodsno = e.orgidx
+					   AND e.istrash = 'F'
+					   AND e.imgtype = #{imgtype}
+				WHERE 1 = 1
+				AND a.goodsno = #{goodsno}
+			) ta
+		<where>
+		AND ta.goodsno = #{goodsno}
+		</where>
+	</select>
+	
+	<!-- 관리자 상품상세 조회 -->
+	<select id="selectAdminGoodsDetail" parameterType="somap" resultType="somap">
+		SELECT	/* GoodsMapper.xml - selectAdminGoodsDetail 관리자 상품상세 조회 */
+			  g.isdeal  				/* 딜상품여부 */
+			, (CASE WHEN g.isdeal='T' THEN '딜'
+					WHEN g.isdeal='F' THEN '일반'
+					ELSE ''
+			   END) AS isdealname		/* 딜상품여부명 */
+			, g.istempsave  			/* 임시저장여부 */
+			, g.ispbgoods  				/* 직매입여부 */
+			, g.dealerno  				/* 입점업체번호 */
+			, (SELECT name FROM t_dealer WHERE userno = g.dealerno)
+				AS dealername			/* 입점업체명 */
+			, g.goodsno  				/* 상품번호 */
+			, g.goodscode  				/* 상품코드 */
+			, g.goodsname  				/* 상품명 */
+			, g.summary  				/* 상품요약설명 */
+			, g.keyword  				/* 검색키워드 */
+			, g.brandidx  				/* 브랜드_일련번호 */
+			, (SELECT name FROM t_brand WHERE idx = g.brandidx)
+				AS brandname			/* 브랜드명 */
+			, IF(IFNULL(g.brandidx, '') = '', 'T', 'F')
+				AS isnobrand			/* 브랜드없음여부 */
+			, g.mdifidx  				/* MD정보IDX */
+			, m.empname					/* 사원이름 */
+			, m.mdsabun					/* MD사번 */
+			, g.muappchtype  			/* 다중적용채널 */
+			, g.istaxfree  				/* 면세여부 */
+			, g.goodsselltype  			/* 상품판매상태 */
+			, (CASE WHEN g.istempsave='T' THEN '임시저장'
+					WHEN g.istempsave='F' THEN FN_GET_CODENAME(#{siteid}, 'GOODSSELLTYPE', g.goodsselltype)
+					ELSE ''
+			   END) AS goodsselltypename	/* 상품판매상태명 */
+			, DATE_FORMAT(g.disstdate, '%Y-%m-%d') AS disstdate	/* 전시시작일자 */
+			, DATE_FORMAT(g.diseddate, '%Y-%m-%d') AS diseddate	/* 전시종료일자 */
+			, DATE_FORMAT(g.disstdate, '%H') AS dissthour  		/* 전시시작시간 */
+			, DATE_FORMAT(g.diseddate, '%H') AS disedhour  		/* 전시종료시간 */
+			, DATE_FORMAT(g.disstdate, '%i') AS disstmin  		/* 전시시작분 */
+			, DATE_FORMAT(g.diseddate, '%i') AS disedmin  		/* 전시종료분 */
+			, g.marketprice  			/* 정상가 */
+			, g.price  					/* 판매가 */
+			, g.minordcnt  				/* 최소주문수량 */
+			, g.maxordcnt  				/* 최대주문수량 */
+			, g.daymaxordcnt  			/* 일최대주문수량 */
+			, g.permaxordcnt  			/* 1인당최대구매수량 */
+			, g.isdisplay  				/* 전시여부 */
+			, g.isfrstsale  			/* 첫구매할일적용여부 */
+			, g.iscncappr  				/* 취소승인필요여부 */
+			, g.goodsdivtype  			/* 상품구분상태 */
+			, FN_GET_CODENAME(#{siteid}, 'GOODSDIVTYPE', g.goodsdivtype)
+				AS goodsdivtypename		/* 상품구분상태명 */
+			, (CASE WHEN (SELECT COUNT(*) FROM t_member_goods WHERE goodsno = g.goodsno) <![CDATA[>]]> 0
+				    THEN 'SP'
+				    WHEN IFNULL(g.mumemlvtype, '') != ''
+				    THEN 'TYPE'
+				    ELSE 'ALL'
+			   END) AS selltarget		/* 판매대상 */
+			, g.mumemlvtype  			/* 다중대상회원등급 */
+			, g.delividx  				/* 배송템플릿일련번호 */
+			, g.iscombdeliv  			/* 묶음배송여부 */
+			, g.kcdivtype  				/* KC대상구분 */
+			, g.isopenreview  			/* 리뷰공개여부 */
+			, g.mumembertype  			/* 다중대상회원유형 */
+			, g.goodsapprtype			/* 상품승인상태 */
+			, FN_GET_CODENAME(#{siteid}, 'GOODSAPPRTYPE', g.goodsapprtype)
+				AS goodsapprtypename	/* 상품승인상태명 */
+			, aswarmonth				/* as보증기간_월 */
+			, asnotice					/* as안내문구 */
+			, DATE_FORMAT(g.regdate, '%Y-%m-%d') AS regdate	/* 등록일자 */
+			, DATE_FORMAT(g.moddate, '%Y-%m-%d') AS moddate	/* 수정일자 */
+			, (CASE WHEN g.ispbgoods='F' THEN ( SELECT di.muaddauthtype 
+										      	FROM t_dealer_info di 
+										      	WHERE di.dealerno = g.dealerno) 
+					ELSE ''
+			   END) AS editauth
+			, g.mugicontype
+			, g.isepif
+		FROM t_goods g
+		LEFT OUTER JOIN t_mdinfo m
+		ON g.mdifidx = m.mdifidx
+		<where>
+		AND g.siteid = #{siteid}
+		AND g.goodsno = #{goodsno}
+		</where>
+	</select>
+	
+	<!-- 관리자 딜구성상품 팝업 목록 조회 -->
+	<select id="selectAdminConstGoodsList" parameterType="somap" resultType="somap">
+		SELECT /* GoodsMapper.xml - selectAdminConstGoodsList 관리자 딜구성상품 팝업 목록 조회 */
+			  a.goodsno						/* 상품번호 */
+			, a.goodscode					/* 상품코드 */
+			, a.goodsname					/* 상품명 */
+			, (CASE WHEN a.ispbgoods='T' THEN '직매입'
+					WHEN a.ispbgoods='F' THEN '위탁'
+					ELSE ''
+			   END) AS ispbgoodsname		/* 판매구분(직매입, 위탁) */
+			, a.dealername					/* 파트너사명 */
+			, a.fileidx						/* 이미지idx */
+			, a.fullpath					/* 이미지 fullpath */
+			, a.goodsdivtype				/* 상품유형구분 */
+			, FN_GET_CODENAME(#{siteid}, 'GOODSDIVTYPE', a.goodsdivtype) AS goodsdivtypename	/* 상품유형구분명 */
+			, FORMAT(a.price, 0) AS price	/* 판매가 */
+			, a.goodsselltype				/* 판매상태구분 */
+			, FN_GET_CODENAME(#{siteid}, 'GOODSSELLTYPE', a.goodsselltype) AS goodsselltypename	/* 판매상태구분명 */
+			, DATE_FORMAT(a.disstdate, '%Y-%m-%d %H:%i:%s') AS disstdate	/* 전시시작일 */
+			, DATE_FORMAT(a.diseddate, '%Y-%m-%d %H:%i:%s') AS diseddate	/* 전시종료일 */
+			, a.delivbname					/* 배송정보명 */
+			, a.delivfaretype				/* 배송비유형 */
+			, (CASE WHEN a.delivfaretype = 'DCT002'	/* 유료 */
+					THEN CONCAT(a.delivfaretypename, ' ', FORMAT(a.delivfare, 0), '원')
+					WHEN a.delivfaretype = 'DCT003'	/* 조건부무료 */
+					THEN CONCAT(a.delivfaretypename, ' ', FORMAT(a.delivfare, 0), '원 (', FORMAT(a.delivfreefare, 0), '원 이상 무료)')
+					ELSE a.delivfaretypename
+			   END) AS delivfaretext
+			, (CASE WHEN a.iscombdeliv='T' THEN '묶음배송'
+					WHEN a.iscombdeliv='F' THEN '개별배송'
+					ELSE ''
+			   END) AS iscombdelivname		/* 배송유형(묶음배송, 개별배송) */
+			, a.iscncappr					/* 취소승인필요여부 */
+		FROM (	SELECT 
+					  g.goodsno
+					, g.goodscode
+					, g.goodsname
+					, g.ispbgoods
+					, (SELECT name FROM t_dealer WHERE userno = g.dealerno) AS dealername
+					, f.idx AS fileidx
+					, CONCAT(f.host, f.imgpath, f.imgfname) AS fullpath
+					, g.goodsdivtype
+					, g.price
+					, g.goodsselltype
+					, g.disstdate
+					, g.diseddate
+					, dt.delivbname
+					, dt.delivfaretype
+					, FN_GET_CODENAME(#{siteid}, 'DELIVFARETYPE', dt.delivfaretype) AS delivfaretypename
+					, dt.delivfare
+					, dt.delivfreefare
+					, g.iscombdeliv
+					, g.iscncappr
+				FROM t_goods g
+				LEFT OUTER JOIN t_file f
+						ON f.orgidx = g.goodsno
+					   AND f.istrash = 'F'
+					   AND f.imgtype = 'IGT001'
+				LEFT OUTER JOIN t_deliv_template dt
+					    ON dt.idx = g.delividx
+				<where>
+					AND g.siteid = #{siteid}
+					AND g.istempsave = 'F'
+					AND g.isdeal = 'F'
+			    	AND g.goodsapprtype = 'GAT004' -- 승인완료
+					<if test="ispbgoods != null and ispbgoods != '' ">
+					AND g.ispbgoods = #{ispbgoods}
+					</if>
+					<if test="dealerno != null and dealerno != '' ">
+					AND g.dealerno = #{dealerno}
+					</if>
+					<if test="sdate != null and sdate != '' ">
+						<choose>
+							<when test="sdate == 'end'">
+								<if test="(startdate != null and startdate != '') and (enddate == null or enddate == '') ">
+								AND DATEDIFF(g.diseddate, STR_TO_DATE(#{startdate},'%Y-%m-%d')) <![CDATA[>=]]> 0
+								</if>
+								<if test="(startdate == null or startdate == '') and (enddate != null and enddate != '') ">
+								AND DATEDIFF(STR_TO_DATE(#{enddate},'%Y-%m-%d'), g.diseddate) <![CDATA[>=]]> 0
+								</if>
+								<if test="(startdate != null and startdate != '') and (enddate != null and enddate != '') ">
+								AND g.diseddate BETWEEN STR_TO_DATE(CONCAT(#{startdate},' 000000'), '%Y-%m-%d %H%i%s') AND STR_TO_DATE(CONCAT(#{enddate},' 235959'), '%Y-%m-%d %H%i%s')
+								</if>
+							</when>
+							<otherwise>
+								<if test="(startdate != null and startdate != '') and (enddate == null or enddate == '') ">
+								AND DATEDIFF(g.disstdate, STR_TO_DATE(#{startdate},'%Y-%m-%d')) <![CDATA[>=]]> 0
+								</if>
+								<if test="(startdate == null or startdate == '') and (enddate != null and enddate != '') ">
+								AND DATEDIFF(STR_TO_DATE(#{enddate},'%Y-%m-%d'), g.disstdate) <![CDATA[>=]]> 0
+								</if>
+								<if test="(startdate != null and startdate != '') and (enddate != null and enddate != '') ">
+								AND g.disstdate BETWEEN STR_TO_DATE(CONCAT(#{startdate},' 000000'), '%Y-%m-%d %H%i%s') AND STR_TO_DATE(CONCAT(#{enddate},' 235959'), '%Y-%m-%d %H%i%s')
+								</if>
+							</otherwise>
+						</choose>
+					</if>
+					<if test='goodscodelist != null and goodscodelist.size > 0'>
+					AND g.goodscode IN
+						<foreach index="index" collection="goodscodelist" item="item" open="(" close=")" separator="," >
+							#{item.goodscode}
+						</foreach>
+					</if>
+					<if test='isallselltype != null and isallselltype == "F" and goodsselltypearr != null and goodsselltypearr.size > 0'>
+					AND g.goodsselltype IN
+						<foreach index="index" collection="goodsselltypearr" item="_idx" open="(" close=")" separator="," >
+							#{_idx}
+						</foreach>
+					</if>
+				</where>
+			 ) a
+		<where>
+			<if test="sword != null and sword != '' ">
+				<choose>
+					<when test="skey == 'goodsname'">
+					AND a.goodsname LIKE CONCAT('%', #{sword}, '%')
+					</when>
+					<when test="skey == 'goodscode'">
+					AND a.goodscode LIKE CONCAT('%', #{sword}, '%')
+					</when>
+					<when test="skey == 'dealername'">
+					AND a.dealername LIKE CONCAT('%', #{sword}, '%')
+					</when>
+					<otherwise>
+					AND ( a.goodsname LIKE CONCAT('%', #{sword}, '%')
+		  			   OR a.goodscode LIKE CONCAT('%', #{sword}, '%')
+		  			   OR a.dealername LIKE CONCAT('%', #{sword}, '%') )
+					</otherwise>
+				</choose>
+			</if>
+		</where>
+		ORDER BY a.goodscode DESC
+	</select>
+	
+<!--
+    ***************************************************************** 
+    * 
+	*  FRONT 영역
+	*
+	***************************************************************** 
+-->
+	<select id="selectFrontGoodsDetail" parameterType="somap" resultMap="selectGoodsJoinGoodsContentResult">
+		/* GoodsMapper.xml - selectFrontGoodsDetail 프론트 상품상세 조회 */
+        select
+              g.goodsno -- 상품번호
+            , g.dealerno -- 입점업체번호
+            , g.goodscode -- 상품코드 
+            , (select optioncode from t_goods_option_detail where goodsno = g.goodsno and ismaingoods = 'T' AND istrash = 'F') as optioncode
+            , g.goodsname -- 상품명
+            , g.summary -- 상품요약설명
+            , g.imgautochk -- 이미지자동체크
+            , g.keyword -- 검색키워드
+            , FN_GET_GOODS_MARKETPRICE(#{siteid}, g.goodsno) as marketprice -- 대표상품공급가
+            , FN_GET_GOODS_PRICE(#{siteid}, g.goodsno) as price -- 대표상품판매가
+            , FN_GET_GOODS_SALEPROMOAMT(#{siteid}, g.goodsno, null, 0, #{platform}) as saleamt -- 프로모션할인적용가(할인가)
+            , FN_GET_GOODS_SALECOUPONAMT(#{siteid}, g.goodsno, null, 0, #{platform}) as goodscpnamt -- 즉시할인쿠폰할인가
+            , FN_GET_GOODS_STOCK(#{siteid}, g.goodsno) as stockcnt
+            , g.istaxfree -- 면세여부
+            , g.brandidx -- 브랜드_일련번호
+            , ifnull(a.enname, '') as brandname -- 브랜드명
+            , a.detail as branddetail -- 브랜드상세설명
+            , a.headcopy
+            , FN_GET_FILE_URL(g.brandidx, 'FLT001', 'IGT011') as brandimgurl
+            , g.product -- 제조사
+            , g.origin -- 원산지
+            , gc.content -- 상세내용
+            , gc.mobile_content -- 모바일_상세내용
+            , gc.notice_content -- 공지이미지
+            , gc.intro_content -- 인트로이미지
+            , (select count(*) 
+            	from t_goods_review a
+            	left join t_goods tg ON a.goodsno = tg.goodsno
+            	where a.istrash = 'F'
+            	AND (
+					tg.goodscode IN (
+						SELECT if(b.subgoodsno IS NULL, a.goodscode, c.goodscode) as goodscode
+						FROM (
+							SELECT goodsno
+								, goodscode
+							FROM t_goods
+							WHERE goodscode = #{goodscode}
+						) a
+						LEFT JOIN t_goods_grp b ON a.goodsno = b.maingoodsno
+						LEFT JOIN t_goods c ON b.subgoodsno = c.goodsno
+					)
+					OR tg.goodscode = #{goodscode}
+				)	
+            ) as reviewcnt -- 리뷰갯수
+            , ifnull((select round(avg(totpoint), 1) 
+            	from t_goods_review a
+            	left join t_goods tg ON a.goodsno = tg.goodsno
+            	where a.istrash = 'F'
+            	AND (
+					tg.goodscode IN (
+						SELECT if(b.subgoodsno IS NULL, a.goodscode, c.goodscode) as goodscode
+						FROM (
+							SELECT goodsno
+								, goodscode
+							FROM t_goods
+							WHERE goodscode = #{goodscode}
+						) a
+						LEFT JOIN t_goods_grp b ON a.goodsno = b.maingoodsno
+						LEFT JOIN t_goods c ON b.subgoodsno = c.goodsno
+					)
+					OR tg.goodscode = #{goodscode}
+				)	
+            ), 0) as reviewavg -- 리뷰평점
+            , (select count(*) from t_goods_qna where goodsno = g.goodsno) as qnasize -- qna갯수
+            , g.isuseaddition -- 추가구성품사용여부
+            , g.ispbgoods -- 직매입여부(T:자사, F:위탁사)
+            , (select cateidx from t_goods_category where goodsno = g.goodsno and isrepre = 'T') as cateidx -- 대표카테고리
+            , g.disstdate -- 전시시작일자(이아래부터는 NEW)
+            , g.diseddate -- 전시종료일자
+            , g.isdisplay -- 전시여부
+            , if(sysdate() between g.disstdate and g.diseddate, 'T', 'F') as isdisdate -- 전시기간여부
+            , g.goodsselltype -- 상품판매상태
+            , g.isfrstsale -- 첫구매할인적용여부
+            , g.iscncappr -- 취소승인필요여부
+            , g.goodsdivtype -- 상품구분상태(새상품, 중고, 리퍼, 해외직구)
+            , FN_GET_CODENAME(#{siteid}, 'GOODSDIVTYPE', g.goodsdivtype) as goodsdivtypename
+            , g.iscombdeliv -- 묶음배송여부
+            , g.kcdivtype -- KC대상구분
+            , g.isopenreview -- 리뷰공개여부
+            , g.goodsapprtype -- 상품승인상태(임시저장, 승인요청, 반려, 승인완료)
+            , g.isdeal -- 딜상품여부
+            , if(isdeal = 'F', 0, (select dealno from t_deal_goods where goodsno = g.goodsno)) as dealno
+            , g.muappchtype -- 다중적용채널(PC, 모바일, 모바일PC)
+            , g.mumembertype -- 다중대상회원유형(일반, 평생,임직원 등)
+            , g.mumemlvtype -- 다중대상회원등급(BRONZE, SILVER 등)
+            , g.delividx -- 배송템플릿
+            , g.istempsave -- 임시저장여부(임시저장일떄는 관리자만 볼수있어야함)
+            , g.minordcnt -- 최소주문수량
+            , g.maxordcnt -- 최대주문수량
+            , g.daymaxordcnt -- 일최대주문수량
+            , g.permaxordcnt -- 인당최대구매수량
+            , g.aswarmonth -- AS보증기간_월
+            , g.asnotice -- AS안내문구
+            , (select count(*) from t_wish where goodsno = g.goodsno and istrash = 'F') as wishcnt
+            , ifnull((select 'T' from t_wish where goodsno = g.goodsno and userno = #{userno} and istrash = 'F'), 'F') as iswished
+            , c.depth1name
+            , c.depth2name
+            , c.depth3name
+            , c.depth4name
+            , FN_GET_FILE_URL(g.goodsno, 'FLT001', #{imgtype}) as fullpath     -- 이미지 경로
+            , if((SELECT count(*)  
+                  FROM t_shopex12 ts 
+                  WHERE ts.SITEID = #{siteid} 
+                  AND ts.ISTRASH  = 'F'
+	              AND ts.ISDISPLAY = 'T'
+	              AND ts.EXTYPE = 'EXN001'
+	              AND ts.GOODSNO = g.goodsno) > 0 , 'T', 'F') AS isnewbadge
+	        , MUGICONTYPE  -- 상품 뱃지 타입 STR
+		    , FN_GET_CODENAME_STR( MUGICONTYPE, 'GICONTYPE') AS MUGICONTYPENM -- 상품 뱃지 타입 STR이름
+		    , if((SELECT COUNT(*)
+		          FROM t_bestgoods
+		          WHERE goodsno = g.goodsno) > 0, 'T', 'F') AS isbestbadge
+		    , if((	SELECT COUNT(*)
+					FROM t_shopex45_goods A
+					INNER JOIN t_shopex45 B ON A.EX45IDX  = B.EX45IDX 
+					WHERE B.EXTYPE = 'EXN004'
+					AND B.ISTRASH  = 'F'
+					AND B.ISDISPLAY  = 'T'
+					AND date_format(now(), '%Y%m%d%H%i') BETWEEN B.EXSTTIME  AND B.EXEDTIME
+					AND A.GOODSNO = g.GOODSNO) > 0,'T','F') AS ispreordbadge
+        from t_goods g
+        join t_goods_content gc
+        on g.goodsno = gc.goodsno
+        left join t_brand a
+        on a.idx = g.brandidx
+        left outer join t_goods_category b 
+        on g.goodsno  = b.goodsno
+		and b.isrepre  = 't'
+        left outer join (
+		    with category as (
+		        select idx, name, depth, parent
+		        from t_category
+		        where siteid = #{siteid}
+		        and hidden = 0 
+		    )
+		    select 
+		          t.*
+		    from (  select 
+		                  a.idx as depth1idx, b.idx as depth2idx, c.idx as depth3idx, d.idx as depth4idx
+		                , ifnull(a.name, '') AS depth1name, ifnull(b.name, '') AS depth2name, ifnull(c.name, '') AS depth3name, ifnull(d.name, '') AS depth4name
+		                , (case when d.idx is not null then d.idx
+		                        when c.idx is not null then c.idx
+		                        when b.idx is not null then b.idx
+		                        else a.idx
+		                   end) as cateidx
+		            from category a
+		            left outer join category b on a.idx = b.parent
+		            left outer join category c on b.idx = c.parent
+		            left outer join category d on c.idx = d.parent
+		            where a.depth = 1
+		         ) t
+		) c 
+		ON b.cateidx = c.cateidx
+		where g.siteid = #{siteid}
+		<choose>
+			<when test='goodsno != null and goodsno !=""'>
+			and g.goodsno = #{goodsno}
+			</when>
+			<otherwise>
+			and g.GOODSCODE = #{goodscode}
+			</otherwise>
+		</choose>
+	</select>
+	
+	<sql id="selectFrontGoodsSql">
+	SELECT /*GoodsMapper.xml -selectGoodsSql:: front 노툴 상품 목록sql*/
+		       tg.goodsno                                             -- 상품번호
+		     , tg.goodscode
+		     , tg.goodsname                                                    -- 상품명
+		     , tg.regdate                                                      -- 상품등록일자
+		     , tg.KEYWORD                                                      -- 상품키워드
+		     , fn_get_goods_marketprice(#{siteid}, tg.goodsno) as marketprice  -- 정산가
+		     , fn_get_goods_price(#{siteid}, tg.goodsno) as price   -- 판매가
+		     , fn_get_goods_salepromoamt(#{siteid}, tg.goodsno, null, 0, #{platform}) as saleamt -- 프로모션할인적용가(할인가)
+		     , fn_get_goods_salecouponamt(#{siteid}, tg.goodsno, null, 0, #{platform}) as goodscpnamt -- 즉시할인쿠폰할인가
+		     , d.cateidx                                                       -- 카테고리idx
+		     , row_number() over(partition by tg.goodsno) as goodsnum		   -- 동일상품 여러개일경우 순번채번
+             , d.fullcateidx                                                   -- 전체 카테고리idx
+             , d.depth1idx  
+             , d.depth2idx
+             , d.depth3idx
+             , d.depth4idx
+             , d.PATH as fullcategoryname                                      -- 전체 카테고리 이름
+		     , IF((SELECT count(*) FROM t_wish tw WHERE userno = #{userno} AND goodsno = tg.goodsno AND istrash = 'F')  <![CDATA[>]]>  0 , 'T','F') AS iswished  -- 찜여부
+		     , tg.brandidx                                                     -- 브랜드idx
+		     , tb.enname as brandname                                            -- 브랜드명
+		     , tgr2.totalpoint
+		     , tgr2.totalcnt
+		     , ifnull(truncate((tgr2.totalpoint / tgr2.totalcnt),0),0) AS reviewavg -- 리뷰단품평균
+		     , ifnull(tcgd.ordcnt, 0) AS ordcnt   -- 일주일간 주문수량
+		    , IF((tdt.DELIVFARETYPE = 'DCT001'),'T','F') AS ISDELIVFREE  -- 무료배송비여부
+		FROM t_goods tg
+		LEFT OUTER JOIN t_deliv_template tdt ON tg.DELIVIDX = tdt.idx 
+		LEFT OUTER JOIN (
+							SELECT GOODSNO, SUM(FRSTORDCNT) AS ORDCNT
+							FROM t_comorder_goods_deliv A
+							INNER JOIN T_COMORDER_GOODS B ON A.ORDGDIDX = B.ORDGDIDX
+							LEFT OUTER JOIN T_COMORDER C ON B.ORDERIDX = C.ORDERIDX
+							WHERE ORDSTATUS IN ('ODS003', 'ODS004', 'ODS006', 'ODS007', 'ODS008', 'ODS009')
+							AND PAYMENTDATE BETWEEN DATE_ADD(DATE_FORMAT(CURRENT_DATE,'%Y-%m-%d 00:00:00'), INTERVAL -7 DAY) AND DATE_FORMAT(CURRENT_DATE,'%Y-%m-%d 00:00:00')
+							GROUP BY GOODSNO
+		                ) tcgd ON tg.GOODSNO  = tcgd.goodsno
+		LEFT OUTER JOIN (
+	                    SELECT goodsno
+	                        , SUM(TOTPOINT) AS totalpoint
+	                        , count(goodsno) AS totalcnt 
+	                    FROM t_goods_review
+	                    WHERE SITEID = #{siteid}
+	                    AND ISTRASH  = 'F'
+	                    GROUP  BY goodsno 
+	                 ) tgr2 ON tg.GOODSNO = tgr2.goodsno
+		LEFT OUTER JOIN t_brand tb ON tg.brandidx = tb.idx
+			-- AND tb.ISTRASH = 'F'
+		LEFT OUTER JOIN t_goods_category c ON tg.goodsno = c.goodsno
+            -- AND c.isrepre = 'T'
+		LEFT OUTER JOIN (
+	    					WITH RECURSIVE CATEGORY AS (
+							     SELECT ta.idx AS cateidx, ta.name, ta.depth, ta.parent, ta.name AS PATH, cast(TA.IDX AS char(50)) AS FULLCATEIDX
+							          , CONCAT(ta.idx, '') AS depth1idx
+							          , cast(null AS char(10)) AS depth2idx
+							          , cast(null AS char(10)) AS depth3idx
+							          , cast(null AS char(10)) AS depth4idx
+							     FROM T_CATEGORY ta
+							     WHERE depth = 1
+							     AND ISTRASH = 'F'
+							     UNION ALL
+							     SELECT ta.idx AS cateidx, ta.name, ta.depth, ta.parent, CONCAT_WS(' > ', tb.path, ta.name) AS PATH, CONCAT_WS(' > ', TB.FULLCATEIDX, cast(TA.IDX AS char(50))) AS FULLCATEIDX
+							          , tb.depth1idx
+							          , IF(tb.depth2idx IS NULL AND ta.depth > 1, CAST(ta.idx AS char(10)), tb.depth2idx) AS depth2idx
+							          , IF(tb.depth3idx IS NULL AND ta.depth > 2, CAST(ta.idx AS char(10)), tb.depth3idx) AS depth3idx
+							          , IF(tb.depth4idx IS NULL AND ta.depth > 3, CAST(ta.idx AS char(10)), tb.depth4idx) AS depth4idx
+							     FROM T_CATEGORY ta
+							     INNER JOIN CATEGORY tb ON ta.parent = tb.cateidx
+		                      )
+						     SELECT *
+							 FROM CATEGORY
+        ) d ON c.cateidx = d.cateidx
+		WHERE 1 = 1 
+		AND tg.SITEID = #{siteid}
+		AND tg.isdisplay = 'T'
+		<if test="brandidx != null and brandidx != ''">
+		AND tg.brandidx = #{brandidx}
+		</if>
+		<if test="muappchtype != null and muappchtype != ''">
+		AND tg.muappchtype LIKE CONCAT('%',#{muappchtype},'%')
+		</if>
+		<if test="mumembertype != null and mumembertype != ''">
+		AND tg.mumembertype LIKE CONCAT('%',#{mumembertype},'%')
+		</if>
+		<if test="mumemlvtype != null and mumemlvtype != ''">
+		AND (tg.mumemlvtype LIKE CONCAT('%',#{mumemlvtype},'%')
+		 	OR EXISTS (
+			 	SELECT * 
+			 	FROM t_member_goods tmg
+			 	WHERE userno = #{userno}
+			 	AND tg.GOODSNO  = tmg.GOODSNO 
+		 	)) -- 특정 회원 대상 지급
+		</if>
+	    <if test='content != null and content !=""'>
+		 	AND (tg.GOODSNAME LIKE CONCAT('%',#{content},'%') OR tg.KEYWORD LIKE CONCAT('%',#{content},'%') OR tb.NAME LIKE CONCAT('%',#{content},'%'))
+		</if>
+		<!-- 카테고리 조회 -->
+		<if test="depth1idx != null and depth1idx != '' ">
+		AND d.depth1idx = #{depth1idx}	/* 대분류카테고리 */
+		</if>
+		<if test="depth2idx != null and depth2idx != '' ">
+		AND d.depth2idx = #{depth2idx}	/* 중분류카테고리 */
+		</if>
+		<if test="depth3idx != null and depth3idx != '' ">
+		AND d.depth3idx = #{depth3idx}	/* 소분류카테고리 */
+		</if>
+		<if test="depth4idx != null and depth4idx != '' ">
+		AND d.depth4idx = #{depth4idx}	/* 세분류카테고리 */
+		</if>
+		AND tg.goodsapprtype = 'GAT004' -- 승인완료
+		AND tg.goodsselltype IN ('GST002', 'GST004', 'GST005')
+		AND date_format(now(), '%Y%m%d%H%i%s')  BETWEEN disstdate AND diseddate
+	</sql>
+	
+	<select id="selectFrontGoodsList" parameterType="somap" resultType="somap">
+		/* GoodsMapper.xml -  selectFrontGoodsList::: FRONT 상품 조회 */
+		SELECT AA.*
+		     , COUNT(*) OVER() as totcnt
+		     , (
+		        select group_concat(DETAIL) 
+			    from t_goods_option_detail sub1
+			    INNER JOIN t_common_code sub2 ON sub2.CMCODE = sub1.COLORTYPE
+			    where sub1.goodsno = AA.goodsno
+			   ) as COLORLIST
+		FROM (
+			SELECT A.*
+			    , FN_GET_FILE_URL(a.goodsno, 'FLT001', #{imgtype}) as fullpath     -- 이미지 경로
+		        , fn_get_goods_stock(#{siteid}, a.goodsno) as stockcnt -- 재고 
+			FROM (<include refid="selectFrontGoodsSql"/>) A -- front 노출 상품 목록
+			where 1 = 1
+			<!-- 무료배송여부 -->
+		    <if test='isdelivfree == "T"'>
+			AND A.isdelivfree = 'T'
+			</if>
+			<!-- 쿠폰적용여부 -->
+			<if test='ispccoupon == "T"'>
+			AND A.goodscpnamt <![CDATA[>]]> 0
+			</if>
+			<if test="goodsno != null and goodsno != ''">
+			AND A.goodsno = #{goodsno}
+			</if>
+			<if test='goodsnos != null and goodsnos > 0'>
+			AND A.goodsno IN <foreach item="item" collection="goodsnos" open="(" separator="," close=")">#{item}</foreach>
+			</if>
+			<if test="user_no_arr != null and user_no_arr.size > 0">
+				AND dealerno IN
+				<foreach collection="user_no_arr" item="userno" index="index" open="(" separator="," close=")">
+					#{userno}
+				</foreach>
+			</if>
+			<if test='minprice != null and maxprice != null'>
+			AND (saleamt - goodscpnamt) <![CDATA[>=]]> #{minprice} and (saleamt - goodscpnamt) <![CDATA[<=]]> #{maxprice}
+			</if>
+			<if test="fbrandlist != null and fbrandlist.size > 0">
+				AND brandidx IN
+				<foreach collection="fbrandlist" item="brandno" index="index" open="(" separator="," close=")">
+				#{brandno}
+				</foreach>
+			</if>
+			<if test="ratinglist != null and ratinglist.size > 0">
+				AND reviewavg IN
+				<foreach collection="ratinglist" item="rating" index="index" open="(" separator="," close=")">
+				#{rating}
+				</foreach>
+			</if>
+			<!-- 색상검색 -->
+			<if test="colorlist != null and colorlist.size > 0">
+			AND EXISTS (
+	              SELECT aa.goodsno
+	              FROM t_goods_option_detail aa
+	              WHERE COLORTYPE IN 
+	              	<foreach collection="colorlist" item="colorno" index="index" open="(" separator="," close=")">
+	                #{colorno}
+	                </foreach>
+	              AND GOODSNO  =  A.GOODSNO 
+	         )
+			</if>
+			 <if test="sort != null and sort != ''">
+				 <choose>
+				  <when test="sort == 'best'">
+				  ORDER BY ordcnt desc
+				  </when>
+				  <when test="sort == 'new'">
+				  ORDER BY regdate desc, ordcnt desc
+				  </when>
+				  <when test="sort == 'highscore'">
+				  ORDER BY reviewavg desc, ordcnt desc
+				  </when>
+				  <when test="sort == 'lowscore'">
+				  ORDER BY reviewavg asc, ordcnt desc
+				  </when>
+				  <when test="sort == 'highprice'">
+				  ORDER BY saleamt desc, ordcnt desc
+				  </when>
+				  <when test="sort == 'lowprice'">
+				  ORDER BY saleamt asc, ordcnt desc
+				  </when>
+				 </choose>
+			 </if>
+		) AA
+		WHERE goodsnum = 1
+		<if test='isnopaging != "T"'>
+		LIMIT #{startpage},#{endpage}
+		</if>
+	</select>
+	
+	
+	
+	<select id="selectGoodsBrandListByCateIdx" parameterType="somap" resultType="somap">
+		SELECT   /*GoodsMapper.xml - selectGoodsBrandListByCateIdx:: 카테고리별 브랜드 목록 조회*/
+		                   tb.IDX       -- 브랜드 idx
+					     , tb.DEALERNO  -- 입점업체 번호
+					     , tb.NAME      -- 브랜드명
+					     , tb.BRCODE    -- 브랜드코드
+					     , tb.CATEIDX   -- 카테고리IDX
+					     , tb.ENNAME    -- 브랜드명_영문
+					     , tb.FRSTNAME  -- 브랜드초성
+					      , if(tb.FRSTNAME BETWEEN 'ㄱ' AND 'ㅎ', tb.FRSTNAME, 'ETC') as filterfrstname -- 필터링용 브랜드명초성
+					     , tb.FRSTENAME -- 브랜드명초성_영문
+					     , if(tb.FRSTENAME BETWEEN 'A' AND 'z', UPPER(tb.frstename), 'ETC') as filterfrstename -- 필터링용 브랜드명초성 영문
+					     , tb.HEADCOPY  -- 헤드카피
+					     , tb.DETAIL    -- 브랜드상세설명
+		                 , FN_GET_FILE_URL(tb.IDX, 'FLT001', 'IGT011') AS imgpath -- IGT027::브랜드_PC이미지, IGT028::브랜드_Mobile이미지
+					     , FN_GET_FILE_URL(tb.IDX, 'FLT001', 'IGT011') AS logopath -- IGT027::브랜드_PC이미지, IGT028::브랜드_Mobile이미지
+		FROM( 
+		      SELECT
+				       tb.idx as brandidx
+		      FROM t_goods tg
+		      LEFT OUTER JOIN t_brand tb ON tg.brandidx = tb.idx
+						--	AND tb.ISTRASH = 'F'
+		      LEFT OUTER JOIN t_goods_category c ON tg.goodsno = c.goodsno
+		      LEFT OUTER JOIN (
+		                      WITH RECURSIVE CATEGORY AS (
+		                          SELECT ta.idx AS cateidx, ta.name, ta.depth, ta.parent, ta.name AS PATH, cast(TA.IDX AS char(50)) AS FULLCATEIDX
+		                               , CONCAT(ta.idx, '') AS depth1idx
+		                               , cast(null AS char(10)) AS depth2idx
+		                               , cast(null AS char(10)) AS depth3idx
+		                               , cast(null AS char(10)) AS depth4idx
+		                          FROM T_CATEGORY ta
+		                          	WHERE depth = 1
+		                          AND ISTRASH = 'F'
+		                          UNION ALL
+		                          SELECT ta.idx AS cateidx, ta.name, ta.depth, ta.parent, CONCAT_WS(' > ', tb.path, ta.name) AS PATH, CONCAT_WS(' > ', TB.FULLCATEIDX, cast(TA.IDX AS char(50))) AS FULLCATEIDX
+		                               , tb.depth1idx
+		                               , IF(tb.depth2idx IS NULL AND ta.depth > 1, CAST(ta.idx AS char(10)), tb.depth2idx) AS depth2idx
+		                               , IF(tb.depth3idx IS NULL AND ta.depth > 2, CAST(ta.idx AS char(10)), tb.depth3idx) AS depth3idx
+		                               , IF(tb.depth4idx IS NULL AND ta.depth > 3, CAST(ta.idx AS char(10)), tb.depth4idx) AS depth4idx
+		                          FROM T_CATEGORY ta
+		                          INNER JOIN CATEGORY tb ON ta.parent = tb.cateidx
+		                            )
+		                       SELECT *
+		                      FROM CATEGORY
+		        ) d ON c.cateidx = d.cateidx
+		      WHERE 1 = 1 
+		      AND tg.SITEID = #{siteid}
+		      AND tg.isdisplay = 'T'
+		      <if test="muappchtype != null and muappchtype != ''">
+				AND tg.muappchtype LIKE CONCAT('%',#{muappchtype},'%')
+			  </if>
+			  <if test="mumembertype != null and mumembertype != ''">
+				AND tg.mumembertype LIKE CONCAT('%',#{mumembertype},'%')
+			  </if>
+			  <if test="mumemlvtype != null and mumemlvtype != ''">
+				AND (tg.mumemlvtype LIKE CONCAT('%',#{mumemlvtype},'%')
+				 	OR EXISTS (
+					 	SELECT * 
+					 	FROM t_member_goods tmg
+					 	WHERE userno = #{userno}
+					 	AND tg.GOODSNO  = tmg.GOODSNO 
+				 	)) -- 특정 회원 대상 지급
+			  </if>
+		      AND tg.goodsapprtype = 'GAT004' -- 승인완료
+		      AND tg.goodsselltype IN ('GST002', 'GST004', 'GST005')
+		      AND date_format(now(), '%Y%m%d%H%i%s')  BETWEEN disstdate AND diseddate
+		      <if test="idx != null and idx != '' and idx != 0">
+			  AND (d.depth1idx = #{idx} OR d.depth2idx = #{idx} OR d.depth3idx = #{idx} OR d.depth4idx = #{idx})
+		      </if>
+		      <if test='content != null and content !=""'>
+		      AND (tg.GOODSNAME LIKE CONCAT('%',#{content},'%') OR tg.KEYWORD LIKE CONCAT('%',#{content},'%') OR tb.NAME LIKE CONCAT('%',#{content},'%'))
+		      </if>
+		      group by tb.IDX
+		    ) aa
+		INNER JOIN t_brand tb ON AA.brandidx = tb.idx
+		ORDER BY enname
+	</select>
+	
+	<select id="selectGoodsPrice" parameterType="somap" resultType="somap">
+	  SELECT   /*GoodsMapper.xml - selectGoodsPrice:: 가격정보 조회*/
+	           IFNULL(MAX(AA.saleamt - AA.goodscpnamt),0) AS maxamt
+		     , IFNULL(MIN(AA.saleamt - AA.goodscpnamt),0) AS minamt
+		FROM( 
+		      SELECT
+				       fn_get_goods_salepromoamt(tg.siteid, tg.goodsno, null, 0, #{platform}) as saleamt -- 프로모션할인적용가(할인가)
+				     , fn_get_goods_salecouponamt(tg.siteid, tg.goodsno, null, 0, #{platform}) as goodscpnamt -- 즉시할인쿠폰할인가
+		      FROM t_goods tg
+		      LEFT OUTER JOIN t_brand tb ON tg.brandidx = tb.idx
+					--		AND tb.ISTRASH = 'F'
+		      LEFT OUTER JOIN t_goods_category c ON tg.goodsno = c.goodsno
+		      LEFT OUTER JOIN (
+		                      WITH RECURSIVE CATEGORY AS (
+		                          SELECT ta.idx AS cateidx, ta.name, ta.depth, ta.parent, ta.name AS PATH, cast(TA.IDX AS char(50)) AS FULLCATEIDX
+		                               , CONCAT(ta.idx, '') AS depth1idx
+		                               , cast(null AS char(10)) AS depth2idx
+		                               , cast(null AS char(10)) AS depth3idx
+		                               , cast(null AS char(10)) AS depth4idx
+		                          FROM T_CATEGORY ta
+		                          	WHERE depth = 1
+		                          AND ISTRASH = 'F'
+		                          UNION ALL
+		                          SELECT ta.idx AS cateidx, ta.name, ta.depth, ta.parent, CONCAT_WS(' > ', tb.path, ta.name) AS PATH, CONCAT_WS(' > ', TB.FULLCATEIDX, cast(TA.IDX AS char(50))) AS FULLCATEIDX
+		                               , tb.depth1idx
+		                               , IF(tb.depth2idx IS NULL AND ta.depth > 1, CAST(ta.idx AS char(10)), tb.depth2idx) AS depth2idx
+		                               , IF(tb.depth3idx IS NULL AND ta.depth > 2, CAST(ta.idx AS char(10)), tb.depth3idx) AS depth3idx
+		                               , IF(tb.depth4idx IS NULL AND ta.depth > 3, CAST(ta.idx AS char(10)), tb.depth4idx) AS depth4idx
+		                          FROM T_CATEGORY ta
+		                          INNER JOIN CATEGORY tb ON ta.parent = tb.cateidx
+		                            )
+		                       SELECT *
+		                      FROM CATEGORY
+		        ) d ON c.cateidx = d.cateidx
+		      WHERE 1 = 1 
+		      AND tg.SITEID = #{siteid}
+		      AND tg.isdisplay = 'T'
+		      <if test="muappchtype != null and muappchtype != ''">
+				AND tg.muappchtype LIKE CONCAT('%',#{muappchtype},'%')
+			  </if>
+			  <if test="mumembertype != null and mumembertype != ''">
+				AND tg.mumembertype LIKE CONCAT('%',#{mumembertype},'%')
+			  </if>
+			  <if test="mumemlvtype != null and mumemlvtype != ''">
+				AND (tg.mumemlvtype LIKE CONCAT('%',#{mumemlvtype},'%')
+				 	OR EXISTS (
+					 	SELECT * 
+					 	FROM t_member_goods tmg
+					 	WHERE userno = #{userno}
+					 	AND tg.GOODSNO  = tmg.GOODSNO 
+				 	)) -- 특정 회원 대상 지급
+			  </if>
+		      AND tg.goodsapprtype = 'GAT004' -- 승인완료
+		      AND tg.goodsselltype IN ('GST002', 'GST004', 'GST005')
+		      AND date_format(now(), '%Y%m%d%H%i%s')  BETWEEN disstdate AND diseddate
+		      <if test="idx != null and idx != '' and idx != 0">
+			  AND (d.depth1idx = #{idx} OR d.depth2idx = #{idx} OR d.depth3idx = #{idx} OR d.depth4idx = #{idx})
+		      </if>
+		      <if test='content != null and content !=""'>
+		      AND (tg.GOODSNAME LIKE CONCAT('%',#{content},'%') OR tg.KEYWORD LIKE CONCAT('%',#{content},'%') OR tb.NAME LIKE CONCAT('%',#{content},'%'))
+		      </if>
+		    ) aa
+	</select>
+	
+	<select id="selectColorList" parameterType="somap" resultType="somap">
+	 	SELECT /*GoodsMapper.xml -  selectColorList::: FRONT 상품 색상 목록 조회*/       
+		      aa.CMCLASS   AS COLORTYPE -- 색상코드
+		    , aa.codename  AS COLORNAME -- 색상명
+		    , aa.detail    AS BG        -- BG값
+		FROM( 
+		      SELECT 
+		              b.CMCLASS
+		            , b.codename
+		            , b.detail
+		      FROM t_goods tg
+		      LEFT OUTER JOIN t_brand tb ON tg.brandidx = tb.idx
+				--	AND tb.ISTRASH = 'F'
+		      INNER JOIN t_goods_option_detail a ON tg.goodsno = a.goodsno
+		      INNER JOIN t_common_code b on b.CMCODE = a.COLORTYPE
+		      LEFT OUTER JOIN t_goods_category c ON tg.goodsno = c.goodsno
+		      LEFT OUTER JOIN (
+		                      WITH RECURSIVE CATEGORY AS (
+		                          SELECT ta.idx AS cateidx, ta.name, ta.depth, ta.parent, ta.name AS PATH, cast(TA.IDX AS char(50)) AS FULLCATEIDX
+		                               , CONCAT(ta.idx, '') AS depth1idx
+		                               , cast(null AS char(10)) AS depth2idx
+		                               , cast(null AS char(10)) AS depth3idx
+		                               , cast(null AS char(10)) AS depth4idx
+		                          FROM T_CATEGORY ta
+		                          	WHERE depth = 1
+		                          AND ISTRASH = 'F'
+		                          UNION ALL
+		                          SELECT ta.idx AS cateidx, ta.name, ta.depth, ta.parent, CONCAT_WS(' > ', tb.path, ta.name) AS PATH, CONCAT_WS(' > ', TB.FULLCATEIDX, cast(TA.IDX AS char(50))) AS FULLCATEIDX
+		                               , tb.depth1idx
+		                               , IF(tb.depth2idx IS NULL AND ta.depth > 1, CAST(ta.idx AS char(10)), tb.depth2idx) AS depth2idx
+		                               , IF(tb.depth3idx IS NULL AND ta.depth > 2, CAST(ta.idx AS char(10)), tb.depth3idx) AS depth3idx
+		                               , IF(tb.depth4idx IS NULL AND ta.depth > 3, CAST(ta.idx AS char(10)), tb.depth4idx) AS depth4idx
+		                          FROM T_CATEGORY ta
+		                          INNER JOIN CATEGORY tb ON ta.parent = tb.cateidx
+		                            )
+		                       SELECT *
+		                      FROM CATEGORY
+		        ) d ON c.cateidx = d.cateidx
+		      WHERE 1 = 1 
+		      AND tg.SITEID = #{siteid}
+		      AND tg.isdisplay = 'T'
+		      <if test="muappchtype != null and muappchtype != ''">
+				AND tg.muappchtype LIKE CONCAT('%',#{muappchtype},'%')
+			  </if>
+			  <if test="mumembertype != null and mumembertype != ''">
+				AND tg.mumembertype LIKE CONCAT('%',#{mumembertype},'%')
+			  </if>
+			  <if test="mumemlvtype != null and mumemlvtype != ''">
+				AND (tg.mumemlvtype LIKE CONCAT('%',#{mumemlvtype},'%')
+				 	OR EXISTS (
+					 	SELECT * 
+					 	FROM t_member_goods tmg
+					 	WHERE userno = #{userno}
+					 	AND tg.GOODSNO  = tmg.GOODSNO 
+				 	)) -- 특정 회원 대상 지급
+			  </if>
+		      AND tg.goodsapprtype = 'GAT004' -- 승인완료
+		      AND tg.goodsselltype IN ('GST002', 'GST004', 'GST005')
+		      AND date_format(now(), '%Y%m%d%H%i%s')  BETWEEN disstdate AND diseddate
+		      <if test="idx != null and idx != '' and idx != 0">
+			  AND (d.depth1idx = #{idx} OR d.depth2idx = #{idx} OR d.depth3idx = #{idx} OR d.depth4idx = #{idx})
+		      </if>
+		      <if test='content != null and content !=""'>
+		      AND (tg.GOODSNAME LIKE CONCAT('%',#{content},'%') OR tg.KEYWORD LIKE CONCAT('%',#{content},'%') OR tb.NAME LIKE CONCAT('%',#{content},'%'))
+		      </if>
+		  ) aa
+		  WHERE 1 = 1
+		  group by aa.CMCLASS, aa.codename, aa.detail
+	</select>
+	
+	<select id="selectBenefitList" parameterType="somap" resultType="somap">
+	 SELECT /*GoodsMapper.xml -  selectBenefitList::: FRONT 상품 혜택 목록 조회*/       
+	            if(ifnull(SUM(goodscpnamt  <![CDATA[>]]>  0),0) > 0,'T','F') AS ISCOUNPON
+	          , if(ifnull(SUM(ISDELIVFREE = 'T'),0) <![CDATA[>]]> 0,'T','F') AS ISDELI
+	     FROM( 
+		   SELECT
+		             tg.goodsno                                                                   -- 상품번호
+		           , tg.goodscode                                                                 -- 상품코드
+		           , tg.goodsname                                                                 -- 상품명
+		           , tg.regdate                                                                   -- 상품등록일자
+		           , tg.KEYWORD                                                                   -- 상품키워드
+		           , fn_get_goods_salecouponamt(#{siteid}, tg.goodsno, null, 0, #{platform}) as goodscpnamt -- 즉시할인쿠폰할인가
+		           , d.cateidx                                                                    -- 카테고리idx
+		           , d.depth1idx                                                                  -- 1DEPTH카테고리
+		           , d.depth2idx                                                                  -- 2DEPTH카테고리
+		           , d.depth3idx                                                                  -- 3DEPTH카테고리
+		           , d.depth4idx                                                                  -- 4DEPTH카테고리
+		           , IF((tdt.DELIVFARETYPE = 'DCT001'),'T','F') AS ISDELIVFREE                    -- 무료배송비여부
+		      FROM t_goods tg
+		      LEFT OUTER JOIN t_brand tb ON tg.brandidx = tb.idx
+					-- AND tb.ISTRASH = 'F'
+		      INNER JOIN t_deliv_template tdt ON tg.DELIVIDX = tdt.idx 
+		      INNER JOIN t_goods_category c ON tg.goodsno = c.goodsno
+		      LEFT OUTER JOIN (
+		                      WITH RECURSIVE CATEGORY AS (
+		                          SELECT ta.idx AS cateidx, ta.name, ta.depth, ta.parent, ta.name AS PATH, cast(TA.IDX AS char(50)) AS FULLCATEIDX
+		                               , CONCAT(ta.idx, '') AS depth1idx
+		                               , cast(null AS char(10)) AS depth2idx
+		                               , cast(null AS char(10)) AS depth3idx
+		                               , cast(null AS char(10)) AS depth4idx
+		                          FROM T_CATEGORY ta
+		                          	WHERE depth = 1
+		                          AND ISTRASH = 'F'
+		                          UNION ALL
+		                          SELECT ta.idx AS cateidx, ta.name, ta.depth, ta.parent, CONCAT_WS(' > ', tb.path, ta.name) AS PATH, CONCAT_WS(' > ', TB.FULLCATEIDX, cast(TA.IDX AS char(50))) AS FULLCATEIDX
+		                               , tb.depth1idx
+		                               , IF(tb.depth2idx IS NULL AND ta.depth > 1, CAST(ta.idx AS char(10)), tb.depth2idx) AS depth2idx
+		                               , IF(tb.depth3idx IS NULL AND ta.depth > 2, CAST(ta.idx AS char(10)), tb.depth3idx) AS depth3idx
+		                               , IF(tb.depth4idx IS NULL AND ta.depth > 3, CAST(ta.idx AS char(10)), tb.depth4idx) AS depth4idx
+		                          FROM T_CATEGORY ta
+		                          INNER JOIN CATEGORY tb ON ta.parent = tb.cateidx
+		                            )
+		                       SELECT *
+		                      FROM CATEGORY
+		        ) d ON c.cateidx = d.cateidx
+		      WHERE 1 = 1 
+		      AND tg.SITEID = #{siteid}
+		      AND tg.isdisplay = 'T'
+		      <if test="muappchtype != null and muappchtype != ''">
+				AND tg.muappchtype LIKE CONCAT('%',#{muappchtype},'%')
+			  </if>
+			  <if test="mumembertype != null and mumembertype != ''">
+				AND tg.mumembertype LIKE CONCAT('%',#{mumembertype},'%')
+			  </if>
+			  <if test="mumemlvtype != null and mumemlvtype != ''">
+				AND (tg.mumemlvtype LIKE CONCAT('%',#{mumemlvtype},'%')
+				 	OR EXISTS (
+					 	SELECT * 
+					 	FROM t_member_goods tmg
+					 	WHERE userno = #{userno}
+					 	AND tg.GOODSNO  = tmg.GOODSNO 
+				 	)) -- 특정 회원 대상 지급
+			  </if>
+		      AND tg.goodsapprtype = 'GAT004' -- 승인완료
+		      AND tg.goodsselltype IN ('GST002', 'GST004', 'GST005')
+		      AND date_format(now(), '%Y%m%d%H%i%s')  BETWEEN disstdate AND diseddate
+		      <if test="idx != null and idx != '' and idx != 0 ">
+	            AND (d.depth1idx = #{idx} OR d.depth2idx = #{idx} OR d.depth3idx = #{idx} OR d.depth4idx = #{idx})
+		      </if>
+	          <if test='content != null and content !=""'>
+		        AND (tg.GOODSNAME LIKE CONCAT('%',#{content},'%') OR tg.KEYWORD LIKE CONCAT('%',#{content},'%') OR tb.NAME LIKE CONCAT('%',#{content},'%'))
+		      </if>
+	    ) A
+	</select>
+	
+	<select id="selectRatingList" parameterType="somap" resultType="somap">
+	SELECT   /*GoodsMapper.xml -  selectRatingList::: 평점 조회*/       
+		      AA.reviewavg as rating  -- 별점
+		FROM( 
+		      SELECT
+					ifnull(truncate((tgr.totalpoint / tgr.totalcnt),0),0) AS reviewavg -- 리뷰단품평균
+		      FROM t_goods tg
+		      LEFT OUTER JOIN t_brand tb ON tg.brandidx = tb.idx
+					--		AND tb.ISTRASH = 'F'
+			  LEFT OUTER JOIN (
+			                    SELECT goodsno
+			                        , SUM(TOTPOINT) AS totalpoint
+			                        , count(goodsno) AS totalcnt 
+			                    FROM t_goods_review
+			                    WHERE SITEID = #{siteid}
+			                    AND ISTRASH  = 'F'
+			                    GROUP  BY goodsno 
+			                 ) tgr ON tg.GOODSNO = tgr.goodsno
+		      LEFT OUTER JOIN t_goods_category c ON tg.goodsno = c.goodsno
+		      LEFT OUTER JOIN (
+		                      WITH RECURSIVE CATEGORY AS (
+		                          SELECT ta.idx AS cateidx, ta.name, ta.depth, ta.parent, ta.name AS PATH, cast(TA.IDX AS char(50)) AS FULLCATEIDX
+		                               , CONCAT(ta.idx, '') AS depth1idx
+		                               , cast(null AS char(10)) AS depth2idx
+		                               , cast(null AS char(10)) AS depth3idx
+		                               , cast(null AS char(10)) AS depth4idx
+		                          FROM T_CATEGORY ta
+		                          	WHERE depth = 1
+		                          UNION ALL
+		                          SELECT ta.idx AS cateidx, ta.name, ta.depth, ta.parent, CONCAT_WS(' > ', tb.path, ta.name) AS PATH, CONCAT_WS(' > ', TB.FULLCATEIDX, cast(TA.IDX AS char(50))) AS FULLCATEIDX
+		                               , tb.depth1idx
+		                               , IF(tb.depth2idx IS NULL AND ta.depth > 1, CAST(ta.idx AS char(10)), tb.depth2idx) AS depth2idx
+		                               , IF(tb.depth3idx IS NULL AND ta.depth > 2, CAST(ta.idx AS char(10)), tb.depth3idx) AS depth3idx
+		                               , IF(tb.depth4idx IS NULL AND ta.depth > 3, CAST(ta.idx AS char(10)), tb.depth4idx) AS depth4idx
+		                          FROM T_CATEGORY ta
+		                          INNER JOIN CATEGORY tb ON ta.parent = tb.cateidx
+		                            )
+		                       SELECT *
+		                      FROM CATEGORY
+		        ) d ON c.cateidx = d.cateidx
+		      WHERE 1 = 1 
+		      AND tg.SITEID = #{siteid}
+		      AND tg.isdisplay = 'T'
+		      <if test="muappchtype != null and muappchtype != ''">
+				AND tg.muappchtype LIKE CONCAT('%',#{muappchtype},'%')
+			  </if>
+			  <if test="mumembertype != null and mumembertype != ''">
+				AND tg.mumembertype LIKE CONCAT('%',#{mumembertype},'%')
+			  </if>
+			  <if test="mumemlvtype != null and mumemlvtype != ''">
+				AND (tg.mumemlvtype LIKE CONCAT('%',#{mumemlvtype},'%')
+				 	OR EXISTS (
+					 	SELECT * 
+					 	FROM t_member_goods tmg
+					 	WHERE userno = #{userno}
+					 	AND tg.GOODSNO  = tmg.GOODSNO 
+				 	)) -- 특정 회원 대상 지급
+			  </if>
+		      AND tg.goodsapprtype = 'GAT004' -- 승인완료
+		      AND tg.goodsselltype IN ('GST002', 'GST004', 'GST005')
+		      AND date_format(now(), '%Y%m%d%H%i%s')  BETWEEN disstdate AND diseddate
+		      <if test="idx != null and idx != '' and idx != 0">
+	            AND (d.depth1idx = #{idx} OR d.depth2idx = #{idx} OR d.depth3idx = #{idx} OR d.depth4idx = #{idx})
+		      </if>
+	          <if test='content != null and content !=""'>
+		        AND (tg.GOODSNAME LIKE CONCAT('%',#{content},'%') OR tg.KEYWORD LIKE CONCAT('%',#{content},'%') OR tb.NAME LIKE CONCAT('%',#{content},'%'))
+		      </if>
+		    ) aa
+		group by aa.reviewavg
+		order by reviewavg asc
+	</select>
+	
+	
+	
+	<select id="selectFrontGoodsCnt" parameterType="somap" resultType="int">
+		/* GoodsMapper.xml -  selectFrontGoodsCnt::: FRONT 상품 조회 수 */
+		SELECT count(*) as totcnt
+		FROM (<include refid="selectFrontGoodsSql"/>) A -- front 노출 상품 목록
+		WHERE  1 = 1
+		<!-- 카테고리검색 -->
+	    <if test="depth1idx != null and depth1idx != '' ">
+		AND A.depth1idx = #{depth1idx}	/* 대분류카테고리 */
+		</if>
+		<if test="depth2idx != null and depth2idx != '' ">
+		AND A.depth2idx = #{depth2idx}	/* 중분류카테고리 */
+		</if>
+		<if test="depth3idx != null and depth3idx != '' ">
+		AND A.depth3idx = #{depth3idx}	/* 소분류카테고리 */
+		</if>
+		<if test="depth4idx != null and depth4idx != '' ">
+		AND A.depth4idx = #{depth4idx}	/* 세분류카테고리 */
+		</if>
+		<!-- 
+		<if test="idx != null and idx > 0">
+		 AND (A.depth1idx = #{idx} OR A.depth2idx = #{idx} OR A.depth3idx = #{idx} OR A.depth4idx = #{idx})
+		</if>
+		 -->
+		<if test="goodsno != null and goodsno != ''">
+		AND A.goodsno = #{goodsno}
+		</if>
+		<if test='goodsnos != null and goodsnos.size > 0'>
+		AND A.goodsno IN <foreach item="item" collection="goodsnos" open="(" separator="," close=")">#{item}</foreach>
+		</if>
+		 <if test='isdelivfree == "T"'>
+		AND A.isdelivfree = 'T'
+		</if>
+		<if test='ispccoupon == "T"'>
+		AND A.goodscpnamt <![CDATA[>]]> 0
+		</if>
+		<if test="user_no_arr != null and user_no_arr.size > 0">
+			AND dealerno IN
+			<foreach collection="user_no_arr" item="userno" index="index" open="(" separator="," close=")">
+				#{userno}
+			</foreach>
+		</if>
+		<!-- 금액검색 -->
+		<if test="minprice != null and minprice != '' and maxprice != null and maxprice != ''">
+		AND (saleamt - goodscpnamt) <![CDATA[>=]]> #{minprice} and (saleamt - goodscpnamt) <![CDATA[<=]]> #{maxprice}
+		</if>
+		<!-- 브랜드검색 -->
+		<if test="fbrandlist != null and fbrandlist.size > 0">
+			AND brandidx IN
+			<foreach collection="fbrandlist" item="brandno" index="index" open="(" separator="," close=")">
+			#{brandno}
+			</foreach>
+		</if>
+		<!-- 색상검색 -->
+		<if test="colorlist != null and colorlist.size > 0">
+		AND EXISTS (
+              SELECT aa.goodsno
+              FROM t_goods_option_detail aa
+              WHERE COLORTYPE IN 
+              	<foreach collection="colorlist" item="colorno" index="index" open="(" separator="," close=")">
+                #{colorno}
+                </foreach>
+              AND GOODSNO  =  A.GOODSNO 
+         )
+		</if>
+		 <!-- 별점 추후 -->
+		<if test="ratinglist != null and ratinglist.size > 0">
+			AND reviewavg IN
+			<foreach collection="ratinglist" item="rating" index="index" open="(" separator="," close=")">
+			#{rating}
+			</foreach>
+		</if>
+	</select>
+	
+	<select id="selectAdminGoodsDetailForHist" parameterType="somap" resultType="somap">
+		/* GoodsMapper.xml -  selectAdminGoodsDetailForHist::: 이력저장용 상품상세 조회 */
+		SELECT 
+			  a.ISPBGOODS 
+			, a.DEALERNO 
+			, a.GOODSNAME 
+			, a.SUMMARY 
+			, a.KEYWORD 
+			, a.BRANDIDX 
+			, a.MDIFIDX 
+			, a.MUAPPCHTYPE 
+			, a.ISTAXFREE 
+			, a.GOODSSELLTYPE 
+			, DATE_FORMAT(a.DISSTDATE, '%Y-%m-%d') AS DISSTDATE	/* 전시시작일자 */
+			, DATE_FORMAT(a.DISEDDATE, '%Y-%m-%d') AS DISEDDATE	/* 전시종료일자 */
+			, DATE_FORMAT(a.DISSTDATE, '%H') AS DISSTHOUR  		/* 전시시작시간 */
+			, DATE_FORMAT(a.DISEDDATE, '%H') AS DISEDHOUR  		/* 전시종료시간 */
+			, DATE_FORMAT(a.DISSTDATE, '%i') AS DISSTMIN  		/* 전시시작분 */
+			, DATE_FORMAT(a.DISEDDATE, '%i') AS DISEDMIN  		/* 전시종료분 */
+			, a.MARKETPRICE 
+			, a.PRICE 
+			, a.MINORDCNT 
+			, a.MAXORDCNT 
+			, a.DAYMAXORDCNT 
+			, a.PERMAXORDCNT 
+			, a.ISDISPLAY 
+			, a.ISFRSTSALE 
+			, a.ISCNCAPPR 
+			, a.GOODSDIVTYPE 
+			, (CASE WHEN (SELECT COUNT(*) FROM t_member_goods WHERE GOODSNO = a.GOODSNO) <![CDATA[>]]> 0
+				    THEN 'SP'
+				    WHEN IFNULL(a.MUMEMLVTYPE, '') != ''
+				    THEN 'TYPE'
+				    ELSE 'ALL'
+			   END) AS SELLTARGET
+			, a.MUMEMLVTYPE 
+			, a.DELIVIDX 
+			, a.ISCOMBDELIV 
+			, a.KCDIVTYPE 
+			, a.ASWARMONTH 
+			, a.ASNOTICE 
+			, a.MUMEMBERTYPE 
+			, a.ISOPENREVIEW 
+			, a.GOODSAPPRTYPE
+			, b.CONTENT AS PCCONTENT
+			, b.MOBILE_CONTENT AS MOBILECONTENT
+			, b.NOTICE_CONTENT AS NOTICECONTENT
+			, b.INTRO_CONTENT AS INTROCONTENT
+			, (SELECT max(NOTIFYIDX) FROM t_goods_notify WHERE GOODSNO = a.GOODSNO) AS NOTIFYTPLIDX
+			, a.MUGICONTYPE
+		FROM t_goods a
+		LEFT OUTER JOIN t_goods_content b ON a.GOODSNO = b.GOODSNO 
+		WHERE a.SITEID = #{siteid}
+		AND a.GOODSNO = #{goodsno}
+	</select>
+
+	<select id="selectGoodsERPData" parameterType="somap" resultType="somap">
+		SELECT
+			B.IFLOGIDX, GOODSNO, DEALERNO, GOODSCODE, GOODSNAME, SUMMARY, KEYWORD, MARKETPRICE, PRICE, PRICESPLIT
+			 , ISTAXFREE, STOCK, CMONEY, OPTIONKIND, BRANDIDX, PRODUCT, ORIGIN, DELIVERYPOLICY, DELIVERYMETHOD
+			 , DELIVERYFEE, DELIVERYLIMIT, A.ORGNO, CMONEYPOLICY, CMONEYVALUE, IMGAUTOCHK, IMG_W, ISUSEADDITION
+			 , ISPBGOODS
+		     , (SELECT MDCODE FROM T_MDINFO WHERE MDIFIDX = A.MDIFIDX) AS MDCODE
+		     , GOODSSELLTYPE
+			 , DATE_FORMAT(DISSTDATE, '%Y%m%d%H%i%s') AS DISSTDATE
+			 , DATE_FORMAT(DISEDDATE, '%Y%m%d%H%i%s') AS DISEDDATE
+			 , MINORDCNT, MAXORDCNT, DAYMAXORDCNT, ISFRSTSALE
+			 , GOODSDIVTYPE, ISCOMBDELIV, KCDIVTYPE, MUAPPCHTYPE, MUMEMBERTYPE, MUMEMLVTYPE, PERMAXORDCNT, ASWARMONTH, ASNOTICE, B.AUD_TYPE_CD
+			 , (SELECT BRCODE FROM T_BRAND WHERE IDX = A.BRANDIDX) AS BRCODE
+		FROM T_GOODS A INNER JOIN (
+				SELECT
+					ORGNO, GROUP_CONCAT(IFLOGIDX) AS IFLOGIDX, MIN(REGDATE) AS REGDATE
+					 ,AUDDIV AS AUD_TYPE_CD
+				FROM T_IFLOG A
+				WHERE IFTYPE = 'IFT002'
+				AND IFDATE IS NULL
+				GROUP BY ORGNO, AUDDIV
+			)B ON A.GOODSNO = B.ORGNO
+		WHERE A.SITEID = #{siteid}
+		ORDER BY B.REGDATE
+	</select>
+	
+	<update id="updateGoodsHits" parameterType="somap">
+		UPDATE /* GoodsMapper.xml -  updateGoodsHits::: 상품조회수 수정 */
+			T_GOODS
+		SET HITS = HITS + 1
+		WHERE GOODSNO = #{goodsno}
+	</update>
+
+	<select id="selectGoodsDashBoard" parameterType="somap" resultType="somap">
+		SELECT
+			 FORMAT(IFNULL(SUM(IF(GOODSAPPRTYPE = 'GAT002', 1, 0)), 0), 0) AS APPLY
+			, FORMAT(IFNULL(SUM(IF(GOODSSELLTYPE = 'GST005', 1, 0)) + SUM(IF(GOODSSELLTYPE = 'GST004' AND (CNT <![CDATA[<=]]> 0), 1, 0)), 0), 0) AS SOLDOUT
+			, FORMAT(IFNULL(SUM(IF(GOODSSELLTYPE = 'GST002' AND GOODSAPPRTYPE = 'GAT004' AND CURRENT_TIMESTAMP BETWEEN DISSTDATE AND DISEDDATE, 1, 0)), 0), 0) AS SALES
+			, FORMAT(IFNULL(SUM(IF(GOODSSELLTYPE = 'GST002', 1, 0)), 0), 0) AS META_SALING
+			, FORMAT(IFNULL(SUM(IF(GOODSAPPRTYPE = 'GAT004', 1, 0)), 0), 0) AS META_APPLY_STATE
+			, FORMAT(IFNULL(SUM(IF(CURRENT_TIMESTAMP BETWEEN DISSTDATE AND DISEDDATE, 1, 0)), 0), 0) AS META_DISPLAY_IN_CNT
+		FROM T_GOODS A LEFT OUTER JOIN (
+			SELECT
+				GOODSNO, SUM(STOCKCNT - SAFESTOCKCNT) AS CNT
+			FROM T_GOODS_OPTION_DETAIL
+			WHERE ISOPTDISPLAY = 'T'
+			GROUP BY GOODSNO
+		)B ON A.GOODSNO = B.GOODSNO
+		WHERE SITEID = #{siteid}
+		AND A.ISDEAL = 'F'
+		AND ISTEMPSAVE = 'F'
+		<if test='userno !=null and userno !="" '>
+			AND DEALERNO = #{userno}
+		</if>
+	</select>
+	
+	<select id="selectRecentGoodList" parameterType="somap" resultType="somap">
+    SELECT /*GoodsMapper.xml - selectRecentGoodList::최근본상품 목록 조회*/
+           tg.goodsname -- 상품명
+	     , tg.summary -- 상품요약설명
+	     , tg.goodsno -- 상품번호
+	     , tg.goodscode
+	     , FN_GET_FILE_URL(tg.goodsno, 'FLT001', #{imgtype}) as fullpath     -- 이미지 경로
+	     , fn_get_goods_marketprice(#{siteid}, tg.goodsno) as marketprice  -- 정산가
+		 , fn_get_goods_price(#{siteid}, tg.goodsno) as price   -- 판매가
+		 , fn_get_goods_salepromoamt(#{siteid}, tg.goodsno, null, 0, #{platform}) as saleamt -- 프로모션할인적용가(할인가)
+		 , fn_get_goods_salecouponamt(#{siteid}, tg.goodsno, null, 0, #{platform}) as goodscpnamt -- 즉시할인쿠폰할인가
+         , FN_GET_GOODS_STOCK(#{siteid}, tg.goodsno) as stockcnt
+         , ifnull(tb.enname, '') as brandname -- 브랜드명
+         , ifnull((select 'T' from t_wish where goodsno = tg.goodsno and userno = #{userno} and istrash = 'F'), 'F') as iswished
+	     , tg.goodsselltype
+	     , tgc.cateidx
+	FROM t_goods tg
+	LEFT OUTER JOIN t_brand tb ON tg.BRANDIDX  = tb.IDX
+	LEFT OUTER JOIN t_goods_category tgc ON tg.goodsno = tgc.goodsno
+            AND tgc.isrepre = 'T'
+	where tg.SITEID = #{siteid}
+	-- AND tg.isdisplay = 'T'
+	<if test="goodsnolist != null and goodsnolist.size > 0">
+		AND tg.goodsno IN 
+		<foreach collection="goodsnolist" item="item" open="(" close=")" separator=",">
+			#{item.goodsno}
+		</foreach>
+	</if>
+	</select>
+
+	<select id="selectPBGoodsList" parameterType="somap" resultType="somap">
+		SELECT
+			B.GOODSNO, B.OPTIONCODE
+		FROM T_GOODS A INNER JOIN T_GOODS_OPTION_DETAIL B ON A.GOODSNO = B.GOODSNO
+		WHERE SITEID = 'base'
+		  AND ISTEMPSAVE = 'F'
+		  AND ISPBGOODS = 'T'
+		  AND GOODSSELLTYPE != 'GST006'
+		  AND GOODSAPPRTYPE = 'GAT004'
+	</select>
+	 
+	<!-- 이미지 업로드 후 상품정보 수정 -->
+	<update id="updateStatusImageUpload" parameterType="somap">
+		UPDATE t_goods	/* GoodsMapper.xml - updateStatusImageUpload 상품정보 갱신 */
+		SET	  goodsapprtype = #{goodsapprtype}
+			, istempsave = #{istempsave}
+			, moddate 		= NOW()
+		WHERE siteid = #{siteid}
+		AND goodsno = #{goodsno}
+	</update>
+	
+	<select id="selectTempSaveGoodsCountByGoodsno" parameterType="somap" resultType="int">
+		/* GoodsMapper.xml - selectTempSaveGoodsCountByGoodsno 임시저장 상품 건수 조회 */
+		SELECT COUNT(*)
+		FROM T_GOODS
+		WHERE siteid = #{siteid}
+		AND istempsave = 'T'
+		<choose>
+			<when test='goodsnolist != null and goodsnolist.size > 0'>
+			AND goodsno IN <foreach collection="goodsnolist" item="_goodsno" open="(" separator="," close=")">#{_goodsno}</foreach>
+			</when>
+			<otherwise>
+			AND goodsno = #{goodsno}
+			</otherwise>
+		</choose>
+	</select>
+</mapper>

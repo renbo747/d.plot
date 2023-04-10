@@ -1,0 +1,111 @@
+package com.dplot.front.controller;
+
+import javax.servlet.http.HttpServletRequest;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestMethod;
+import org.springframework.web.bind.annotation.RestController;
+
+import com.dplot.annontation.FrontInfo;
+import com.dplot.common.Response;
+import com.dplot.common.SOMap;
+import com.dplot.front.service.CouponService;
+
+@RestController
+@RequestMapping("coupon")
+public class CouponController {
+	/** The Constant logger. */
+	private static final Logger logger = LoggerFactory.getLogger(CouponController.class);
+
+
+	@Autowired
+	private CouponService couponService;
+
+	/**
+	 * 주문결제 다운로드 쿠폰 조회
+	 */
+	@FrontInfo
+	@RequestMapping(value="/order/list",  method = RequestMethod.POST)
+	public Response orderCouponlist(@RequestBody SOMap params) throws Exception {
+		Response res = new Response();
+		res.setData(couponService.selectOrderCouponList(params));
+
+		return res;
+	}
+
+	/**
+	 * 마이페이지 쿠폰목록 조회
+	 */
+	@FrontInfo
+	@RequestMapping(value="/mypage/list",  method = RequestMethod.POST)
+	public Response myPageCouponList(@RequestBody SOMap params) throws Exception {
+		Response res = new Response();
+		res.setData(couponService.selectMypageCouponList(params));
+
+		return res;
+	}
+
+	/**
+	 * 쿠폰다운로드
+	 * @param params
+	 * @return
+	 * @throws Exception
+	 */
+	@RequestMapping(value="/download",  method = RequestMethod.POST)
+	public Response download(@RequestBody SOMap params) throws Exception {
+		return couponService.downloadCoupon(params);
+	}
+
+	/**
+	 * 쿠폰전체다운로드
+	 * @param params
+	 * @return
+	 * @throws Exception
+	 */
+	@RequestMapping(value="/download/all",  method = RequestMethod.POST)
+	public Response downloadAll(@RequestBody SOMap params) throws Exception {
+		return couponService.downloadAllCoupon(params);
+	}
+
+
+	/**
+	 * 쿠폰전체다운로드(페이징으로인하여 전체 목록 조회후  다운로드처리)
+	 * @param params
+	 * @return
+	 * @throws Exception
+	 */
+	@RequestMapping(value="/pageDownload/all",  method = RequestMethod.POST)
+	public Response downloadAll2(@RequestBody SOMap params) throws Exception {
+		return new Response(couponService.pageDownloadAllCoupon(params));
+	}
+
+	/**
+	 * 평생회원 쿠폰 조회
+	 * @param params
+	 * @return
+	 * @throws Exception
+	 */
+	@RequestMapping(value="/lifemember", method = RequestMethod.POST)
+	public Response lifetimeCoupon(@RequestBody SOMap params) throws Exception {
+		return new Response(couponService.lifetimeCoupon(params));
+	}
+
+	/**
+	 * 이벤트 쿠폰 다운로드
+	 * @param params
+	 * @return
+	 * @throws Exception
+	 */
+	@RequestMapping(value="/down", method = {RequestMethod.POST,RequestMethod.GET})
+	public Response down(@RequestBody SOMap params) throws Exception {
+		//SOMap params = new SOMap();
+		//String code = request.getParameter("cpninfoidx");
+		//params.put("cpninfoidx", code);
+
+		return couponService.downCoupon(params);
+	}
+}

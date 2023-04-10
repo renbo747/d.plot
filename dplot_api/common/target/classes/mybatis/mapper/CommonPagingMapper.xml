@@ -1,0 +1,55 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="COMMON">
+
+<sql id="pagingHeaderSql">
+  
+</sql>            
+ 
+<sql id="pagingFooterSql">      
+	LIMIT #{startnum}, #{endnum}  
+</sql> 
+    
+    
+  <sql id="bigPagingHeaderSql">
+  <![CDATA[
+    SELECT
+        * 
+    FROM
+        (SELECT
+            T1.*,
+            ROWNUM RNUM 
+         FROM
+            (
+  ]]>   
+ </sql>            
+ 
+ <sql id="bigPagingFooterSql">      
+  <![CDATA[      
+               ) T1 
+         WHERE ROWNUM <= #{page} * #{pagesize}
+        ) 
+    WHERE RNUM > (#{page}-1) * #{pagesize}
+  ]]>  
+    </sql>  
+    
+    
+    
+  <sql id="newBigPagingHeaderSql">
+  <![CDATA[
+    SELECT
+        * 
+    FROM
+        (
+  ]]>   
+ </sql>            
+ 
+ <sql id="newBigPagingFooterSql">      
+  <![CDATA[      
+         ) T1 
+         WHERE rownumber between (#{page}-1) * #{pagesize} and #{page} * #{pagesize}
+  ]]>  
+    </sql>         
+
+</mapper>

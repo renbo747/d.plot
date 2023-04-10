@@ -1,0 +1,213 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.dplot.mapper.DadaEventEnterMapper">
+
+    <!-- 이벤트 응모 조회 -->
+    <select id="selectAdminDadaEventEnterList" resultType="somap" parameterType="somap">
+        /* selectAdminDadaEventEnterList */
+        SELECT if(temp > 9, temp, concat('0', temp)) AS rn,
+        	   a.idx,
+               a.eventidx,
+               a.memberid,
+               a.userno,
+               a.name,
+               a.count
+        FROM (
+                 SELECT @rownum := @rownum + 1 AS temp,
+                        a.idx
+                        a.eventidx,
+                        a.userno,
+                        b.userid AS memberid,
+                        c.name,
+                        count(a.userno)        AS count
+                 FROM t_dadaevent_enter a
+                          LEFT JOIN t_user b ON a.userno = b.no
+                          LEFT JOIN t_member c ON a.userno = c.userno
+                    , (SELECT @rownum := 0) temp
+                 WHERE 1 = 1
+                   <if test="eventidx != null and eventidx != ''">
+                        AND a.eventidx = #{eventidx}
+                   </if>
+                   <if test="usernolist != null and usernolist.size > 0">
+                        AND a.userno IN
+                        <foreach collection="usernolist" item="item" open="(" close=")" separator=",">
+                            #{item}
+                        </foreach>
+                   </if>
+                 GROUP BY a.userno
+             ) a
+        WHERE 1 = 1
+    </select>
+
+    <!-- 이벤트 응모 팝업 리스트 조회 -->
+    <select id="selectAdminDadaEventEnterListPopup" resultType="somap" parameterType="somap">
+        /* selectAdminDadaEventEnterListPopup */
+        SELECT date_format(regdate, '%Y-%m-%d %H:%i:%s') AS regdate
+        FROM t_dadaevent_enter
+        WHERE 1 = 1
+        AND eventidx = #{eventidx}
+        AND userno = #{userno}
+    </select>
+
+    <!-- 이벤트 응모 유저 정보 포함 조회 -->
+    <select id="selectAdminDadaEventEnterByUserInfoList" resultType="somap" parameterType="somap">
+        SELECT *
+        FROM (
+                 SELECT b.userid
+                 	  , a.idx
+                      , c.name                                                      AS username
+                      , fn_get_codename('base', 'DADAMEMBERTYPE', c.dadamembertype) AS dadamembertypename
+                      , fn_get_codename('base', 'MEMLVTYPE', c.memlvtype)           AS memlvtypename
+                      , date_format(c.regdate, '%Y-%d-%m')                          AS regdate
+                      , c.userno
+                      , c.memlvtype AS sortlvtype
+                      , c.dadamembertype AS sortmemtype
+                 FROM t_dadaevent_enter a
+                          JOIN t_user b ON a.userno = b.no
+                          JOIN t_member c ON a.userno = c.userno
+                 WHERE 1 = 1
+                   AND a.eventidx = #{eventidx}
+                   AND a.issucc = 'T'
+                   AND a.istrash = 'F'
+             ) a
+        <if test="sort == null and sort == ''">
+            ORDER BY a.username
+        </if>
+        <if test="sort != null and sort != ''">
+            <choose>
+                <when test="sort == 'dadamembertype_desc'">
+                    ORDER BY a.sortmemtype DESC, a.username
+                </when>
+                <when test="sort == 'dadamembertype_asc'">
+                    ORDER BY a.sortmemtype ASC, a.username
+                </when>
+                <when test="sort == 'memlvtype_desc'">
+                    ORDER BY a.sortlvtype DESC, a.username
+                </when>
+                <when test="sort == 'memlvtype_asc'">
+                    ORDER BY a.sortlvtype ASC, a.username
+                </when>
+                <when test="sort == 'regdate_desc'">
+                    ORDER BY a.regdate DESC, a.username
+                </when>
+                <when test="sort == 'regdate_asc'">
+                    ORDER BY a.regdate ASC, a.username
+                </when>
+            </choose>
+        </if>
+    </select>
+
+    <!-- 이벤트 관리 엑셀 다운 로드 -->
+    <select id="selectAdminEnterExcelDownload" resultType="somap" parameterType="somap">
+        /* selectAdminEnterExcelDownload */
+        SELECT if(temp > 9, temp, concat('0', temp)) AS rn,
+               a.*
+        FROM (
+                 SELECT @rownum := @rownum + 1            AS temp
+                      , a.eventidx
+                      , a.userno
+                      , b.userid                                            -- 유저 아이디
+                      , c.name                                              -- 유저 이름
+                      , count(a.userno)                   AS count          -- 총 응모 수
+                      , c.mobile                                            -- 핸드폰
+                      , (SELECT count(*)
+		                   FROM t_comcoupon_memissue cm
+		                  WHERE cm.userno = b.no
+		                    AND cm.isdownload = 'T'
+		                    AND cm.issuedate <![CDATA[<=]]> now()
+		                    AND cm.usedate IS NULL)		 AS couponcount     -- 쿠폰
+                      , c.lastlogindate                                     -- 최근접속일시
+                      , c.email                                             -- 이메일
+                      , if(e.total_paypoint is null, 0, e.total_paypoint) -
+                        if(e.total_usepoint is null, 0, e.total_usepoint)           AS paypoint     -- 적립금
+                      , c.lastbuydate                                       -- 최근구매일시
+                      , if(c.gender = '100', '남', '여')    AS gender         -- 성별
+                      , if(f.total_paypoint is null, 0, f.total_paypoint) -
+                        if(f.total_usepoint is null, 0, f.total_usepoint)           AS epoint       -- e포인트
+                      , c.frstbuydate                                       -- 첫 구매일자
+                      , c.birthdate                                         -- 생년월일
+                      , if(e.empreserve_point is null, 0, e.empreserve_point) -
+                        if(e.empreserve_usepoint is null, 0, e.empreserve_usepoint) AS payemploypoint   -- 임직원적립금
+                      , c.regdate                         AS memregdate     -- 가입일자
+                      , concat(c.addr, ' ', c.addrdetail) AS address        -- 배송지 주소
+                 FROM t_dadaevent_enter a
+                          LEFT JOIN t_user b ON a.userno = b.no
+                          LEFT JOIN t_member c ON a.userno = c.userno
+                          LEFT JOIN (
+                     SELECT a.userno,
+                            sum(a.paypoint)                                          as total_paypoint,
+                            sum(a.usedpoint)                                         as total_usepoint,
+                            sum(case when a.isempreserve = 'T' THEN a.paypoint END)  as empreserve_point,
+                            sum(case when a.isempreserve = 'T' THEN a.usedpoint END) as empreserve_usepoint
+                     FROM t_reserve_pay a
+                     GROUP BY a.userno
+                 ) e ON c.userno = e.userno
+                          LEFT JOIN (
+                     SELECT a.userno,
+                            sum(a.paypoint) as total_paypoint,
+                            sum(b.usepoint) as total_usepoint
+                     FROM t_epoint_pay a
+                              LEFT JOIN (
+                         SELECT EPOPAYIDX, sum(usepoint) as usepoint
+                         FROM t_epoint_use
+                         group by EPOPAYIDX
+                     ) b ON a.epopayidx = b.epopayidx
+                     GROUP BY a.userno
+                 ) f ON c.userno = f.userno
+                    , (SELECT @rownum := 0) temp
+                 WHERE 1 = 1
+                   AND a.eventidx = #{eventidx}
+                   AND a.istrash = 'F'
+                 GROUP BY a.userno
+             ) a
+        WHERE 1 = 1
+    </select>
+
+    <!-- 이벤트 응모 저장 -->
+    <insert id="insertAdminEventEnterArray" parameterType="somap">
+        INSERT INTO t_dadaevent_enter (EVENTIDX, USERNO, REGDATE)
+        VALUES
+        <foreach collection="enterlist" separator="," item="item">
+            (#{eventidx}, #{item.userno}, now())
+        </foreach>
+    </insert>
+
+    <!-- 이벤트 응모 수정 -->
+    <update id="updateAdminEventEnterArray" parameterType="somap">
+        UPDATE t_dadaevent_enter
+        <set>
+        	<if test="issucc != null">
+                issucc = #{issucc},
+            </if>
+            <if test="istrash != null">
+                istrash = #{istrash},
+            </if>
+        </set>
+        WHERE 1 = 1
+          <if test="eventidx != null and eventidx != ''">
+            AND eventidx = #{eventidx}
+          </if>
+          <if test="list != null and list.size > 0">
+              AND idx IN
+              <foreach collection="list" open="(" separator="," close=")" item="item">
+                  #{item}
+              </foreach>
+          </if>
+    </update>
+
+    <!-- 이벤트 응모 저장 -->
+    <insert id="insertAdminEventEnter" parameterType="somap">
+        INSERT INTO t_dadaevent_enter (EVENTIDX, USERNO,
+         <if test="issucc != null">
+                ISSUCC,
+         </if>
+         REGDATE)
+        VALUES
+        (#{eventidx}, #{userno},
+         <if test="issucc != null">
+                #{issucc},
+         </if>
+        now())
+    </insert>
+</mapper>

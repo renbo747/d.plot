@@ -1,0 +1,72 @@
+<template>
+  <main class="mypage-invitation-event-pc">
+    <div class="container">
+      <section class="benefit__section">
+        <div class="benefit__header">
+          <p class="mb-0 invitation__title">
+            지금 D.PLOT 가입하면 나도 혜택! 나를 초대한 친구도 혜택!
+          </p>
+        </div>
+        <div class="benefit__body">
+          <p class="mb-0 benefit__title">친구와 함께 받는 혜택</p>
+          <ul class="list-style-none ul-dot"  v-if="rewardInfo.recomtype == constants.RECOMTYPE_RCT_SAVE">
+            <li><span>친구에게 적립금 {{$util.maskComma(rewardInfo.recjoinpoint) }}원 지급</span></li>
+            <li><span>나에게 적립금 {{ $util.maskComma(rewardInfo.revpoint) }}원 지급</span></li>
+          </ul>
+          <ul class="list-style-none ul-dot"  v-else-if="rewardInfo.recomtype == constants.RECOMTYPE_RCT_EPOINT">
+            <li><span>친구에게 D포인트 {{ $util.maskComma(rewardInfo.recjoinpoint) }}원 지급</span></li>
+            <li><span>나에게 D포인트 {{ $util.maskComma(rewardInfo.revpoint) }}원 지급</span></li>
+          </ul>
+          <ul class="list-style-none ul-dot" v-else>
+            <li><span>친구에게 쿠폰 {{rewardInfo.recjoincpname}} 지급</span></li>
+            <li><span>나에게 쿠폰 {{rewardInfo.revcpname }} 지급</span></li>
+          </ul>
+        </div>
+        <div class="benefit__footer">
+          <b-button class="dp-btn text-white" variant="gray-800"  @click="goSignUp()" squared>
+            <span>초대장으로 가입하고 혜택받기</span>
+          </b-button>
+        </div>
+      </section>
+    </div>
+  </main>
+</template>
+
+<script>
+import KmcCert from '@views.mobile/member/KmcCert.js'
+export default {
+  mixins : [KmcCert],
+  data() {
+    return {
+      rewardInfo:{},
+      constants: this.$store.getters["MEMBER"],
+    };
+  },
+  methods: {
+    /*******************************
+     * 리워드 보상정보 조회
+     ******************************/
+    getRewardInfo() {
+      this.$http.post("/etc/reward", {}).then((result) => {
+        this.rewardInfo = result.data.rewardinfo;
+        this.$util.debug(this.rewardInfo);
+      });
+    },
+     /*******************************
+     * 회원가입하러가기
+     ******************************/
+    goSignUp(){
+      if (this.$util.isNull(this.$route.query.no)) {
+        this.$eventBus.$emit('alert', '확인', "추천인 정보가 없습니다.");
+      }else {
+        window.sessionStorage.setItem('inviteno', this.$route.query.no);
+        this.$router.push({'name':'member-login'});
+        this.signup();
+      }
+    }
+  },
+  mounted() {
+    this.getRewardInfo();
+  },
+};
+</script>

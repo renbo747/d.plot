@@ -1,0 +1,191 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.dplot.mapper.ReqTemplateMapper">
+	<!-- 사용중인 문구 템플릿 목록 조회 -->
+	<select id="selectAllUseTemplateList" parameterType="somap" resultType="somap">
+		SELECT  /* ReqTemplateMapper.xml - selectAllUseTemplateList 사용중인 문구 템플릿 목록 조회 */
+			tplidx
+			, subject
+			, content
+		FROM t_reqtemplate
+		<where>
+			AND siteid = #{siteid}
+			AND istrash = 'F'
+		</where>
+		ORDER BY sort
+	</select>
+	
+	<!-- 답변템플릿 목록 조회 -->
+	<select id="selectRepTemplateList" parameterType="somap" resultType="somap">
+		/* ReqTemplateMapper - selectRepTemplateList 답변템플릿 목록조회 */
+		SELECT
+			  t.SORTNUM
+			, t.SORT AS ORGSORTNUM
+			, t.TPLIDX 
+			, t.SUBJECT 
+			, t.REGUSERID 
+			, t.REGUSERNAME
+			, date_format(t.REGDATE, '%Y-%m-%d') AS REGDATE 
+		FROM (
+			SELECT
+				  ta.*
+				, (@rownum := @rownum+1) AS SORTNUM
+			FROM (<include refid="selectRepTemplateSQL"/>) ta
+			, (SELECT @rownum := 0) tb
+		) t
+		<choose>
+			<when test="psort == 'sortnum_asc'">
+			ORDER BY t.SORTNUM ASC, t.REGDATE DESC
+			</when>
+			<when test="psort == 'sortnum_desc'">
+			ORDER BY t.SORTNUM DESC, t.REGDATE DESC
+			</when>
+			<when test="psort == 'subject_asc'">
+			ORDER BY t.SUBJECT ASC, t.REGDATE DESC, t.SORTNUM
+			</when>
+			<when test="psort == 'subject_desc'">
+			ORDER BY t.SUBJECT DESC, t.REGDATE DESC, t.SORTNUM
+			</when>
+			<when test="psort == 'regdate_asc'">
+			ORDER BY t.REGDATE ASC, t.SORTNUM
+			</when>
+			<when test="psort == 'regdate_desc'">
+			ORDER BY t.REGDATE DESC, t.SORTNUM
+			</when>
+			<otherwise>
+			ORDER BY t.REGDATE DESC, t.SORTNUM
+			</otherwise>
+		</choose>
+		<if test="startpage != null and !startpage.equals('') and endpage != null and !endpage.equals('')">
+		LIMIT #{startpage}, #{endpage}
+		</if>
+	</select>
+	
+	<!-- 답변템플릿 건수 조회 -->
+	<select id="selectRepTemplateListCount" parameterType="somap" resultType="somap">
+		/* ReqTemplateMapper - selectRepTemplateListCount 답변템플릿 건수 조회 */
+        SELECT COUNT(*) AS totalcnt
+		FROM (<include refid="selectRepTemplateSQL"/>) ta
+	</select>
+	
+	<!-- 답변템플릿 상세 조회 -->
+	<select id="selectRepTemplateDetail" parameterType="somap" resultType="somap">
+		/* ReqTemplateMapper - selectRepTemplateDetail 답변템플릿 상세 조회 */
+		SELECT 
+			  tr.TPLIDX 
+			, tr.SUBJECT 
+			, tr.CONTENT 
+			, tr.REGUSERID 
+			, ta.NAME AS REGUSERNAME 
+			, date_format(tr.REGDATE, '%Y-%m-%d') AS REGDATE 
+		FROM t_reqtemplate tr 
+		INNER JOIN t_user tu ON tr.REGUSERID = tu.USERID 
+		INNER JOIN t_admin ta ON tu.NO = ta.USERNO 
+		WHERE tr.SITEID = #{siteid}
+		AND tr.TPLIDX = #{tplidx}
+		AND tr.ISTRASH = 'F'
+	</select>
+	
+	<!-- 답변템플릿 조회 쿼리 -->
+	<sql id="selectRepTemplateSQL">
+		SELECT 
+			  tr.SORT
+			, tr.TPLIDX 
+			, tr.SUBJECT 
+			, tr.REGUSERID 
+			, ta.NAME AS REGUSERNAME 
+			, tr.REGDATE
+		FROM t_reqtemplate tr 
+		INNER JOIN t_user tu ON tr.REGUSERID = tu.USERID 
+		INNER JOIN t_admin ta ON tu.NO = ta.USERNO 
+		WHERE tr.SITEID = #{siteid}
+		AND tr.ISTRASH = 'F'
+		<if test="(startdate != null and startdate != '') and (enddate == null or enddate == '') ">
+		AND tr.REGDATE <![CDATA[>=]]> STR_TO_DATE(CONCAT(#{startdate},'000000'), '%Y-%m-%d%H%i%s')
+		</if>
+		<if test="(startdate == null or startdate == '') and (enddate != null and enddate != '') ">
+		AND tr.REGDATE <![CDATA[<=]]> STR_TO_DATE(CONCAT(#{enddate},'235959'), '%Y-%m-%d%H%i%s')
+		</if>
+		<if test="(startdate != null and startdate != '') and (enddate != null and enddate != '') ">
+		AND tr.REGDATE BETWEEN STR_TO_DATE(CONCAT(#{startdate},'000000'), '%Y-%m-%d%H%i%s') AND STR_TO_DATE(CONCAT(#{enddate},'235959'), '%Y-%m-%d%H%i%s')
+		</if>
+		<if test="sword != null and sword != '' ">
+			<choose>
+				<when test="skey == 'subject'">
+				AND tr.SUBJECT LIKE CONCAT('%', #{sword}, '%')
+				</when>
+				<when test="skey == 'regusername'">
+				AND ta.NAME LIKE CONCAT('%', #{sword}, '%')
+				</when>
+				<otherwise>
+				AND ( tr.SUBJECT LIKE CONCAT('%', #{sword}, '%')
+				   OR ta.NAME LIKE CONCAT('%', #{sword}, '%') )
+				</otherwise>
+			</choose>
+		</if>
+		ORDER BY tr.SORT
+	</sql>
+	
+	<!-- 답변템플릿 저장 -->
+	<insert id="mergeRepTemplate" parameterType="somap">
+		/* ReqTemplateMapper - mergeRepTemplate 답변템플릿 저장 */
+		INSERT INTO t_reqtemplate (
+			  TPLIDX	/* 답변템플릿IDX */
+			, SITEID	/* 사이트ID */
+			, SORT		/* 노출순서 */
+			, SUBJECT  	/* 제목 */
+			, CONTENT  	/* 내용 */
+			, ISTRASH  	/* 삭제여부 */
+			, REGUSERID /* 등록자ID */
+			, REGDATE  	/* 등록일시 */
+		) VALUES (
+			  #{tplidx}
+			, #{siteid}
+			, (	SELECT t.SORT 
+			  	FROM (
+			  		SELECT ifnull(max(SORT)+1, 1) AS SORT 
+			  		FROM t_reqtemplate
+			  		WHERE istrash = 'F'
+			  	) t
+			  )
+			, #{subject}
+			, #{content}
+			, 'F'
+			, #{authuserid}
+			, NOW()
+		)
+		ON DUPLICATE KEY UPDATE
+			  SUBJECT = #{subject}
+			, CONTENT = #{content}
+			, MODUSERID = #{authuserid}
+			, MODDATE = NOW()
+	</insert>
+
+	<!-- 답변템플릿 삭제 -->
+	<update id="updateRepTemplateUse" parameterType="somap">
+		UPDATE t_reqtemplate  /* ReqTemplateMapper.xml - updateRepTemplateUse 답변템플릿 삭제 */
+		SET
+			  ISTRASH = #{istrash}
+			, MODUSERID = #{authuserid}
+			, MODDATE = NOW()
+		WHERE SITEID = #{siteid}
+		AND TPLIDX = #{tplidx}
+	</update>
+
+	<!-- 답변템플릿 노출순서 변경 -->
+	<update id="updateRepTemplateSort" parameterType="somap">
+		UPDATE t_reqtemplate  /* ReqTemplateMapper.xml - updateRepTemplateSort 답변템플릿 노출순서 변경 */
+		SET SORT = 
+            CASE TPLIDX
+            <foreach collection="changelist" index="index" item="item">
+                WHEN #{item.idx} THEN #{item.orgsortnum}
+            </foreach>
+            END
+		WHERE SITEID = #{siteid}
+		AND TPLIDX IN
+        <foreach collection="changelist" index="index" item="item" separator="," open="(" close=")">
+            #{item.idx}
+        </foreach>
+	</update>
+</mapper>

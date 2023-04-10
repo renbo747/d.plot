@@ -1,0 +1,503 @@
+.dp-signup {
+
+  .btn.dp-btn {
+    font-size: 16px;
+    letter-spacing: -.64px;
+    height: 48px;
+  }
+
+  .form-group {
+    margin-bottom: 0 !important;
+  }
+
+  .form-group + .form-group {
+    margin-top: 20px;
+  }
+
+  .magic-checkbox + label {
+    padding-left: 34px;
+    line-height: 20px;
+  }
+
+  .more-icon {
+    cursor: pointer;
+  }
+
+  .signup__title {
+    font-size: 26px;
+    letter-spacing: -1.04px;
+    line-height: 37px;
+    margin-bottom: 60px;
+  }
+
+  .signup__form {
+    padding-top: 40px;
+  }
+  // input박스 영역
+  .form-group {
+    margin-bottom: 10px;
+  }
+
+  // 이용약관 부분
+  .dp-signup__agree-service {
+    padding-top: 40px;
+
+    .agree-service__description {
+      font-size: 16px;
+      letter-spacing: -.64px;
+      line-height: 24px;
+      font-weight: 500;
+      margin-bottom: 30px;
+    }
+    .agree-service__box {
+      color: $black;
+      font-size: 14px;
+      letter-spacing: -.56px;
+      padding: 0 14px;
+
+      > li {
+        display: flex;
+        justify-content: space-between;
+      }
+
+      li:first-child {
+        padding-bottom: 16px;
+      }
+
+      li + li {
+        padding-top: 14px;
+      }
+
+    }
+    .signup-last {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 14px 16px;
+      border: 1px solid $gray-400 ;
+      margin-top: 40px;
+
+      .magic-checkbox + label {
+        font-weight: 600;
+        color: #111;
+      }
+
+      i {
+        display: flex;
+        align-items: center;
+        font-style: normal;
+        span {
+          padding-right: 4px;
+        }
+      }
+    }
+  }
+
+  // 이용약관 부분 버튼
+  .dp-signup__btn-box {
+    padding-top: 40px;
+  }
+
+  // 임직원 회원가입 페이지 관련 scss
+  .email__label {
+    margin-bottom: 10px;
+  }
+  .email__executive {
+    margin-bottom: 12px;
+  }
+  .email-phone-find {
+    display: flex;
+    align-items: center;
+    .email-input {
+      width: 50%;
+    }
+    .at-sign {
+      padding-left: 8px;
+      padding-right: 8px;
+    }
+    .domain-select {
+      width: 49%;
+      height: 48px;
+    }
+  }
+  .email-number__label {
+    padding-top: 20px;
+    padding-bottom: 10px;
+    margin-bottom: 0;
+  }
+  .confirm-alert {
+    display: flex;
+    margin-bottom: 12px;
+
+    img{
+      margin-right: 2px;
+    }
+  }
+  .number-input {
+    position: relative;
+    margin-bottom: 8px;
+    .icon-input-success {
+      display: none !important;
+    }
+    &::after {
+      content: attr(data-timer);
+      position: absolute;
+      top: 50%;
+      right: 16px;
+      transform: translateY(-50%);
+      font-size: 14px;
+      letter-spacing: -.56px;
+      line-height: 20px;
+    }
+  }
+}
+
+// 이미 회원가입 완료 페이지
+.sign-up-sns {
+
+  .already-signup__name {
+    width: 71px;
+    margin-right: 34px;
+  }
+
+  .signup-already-btn {
+    padding-top: 40px;
+  }
+
+  .already-signup__desc {
+    margin-bottom: 0;
+  }
+
+  .already-signup__info {
+    margin-top: 30px;
+  }
+
+  .already-signup__flex + .already-signup__flex {
+    margin-top: 6px;
+  }
+
+  .signup-description-sns {
+    margin-top: 10px;
+  }
+
+  .customer-center__title-pc {
+    color: #888888;
+  }
+
+  .customer-center-pc {
+    margin-bottom: 40px;
+  }
+
+  .customer-center__number-pc {
+    font-size: 26px;
+    line-height: -1.04px;
+    padding-top: 10px;
+  }
+
+  .customer-center-wrap {
+    padding-top: 20px;
+  }
+
+  .customer-center__time01 {
+    margin-bottom: 10px;
+  }
+
+  .center-title-pc {
+    color: #888888;
+    margin-right: 16px;
+  }
+}
+
+// 회원가입 완료 페이지
+.signup-complete {
+
+  .complete-coupon {
+    padding-top: 50px;
+  }
+
+  .complete-coupon-title {
+    padding-bottom: 14px;
+  }
+
+  .complete-information {
+    padding-bottom: 16px;
+  }
+
+  .success-info-pc {
+    display: flex;
+    text-align: center;
+    margin-bottom: 6px;
+  }
+
+  .success__info__name {
+    text-align: left;
+    width: 71px;
+    margin-right: 34px;
+  }
+
+  .success-info-recommend {
+    margin-top: 20px;
+  }
+
+  .info-recommend-id__p {
+    font-size: 14px;
+    letter-spacing: -.56px;
+    line-height: 20px;
+  }
+
+  .signup-success__p {
+    color: #888888;
+  }
+
+  .info-recommend-id__form__check {
+    margin-right: 12px;
+    width: 70%;
+  }
+
+  .btn-to-main {
+    margin-right: 16px;
+  }
+
+  .btn.recommend-id-btn {
+    padding: 0 42px;
+    width: 30%;
+    border-color: $gray-600;
+  }
+}
+
+
+
+// 평생회원 모달
+.lifetime-member {
+  .modal-content {
+    padding-left: 20px;
+    padding-right: 20px;
+  }
+
+  .lifetime-box {
+    text-align: left;
+  }
+
+  .lifetime-box__title {
+    color: #111;
+    position: relative;
+    padding-left: 8px;
+    font-size: 14px;
+    letter-spacing: -.56px;
+    word-break: keep-all;
+    margin-bottom: 12px;
+    @include media-breakpoint-up(xl) {
+      font-size: 16px;
+      letter-spacing: -.64px;
+    }
+  }
+
+  .lifetime-box__text {
+    color: $gray-700;
+    position: relative;
+    padding-left: 8px;
+    font-size: 14px;
+    letter-spacing: -.56px;
+    word-break: keep-all;
+    @include media-breakpoint-up(xl) {
+      font-size: 16px;
+      letter-spacing: -.64px;
+    }
+  }
+
+  .lifetime-box + .lifetime-box {
+    margin-top: 30px;
+  }
+
+  .lifetime-member__confirm-btn {
+    font-size: 14px;
+    letter-spacing: -.56px;
+    line-height: 24px;
+  }
+}
+
+// 카카오 회원가입 완료 모달
+.kakao-signup__success {
+  color: $black;
+  .modal-title {
+    font-weight: 400;
+  }
+  .kakao-signup__success__desc {
+    font-size: 18px;
+    letter-spacing: -.72px;
+    line-height: 28px;
+    margin-bottom: 18px;
+  }
+  .now-name {
+    width: 100%;
+    padding: 16px 20px;
+    margin-bottom: 30px;
+    background-color: $gray-100;
+    font-size: 14px;
+    letter-spacing: -.56px;
+    line-height: 20px;
+  }
+  .input-label {
+    word-break: keep-all;
+  }
+  .base-input {
+    margin-bottom: 50px;
+  }
+  .dp-btn {
+    margin-bottom: 16px;
+  }
+  .kakao-signup__info {
+    color: $gray-700;
+    font-size: 14px;
+    letter-spacing: -.56px;
+    line-height: 22px;
+  }
+}
+
+// 회원가입 완료 모달
+.signup-success {
+  color: $black;
+  .modal-title {
+    font-weight: 400;
+  }
+  .signup-success__desc {
+    font-size: 18px;
+    letter-spacing: -.72px;
+    line-height: 28px;
+    margin-bottom: 32px;
+  }
+  .signup-success__title {
+    margin-bottom: 12px;
+    font-size: 16px;
+    letter-spacing: -.64px;
+    line-height: 24px;
+    font-weight: 500;
+  }
+  .signup-success__p {
+    margin-bottom: 0;
+    font-size: 14px;
+    letter-spacing: -.56px;
+    line-height: 22px;
+    color: #888888;
+  }
+  .signup-success__info {
+    margin-bottom: 50px;
+  }
+  .success-info {
+    display: flex;
+    align-items: center;
+    margin-bottom: 6px;
+    p {
+      min-width: 62px;
+      color: $gray-700;
+      margin-bottom: 0;
+      font-size: 14px;
+      letter-spacing: -.56px;
+      line-height: 20px;
+      &:nth-child(1) {
+        margin-right: 18px;
+      }
+    }
+  }
+  .signup-success__buttons {
+    display: flex;
+    align-items: center;
+  }
+  .recommend-id__container {
+
+  }
+  .recommend-id__p {
+    font-size: 14px;
+    letter-spacing: -.56px;
+    line-height: 20px;
+    margin-bottom: 10px;
+  }
+  .recommend-id__form {
+    display: flex;
+    align-items: center;
+    .base-input {
+      width: 100%;
+    }
+    .dp-btn {
+      width: 100px;
+      border: 1px solid $gray-400;
+    }
+  }
+  .to-main-btn {
+    border: 1px solid $gray-400;
+  }
+}
+
+// 이용약관 모달
+.dp-modal.terms-modal.terms-modal-pc {
+  .modal-dialog {
+    max-width: 1200px;
+  }
+
+  .modal-header {
+    height: 80px;
+    padding: 24px 30px;
+    .modal-title {
+      font-size: 22px;
+    }
+  }
+
+  .modal-body {
+    padding: 30px;
+
+    .dp-sort__badge {
+      font-size: 14px;
+      letter-spacing: -.56px;
+      line-height: 20px;
+    }
+
+    .dp-sort__ul {
+      padding-bottom: 30px;
+
+      li + li {
+        margin-left: 10px;
+      }
+    }
+  }
+}
+
+// 이미 회원인 경우 모달
+.already-signup {
+  color: $black;
+  .modal-title {
+    font-weight: 400;
+  }
+  .already-signup__desc {
+    font-size: 18px;
+    letter-spacing: -.72px;
+    line-height: 28px;
+    margin-bottom: 12px;
+  }
+  .already-signup__info {
+    margin-bottom: 50px;
+    margin-top: 32px;
+  }
+  .already-signup__flex {
+    display: flex;
+    align-items: center;
+    &:nth-child(1) {
+      margin-bottom: 6px;
+    }
+    p {
+      min-width: 62px;
+      color: $gray-700;
+      margin-bottom: 0;
+      font-size: 14px;
+      letter-spacing: -.56px;
+      line-height: 20px;
+      &:nth-child(1) {
+        margin-right: 20px;
+      }
+    }
+  }
+}
+
+// 임직원 회원가입 모달
+.dp-signup__description-executive {
+  padding-bottom: 40px;
+}

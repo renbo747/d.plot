@@ -1,0 +1,427 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.dplot.mapper.ReserveMapper">
+
+	<!-- 적립금 목록 조회 -->
+	<select id="selectReserveList" parameterType="somap" resultType="somap">
+		/* ReserveMapper.xml - selectReserveList 적립금 목록 조회 */
+		<include refid="selectAdminReserveSQL"/>
+		<choose>
+			<when test="psort == 'memtype_asc'">
+			ORDER BY ta.membertype ASC, ta.regdate DESC
+			</when>
+			<when test="psort == 'memtype_desc'">
+			ORDER BY ta.membertype DESC, ta.regdate DESC
+			</when>
+			<when test="psort == 'memlv_asc'">
+			ORDER BY ta.memlvtype ASC, ta.regdate DESC
+			</when>
+			<when test="psort == 'memlv_desc'">
+			ORDER BY ta.memlvtype DESC, ta.regdate DESC
+			</when>
+			<when test="psort == 'point_asc'">
+			ORDER BY ta.point ASC, ta.regdate DESC
+			</when>
+			<when test="psort == 'point_desc'">
+			ORDER BY ta.point DESC, ta.regdate DESC
+			</when>
+			<when test="psort == 'regdate_asc'">
+			ORDER BY ta.regdate ASC
+			</when>
+			<when test="psort == 'regdate_desc'">
+			ORDER BY ta.regdate DESC
+			</when>
+			<otherwise>
+			ORDER BY ta.regdate DESC
+			</otherwise>
+		</choose>
+		<if test="startpage != null and !startpage.equals('') and endpage != null and !endpage.equals('')">
+		LIMIT #{startpage}, #{endpage}
+		</if>
+	</select>
+
+	<!-- 적립금 목록 전체건수 조회 -->
+	<select id="selectReserveListCount" parameterType="somap" resultType="somap">
+	SELECT 	/* ReserveMapper.xml - selectReserveListCount 적립금 목록 전체건수 조회 */
+		  COUNT(*) AS totalcnt, IFNULL(SUM(t.paycnt), 0) AS paycnt, IFNULL(SUM(t.usecnt), 0) AS usecnt, IFNULL(SUM(t.extinctcnt), 0) AS extinctcnt
+	FROM (<include refid="selectAdminReserveSQL"/>) t
+	</select>
+
+	<!-- 적립금 목록 조회(엑셀용) -->
+	<select id="selectReserveListForExcel" parameterType="somap" resultType="somap">
+		/* ReserveMapper.xml - selectReserveListForExcel 적립금 목록 조회(엑셀용) */
+		<include refid="selectAdminReserveSQL"/>
+		<choose>
+			<when test="psort == 'memtype_asc'">
+			ORDER BY ta.membertype ASC, ta.regdate DESC
+			</when>
+			<when test="psort == 'memtype_desc'">
+			ORDER BY ta.membertype DESC, ta.regdate DESC
+			</when>
+			<when test="psort == 'memlv_asc'">
+			ORDER BY ta.memlvtype ASC, ta.regdate DESC
+			</when>
+			<when test="psort == 'memlv_desc'">
+			ORDER BY ta.memlvtype DESC, ta.regdate DESC
+			</when>
+			<when test="psort == 'point_asc'">
+			ORDER BY ta.point ASC, ta.regdate DESC
+			</when>
+			<when test="psort == 'point_desc'">
+			ORDER BY ta.point DESC, ta.regdate DESC
+			</when>
+			<when test="psort == 'regdate_asc'">
+			ORDER BY ta.regdate ASC
+			</when>
+			<when test="psort == 'regdate_desc'">
+			ORDER BY ta.regdate DESC
+			</when>
+			<otherwise>
+			ORDER BY ta.regdate DESC
+			</otherwise>
+		</choose>
+		<if test="startpage != null and !startpage.equals('') and endpage != null and !endpage.equals('')">
+		LIMIT #{startpage}, #{endpage}
+		</if>
+	</select>
+
+	<sql id="selectAdminReserveSQL" >
+		SELECT 	/* ReserveMapper.xml - selectAdminReserveSQL 관리자 적립금 조회 쿼리 */
+		      ta.reserveidx
+			, ta.respayidx
+			, ta.resuseidx
+			, (CASE WHEN ta.isempreserve = 'T' THEN '임직원적립금'
+					WHEN ta.isempreserve = 'F' THEN '적립금'
+					ELSE ''
+			   END) AS isempreservename
+			, ta.userno
+			, ta.membertype
+		    , FN_GET_CODENAME(NULL, 'DADAMEMBERTYPE', ta.membertype) AS membertypename
+			, ta.memlvtype
+		    , FN_GET_CODENAME(NULL, 'MEMLVTYPE', ta.memlvtype) AS memlvtypename
+			, (CASE WHEN ta.isauto = 'F' THEN '수동'
+					ELSE '-'
+			   END) AS isautoname
+			, ta.point
+			, ta.formatpoint
+            , ta.resreason
+			, ta.ordercode
+			, DATE_FORMAT(ta.regdate, '%Y-%m-%d') AS regdate
+			, ta.paycnt
+			, ta.usecnt
+			, ta.extinctcnt
+		    , (CASE WHEN ta.resuseidx = ''
+		    		THEN FN_GET_CODENAME(NULL, 'RESPAYTYPE', ta.respaytype)
+		    		ELSE FN_GET_CODENAME(NULL, 'RESUSETYPE', ta.respaytype)
+		       END) AS respaytypename
+		    , u.userid
+		    , m.name AS username
+		    , ta.typename
+		FROM (	SELECT  /* 적립내역 */
+				      'pay' AS type
+				    , rp.reserveidx
+				    , rp.respayidx
+				    , '' AS resuseidx
+				    , rp.userno
+				    , rp.isempreserve
+				    , rp.paymembertype AS membertype
+				    , rp.paymemlvtype AS memlvtype
+				    , (CASE WHEN rp.respaytype='RPT011' THEN 'F' ELSE 'T' END) AS isauto
+				    , rp.paypoint AS point
+				    , CONCAT('+', FORMAT(rp.paypoint, 0)) AS formatpoint
+				    , rp.respaytype
+				    , rp.ordercode
+				    , STR_TO_DATE(rp.resstday, '%Y%m%d%H%i') AS regdate
+					, 1 as paycnt
+					, 0 as usecnt
+					, 0 as extinctcnt
+					, (CASE WHEN rp.respaytype = 'RPT011' THEN r.resreason ELSE '' END ) AS resreason
+					, '적립' as typename
+				FROM t_reserve_pay rp
+				LEFT OUTER JOIN t_reserve r
+					 ON rp.reserveidx = r.reserveidx
+				UNION ALL
+				SELECT  /* 차감내역(사용, 소멸) */
+				      (CASE WHEN ru.resusetype = 'RUT003' THEN 'pay'
+				      		WHEN ru.resusetype = 'RUT002' THEN 'extinct'
+				            ELSE 'use'
+				       END) AS type
+				    , rp.reserveidx
+				    , rp.respayidx
+				    , ru.resuseidx
+				    , ru.userno
+				    , rp.isempreserve
+				    , ru.usemembertype AS membertype
+				    , ru.usememlvtype AS memlvtype
+				    , (CASE WHEN ru.resusetype='RUT004' THEN 'F' ELSE 'T' END) AS isauto
+				    , if(ru.resusetype = 'RUT003', ru.usepoint, (ru.usepoint * -1)) AS point
+				    , CONCAT(if(ru.resusetype = 'RUT003', '+', '-'), FORMAT(ru.usepoint, 0)) AS formatpoint
+				    , ru.resusetype AS respaytype
+				    , ru.ordercode
+				    , ru.regdate
+					, (CASE WHEN ru.resusetype = 'RUT003' THEN 1 ELSE 0 END) as paycnt
+					, (CASE WHEN ru.resusetype = 'RUT002' THEN 0 ELSE 1 END) as usecnt
+					, (CASE WHEN ru.resusetype = 'RUT002' THEN 1 ELSE 0 END) as extinctcnt
+					, ru.resusereason AS resreason
+					, if(ru.resusetype = 'RUT003', '적립', '차감') as typename
+				FROM t_reserve_use ru
+				INNER JOIN (
+					SELECT resuseidx, max(respayidx) AS respayidx
+					FROM t_reserve_usepay
+					GROUP BY resuseidx
+				) rup ON ru.resuseidx = rup.resuseidx
+				INNER JOIN t_reserve_pay rp ON rup.respayidx = rp.respayidx
+			 ) ta
+		INNER JOIN t_user u   ON ta.userno = u.no
+		INNER JOIN t_member m ON ta.userno = m.userno
+		WHERE 1 = 1
+		<if test="userno != null and userno != '' ">
+			AND ta.userno = #{userno}
+		</if>
+		<if test="sword != null and sword != '' ">
+			<choose>
+				<when test="skey == 'userid'">
+				AND u.userid LIKE CONCAT('%', #{sword}, '%')
+				</when>
+				<when test="skey == 'username'">
+				AND m.name LIKE CONCAT('%', #{sword}, '%')
+				</when>
+				<when test="skey == 'ordercode'">
+				AND ta.ordercode LIKE CONCAT('%', #{sword}, '%')
+				</when>
+				<otherwise>
+				AND ( u.userid LIKE CONCAT('%', #{sword}, '%')
+				   OR m.name LIKE CONCAT('%', #{sword}, '%')
+				   OR ta.ordercode LIKE CONCAT('%', #{sword}, '%') )
+				</otherwise>
+			</choose>
+		</if>
+		<if test="(startdate != null and startdate != '') and (enddate == null or enddate == '') ">
+		AND DATEDIFF(ta.regdate, STR_TO_DATE(#{startdate},'%Y-%m-%d')) <![CDATA[>=]]> 0
+		</if>
+		<if test="(startdate == null or startdate == '') and (enddate != null and enddate != '') ">
+		AND DATEDIFF(STR_TO_DATE(#{enddate},'%Y-%m-%d'), ta.regdate) <![CDATA[>=]]> 0
+		</if>
+		<if test="(startdate != null and startdate != '') and (enddate != null and enddate != '') ">
+		AND ta.regdate BETWEEN STR_TO_DATE(CONCAT(#{startdate},' 000000'), '%Y-%m-%d %H%i%s') AND STR_TO_DATE(CONCAT(#{enddate},' 235959'), '%Y-%m-%d %H%i%s')
+		</if>
+		<if test="type != null and type != ''">
+		AND ta.type = #{type}			/* 지급구분(적립:pay, 차감:use, 소멸:extinct) */
+		</if>
+		<if test='respaytypearr != null and respaytypearr.size > 0'>
+		AND ta.respaytype IN		/* 적립금지급구분 */
+			<foreach index="index" collection="respaytypearr" item="_item" open="(" close=")" separator="," >
+				#{_item}
+			</foreach>
+		</if>
+		<if test='isempreservearr != null and isempreservearr.size > 0'>
+			AND ta.isempreserve IN
+			<foreach index="index" collection="isempreservearr" item="_item" open="(" close=")" separator="," >
+				#{_item}
+			</foreach>
+		</if>
+		<if test='isallmember != null and isallmember == "F" and mumembertypearr != null and mumembertypearr.size > 0'>
+		AND ta.membertype IN			/* 회원유형 */
+			<foreach index="index" collection="mumembertypearr" item="_item" open="(" close=")" separator="," >
+				#{_item}
+			</foreach>
+		</if>
+		<if test='isallmemlv != null and isallmemlv =="F" and mumemlvtypearr != null and mumemlvtypearr.size > 0'>
+		AND ta.memlvtype IN			/* 회원등급 */
+			<foreach index="index" collection="mumemlvtypearr" item="_item" open="(" close=")" separator="," >
+				#{_item}
+			</foreach>
+		</if>
+	</sql>
+
+	<!-- FRONT 사용자 적립금 목록 조회 -->
+	<!-- 추후 작업: 1)구매확정 적립일경우 상품 정보 포함
+	             2)구매확정시 적립금 지급 비울
+	 -->
+	<select id="selectFrontReserveList" parameterType="somap" resultType="somap">
+	  SELECT /*ResreveMapper.xml - selectFrontReserveList:: 적립금 내역조회*/
+             TYPE
+           , typename
+           , SIGN
+           , PAYPOINT AS POINT
+           , REGDATE
+           , USERNO
+           , RESSTDAY
+           , RESEDDAY
+           , ISEMPRESERVE
+           , RESPAYTYPE
+           , respaytypename
+           , regdatestr
+           , period
+           , COUNT(*) OVER() as totcnt
+      FROM (
+           SELECT
+                 'pay' AS type          -- pay:적립, use:사용, extinct: 소멸, canceladd: 취소적립
+                , '적립' AS typename
+                , '+' AS sign
+                , a.PAYPOINT
+                , a.REGDATE
+                , a.USERNO
+                , a.RESSTDAY
+                , a.RESEDDAY
+                , a.ISEMPRESERVE
+                , a.RESPAYTYPE
+                , (CASE WHEN RESPAYTYPE = 'RPT011' THEN b.RESREASON
+                   ELSE FN_GET_CODENAME(NULL, 'RESPAYTYPE', a.RESPAYTYPE) END ) AS respaytypename
+                , DATE_FORMAT(a.regdate, '%Y.%m.%d') AS regdatestr
+                , date_format(STR_TO_DATE(a.resedday, '%Y%m%d%H%i'), '%Y.%m.%d %H:%i') AS period
+           FROM t_reserve_pay a
+           LEFT OUTER JOIN t_reserve b ON a.RESERVEIDX  = b.RESERVEIDX
+           WHERE USERNO  = #{userno}
+           UNION all
+           SELECT (CASE WHEN A.RESUSETYPE = 'RUT002' THEN 'extinct'
+                      WHEN A.RESUSETYPE = 'RUT003' THEN 'pay'
+                    ELSE 'use'
+                 END) AS type           -- pay:적립, use:사용, extinct: 소멸, canceladd: 취소적립
+               , (CASE WHEN A.RESUSETYPE = 'RUT002' THEN '소멸'
+                       WHEN A.RESUSETYPE = 'RUT003' THEN '환불적립'
+                     ELSE '사용'
+                 END) AS type           -- pay:적립, use:사용, extinct: 소멸, canceladd: 취소적립
+               , (CASE WHEN A.RESUSETYPE = 'RUT003' THEN '+'
+                    ELSE '-'
+                 END) AS sign           -- pay:적립, use:사용, extinct: 소멸, canceladd: 취소적립
+               , a.USEPOINT
+               , a.REGDATE
+               , a.USERNO
+               , '' AS RESSTDAY
+                , '' AS RESEDDAY
+                , b.ISEMPRESERVE
+                , a.RESUSETYPE AS RESPAYTYPE
+                , (CASE WHEN a.RESUSETYPE = 'RUT004' THEN a.RESUSEREASON
+                   ELSE FN_GET_CODENAME(NULL, 'RESUSETYPE', RESUSETYPE) END) AS respaytypename
+                , DATE_FORMAT(a.regdate, '%Y.%m.%d') AS regdatestr
+                , '' AS period
+            FROM t_reserve_use a
+            INNER JOIN (
+                         SELECT RESUSEIDX
+                              , max(sub2.ISEMPRESERVE) AS ISEMPRESERVE
+                      FROM t_reserve_usepay sub1
+                      LEFT OUTER JOIN t_reserve_pay sub2 ON sub1.RESPAYIDX  = sub2.RESPAYIDX
+                      WHERE sub2.USERNO  = #{userno}
+                      GROUP BY sub1.RESUSEIDX
+            ) b ON a.RESUSEIDX  = b.RESUSEIDX
+      ) aa
+      WHERE 1= 1
+      <if test='userno != null and userno != ""'>
+	   AND aa.userno = #{userno}
+	  </if>
+      <if test='isempreserve != null and isempreserve != ""'>
+	   AND aa.isempreserve = #{isempreserve}
+      </if>
+      <if test='type != null and type != "" and type != "all"'>
+	   AND aa.type = #{type}
+	  </if>
+      ORDER BY regdate desc
+      LIMIT #{startpage}, #{endpage}
+	</select>
+
+	<select id="selectExtinctReserveInfo" parameterType="somap" resultType="somap">
+	 SELECT /*ReserveMapper.xml - selectExtinctReserveInfo::사용자별 일주일 이내  소멸금액조회*/
+	        MAX(extinctday)  AS extinctday
+          , IFNULL(SUM(extinctpoint),0) AS extinctpoint
+          , IFNULL(SUM(userpoint),0) AS userpoint
+	 FROM (
+	     SELECT date_format(STR_TO_DATE(min(RESEDDAY), '%Y%m%d%H%i'), '%Y.%m.%d %H:%i') AS extinctday
+	          , IFNULL(SUM(PAYPOINT - USEDPOINT), 0) AS extinctpoint
+	          , 0 AS userpoint
+	     FROM  t_reserve_pay trp
+		 WHERE trp.RESEDDAY BETWEEN date_format(NOW(), '%Y%m%d%H%i') and date_format(DATE_ADD(NOW(),  INTERVAL +7 DAY), '%Y%m%d%H%i')
+	     <if test='userno != null and userno != ""'>
+		 AND trp.userno = #{userno}
+		 </if>
+	     <if test='isempreserve != null and isempreserve != ""'>
+		 AND trp.isempreserve = #{isempreserve}
+		 </if>
+		 GROUP BY USERNO
+		 UNION  all
+		 SELECT '' AS extinctday
+	          , 0 AS extinctpoint
+	          , IFNULL(SUM(PAYPOINT - USEDPOINT), 0) AS userpoint
+	     FROM  t_reserve_pay trp
+		 WHERE date_format(sysdate(),'%Y%m%d%H%i') BETWEEN RESSTDAY AND RESEDDAY
+	     <if test='userno != null and userno != ""'>
+		 AND trp.userno = #{userno}
+		 </if>
+	     <if test='isempreserve != null and isempreserve != ""'>
+		 AND trp.isempreserve = #{isempreserve}
+		 </if>
+		 GROUP BY USERNO
+	 ) A
+	</select>
+
+	<!-- 적립금 저장 -->
+	<insert id="insertReserve" parameterType="somap" useGeneratedKeys="true" keyColumn="reserveidx" keyProperty="reserveidx">
+		/* ReserveMapper.xml - insertReserve 적립금 저장 */
+		INSERT INTO t_reserve (
+			  siteid  		/* 사이트ID */
+			, isempreserve  /* 임직원적립금여부 */
+			, resreason  	/* 적립금지급사유 */
+			, isnowpay  	/* 즉시지급여부 */
+			, respayday  	/* 적립금지급일 */
+			, ismemtype  	/* 특정유형등급대상여부 */
+			, mumembertype  /* 다중대상회원유형 */
+			, mumemlvtype  	/* 다중대상회원등급 */
+			, paypoint  	/* 지급포인트 */
+			, reguserid  	/* 등록자ID */
+			, regdate  		/* 등록일시 */
+			, moduserid  	/* 수정자ID */
+			, moddate  		/* 수정일시 */
+		) VALUES (
+			  #{siteid}
+			, #{isempreserve}
+			, #{resreason}
+			, #{isnowpay}
+			, #{respayday}
+			, #{ismemtype}
+			, #{mumembertype}
+			, #{mumemlvtype}
+			, #{paypoint}
+			, #{authuserid}
+			, NOW()
+			, #{authuserid}
+			, NOW()
+		)
+	</insert>
+
+	<select id="selectReserveExpireList" parameterType="somap" resultType="somap">
+		SELECT
+			A.USERNO, RPOINT, B.USERID, B.NAME, B.MOBILE AS NUMBER
+			, DATE_FORMAT(LAST_DAY(CURRENT_DATE), '%Y년 %m월 %d일') AS EXTINCTDATE
+		FROM (
+			SELECT
+			       USERNO, FORMAT(SUM(PAYPOINT - USEDPOINT), 0) AS RPOINT
+			FROM T_RESERVE_PAY
+			WHERE DATE_FORMAT(CURRENT_DATE, '%Y-%m-01 00:00:00') <![CDATA[<=]]> STR_TO_DATE(RESEDDAY, '%Y%m%d%H%i')
+			AND DATE_ADD(CURRENT_TIMESTAMP, INTERVAL 1 MONTH) <![CDATA[>]]> STR_TO_DATE(RESEDDAY, '%Y%m%d%H%i')
+			AND 0 <![CDATA[<]]> (PAYPOINT - USEDPOINT)
+			AND ISEMPRESERVE = 'F'
+			GROUP BY USERNO
+			 ) A LEFT OUTER JOIN (
+			     SELECT USERNO, SITEID, USERID, NAME, MOBILE, ISIFSMS
+			     FROM T_USER A INNER JOIN T_MEMBER B ON A.NO = B.USERNO AND B.STATE = 'MST001' AND MOBILE != '' AND MOBILE IS NOT NULL
+			 )B ON A.USERNO = B.USERNO
+		WHERE B.SITEID = #{siteid}
+		AND B.ISIFSMS = 'T'
+	</select>
+
+	<select id="spInsertManualReserveuse" parameterType="somap" resultType="somap" statementType="CALLABLE">
+		{
+			CALL SP_INSERT_MANUAL_RESERVEUSE(
+				  #{isempreserve, mode=IN,  jdbcType=VARCHAR}
+				, #{userno, 	  mode=IN,  jdbcType=INTEGER}
+				, #{usepoint, 	  mode=IN,  jdbcType=INTEGER}
+				, #{resusereason, mode=IN,  jdbcType=VARCHAR}
+				, #{regid,        mode=IN,  jdbcType=VARCHAR}
+				, #{code,   	  mode=OUT, jdbcType=INTEGER}
+				, #{msg,   	  	  mode=OUT, jdbcType=VARCHAR}
+				, #{adjustpoint,  mode=OUT, jdbcType=INTEGER}
+			)
+		}
+	</select>
+</mapper>

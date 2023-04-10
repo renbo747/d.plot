@@ -1,0 +1,165 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.dplot.mapper.BatchMapper">
+
+	<select id="selectConfigBySiteId" parameterType="String" resultType="somap">
+		SELECT /* BatchMapper.xml - selectConfigBySiteId INSTA TOKEN 조회 */
+		       siteid, sitename, instatoken
+		FROM T_CONFIG
+		WHERE SITEID = #{siteid}
+	</select>
+
+	<select id="spUpdateMemberStateByLastLogin" parameterType="somap" resultType="somap" statementType="CALLABLE">
+		{
+			CALL SP_UPDATE_MEMBER_STATE_BY_LASTLOGIN(
+			  #{siteid, mode=IN, jdbcType=VARCHAR}
+			, #{code, mode=OUT, jdbcType=INTEGER}
+			, #{msg, mode=OUT, jdbcType=VARCHAR}
+			, #{insert_cnt, mode=OUT, jdbcType=INTEGER}
+			, #{update_cnt, mode=OUT, jdbcType=INTEGER}
+			)
+		}
+	</select>
+
+	<select id="spDeleteMemberThatDormancy" parameterType="somap" resultType="somap" statementType="CALLABLE">
+		{
+			CALL SP_DELETE_MEMBER_THAT_DORMANCY(
+				  #{siteid, mode=IN, jdbcType=VARCHAR}
+				, #{code, mode=OUT, jdbcType=INTEGER}
+				, #{msg, mode=OUT, jdbcType=VARCHAR}
+				, #{update_cnt, mode=OUT, jdbcType=INTEGER}
+			)
+		}
+	</select>
+
+	<select id="spUpdatePartnersStateByLastlogin" parameterType="somap" resultType="somap" statementType="CALLABLE">
+		{
+			CALL SP_UPDATE_PARTNERS_STATE_BY_LASTLOGIN(
+			  #{siteid, mode=IN, jdbcType=VARCHAR}
+			, #{code, mode=OUT, jdbcType=INTEGER}
+			, #{msg, mode=OUT, jdbcType=VARCHAR}
+			, #{update_cnt, mode=OUT, jdbcType=INTEGER}
+			)
+		}
+	</select>
+
+	<select id="spUpdateGoodsStateByDisplay" parameterType="somap" resultType="somap" statementType="CALLABLE">
+		{
+			CALL SP_UPDATE_GOODS_STATE_BY_DISPLAY(
+			  #{siteid, mode=IN, jdbcType=VARCHAR}
+			, #{code, mode=OUT, jdbcType=INTEGER}
+			, #{msg, mode=OUT, jdbcType=VARCHAR}
+			, #{update_cnt, mode=OUT, jdbcType=INTEGER}
+			)
+		}
+	</select>
+
+	<select id="spUpdateGoodsStateByStock" parameterType="somap" resultType="somap" statementType="CALLABLE">
+		{
+			CALL SP_UPDATE_GOODS_STATE_BY_STOCK(
+			  #{siteid, mode=IN, jdbcType=VARCHAR}
+			, #{code, mode=OUT, jdbcType=INTEGER}
+			, #{msg, mode=OUT, jdbcType=VARCHAR}
+			, #{update_cnt, mode=OUT, jdbcType=INTEGER}
+			)
+		}
+	</select>
+
+	<select id="spMemberPointExtinct" parameterType="somap" resultType="somap" statementType="CALLABLE">
+		{
+			CALL SP_MEMBER_POINT_EXTINCT(
+			  #{siteid, mode=IN, jdbcType=VARCHAR}
+			, #{code, mode=OUT, jdbcType=INTEGER}
+			, #{msg, mode=OUT, jdbcType=VARCHAR}
+			, #{reserve_insert_cnt, mode=OUT, jdbcType=INTEGER}
+			, #{reserve_update_cnt, mode=OUT, jdbcType=INTEGER}
+			, #{epoint_insert_cnt, mode=OUT, jdbcType=INTEGER}
+			, #{epoint_update_cnt, mode=OUT, jdbcType=INTEGER}
+			)
+		}
+	</select>
+
+	<select id="spMemberBirthdayPayPoint" parameterType="somap" resultType="somap" statementType="CALLABLE">
+		{
+			CALL SP_MEMBER_BIRTHDAY_PAY_POINT(
+				#{siteid, mode=IN, jdbcType=VARCHAR}
+			, #{code, mode=OUT, jdbcType=INTEGER}
+			, #{msg, mode=OUT, jdbcType=VARCHAR}
+			, #{insert_cnt, mode=OUT, jdbcType=INTEGER}
+			)
+		}
+	</select>
+
+	<select id="spInsertReservePayPoint" parameterType="somap" resultType="somap" statementType="CALLABLE">
+		{
+			CALL SP_INSERT_RESERVE_PAY_POINT(
+				#{siteid, mode=IN, jdbcType=VARCHAR}
+				, #{code, mode=OUT, jdbcType=INTEGER}
+				, #{msg, mode=OUT, jdbcType=VARCHAR}
+				, #{insert_cnt, mode=OUT, jdbcType=INTEGER}
+				, #{update_cnt, mode=OUT, jdbcType=INTEGER}
+			)
+		}
+	</select>
+
+	<select id="spInsertEPointPayPoint" parameterType="somap" resultType="somap" statementType="CALLABLE">
+		{
+			CALL SP_INSERT_EPOINT_PAY_POINT(
+				  #{siteid, mode=IN, jdbcType=VARCHAR}
+				, #{code, mode=OUT, jdbcType=INTEGER}
+				, #{msg, mode=OUT, jdbcType=VARCHAR}
+				, #{insert_cnt, mode=OUT, jdbcType=INTEGER}
+				, #{update_cnt, mode=OUT, jdbcType=INTEGER}
+			)
+		}
+	</select>
+
+	<select id="spCouponStateUpdate" parameterType="somap" resultType="somap" statementType="CALLABLE">
+		{
+			CALL SP_COUPON_STATE_UPDATE_AND_ISSUE(
+				  #{siteid, mode=IN, jdbcType=VARCHAR}
+				, #{code, mode=OUT, jdbcType=INTEGER}
+				, #{msg, mode=OUT, jdbcType=VARCHAR}
+				, #{insert_cnt, mode=OUT, jdbcType=INTEGER}
+				, #{update_cnt, mode=OUT, jdbcType=INTEGER}
+			)
+		}
+	</select>
+
+	<select id="spOrderStatusUpdate" parameterType="somap" resultType="somap" statementType="CALLABLE">
+		{
+			CALL SP_ORDER_STATUS_UPDATE(
+			  #{siteid, mode=IN, jdbcType=VARCHAR}
+			, #{code, mode=OUT, jdbcType=INTEGER}
+			, #{msg, mode=OUT, jdbcType=VARCHAR}
+			, #{insert_cnt, mode=OUT, jdbcType=INTEGER}
+			, #{update_cnt, mode=OUT, jdbcType=INTEGER}
+			, #{idx_end_arr, mode=OUT, jdbcType=VARCHAR}
+			, #{idx_cancel_arr, mode=OUT, jdbcType=VARCHAR}
+			)
+		}
+	</select>
+
+	<select id="spUpdatePartnersAgreeState" parameterType="somap" resultType="somap" statementType="CALLABLE">
+		{
+			CALL SP_UPDATE_PARTNERS_AGREE_STATE(
+			  #{siteid, mode=IN, jdbcType=VARCHAR}
+			, #{code, mode=OUT, jdbcType=INTEGER}
+			, #{msg, mode=OUT, jdbcType=VARCHAR}
+			, #{update_cnt, mode=OUT, jdbcType=INTEGER}
+			)
+		}
+	</select>
+
+	<select id="spBestGoodsInsert" parameterType="somap" resultType="somap" statementType="CALLABLE">
+		{
+			CALL SP_BEST_GOODS_INSERT(
+				#{siteid, mode=IN, jdbcType=VARCHAR}
+			, #{code, mode=OUT, jdbcType=INTEGER}
+			, #{msg, mode=OUT, jdbcType=VARCHAR}
+			, #{insert_cnt, mode=OUT, jdbcType=INTEGER}
+			)
+		}
+	</select>
+</mapper>

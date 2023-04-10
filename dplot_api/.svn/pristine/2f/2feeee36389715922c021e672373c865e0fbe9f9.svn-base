@@ -1,0 +1,71 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.dplot.mapper.IFLogMapper">
+
+    <insert id="insertIfLogERPData" parameterType="somap">
+        INSERT INTO T_IFLOG (SITEID, IFTYPE, ORGNO, REGDATE, AUDDIV, NOTE)
+		<choose>
+			<when test="orgnolist != null and orgnolist.size > 0">
+			VALUES
+			<foreach collection="orgnolist" item="_orgno" index="index" open="" separator="," close="">
+				(#{siteid}, #{type}, #{_orgno}, CURRENT_TIMESTAMP, #{aud}, #{note})
+			</foreach>
+			</when>
+			<otherwise>
+			VALUES (#{siteid}, #{type}, #{orgno}, CURRENT_TIMESTAMP, #{aud}, #{note})
+			</otherwise>
+		</choose>
+    </insert>
+
+    <update id="updateIFLog" parameterType="somap">
+        UPDATE T_IFLOG SET NOTE = #{data, jdbcType=VARCHAR}
+        <if test='complete != null and complete != "" and complete == "T"'>
+            , IFDATE = CURRENT_TIMESTAMP
+        </if>
+        WHERE IFLOGIDX = #{idx}
+    </update>
+
+    <update id="updateIFLogDate" parameterType="somap">
+        UPDATE T_IFLOG SET IFDATE = CURRENT_TIMESTAMP
+        WHERE IFLOGIDX IN
+        <foreach collection="idx" item="item" open="(" separator="," close=")">
+            #{item}
+        </foreach>
+    </update>
+
+    <select id="selectIFLogList" parameterType="somap" resultType="somap">
+        SELECT
+            IFLOGIDX, IFTYPE, ORGNO, REGDATE, IFDATE, AUDDIV, NOTE
+        FROM T_IFLOG
+        WHERE SITEID = #{siteid}
+        AND IFTYPE = #{type}
+        AND IFDATE IS NULL
+        ORDER BY REGDATE
+    </select>
+
+    <insert id="insertIfLogERPDataForReserveAll" parameterType="somap">
+        INSERT INTO T_IFLOG (SITEID, IFTYPE, ORGNO, REGDATE, AUDDIV, NOTE)
+        SELECT
+        	  #{siteid}
+        	, #{type}
+			, RESPAYIDX
+			, CURRENT_TIMESTAMP
+			, #{aud}
+			, #{note}
+		FROM T_RESERVE_PAY
+		WHERE 1 = 1
+		<if test = 'reserveidx != null and reserveidx != ""'>
+		AND RESERVEIDX = #{reserveidx}
+		</if>
+		<if test = 'promoidx != null and promoidx != ""'>
+		AND PROMOIDX = #{promoidx}
+		</if>
+		<if test = 'srpidx != null and srpidx != ""'>
+		AND SRPIDX = #{srpidx}
+		</if>
+		<if test = 'eventidx != null and eventidx != ""'>
+		AND EVENTIDX = #{eventidx}
+		</if>
+    </insert>
+</mapper>

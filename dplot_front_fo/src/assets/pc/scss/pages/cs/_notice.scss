@@ -1,0 +1,147 @@
+.cs-notice {
+  .cursor {
+    cursor: pointer;
+  }
+  .cs-notice-header {
+    padding-bottom: 60px;
+  }
+  .cs-section__title {
+    font-size: 26px;
+    letter-spacing: -1.04px;
+  }
+  //공지사항 페이지
+  .cs-notice__ul {
+    & > li {
+      padding-top: 30px;
+      padding-bottom: 30px;
+      &:last-child {
+        border-bottom: solid 1px $border-color;
+      }
+
+      &.active {
+        .notice-title {
+          color: $black;
+          font-weight: 500;
+
+        }
+      }
+      &.new {
+        .notice-title::after {
+          position: relative;
+          top: -15px;
+          right: -3px;
+          display: inline-block;
+          content: "";
+          width: 6px;
+          height: 6px;
+          border-radius: 50%;
+          background-color: $primary;
+          font-weight: 500;
+        }
+      }
+    }
+    li + li {
+      border-top: 1px solid $border-color;
+    }
+    .notice-link {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    .notice-title {
+      position: relative;
+      font-size: 18px;
+      letter-spacing: -.72px;
+      font-weight: 400;
+      color: $gray-800;
+      //&.active {
+      //  color: $black;
+      //  font-weight: 500;
+      //}
+      //&.active::after {
+      //  position: relative;
+      //  top: -15px;
+      //  right: -3px;
+      //  display: inline-block;
+      //  content: "";
+      //  width: 6px;
+      //  height: 6px;
+      //  border-radius: 50%;
+      //  background-color: $primary;
+      //  font-weight: 500;
+      //}
+    }
+    .notice-date {
+      font-size: 18px;
+      letter-spacing: -.72px;
+    }
+
+    .notice-title-before {
+      position: relative;
+      &::before {
+        position: absolute;
+        top: 23px;
+        right: 77px;
+        content: '';
+        width: 6px;
+        height: 6px;
+        border-radius: 50%;
+        background-color: $primary;
+
+      }
+    }
+  }
+  //pagination
+  .inquiry-pagination {
+    align-items: center;
+    justify-content: center;
+  }
+
+  .cs-notice-detail {
+    .cs-notice-detail__title {
+
+      &.new::after {
+        position: relative;
+        top: -10px;
+        right: 0;
+        display: inline-block;
+        content: "";
+        width: 6px;
+        height: 6px;
+        border-radius: 50%;
+        background-color: $primary;
+        font-weight: 500;
+      }
+    }
+
+    .cs-notice-detail-header {
+      padding-bottom: 30px;
+      border-bottom: solid 1px $border-color;
+      margin-bottom: 60px;
+    }
+    .cs-notice-detail__img {
+      width: 100%;
+      img {
+        max-width: 100%;
+      }
+    }
+    .cs-notice-detail__btn {
+      padding-top: 60px;
+    }
+    .notice-detail__btn__wrap {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    .notice-detail__btn {
+      width: 300px;
+      border-radius: 0;
+    }
+
+  }
+  //common
+  .mb-10 {
+    margin-bottom: 10px;
+  }
+}
+

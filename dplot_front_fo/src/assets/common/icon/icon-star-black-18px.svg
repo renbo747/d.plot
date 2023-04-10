@@ -1,0 +1,9 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 18 18">
+    <g data-name="그룹 22439">
+        <path data-name="사각형 6313" style="fill:none" d="M0 0h18v18H0z"/>
+        <g data-name="다각형 15" style="fill:none">
+            <path d="m6 0 1.8 4.028 4.2.555-3.088 3.045L9.708 12 6 9.853 2.292 12l.8-4.372L0 4.584l4.2-.555z" style="stroke:none" transform="translate(3 3)"/>
+            <path d="M6 2.451 4.885 4.947l-2.727.36 2.008 1.98-.503 2.764L6 8.698l2.337 1.353-.503-2.763 2.008-1.98-2.727-.361L6 2.45M6 0l1.8 4.028 4.2.556-3.088 3.044L9.708 12 6 9.853 2.292 12l.796-4.372L0 4.584l4.2-.556L6 0z" style="fill:#111;stroke:none" transform="translate(3 3)"/>
+        </g>
+    </g>
+</svg>

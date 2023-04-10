@@ -1,0 +1,192 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.dplot.mapper.ClaimGoodsGiftMapper">
+    <insert id="insertClaimGoodsGift" parameterType="somap" useGeneratedKeys="true" keyProperty="clmgiftidx">
+   	INSERT  /* ClaimGoodsGiftMapper - insertClaimGoodsGift 클레임 상품 사은품 저장*/
+		INTO T_CLAIM_GOODS_GIFT (
+			  CLMIDX		/* 클레임IDX(FK) */
+			, GIFTIDX		/* 사은품IDX */
+			, GIFTPROMOIDX	/* 사은품프로모션IDX */
+			, RCVAMT		/* 수량 */
+			, ISTRASH		/* 삭제여부 */
+			, ISADD			/* 추가여부 */
+			, REGUSERID		/* 등록자ID */
+			, REGDATE		/* 등록일시 */
+		) VALUES (
+			  #{clmidx}
+			, #{giftidx}
+			, #{giftpromoidx}
+			, #{rcvamt}
+			, 'F'
+			, #{isadd}
+			, #{userid}
+			, sysdate()
+		)
+	</insert>
+	
+	<select id="selectClaimGoodsGift" parameterType="somap" resultType="somap">
+		SELECT /* ClaimGoodsGiftMapper - selectClaimGoodsGift 클레임사은품 조회 */
+			A.CLMIDX
+			, A.GIFTPROMOIDX
+			, A.GIFTIDX
+			, B.PROMONAME
+			, B.GIFTTERMTYPE 
+		    , C.GIFTCODE
+		    , C.GIFTNAME
+		    , FN_GET_FILE_URL(A.GIFTIDX, 'FLT001', 'IGT015') as FULLPATH
+		    , A.ISADD
+		    , A.RCVAMT
+		FROM T_CLAIM_GOODS_GIFT A
+		INNER JOIN T_PROMOTION B
+		ON A.GIFTPROMOIDX = B.PROMOIDX
+		INNER JOIN T_GIFT C
+		ON A.GIFTIDX = C.GIFTIDX
+		WHERE A.CLMIDX =#{clmidx}
+		ORDER BY A.GIFTPROMOIDX
+	</select>
+	
+	<select id="selectClaimGoodsGiftWithoutClaim" parameterType="somap" resultType="somap">
+		SELECT /* ClaimGoodsGiftMapper - selectClaimGoodsGiftWithoutClaim 주문사은품목록 클레임제외*/
+		      TT1.*
+		    , TT2.PROMONAME
+		    , TT2.GIFTTERMTYPE 
+		    , TT3.GIFTCODE
+		    , TT3.GIFTNAME
+		    , FN_GET_FILE_URL(TT1.GIFTIDX, 'FLT001', #{imgtype}) as FULLPATH
+		FROM (
+		    SELECT
+		          T1.ORDERIDX
+				, T1.ORDGIFTIDX
+		        , T1.GIFTPROMOIDX
+		        , T1.GIFTIDX
+		        , T1.RCVAMT - IFNULL(T2.RCVAMT, 0) AS RCVAMT
+		        , DATE_FORMAT(T1.REGDATE, '%Y-%m-%d %H:%i:%s') AS REGDATE
+		    FROM T_COMORDER_GOODS_GIFT T1
+		    LEFT OUTER JOIN (
+		        SELECT
+		              A.ORDERIDX
+		            , B.GIFTPROMOIDX
+		            , B.GIFTIDX
+		            , SUM(B.RCVAMT) AS RCVAMT
+		            , B.ISADD
+		        FROM T_CLAIM A
+		        LEFT JOIN T_CLAIM_GOODS_GIFT B
+		        ON A.CLMIDX = B.CLMIDX
+		        WHERE A.ORDERIDX = #{orderidx}
+		        AND A.ISTRASH = 'F'
+		        AND B.ISADD = 'F'
+		        <if test='status == "APPLY"'>
+	            AND (A.CNCSTATUS NOT IN ('CNS003','CNS004') OR A.RTNSTATUS NOT IN ('RTS004','RTS005') OR A.EXCSTATUS NOT IN ('EXS004','EXS005')) -- 반려, 철회
+	            </if>
+	            <if test='status == "DETAIL"'>
+	            AND A.CLMIDX <![CDATA[<>]]> #{clmidx}
+	            AND (A.CNCSTATUS IN ('CNS005','CNS007') 
+	                    OR A.RTNSTATUS IN ('RTS006','RTS007','RTS008','RTS009','RTS010') 
+	                    OR A.EXCSTATUS IN ('EXS006','EXS007','EXS008','EXS009','EXS010','EXS011','EXS012'))
+	            </if>
+	            <if test='status == "COMPLETE"'>
+	            	<if test='clmidx != null and clmidx != ""'>
+		            AND A.CLMIDX <![CDATA[<>]]> #{clmidx}
+					AND A.CLMCOMPDATE <![CDATA[<]]> (SELECT CLMCOMPDATE FROM t_claim WHERE CLMIDX = #{clmidx})
+					</if>
+		            AND (A.CNCSTATUS IN ('CNS005') 
+		                    OR A.RTNSTATUS IN ('RTS009','RTS010') 
+		                    OR A.EXCSTATUS IN ('EXS011','EXS012'))
+	            </if>
+	            <if test='status == "ERP"'>
+	            AND A.CNCSTATUS = 'CNS005'
+	            </if>
+				<if test='status == "ERP_RETURN"'>
+				AND (A.CNCSTATUS = 'CNS005' OR A.RTNSTATUS IN ('RTS009', 'RTS010'))
+				</if>
+		        GROUP BY A.ORDERIDX, B.GIFTIDX, B.GIFTPROMOIDX
+		    ) T2
+		    ON T1.ORDERIDX = T2.ORDERIDX
+		    AND T1.GIFTIDX = T2.GIFTIDX
+		    AND T1.GIFTPROMOIDX = T2.GIFTPROMOIDX
+		    WHERE T1.ORDERIDX = #{orderidx}
+		    AND (T2.ORDERIDX IS NULL OR T2.ISADD = 'F')
+		    AND T1.RCVAMT - IFNULL(T2.RCVAMT, 0) > 0
+		    UNION ALL 
+		    SELECT
+		          T1.ORDERIDX
+		        , T2.CLMGIFTIDX
+		        , T2.GIFTPROMOIDX
+		        , T2.GIFTIDX
+		        , T2.RCVAMT
+		        , DATE_FORMAT(T2.REGDATE, '%Y-%m-%d %H:%i:%s') AS REGDATE
+		    FROM T_CLAIM T1
+		    LEFT JOIN T_CLAIM_GOODS_GIFT T2
+		    ON T1.CLMIDX = T2.CLMIDX
+		    WHERE T1.ORDERIDX = #{orderidx}
+		    AND T1.ISTRASH = 'F'
+		    AND T2.ISADD = 'T'
+		    <if test='status == "APPLY"'>
+            AND (T1.CNCSTATUS NOT IN ('CNS003','CNS004') OR T1.RTNSTATUS NOT IN ('RTS004','RTS005') OR T1.EXCSTATUS NOT IN ('EXS004','EXS005')) -- 반려, 철회
+            </if>
+            <if test='status == "DETAIL"'>
+            AND T1.CLMIDX <![CDATA[<>]]> #{clmidx}
+            AND (T1.CNCSTATUS IN ('CNS005','CNS007') 
+                    OR T1.RTNSTATUS IN ('RTS006','RTS007','RTS008','RTS009','RTS010') 
+                    OR T1.EXCSTATUS IN ('EXS006','EXS007','EXS008','EXS009','EXS010','EXS011','EXS012'))
+            </if>
+            <if test='status == "COMPLETE"'>
+	            <if test='clmidx != null and clmidx != ""'>
+	            AND T1.CLMIDX <![CDATA[<>]]> #{clmidx}
+				AND T1.CLMCOMPDATE <![CDATA[<]]> (SELECT CLMCOMPDATE FROM t_claim WHERE CLMIDX = #{clmidx})
+				</if>
+	            AND (T1.CNCSTATUS IN ('CNS005') 
+	                    OR T1.RTNSTATUS IN ('RTS009','RTS010') 
+	                    OR T1.EXCSTATUS IN ('EXS011','EXS012'))
+            </if>
+            <if test='status == "ERP"'>
+            AND T1.CNCSTATUS = 'CNS005'
+            </if>
+			<if test='status == "ERP_RETURN"'>
+			AND (T1.CNCSTATUS = 'CNS005' OR T1.RTNSTATUS IN ('RTS009', 'RTS010'))
+			</if>
+		) TT1
+		INNER JOIN T_PROMOTION TT2
+		ON TT1.GIFTPROMOIDX = TT2.PROMOIDX
+		INNER JOIN T_GIFT TT3
+		ON TT1.GIFTIDX = TT3.GIFTIDX
+		ORDER BY TT1.GIFTPROMOIDX
+	</select>
+	
+	<select id="selectClaimGoodsGiftCheck" parameterType="somap" resultType="int">
+		SELECT  /* ClaimGoodsGiftMapper - selectClaimCouponCheck 클레임 사은품여부 조회*/
+			COUNT(*)
+		FROM T_CLAIM_GOODS_GIFT
+		WHERE  CLMIDX = #{clmidx}
+		AND GIFTPROMOIDX = #{giftpromoidx}
+		AND GIFTIDX = #{giftidx}
+	</select>
+	
+	<update id="updateClaimGoodsGiftTrash" parameterType="somap">
+		UPDATE  /* ClaimGoodsGiftMapper - updateClaimCouponTrash 클레임 사은품여부 수정*/
+			T_CLAIM_COUPON
+		SET ISTRASH = #{istrash}
+			<if test='rcvamt != null and rcvamt !=""'>
+			, RCVAMT = #{rcvamt}
+			</if>
+		WHERE CLMIDX = #{clmidx}
+		<if test='giftpromoidx'>
+		AND GIFTPROMOIDX = #{giftpromoidx}
+		AND GIFTIDX = #{giftidx}
+		</if>
+	</update>
+
+	<select id="selectClaimGoodsGiftERPData" parameterType="somap" resultType="somap">
+		SELECT
+			CLMGIFTIDX
+			 ,CLMIDX
+			 ,GIFTIDX
+			 ,GIFTPROMOIDX
+			 ,RCVAMT
+			 ,ISADD
+		FROM T_CLAIM_GOODS_GIFT
+		WHERE ISTRASH = 'F'
+	    AND CLMIDX = #{clmidx}
+	</select>
+</mapper>
+	

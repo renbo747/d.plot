@@ -1,0 +1,541 @@
+package com.dplot.admin.service.operation;
+
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Map;
+import java.util.Optional;
+import java.util.stream.Collectors;
+
+import org.apache.tika.Tika;
+import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.mock.web.MockMultipartFile;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Propagation;
+import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.multipart.MultipartFile;
+
+import com.dplot.admin.service.goods.GoodsManageServiceImpl;
+import com.dplot.common.CMConst;
+import com.dplot.common.Response;
+import com.dplot.common.SOMap;
+import com.dplot.common.Status;
+import com.dplot.common.service.CommonService;
+import com.dplot.common.service.util.FileService;
+import com.dplot.common.service.util.MallBaseService;
+import com.dplot.exception.CustomException;
+import com.dplot.mapper.BoardPostMapper;
+import com.dplot.mapper.DadaEventCommentMapper;
+import com.dplot.mapper.DadaEventEnterMapper;
+import com.dplot.mapper.DadaEventGoodsMapper;
+import com.dplot.mapper.DadaEventMapper;
+import com.dplot.mapper.EvtCommentReportMapper;
+import com.dplot.mapper.FileMapper;
+import org.slf4j.Logger;
+
+/**
+ * @author : LKW
+ * @discription : 프로모션 ServiceImpl
+ * @fileName : ShoppingPromotionServiceImpl.java
+ * @date : 2022-04-07
+ * =================================================================
+ * DATE			AUTHOR		NOTE
+ * -----------------------------------------------------------------
+ * 2022-04-07	LKW		최초생성
+ * -----------------------------------------------------------------
+ */
+@Service
+public class ShoppingPromotionServiceImpl extends MallBaseService implements ShoppingPromotionService {
+    private static final Logger logger = LoggerFactory.getLogger(ShoppingPromotionServiceImpl.class);
+    @Autowired
+    BoardPostMapper boardPostMapper;
+
+    @Autowired
+    DadaEventMapper dadaEventMapper;
+
+    @Autowired
+    DadaEventCommentMapper dadaEventCommentMapper;
+
+    @Autowired
+    DadaEventGoodsMapper dadaEventGoodsMapper;
+
+    @Autowired
+    EvtCommentReportMapper evtCommentReportMapper;
+
+    @Autowired
+    DadaEventEnterMapper dadaEventEnterMapper;
+
+
+    @Autowired
+    FileService fileService;
+
+    @Autowired
+    CommonService commonService;
+
+    @Autowired
+    private FileMapper fileMapper;
+
+    /**
+     * 프로모션 조회
+     *
+     * @param params
+     * @return
+     * @throws Exception
+     */
+    @Override
+    public SOMap selectPromotionList(SOMap params) throws Exception {
+        SOMap result = new SOMap();
+        params.put("siteid", cs.getStr("siteid"));
+        params.put("eventtype", CMConst.EVENT_TYPE_NOMAL);
+
+        // 페이징 처리
+        int page = Integer.parseInt(params.get("page").toString());
+        int pageCount = Integer.parseInt(params.get("pagecount").toString());
+        int startPage = (page > 1) ? ((page - 1) * pageCount) : 0;
+        params.put("startpage", startPage);
+        params.put("endpage", pageCount);
+
+        result.put("list", dadaEventMapper.selectAdminEventList(params));
+        result.put("stateList", dadaEventMapper.selectAdminEventStateList(params));
+        return result;
+    }
+
+    /**
+     * 프로모션 상세 조회
+     *
+     * @param params
+     * @return
+     * @throws Exception
+     */
+    @Override
+    public SOMap selectPromotionDetail(SOMap params) throws Exception {
+        SOMap result = new SOMap();
+        params.put("siteid", cs.getStr("siteid"));
+
+//        dadaEventMapper.updateReadCnt(params.getStr("eventidx"));
+
+        // 이벤트 상세 조회
+        SOMap eventDtl = dadaEventMapper.selectAdminEventDtl(params);
+
+        // 이벤트 정보 파일 조회
+        SOMap fileParams = new SOMap();
+        String[] types = {CMConst.IMG_TYPE_EVENT_IMG_MAIN_PC, CMConst.IMG_TYPE_EVENT_IMG_MAIN_MO};
+        fileParams.put("orgidx", params.get("eventidx"));
+        fileParams.put("imgtypes", types);
+        SOMap filesMap = fileService.selectFileList(fileParams);
+
+        List<Map<String, Object>> filesList = filesMap.getArrayList("uploadedfile");
+        SOMap files = new SOMap();
+        filesList.forEach(obj -> {
+            if (CMConst.IMG_TYPE_EVENT_IMG_MAIN_PC.equals(obj.get("imgtype"))) {
+                files.put("pcimgfile", obj);
+            } else {
+                files.put("mobileimgfile", obj);
+            }
+        });
+
+        // 연관 상품 조회 : 2021-12-17 완료
+        List<SOMap> productList = dadaEventGoodsMapper.selectAdminDadaEventGoods(params);
+
+        // 댓글 조회 : 2021-12-17 완료
+        ArrayList<Object> commentList = this.selectCommentList(params).getArrayList("list");
+
+        // result 객체에 저장
+        result.put("eventdtl", eventDtl); // 이벤트 기본 상세 정보
+        result.put("productlist", productList); // 이벤트 연관 상품 정보
+        result.put("files", files); // 사진 파일
+        result.put("commentlist", commentList); // 댓글 리스트
+
+        return result;
+    }
+
+    /**
+     * 프로모션 댓글 신고 조회
+     *
+     * @param params
+     * @return
+     * @throws Exception
+     */
+    @Override
+    public SOMap selectPromotionReportList(SOMap params) throws Exception {
+        SOMap result = new SOMap();
+    	params.put("siteid", cs.getStr("siteid"));
+        result.put("list", evtCommentReportMapper.selectAdminEvtCommentReportList(params));
+        return result;
+    }
+
+    /**
+     * 프로모션 등록
+     *
+     * @param params
+     * @param files
+     * @throws Exception
+     */
+    @Override
+    @Transactional(propagation = Propagation.REQUIRED, rollbackFor = {Exception.class, CustomException.class})
+    public void insertPromotion(SOMap params, Map<String, MultipartFile> files) throws Exception {
+        // 사이트맵
+        params.put("siteid", cs.getStr("siteid"));
+        params.put("eventtype", CMConst.EVENT_TYPE_NOMAL);
+        params.put("reguserid", cs.getStr("authuserid"));
+
+        try {
+        	// 이벤트 게시물 추가
+        	dadaEventMapper.insertEvent(params);
+
+        	int eventIdx = params.getInt("eventidx");
+
+        	// 이벤트 상품 추가 (dadaevent_goods)
+        	if (params.containsKey("productlist")) {
+        		dadaEventGoodsMapper.insertDadaEventGoods(params);
+        	}
+
+        	// 사진 파일 추가
+        	if (files.containsKey("pcimgfile")) {
+        		MultipartFile pcimgfile = files.get("pcimgfile");
+        		fileService.uploadImage(pcimgfile, eventIdx, CMConst.IMG_TYPE_EVENT_IMG_MAIN_PC);
+        	}
+
+        	if (files.containsKey("mobileimgfile")) {
+        		MultipartFile mobileImgFile = files.get("mobileimgfile");
+        		fileService.uploadImage(mobileImgFile, eventIdx, CMConst.IMG_TYPE_EVENT_IMG_MAIN_MO);
+        	}
+        }catch(Exception e) {
+        	throw new CustomException("프로모션 등록시 오류가 발생하였습니다. 관리자에게 문의해주세요.");
+        }
+    }
+
+    /**
+     * 프로모션 상세 수정
+     *
+     * @param params
+     * @param files
+     * @throws Exception
+     */
+    @Override
+    @Transactional(propagation = Propagation.REQUIRED, rollbackFor = {Exception.class, CustomException.class})
+    public void updatePromotionDetail(SOMap params, Map<String, MultipartFile> files) throws Exception {
+        params.put("siteid", cs.getStr("siteid"));
+        params.put("moduserid", cs.getStr("authuserid"));
+
+        this.isCanSaveCheck(params);
+
+        try {
+        	params.put("modifycheck", "T");
+        	int eventIdx = params.getInt("eventidx");
+        	dadaEventMapper.updateEvent(params);
+
+        	// 파일 삭제
+        	List<Integer> deletefile = params.getArrayList("deletefile");
+        	for (int i = 0; i < deletefile.size(); i++) {
+        		int idx = deletefile.get(i);
+        		fileService.delete(idx);
+        	}
+        	// 파일 저장
+        	if(files.containsKey("pcimgfile")){
+        		MultipartFile pcimgfile = files.get("pcimgfile");
+        		SOMap s3Result = fileService.uploadImage(pcimgfile, eventIdx, CMConst.IMG_TYPE_EVENT_IMG_MAIN_PC);
+        	}
+        	if(files.containsKey("mobileimgfile")){
+        		MultipartFile mobileimgFile = files.get("mobileimgfile");
+        		SOMap s3Result = fileService.uploadImage(mobileimgFile, eventIdx, CMConst.IMG_TYPE_EVENT_IMG_MAIN_MO);
+        	}
+
+        	// pc이미지 변경없이 mobile이미지만 변경했을 시 copy필요
+        	if(params.containsKey("copycheck")) {
+        		SOMap temp = new SOMap();
+        		int idx = params.getInt("copyidx");
+        		temp.put("idx", idx);
+        		SOMap result = fileMapper.selectFile(temp);
+        		if(result == null) {
+        			throw new  Exception("파일이 존재하지 않습니다");
+        		}
+
+        		byte[] byteImage = fileService.get(idx);
+
+        		if(byteImage == null || byteImage.length == 0) {
+        			throw new  Exception("파일이 존재하지 않습니다");
+        		}
+
+        		String contentType = new Tika().detect(byteImage);
+        		MultipartFile multipartFile = new MockMultipartFile(result.getDbStr("imgfname"), result.getDbStr("imgforiname"), contentType, byteImage);
+
+        		SOMap s3Result = fileService.uploadImage(multipartFile, eventIdx, CMConst.IMG_TYPE_EVENT_IMG_MAIN_MO);
+        	}
+
+        	// 상품 삭제
+        	dadaEventGoodsMapper.deleteDadaEventGoods(params);
+
+        	// 상품, 추가수정
+        	if (params.containsKey("productlist")) {
+        		SOMap insertAndUpdateProductMap = new SOMap();
+        		insertAndUpdateProductMap.put("productlist", params.get("productlist"));
+        		insertAndUpdateProductMap.put("reguserid", params.getStr("moduserid"));
+        		insertAndUpdateProductMap.put("eventidx", params.getStr("eventidx"));
+
+        		dadaEventGoodsMapper.insertDadaEventGoods(insertAndUpdateProductMap);
+        	}
+        } catch(Exception e) {
+        	throw new CustomException("프로모션 수정시 오류가 발생하였습니다. 관리자에게 문의해주세요.");
+        }
+    }
+
+    /**
+     * 프로모션 사용 여부 수정
+     *
+     * @param params
+     * @throws Exception
+     */
+    @Override
+    @Transactional(propagation = Propagation.REQUIRED, rollbackFor = {Exception.class, CustomException.class})
+    public void updatePromotionUse(SOMap params) throws Exception {
+    	try{
+        	params.put("siteid", cs.getStr("siteid"));
+    		dadaEventMapper.updateEvent(params);
+    	} catch(Exception e) {
+        	throw new CustomException("프로모션 수정시 오류가 발생하였습니다. 관리자에게 문의해주세요.");
+    	}
+    }
+
+    /**
+     * 프로모션 블라인드 수정
+     *
+     * @param params
+     * @throws Exception
+     */
+    @Override
+    @Transactional(propagation = Propagation.REQUIRED, rollbackFor = {Exception.class, CustomException.class})
+    public void updatePromotionCommentBlind(SOMap params) throws Exception {
+    	try {
+        	params.put("siteid", cs.getStr("siteid"));
+    		dadaEventCommentMapper.updateDadaEventComment(params);
+    	} catch(Exception e){
+        	throw new CustomException("프로모션 블라인드 수정시 오류가 발생하였습니다. 관리자에게 문의해주세요.");
+    	}
+    }
+
+    /**
+     * 프로모션 댓글 추가, 수정
+     *
+     * @param params
+     * @throws Exception
+     */
+    @Override
+    @Transactional(propagation = Propagation.REQUIRED, rollbackFor = {Exception.class, CustomException.class})
+    public void insertAndUpdatePromotionComment(SOMap params) throws Exception {
+        // 추가
+    	try {
+        	params.put("siteid", cs.getStr("siteid"));
+    		if ("T".equals(params.getStr("isinsert"))) {
+    			dadaEventCommentMapper.insertDadaEventComment(params);
+    		} else {
+    			dadaEventCommentMapper.updateDadaEventComment(params);
+    		}
+    	} catch(Exception e) {
+        	throw new CustomException("프로모션 댓글 추가,수정시 오류가 발생하였습니다. 관리자에게 문의해주세요.");
+    	}
+    }
+
+    /**
+     * 프로모션 댓글 삭제
+     *
+     * @param params
+     * @throws Exception
+     */
+    @Override
+    @Transactional(propagation = Propagation.REQUIRED, rollbackFor = {Exception.class, CustomException.class})
+    public void deletePromotionComment(SOMap params) throws Exception {
+    	try {
+        	params.put("siteid", cs.getStr("siteid"));
+    		dadaEventCommentMapper.deleteDadaEventComment(params);
+    	}catch(Exception e) {
+        	throw new CustomException("프로모션 댓글 삭제시 오류가 발생하였습니다. 관리자에게 문의해주세요.");
+    	}
+    }
+
+    /**
+     * 저장 여부 판별
+     *
+     * @param params
+     * @return
+     * @throws Exception
+     */
+    public void isCanSaveCheck(SOMap params) throws Exception {
+    	params.put("siteid", cs.getStr("siteid"));
+        boolean check = dadaEventMapper.isAdminCanSaveCheckEventAndCheckEvent(params).getInt("check") == 1;
+        if (!check) {
+            throw new CustomException("종료전 상태에서만 수정가능합니다.");
+        }
+    }
+
+    /**
+     * 프로모션 상세 댓글 조회
+     *
+     * @param params
+     * @return
+     * @throws Exception
+     */
+    @Override
+    public SOMap selectCommentList(SOMap params) throws Exception {
+    	params.put("siteid", cs.getStr("siteid"));
+        SOMap result = new SOMap();
+        SOMap fileParams = new SOMap();
+        String[] commentTypes = {CMConst.IMG_TYPE_EVENT_IMG_REPLY, CMConst.IMG_TYPE_EVENT_REPLY_VIDEO};
+        fileParams.put("imgtypes", commentTypes);
+        ArrayList<Map<String, Object>> commentFileList = fileService.selectFileList(fileParams).getArrayList("uploadedfile");
+
+        List<SOMap> commentList = dadaEventCommentMapper.selectAdminDadaEventCommentList(params);
+
+        // depth 댓글 순서 조정
+        List<SOMap> resultCommentList = new ArrayList<>();
+        List<SOMap> root = commentList.stream().filter(obj -> "0".equals(obj.getStr("depth"))).collect(Collectors.toList());
+        List<SOMap> child = commentList.stream().filter(obj -> !"0".equals(obj.getStr("depth"))).collect(Collectors.toList());
+
+        root.forEach(rt -> {
+            // depth0 idx 값
+            String commentIdx = rt.getStr("commentidx");
+            // depth0 idx 값과 같은 child upcommentidx 추출
+            List<SOMap> rootChildList = child.stream().filter(obj -> commentIdx.equals(obj.getStr("upcommentidx"))).collect(Collectors.toList());
+            // 이미지 파일 검사
+            Optional<Map<String, Object>> commentFile = commentFileList.stream().filter(file -> commentIdx.equals(file.get("orgidx").toString())).findFirst();
+            if (commentFile.isPresent()) { // null 체크
+                if (CMConst.FILE_TYPE_VIDEO.equals(commentFile.get().get("filetype").toString()) && CMConst.IMG_TYPE_EVENT_REPLY_VIDEO.equals(commentFile.get().get("imgtype").toString())) { // 동영상 타입
+                	rt.put("videofile", commentFile.get());
+                	rt.put("filetype", "video");
+                    rt.put("icon", "icon-file-video");
+                } else if (CMConst.IMG_TYPE_EVENT_IMG_REPLY.equals(commentFile.get().get("imgtype").toString())) { // 사진 타입
+                	rt.put("imgpath", commentFile.get().get("fullpath"));
+                	rt.put("filetype", "photo");
+                    rt.put("icon", "icon-file-photo");
+                }
+            }
+            // 새로운 result list에 넣어줌
+            resultCommentList.add(rt);
+            if (rootChildList.size() > 0) {
+                resultCommentList.addAll(rootChildList);
+            }
+        });
+
+        commentList = resultCommentList;
+
+        result.put("list", commentList);
+        return result;
+    }
+
+    /**
+     * 이벤트 댓글 엑셀 다운
+     *
+     * @param params
+     * @return
+     * @throws Exception
+     */
+    @Override
+    public List<Map<String, Object>> selectPromotionCommentExcelDownload(SOMap params) throws Exception {
+    	params.put("siteid", cs.getStr("siteid"));
+        List<Map<String, Object>> commentList = dadaEventCommentMapper.selectAdminCommentExcelDownload(params);
+
+        // depth 댓글 순서 조정
+        List<Map<String, Object>> resultCommentList = new ArrayList<>();
+        List<Map<String, Object>> root = commentList.stream().filter(obj -> "0".equals(obj.get("depth").toString())).collect(Collectors.toList());
+        List<Map<String, Object>> child = commentList.stream().filter(obj -> !"0".equals(obj.get("depth").toString())).collect(Collectors.toList());
+
+        root.forEach(rt -> {
+            // depth0 idx 값
+            String commentIdx = rt.get("commentidx").toString();
+            // depth0 idx 값과 같은 child upcommentidx 추출
+            List<Map<String, Object>> rootChildList = child.stream().filter(obj -> commentIdx.equals(obj.get("upcommentidx").toString())).collect(Collectors.toList());
+            // 새로운 result list에 넣어줌
+            resultCommentList.add(rt);
+            if (rootChildList.size() > 0) {
+                resultCommentList.addAll(rootChildList);
+            }
+        });
+
+        commentList = resultCommentList;
+        return commentList;
+    }
+
+    @Override
+	public SOMap checkChange(SOMap params) throws Exception {
+		params.put("siteid", cs.getStr("siteid"));
+		SOMap result = new SOMap();
+
+		int count = dadaEventMapper.checkDisplayCnt(params);
+
+		// 1개 이상일 때 출력
+		String overmsg = params.getStr("overmsg");
+		// 0개일 때 출력
+		String zeromsg = params.getStr("zeromsg");
+
+		if(count > 0){
+			result.put("msg", overmsg);
+		} else {
+			result.put("msg", zeromsg + " 처리 시, 게시 가능한 게시물이 없으므로 영역이 숨김처리 됩니다. 진행 하시겠습니까?");
+		}
+
+		return result;
+	}
+
+
+	public Response updatePromotionLottery(SOMap params) {
+		Response res = new Response();
+		SOMap resultMap = new SOMap();
+		logger.info("-------------------params.winnercount:"+params.get("winnercount"));
+		logger.info("-------------------params.eventidx:"+params.get("eventidx"));
+
+		SOMap resultWinning = dadaEventMapper.selectResultWinning(params);
+		if("T".equals(resultWinning.get("isselectcomplete"))) {
+			res.setStatusCode(Status.CREATED.getKey());
+			res.setMessage("이미 추첨되었습니다.");
+			return res;
+		}
+
+		List winnerList =  dadaEventMapper.selectLotteryWinner(params);
+
+
+		SOMap eventEnterWinnerMap = new SOMap();
+		if(winnerList != null && winnerList.size() > 0) {
+			eventEnterWinnerMap.put("issucc", "T");
+			eventEnterWinnerMap.put("list", winnerList);
+			dadaEventEnterMapper.updateAdminEventEnterArray(eventEnterWinnerMap);
+
+			params.put("isselectcomplete", "T");
+			dadaEventMapper.updateEvent(params);
+		}
+
+		return res;
+	}
+
+	/**
+	 * 그랜드 오픈 래플응모 결과
+	 * @param param
+	 * @return
+	 */
+	public Response raffleWinList(SOMap param) throws Exception {
+		Response res = new Response();
+		SOMap resultMap = new SOMap();
+//		if(!isMember()) {
+//			res.setStatusCode(Status.FAIL.getKey());
+//			res.setMessage("'로그인 후 이벤트 참여해주세요.");
+//			return res;
+//		}
+		param.put("siteid", cs.getStr("siteid"));
+		param.put("userno", cs.getInt("authmemberno"));
+		param.put("issucc", "F");
+
+		// 이벤트에 응모했는지 조회
+
+		SOMap resultWinning = dadaEventMapper.selectResultWinning(param);
+		if("F".equals(resultWinning.get("isselectcomplete"))) {
+			res.setStatusCode(Status.CREATED.getKey());
+			res.setMessage("아직 당첨자 추천전입니다.");
+			return res;
+		}
+
+		List<SOMap> winnerlist = dadaEventMapper.selectraffleWinList(param);
+		resultMap.put("winnerlist", winnerlist);
+		res = new Response(resultMap);
+		return res;
+	}
+
+}

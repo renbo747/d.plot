@@ -1,0 +1,624 @@
+package com.dplot.front.controller;
+
+import java.security.interfaces.RSAPublicKey;
+import java.util.Date;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.Properties;
+
+import javax.annotation.Resource;
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.authentication.AuthenticationTrustResolver;
+import org.springframework.security.authentication.AuthenticationTrustResolverImpl;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestMethod;
+import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.util.CookieGenerator;
+
+import com.dplot.common.CMConst;
+import com.dplot.common.Response;
+import com.dplot.common.SOMap;
+import com.dplot.common.Status;
+import com.dplot.common.service.util.NaverCaptchaService;
+import com.dplot.front.apple.Key;
+import com.dplot.front.apple.Keys;
+import com.dplot.front.service.CartService;
+import com.dplot.front.service.FrontMemberService;
+import com.dplot.security.model.NonMember;
+import com.dplot.util.HttpClientUtils;
+import com.dplot.util.ServletRequestInfoUtil;
+import com.dplot.util.Util;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.nimbusds.jose.JWSVerifier;
+import com.nimbusds.jose.crypto.RSASSAVerifier;
+import com.nimbusds.jose.jwk.JWK;
+import com.nimbusds.jose.jwk.RSAKey;
+import com.nimbusds.jwt.JWTClaimsSet;
+import com.nimbusds.jwt.SignedJWT;
+
+/**
+ * 모바일 사용자 회원Controller <BR>
+ * 모바일 사용자에서 회원메뉴(로그인,회원가입,아이디/비밀번호찾기)
+ */
+@RestController
+@RequestMapping("/member")
+public class MemberController {
+	
+	/** The Constant logger. */
+	private static final Logger logger = LoggerFactory.getLogger(MemberController.class);
+	
+	/** The frontMemberService. */
+	@Autowired
+	private FrontMemberService frontMemberService;
+
+	/** The frontMemberService. */
+	@Autowired
+	private CartService cartService;
+	
+	@Resource(name="propertiesFactory")
+	private Properties prop;
+	
+    /**
+     * 아이디찾기 mobile, email, userid는 별표로 리턴
+     * @return Response
+     * @throws Exception
+     */
+	@RequestMapping(value="/find/id", method=RequestMethod.POST)
+	public Response memberFindId(@RequestBody SOMap param) throws Exception{
+		Response res = new Response();
+		
+		res.setData(frontMemberService.findId(param));
+		
+		return res;
+	}
+	
+    /**
+     * 아이디 찾기 - 아이디를 메일이나 핸드폰으로 보내기
+     * @param 타입 : email / hp
+     * @return Response
+     * @throws Exception
+     */
+	@RequestMapping(value="/sendId", method=RequestMethod.POST)
+	public Response sendIdByEmail(@RequestBody SOMap param) throws Exception{
+		Response res = new Response();
+		
+		frontMemberService.sendId(param);
+
+		return res;
+	}
+	
+    /**
+     * 비밀번호 찾기 - 인증번호전송
+     * @return Response
+     * @throws Exception
+     */
+	@RequestMapping(value="/find/pw/authSend", method=RequestMethod.POST)
+	public Response memberFindPwAuthSend(@RequestBody SOMap param) throws Exception{
+		Response res = new Response();
+		res.setErrorShow(false);
+		
+		// TODO: 이메일, 문자보내기
+		res.setData(frontMemberService.sendAuthNum(param));
+		
+		return res;
+	}
+	
+    /**
+     * 비밀번호 찾기 - 인증번호확인
+     * @return Response
+     * @throws Exception
+     */
+	@RequestMapping(value="/find/pw/authConfirm", method=RequestMethod.POST)
+	public Response memberFindPwAuthConfirm(@RequestBody SOMap param) throws Exception{
+		Response res = new Response();
+		res.setErrorShow(false);
+		
+		res.setData(frontMemberService.confirmAuthNum(param));
+		
+		return res;
+	}
+	
+    /**
+     * 비밀번호 변경
+     * @return Response
+     * @throws Exception
+     */
+	@RequestMapping(value="/pw/change", method=RequestMethod.POST)
+	public Response memberPwChange(@RequestBody SOMap param, HttpServletResponse response) throws Exception{
+		Response res = new Response();
+		
+		res.setData(frontMemberService.changePw(param));
+		
+		// 로그인 5회 실패 쿠키 삭제
+		CookieGenerator cg = new CookieGenerator();
+		cg.setCookieDomain(ServletRequestInfoUtil.getRequestDomain());
+		cg.setCookiePath("/");
+		cg.setCookieName(CMConst.COOKIE_OVER_TIME_LOGIN_ATTEMPT);
+		cg.setCookieMaxAge(0);
+		cg.addCookie(response, "");
+				
+		return res;
+	}
+	
+    /**
+     * 비밀번호 수정일 갱신
+     * @return Response
+     * @throws Exception
+     */
+	@RequestMapping(value="/pw/changeDateRenew", method=RequestMethod.POST)
+	public Response memberPwChangeDateRenew(@RequestBody SOMap param) throws Exception{
+		frontMemberService.updatePwChangeDateNowByNo(param);
+		return new Response();
+	}
+	
+    /**
+     * 네이버 캡차
+     * @return Response
+     * @throws Exception
+     */
+	@RequestMapping(value="/captcha", method=RequestMethod.POST)
+	public Response captcha(@RequestBody SOMap param) throws Exception{
+		Response res = new Response();
+		String key = param.getStr("captchakey");
+		String value = param.getStr("captchavalue");
+		String type = param.getStr("captchatype");
+		
+		logger.info("key = {}", key);
+		logger.info("value = {}", value);
+
+		Map<String, Object> result = new HashMap<>();
+		
+		NaverCaptchaService navercaptchaService = new NaverCaptchaService();
+
+		// 캡차 검증
+		if (Util.isNotEmpty(key) && Util.isNotEmpty(value)) {
+			String verification = navercaptchaService.captchaNkeyResult(type, key, value);
+			if (verification != null) {
+				result.put("verification", Boolean.parseBoolean(verification));
+			} else {
+				res.setStatusCode(Status.FAIL.getKey()); // 오류날 경우 캡차 안타게 클라이언트 변경
+			}
+		// 캡차 요청
+		} else {
+			key = Util.isNotEmpty(key) ? key : navercaptchaService.captchaNkey(type);
+			result.put("key", key);
+			String src = navercaptchaService.getCaptcha(type, key);
+			if (src != null) {
+				result.put("src", src);
+			} else {
+				res.setStatusCode(Status.FAIL.getKey()); // 오류날 경우 캡차 안타게 클라이언트 변경
+			}
+		}
+		res.setData(result);
+		return res;
+	}
+	
+	/**
+     * SNS 로그인
+     * @return Response
+     * @throws Exception
+     */
+	@RequestMapping(value="/sns/login", method=RequestMethod.POST)
+	public Response snsLogin(@RequestBody SOMap param) throws Exception{
+		
+		return new Response(frontMemberService.snsLogin(param));
+	}
+	
+	/**
+     * SNS 로그인
+     * @return Response
+     * @throws Exception
+     */
+	@RequestMapping(value="/sns/connect", method=RequestMethod.POST)
+	public Response snsConnect(@RequestBody SOMap param) throws Exception{
+		
+		return new Response(frontMemberService.snsConnect(param));
+	}
+	
+	/**
+	 * 회원정보 수정 애플 sns 연결
+	 * @param param
+	 * @return
+	 * @throws Exception
+	 */
+	@RequestMapping(value="/sns/apple/connect", method=RequestMethod.POST)
+	public Response snsAppleConnect(@RequestBody SOMap param) throws Exception{
+		return new Response(frontMemberService.snsAppleConnect(param));
+	}
+	
+	/**
+     * SNS 로그인 해체
+     * @return Response
+     * @throws Exception
+     */
+	@RequestMapping(value="/sns/disconnect", method=RequestMethod.POST)
+	public Response snsDisconnect(@RequestBody SOMap param) throws Exception{
+		
+		return new Response(frontMemberService.snsDisconnect(param));
+	}
+	
+	/**
+     * 회원가입 처리
+     * @return Response
+     * @throws Exception
+     */
+	@RequestMapping(value="/signup/act", method=RequestMethod.POST)
+	public Response signupAct(@RequestBody SOMap param) throws Exception{
+		
+		Response res = new Response(param);
+		
+		res.setErrorShow(false);
+		
+		frontMemberService.saveSignup(param);
+		
+		return res;
+	}
+	
+	/**
+	 * 사용자 회원가입 약관 페이지
+	 * 
+	 * @param p
+	 * @param map
+	 * @param session
+	 * @return
+	 * @throws Exception
+	 */
+	@RequestMapping("/signup/term")
+	public Response term(@RequestBody SOMap param) throws Exception{
+		SOMap result = new SOMap();
+				
+		result.put("list", frontMemberService.selectSignUpTerm(param));
+		
+		return new Response(result);
+	}
+	
+	/**
+     * 회원가입 아이디중복체크
+     * @return Response
+     * @throws Exception
+     */
+	@RequestMapping(value="/signup/idCheck", method=RequestMethod.POST)
+	public Response idCheck(@RequestBody SOMap param) throws Exception{
+		Response res = new Response();
+		res.setErrorShow(false);
+
+		if(frontMemberService.checkUserId(param)) {
+			res.setStatusCode(Status.FAIL.getKey());
+			res.setMessage("중복된 아이디가 존재합니다.");
+		}
+		
+		return res;
+	}
+	
+	/**
+     * 회원가입 이메일중복체크
+     * @return Response
+     * @throws Exception
+     */
+	@RequestMapping(value="/signup/emailCheck", method=RequestMethod.POST)
+	public Response emailCheck(@RequestBody SOMap param) throws Exception{
+		Response res = new Response();
+		
+		res.setErrorShow(false);
+		if(frontMemberService.checkEmail(param)) {
+			res.setStatusCode(Status.FAIL.getKey());
+			res.setMessage("[중복]된 이메일이 존재합니다.");
+		}
+		
+		if(frontMemberService.checkSleepMemberEmail(param)) {
+			res.setStatusCode(Status.FAIL.getKey());
+			res.setMessage("[탈퇴]후 30일이 경과되지 않은 회원의 이메일주소입니다.");
+		}
+		
+		return res;
+	}
+	
+	/**
+	 * 회원가입 완료시 회원정보 조회
+	 * @param param
+	 * @return
+	 * @throws Exception
+	 */
+	@RequestMapping(value="/signup/memberInfo", method=RequestMethod.POST)
+	public Response selectUserInfo(@RequestBody SOMap param) throws Exception{
+		return new Response(frontMemberService.selectMemberInfo(param));
+	}
+	
+	
+	
+	/**
+     * 회원가입 임직원 확인 인증번호 메일발송
+     * @return Response
+     * @throws Exception
+     */
+	@RequestMapping(value="/signup/sendAuth", method=RequestMethod.POST)
+	public Response sendAuth(@RequestBody SOMap param) throws Exception{
+		Response res = new Response(frontMemberService.sendAuthEmail(param));
+		return res;
+		
+	}
+	
+	/**
+     * 회원가입 임직원 확인 인증번호 확인
+     * @return Response
+     * @throws Exception
+     */
+	@RequestMapping(value="/signup/confirmAuth", method=RequestMethod.POST)
+	public Response confirmAuth(@RequestBody SOMap param) throws Exception{
+		Response res = new Response();
+		
+		frontMemberService.confirmAuthEmail(param);
+		
+		return res;
+	}
+	
+	/**
+     * 회원탈퇴 처리
+     * @return Response
+     * @throws Exception
+     */
+	@RequestMapping(value="/withdraw", method=RequestMethod.POST)
+	public Response withdraw(@RequestBody SOMap param, HttpServletResponse response) throws Exception{
+		
+		frontMemberService.withdraw(param);
+		return new Response();
+		//response.sendRedirect("/member/logout");
+	}
+	
+	/**
+     * 회원가입 아이디중복체크
+     * @return Response
+     * @throws Exception
+     */
+	@RequestMapping(value="/sleep/cancel", method=RequestMethod.POST)
+	public Response sleepCancel(@RequestBody SOMap param) throws Exception{
+		frontMemberService.cancelSleepMember(param);
+		
+		return new Response();
+	}
+	
+	/**
+     * 로그인 체크, 로그인 안돼있으면 401
+     * @return Response
+     * @throws Exception
+     */
+	@RequestMapping(value="/checkAuth", method=RequestMethod.POST)
+	public Response checkAuth(@RequestBody SOMap param) throws Exception{
+		Response response = new Response();
+		response.setErrorShow(false);
+		
+		AuthenticationTrustResolver trustResolver = new AuthenticationTrustResolverImpl();
+		
+		Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+				
+		logger.debug(authentication + "");
+		if(authentication == null || trustResolver.isAnonymous(authentication)) {
+			response.setStatusCode(Status.PROC_FAIL.getKey());
+		}else {
+			if(authentication.getPrincipal() instanceof NonMember) {
+				response.setStatusCode(Status.PROC_FAIL.getKey());
+			}
+		}
+		
+		return response;
+	}
+	
+	/**
+     * 비회원로그인 체크
+     * @return Response
+     * @throws Exception
+     */
+	@RequestMapping(value="/checkNonemember", method=RequestMethod.POST)
+	public Response checkNonemember(@RequestBody SOMap param) throws Exception{
+		Response response = new Response();
+		response.setErrorShow(false);
+		
+		AuthenticationTrustResolver trustResolver = new AuthenticationTrustResolverImpl();
+		
+		Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+				
+		logger.debug(authentication + "");
+		if(authentication == null || trustResolver.isAnonymous(authentication)) {
+			response.setStatusCode(Status.PROC_FAIL.getKey());
+		}
+		
+		return response;
+	}
+	
+	/**
+	 * 추천인 보상 지급
+	 * @param param
+	 * @return
+	 * @throws Exception
+	 */
+	@RequestMapping(value="/recommend", method= RequestMethod.POST)
+	public Response saveRecommend(@RequestBody SOMap param) throws Exception {
+		frontMemberService.saveRecommend(param);
+		return new Response();
+	}
+	
+	/**
+	 * 카카오 계정 사용자명 변경
+	 * @param param
+	 * @return
+	 * @throws Exception
+	 */
+	@RequestMapping(value="/saveKakaoName", method= RequestMethod.POST)
+	public Response saveKakaoName(@RequestBody SOMap param) throws Exception {
+		frontMemberService.saveKakaoName(param);
+		return new Response();
+	}
+	
+	
+	/**
+	 * 애플로그인 콜백처리
+	 * @param param
+	 * @return
+	 * @throws Exception
+	 */
+	@RequestMapping(value="/appleAuth", method= RequestMethod.POST)
+	public void appleAuth(HttpServletRequest request, HttpServletResponse response) throws Exception {
+		logger.debug("Apple Login Callback ID TOKEN : " + request.getParameter("id_token"));
+		
+		System.out.println(request.getParameter("state"));
+		//String code = request.getParameter("code");
+		String id_token = request.getParameter("id_token");
+		
+		// 1차검증 Verify the JWS E256 signature using the server’s public key
+		
+		SignedJWT signedJWT = SignedJWT.parse(id_token);
+		JWTClaimsSet payload = signedJWT.getJWTClaimsSet();
+		
+		String publicKeys = HttpClientUtils.doGet("https://appleid.apple.com/auth/keys");
+        ObjectMapper objectMapper = new ObjectMapper();
+        Keys keys = objectMapper.readValue(publicKeys, Keys.class);
+        
+        boolean signature = false;
+        for (Key key : keys.getKeys()) {
+        	 RSAKey rsaKey = (RSAKey) JWK.parse(objectMapper.writeValueAsString(key));
+             RSAPublicKey publicKey = rsaKey.toRSAPublicKey();
+             JWSVerifier verifier = new RSASSAVerifier(publicKey);
+             if (signedJWT.verify(verifier)) {
+            	 signature = true;
+             }
+        }
+        
+        if(!signature) {
+        	throw new Exception("애플로그인 처리중 키값이 일치하지 않습니다.");
+        }
+		
+        Date currentTime = new Date(System.currentTimeMillis());
+        
+        String aud = payload.getAudience().get(0);
+        String iss = payload.getIssuer();
+//        String nonce =(String)payload.getClaim("nonce");
+        String snsmemberno =(String)payload.getClaim("sub");
+        String email =(String)payload.getClaim("email");
+        
+        if (!currentTime.before(payload.getExpirationTime())){
+        	throw new Exception("애플로그인 처리중 토큰이 만료되었습니다.");
+        }
+        if (!aud.equals(prop.getProperty("apple.login.cilent.id", ""))) {
+        	throw new Exception("애플로그인 클라이언트ID가 일치하지 않습니다.");
+        }
+        if(!iss.equals("https://appleid.apple.com")){
+        	throw new Exception("애플로그인 에러가 발생하였습니다.");
+        }
+//        if(!nonce.equals(prop.getProperty("apple.login.nonce", "")) {
+//        	throw new Exception("애플로그인 에러가 발생하였습니다.");
+//        }
+        
+        response.sendRedirect(prop.getProperty("apple.login.redirect.url") + "?snsmemberno=" + snsmemberno + "&email=" + email);
+	}
+	
+	/**
+	 * 로그인 회원정보 조회
+	 * @param param
+	 * @return
+	 * @throws Exception
+	 */
+	@RequestMapping(value="/info", method=RequestMethod.POST)
+	public Response selectMemberJoinchType(@RequestBody SOMap param) throws Exception{
+		return new Response(frontMemberService.selectMember(param));
+	}
+	
+	/**
+	 * 회원정보 확인페이지 비밀번호 확인
+	 * @param param
+	 * @return
+	 * @throws Exception
+	 */
+	@RequestMapping(value="/confirmCheck", method=RequestMethod.POST)
+	public Response selectConfirmCheck(@RequestBody SOMap param) throws Exception{
+		frontMemberService.selectConfirmCheck(param);
+		return new Response();
+	}
+	
+	/**
+	 * 회원정보 수정처리
+	 * @param param
+	 * @return
+	 * @throws Exception
+	 */
+	@RequestMapping(value = "infoModify", method=RequestMethod.POST)
+	public Response changeInfoModyfy(@RequestBody SOMap param) throws Exception{
+		Response res = new Response(param);
+		res.setErrorShow(false);
+		
+		frontMemberService.saveInfoModify(param);
+		return res;
+	}
+	
+	/**
+	 * 회원정보 광고성PUSH수신동의
+	 * @param param
+	 * @return
+	 * @throws Exception
+	 */
+	@RequestMapping(value = "/push", method=RequestMethod.POST)
+	public Response saveAdPush(@RequestBody SOMap param) throws Exception{
+		
+		frontMemberService.saveIsAdPush(param);
+		
+		return new Response();
+	}
+	
+	/**
+	 * 바이오토큰값 조회
+	 * @param param
+	 * @return
+	 * @throws Exception
+	 */
+	@RequestMapping(value = "/getEncBio", method=RequestMethod.POST)
+	public Response getBio(@RequestBody SOMap param) throws Exception{
+		
+		SOMap bio = frontMemberService.getEncBio(param);
+		
+		return new Response(bio);
+	}
+	
+	/**
+	 * 바이오 토큰값 저장
+	 * @param param
+	 * @return
+	 * @throws Exception
+	 */
+	@RequestMapping(value = "/bio", method=RequestMethod.POST)
+	public Response saveBio(@RequestBody SOMap param) throws Exception{
+		
+		frontMemberService.saveEncBio(param);
+		
+		return new Response();
+	}
+	
+	/**
+	 * app용 사용자 정보 조회(비로그인 정보도 조회)
+	 * @param param
+	 * @return
+	 * @throws Exception
+	 */
+	@RequestMapping(value = "/app/info", method=RequestMethod.POST)
+	public Response getMemberInfo(@RequestBody SOMap param) throws Exception {
+		return new Response(frontMemberService.getMemberInfo(param));
+	}
+	
+	/**
+	 * 회원이메일 & 핸드폰번호 조회
+	 * @param param
+	 * @return
+	 * @throws Exception
+	 */
+	@RequestMapping(value = "/memberEmailPhone", method=RequestMethod.POST)
+	public Response memberInfo(@RequestBody SOMap param) throws Exception {
+		return new Response(frontMemberService.memberEmailPhone(param));
+	}
+
+}

@@ -1,0 +1,37 @@
+.base-counter {
+  display: inline-flex;
+  border: 1px solid $border-color;
+  height: 30px;
+  .base-counter__btn {
+    width: 28px;
+    height: 28px;
+    background: #fff;
+    border: none;
+    outline: 0;
+    &.decrement {
+      background: url('~@/assets/common/icon/icon-minus-gray-16px.svg') no-repeat center;
+      background-size: 16px;
+    }
+    &.increment {
+      background: url('~@/assets/common/icon/icon-plus-gray-16px.svg') no-repeat center;
+      background-size: 16px;
+    }
+  }
+  .base-counter__input {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    text-align: center;
+    width: 42px;
+    padding: 0;
+    font-size: 14px;
+    letter-spacing: -.56px;
+    border-left: 1px solid $border-color;
+    border-right: 1px solid $border-color;
+    border-top: none;
+    border-bottom: none;
+    outline: 0;
+    -webkit-appearance: none;
+    -webkit-border-radius: 0;
+  }
+}

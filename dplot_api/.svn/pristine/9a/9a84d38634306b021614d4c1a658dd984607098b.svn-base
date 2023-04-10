@@ -1,0 +1,236 @@
+package com.dplot.mapper;
+
+import com.dplot.annontation.MapperInterface;
+import com.dplot.common.SOMap;
+
+import java.util.List;
+import java.util.Map;
+
+@MapperInterface
+public interface ClaimMapper {
+	
+	/**
+	 * 클레임정보 조회
+	 */
+	SOMap selectClaimInfo(SOMap param);
+	
+    /**
+     * 반품/교환 처리 리스트 조회 (굿스플로 배송추적처리 배치에서 사용)
+     */
+    List<SOMap> selectReturnAndExchangeInvoiceList(SOMap param);
+
+    /**
+     * 반품/교환 상태 업데이트 처리 (굿스플로 배송추적처리 배치에서 사용)
+     */
+    int updateClaimDeliveryStatus(SOMap param);
+
+    /**
+     * 클레임구분별 건수 조회
+     */
+    SOMap selectClaimClmtypeCnt(SOMap param);
+	
+	/**
+	 * 관리자용 상태별 클레임목록 조회
+	 */
+	List<SOMap> selectAdminClaimList(SOMap params);
+	
+	/**
+	 * 관리자용 상태별 클레임목록 건수 조회
+	 */
+	SOMap selectAdminClaimListCount(SOMap params);
+	
+	/**
+	 * 관리자용 상태별 클레임목록 조회(엑셀용)
+	 */
+	List<Map<String, Object>> selectAdminClaimListForExcel(SOMap params);
+	
+	/**
+	 * 관리자용 환불관리 목록조회
+	 */
+	List<SOMap> selectAdminRefundList(SOMap params);
+	
+	/**
+	 * 관리자용 환불관리 목록 건수 조회
+	 */
+	SOMap selectAdminRefundListCount(SOMap params);
+	
+	/**
+	 * 관리자용 환불관리 목록조회(엑셀용)
+	 */
+	List<Map<String, Object>> selectAdminRefundListForExcel(SOMap params);
+
+	/**
+	 * 환불상세정보 조회
+	 */
+	SOMap selectAdminClaimRefundInfo(SOMap dbParam);
+
+	/**
+	 * 교환/반품 운송장번호 업데이트 (회수 운송장 번호)
+	 */
+	int updateClaimDeliveryInvoice(SOMap dbParam);
+
+	/**
+	 * 클레임 교환/반품 상태 업데이트 처리 (취소는 아님)
+	 */
+	int updateClaimStatusNonCancel(SOMap dbParam);
+
+
+	/**
+	 * 굿스플로 클레임 배송추적 에러 처리
+	 */
+	int updateClaimTrackingError(SOMap param);
+
+	/**
+	 * 굿스플로 클레임 배송추적 리스트
+	 */
+	List<SOMap> selectClaimDeliveringList(SOMap param);
+	
+	/**
+	 * 굿스플로 클레임 개별반품 배송추적 리스트
+	 */
+	List<SOMap> selectClaimRtnManDeliveringList(SOMap param);
+
+	/**
+	 * 굿스플로 클레임 에러처리 리스트
+	 */
+	List<SOMap> selectClaimDeliveringListForError(SOMap param);
+
+	/**
+	 * 굿스플로 회수 에러처리 리스트
+	 */
+	List<SOMap> selectClaimReturnListForError(SOMap param);
+	
+	/**
+	 * 클레임 목록 조회
+	 */
+	List<SOMap> selectClaimList(SOMap param);
+	
+	/**
+	 * 클레임 목록 이전클레임비교 조회
+	 * @param param
+	 * @return
+	 */
+	List<SOMap> selectClaimListForPrev(SOMap param);
+	
+	/**
+	 * 관리자 클레임 목록 이전클레임비교 조회
+	 * @param param
+	 * @return
+	 */
+	List<SOMap> selectAdminClaimListForPrev(SOMap param);
+	
+	/**
+	 * 클레임 신청정보 조회
+	 */
+	SOMap selectOrderClaimApplyInfo(SOMap param);
+	
+	/**
+	 * 마이페이지 주문크레임 목록 조회
+	 * @param params
+	 * @return
+	 */
+	List<SOMap> selectMyClaimList(SOMap params);
+	
+	/**
+	 * 클레임번호조회
+	 * @param param
+	 * @return
+	 */
+	String selectClaimNo(SOMap param);
+	
+	/**
+	 * 클레임결제정보수정
+	 * @param param
+	 * @return
+	 */
+	int updateClaimPayment(SOMap param);
+	
+	/**
+	 * 클레임 수정
+	 * @param param
+	 * @return
+	 */
+	int updateClaim(SOMap param);
+	
+	/**
+	 * 클레임 저장
+	 * @param param
+	 * @return
+	 */
+	int insertClaim(SOMap param);
+	
+	/**
+	 * 클레임 상태 변경
+	 * @param param
+	 * @return int
+	 */
+	int updateClaimStatus(SOMap param);
+
+	/**
+	 * 클레임 완료일 수정
+	 * @param param
+	 * @return
+	 */
+	int updateClaimCompdate(SOMap param);
+	
+	/**
+	 * 대시보드 클레임 현황
+	 */
+	SOMap selectClaimDashBoard(SOMap param);
+	
+	/**
+	 * 회수지/교환배송지정보 변경
+	 * @param param
+	 * @return int
+	 */
+	int updateClaimRecExcdlvInfo(SOMap param);
+	
+	/**
+	 * 조정금액 저장
+	 * @param param
+	 * @return int
+	 */
+	int updateClaimFinAdjustAmt(SOMap param);
+	
+	/**
+	 * 클레임상태 조회
+	 * @param param
+	 * @return SOMap
+	 */
+	SOMap selectClaimStatusInfo(SOMap param);
+
+	/**
+	 *  ERP용 주문 취소 데이터 조회
+	 */
+	List<SOMap> selectOrderCancelERPData(SOMap param);
+
+	/**
+	 *  ERP용 반품/교환 접수 데이터 조회
+	 */
+	List<SOMap> selectClaimApplyERPData(SOMap param);
+
+	/**
+	 * ERP용 반품완료 데이터 전달 (RTS004, RTS005)
+	 */
+	List<SOMap> selectReturnCompleteERPData(SOMap param);
+
+	/**
+	 * ERP용 반품완료 데이터 전달 (RTS009, RTS010)
+	 */
+	List<SOMap> selectOrderReturnERPData(SOMap param);
+
+	/**
+	 * ERP용 교환완료 데이터 전달
+	 */
+	List<SOMap> selectExchangeCompleteERPData(SOMap param);
+
+	/**
+	 * 직매입 회수진행 상태 수정
+	 */
+	int updateClaimRecDeliveryERP(SOMap param);
+
+	/**
+	 * 직매입 교환배송 상태 수정
+	 */
+	int updateClaimExcDeliveryERP(SOMap param);
+}

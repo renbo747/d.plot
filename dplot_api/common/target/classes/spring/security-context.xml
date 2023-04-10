@@ -1,0 +1,150 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans:beans xmlns="http://www.springframework.org/schema/security"
+	xmlns:beans="http://www.springframework.org/schema/beans" 
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:schemaLocation="http://www.springframework.org/schema/security 
+		http://www.springframework.org/schema/security/spring-security.xsd
+		http://www.springframework.org/schema/beans 
+		http://www.springframework.org/schema/beans/spring-beans-4.3.xsd">
+
+	<http pattern="/api/partners/**"
+	auto-config="false"
+	use-expressions="true"
+	security-context-repository-ref="dealerSecurityContextRepository"
+    entry-point-ref="authenticationEntryPoint">
+		<access-denied-handler ref="accessDeniedHandler"/>
+		<intercept-url pattern="/api/partners/login_act" access="permitAll"/>
+		<intercept-url pattern="/api/partners/logout" access="permitAll"/>
+		<intercept-url pattern="/api/partners/**" access="hasRole('ROLE_DEALER')"/>
+		<cors ref="corsFilter"/>
+		<csrf disabled="true"/>
+		<custom-filter ref="partnersUsernamePasswordAuthenticationFilter" position="FORM_LOGIN_FILTER "/>
+		<logout delete-cookies="DEALER_TOKEN,SPRING_SECURITY_REMEMBER_ME_COOKIE" 
+		invalidate-session="true" 
+		logout-url="/api/partners/logout"
+		success-handler-ref="dealerLogoutSuccessHandler"/>
+	</http>
+	<beans:bean id="partnersUsernamePasswordAuthenticationFilter" class="com.dplot.security.filter.CustomUsernamePasswordAuthenticationFilter">
+		<beans:property name="authenticationManager" ref="dealerAuthManager" />
+		<beans:property name="authenticationSuccessHandler" ref="dealerAuthenticationSuccessHandler"/>
+		<beans:property name="authenticationFailureHandler" ref="dealerAuthenticationFailureHandler"/>
+		<beans:property name="filterProcessesUrl" value="/api/partners/login_act"/>
+		<beans:property name="usernameParameter" value="id"/>
+		<beans:property name="passwordParameter" value="pw"/>
+	</beans:bean>
+	
+	<authentication-manager id="dealerAuthManager">
+		<authentication-provider ref="dealerAuthenticationProvider"/>
+	</authentication-manager>
+	
+	<http pattern="/api/admin/**"
+	auto-config="false" 
+	use-expressions="true" 
+	security-context-repository-ref="adminSecurityContextRepository"
+	entry-point-ref="authenticationEntryPoint">
+		<access-denied-handler ref="accessDeniedHandler"/>
+		<intercept-url pattern="/api/admin/login_act" access="permitAll"/>
+		<intercept-url pattern="/api/admin/logout" access="permitAll"/>
+		<intercept-url pattern="/api/admin/**" access="hasRole('ROLE_ADMIN')"/>
+		<cors ref="corsFilter"/>
+		<csrf disabled="true"/>
+		<custom-filter ref="adminUsernamePasswordAuthenticationFilter" position="FORM_LOGIN_FILTER "/>
+		<logout delete-cookies="ADMIN_TOKEN,SPRING_SECURITY_REMEMBER_ME_COOKIE" 
+		invalidate-session="true" 
+		logout-url="/api/admin/logout"
+		success-handler-ref="adminLogoutSuccessHandler"/>
+	</http>
+	
+	<beans:bean id="adminUsernamePasswordAuthenticationFilter" class="com.dplot.security.filter.CustomUsernamePasswordAuthenticationFilter">
+	    <beans:property name="authenticationManager" ref="adminAuthManager" />
+	    <beans:property name="authenticationSuccessHandler" ref="adminAuthenticationSuccessHandler"/>
+	    <beans:property name="authenticationFailureHandler" ref="adminAuthenticationFailureHandler"/>
+	    <beans:property name="filterProcessesUrl" value="/api/admin/login_act"/>
+	    <beans:property name="usernameParameter" value="id"/>
+	    <beans:property name="passwordParameter" value="pw"/>
+	</beans:bean>
+	
+	<authentication-manager id="adminAuthManager">
+		<authentication-provider ref="adminAuthenticationProvider"/>
+	</authentication-manager>
+	
+	<http pattern="/api/**" auto-config="false" 
+	use-expressions="true" 
+	security-context-repository-ref="memberSecurityContextRepository"
+	entry-point-ref="authenticationEntryPoint">
+		<access-denied-handler ref="accessDeniedHandler"/>
+		<intercept-url pattern="/api/mypage/**" access="hasRole('ROLE_MEMBER')"/>
+		<intercept-url pattern="/api/nonemember/**" access="hasRole('ROLE_NON_MEMBER')"/>
+		<intercept-url pattern="/api/**" access="permitAll"/>
+		<cors ref="corsFilter"/>
+		<csrf disabled="true"/>
+		<custom-filter ref="frontUsernamePasswordAuthenticationFilter" position="FORM_LOGIN_FILTER "/>
+		<headers>
+			<frame-options disabled="true"/>
+			<hsts disabled="true"/><!-- 솔루션은 https http 혼용이기때문에 이거 하면 무한로딩에 빠짐 -->
+		</headers>
+		<logout delete-cookies="MEMBER_TOKEN,SPRING_SECURITY_REMEMBER_ME_COOKIE" 
+		invalidate-session="true" 
+		logout-url="/api/member/logout" 
+		success-handler-ref="memberLogoutSuccessHandler"
+		/>
+		<remember-me 
+		services-ref="frontRememberMeService"
+		authentication-success-handler-ref="rememberMeAuthenticationSuccessHandler"
+		 />
+	</http>
+
+	<authentication-manager id="memberAuthManager">
+		<authentication-provider ref="rememberMeAuthentcationProvider"/>
+		<authentication-provider ref="memberAuthenticationProvider"/>
+	</authentication-manager>
+	
+	<beans:bean id="frontUsernamePasswordAuthenticationFilter" class="com.dplot.security.filter.CustomUsernamePasswordAuthenticationFilter">
+	    <beans:property name="authenticationManager" ref="memberAuthManager" />
+	    <beans:property name="authenticationSuccessHandler" ref="memberAuthenticationSuccessHandler"/>
+	    <beans:property name="authenticationFailureHandler" ref="memberAuthenticationFailureHandler"/>
+	    <beans:property name="filterProcessesUrl" value="/api/member/login_act"/>
+	    <beans:property name="usernameParameter" value="id"/>
+	    <beans:property name="passwordParameter" value="pw"/>
+	    <beans:property name="rememberMeServices" ref="frontRememberMeService"/>
+	</beans:bean>
+		
+	<beans:bean id="frontRememberMeService" class="com.dplot.security.service.RememberMeService">
+		<beans:constructor-arg name="key" value="dkanrjskgoqhqtlek!!!"/>
+		<beans:constructor-arg name="userDetailsService" ref="memberAuthManagerService"/>
+		<beans:property name="parameter" value="rememberMe"/>
+		<beans:property name="tokenValiditySeconds" value="31536000"/>
+		<beans:property name="useSecureCookie" value="false"/>
+	</beans:bean>
+	
+	<beans:bean id="rememberMeAuthentcationProvider" class="com.dplot.security.provider.CustomRememberMeAuthenticationProvider">
+		<beans:constructor-arg name="key" value="dkanrjskgoqhqtlek!!!"/>
+	</beans:bean>
+	
+	<beans:bean id="adminSecurityContextRepository" class="com.dplot.security.repository.AdminSecurityContextRepository">
+		<beans:constructor-arg name="tokenName" value="ADMIN_TOKEN"/>
+		<beans:constructor-arg name="secret" value="dkanrjskgoqhqtlek!!!"/>
+		<beans:constructor-arg name="cs" ref="mallConfigServiceImpl"/>
+		<beans:constructor-arg name="minute" value="180"/>
+	</beans:bean> 
+	
+	<beans:bean id="dealerSecurityContextRepository" class="com.dplot.security.repository.DealerSecurityContextRepository">
+		<beans:constructor-arg name="tokenName" value="DEALER_TOKEN"/>
+		<beans:constructor-arg name="secret" value="sdfsdrwer234134234!!!!"/>
+		<beans:constructor-arg name="cs" ref="mallConfigServiceImpl"/>
+		<beans:constructor-arg name="minute" value="180"/>
+	</beans:bean>
+	 
+	<beans:bean id="memberSecurityContextRepository" class="com.dplot.security.repository.MemberSecurityContextRepository">
+		<beans:constructor-arg name="tokenName" value="MEMBER_TOKEN"/>
+		<beans:constructor-arg name="secret" value="asdfwer324521!!!!"/>
+		<beans:constructor-arg name="cs" ref="mallConfigServiceImpl"/>
+		<beans:constructor-arg name="memberMinute" value="60"/>
+		<beans:constructor-arg name="nonMemberMinute" value="30"/>
+	</beans:bean>
+
+	<!-- <beans:bean id="customAccessDeniedHandler" class="apps.utils.CustomAccessDeniedHandler"/> -->
+	<beans:bean id="authenticationEntryPoint" class="com.dplot.security.RestAuthenticationEntryPoint"/>
+	<beans:bean id="accessDeniedHandler" class="com.dplot.security.RestAccessDeniedHandler"/>
+
+</beans:beans>

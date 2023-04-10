@@ -1,0 +1,62 @@
+.magazine-trend-detail-pc {
+  .trend-detail__header__section {
+    padding-top: 100px;
+    display: flex;
+    align-items: center;
+    h1 {
+      font-size: 26px;
+      letter-spacing: -1.04px;
+      line-height: 22px;
+      font-weight: 700;
+      padding-right: 20px;
+    }
+    .icon-heart__area {
+      display: flex;
+      align-items: center;
+    }
+    .wish-count {
+      font-size: 14px;
+      letter-spacing: -.56px;
+    }
+    .dp-bar {
+      margin-left: 10px;
+      margin-right: 10px;
+      height: 10px;
+      margin-top: 5px;
+    }
+  }
+  .trend-detail__utility {
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+    margin-left: auto;
+  }
+
+  .detail-contents__wrap {
+    padding-top: 48px;
+    .contents__box {
+      padding-bottom: 180px;
+      img {
+        width: 100%;
+
+      }
+      .trend-detail__title {
+        padding-top: 40px;
+        font-size: 46px;
+        letter-spacing: -2.3px;
+        line-height: 60px;
+        font-weight: 700;
+        padding-bottom: 16px;
+      }
+      .trend-detail__description {
+        width: 682px;
+        font-size: 16px;
+        letter-spacing: -.64px;
+        line-height: 26px;
+        color: $gray-700;
+        word-break: keep-all;
+      }
+    }
+  }
+
+}

@@ -1,0 +1,55 @@
+.none-member-order-view {
+  height: calc((var(--vh, 1vh) * 100) - 110px);
+
+  .order-view__header {
+    margin-bottom: 40px;
+
+    .icon-container {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding-top: 60px;
+      margin-bottom: 20px;
+    }
+
+    .bag-icon {
+      width: 94px;
+      height: 94px;
+      border-radius: 50%;
+      background: url("~@/assets/common/icon/icon-bag-black-64px.svg") no-repeat center;
+      background-color: $gray-100;
+    }
+
+    .info-container {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .info-text {
+      width: 160px;
+      font-size: 14px;
+      letter-spacing: -.56px;
+      line-height: 22px;
+      text-align: center;
+      color: $gray-700;
+      margin-bottom: 0;
+      word-break: keep-all;
+    }
+  }
+
+  .order-view__body {
+    .base-input + .base-input {
+      margin-top: 10px;
+    }
+
+    .dp-icon {
+      width: 16px;
+      height: 16px;
+      background-size: 16px !important;
+    }
+  }
+  .order-view__footer {
+    margin-top: 20px;
+  }
+}

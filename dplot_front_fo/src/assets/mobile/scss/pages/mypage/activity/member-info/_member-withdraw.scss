@@ -1,0 +1,84 @@
+.dp-member-withdraw {
+  padding-top: 30px;
+  padding-bottom: 50px;
+  .dp-hr {
+    height: 1px;
+  }
+  .base-textarea .form-control {
+    min-height: 160px;
+  }
+  .member-withdraw__title {
+    padding-bottom: 24px;
+    p {
+      font-weight: 400;
+    }
+  }
+  .benefit__text-area {
+    padding: 20px;
+    background: $gray-100;
+    margin-bottom: 30px;
+
+    li {
+      .text-area__key {
+        width: 100px;
+        span {
+          font-size: 14px;
+          letter-spacing: -.56px;
+          color: $gray-700;
+        }
+      }
+      .text-area__value {
+        width: calc(100% - 100px);
+
+        .benefit__value {
+          font-size: 14px;
+          letter-spacing: -.56px;
+          font-weight: 700;
+          margin-right: 2px;
+        }
+        .value__unit {
+          font-size: 14px;
+          letter-spacing: -.56px;
+        }
+      }
+    }
+    li+ li {
+      padding-top: 10px;
+    }
+  }
+  .withdraw__reason-select {
+    padding-bottom: 24px;
+    .reason-select__title {
+      font-weight: 500;
+      padding-bottom: 10px;
+    }
+    .reason-select__box {
+      margin-bottom: 8px;
+    }
+    .caution__text {
+      color: $gray-700;
+      word-break: keep-all;
+      padding-bottom: 24px;
+      font-size: 14px;
+      letter-spacing: -.56px;
+    }
+  }
+  .agree__area {
+    .magic-checkbox + label {
+      width: 235px;
+      word-break: keep-all;
+      font-size: 14px;
+      letter-spacing: -.56px;
+      line-height: 22px;
+      color: $black;
+    }
+  }
+  .member-withdraw__btn-area {
+    padding-top: 50px;
+    .btn-group {
+      .dp-btn:first-child {
+        margin-right: 10px;
+      }
+    }
+  }
+}

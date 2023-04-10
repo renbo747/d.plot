@@ -1,0 +1,88 @@
+.cs-faq {
+  // 자주묻는 질문 필터
+  .question-filter {
+    .question__ul {
+      display: flex;
+      flex-wrap: wrap;
+
+      li {
+        width: 50%;
+        border: 1px solid $border-color;
+        padding:0;
+        margin-bottom: -1px;
+        &:nth-child(2n) {
+          margin-left: -1px;
+        }
+      }
+
+    }
+    .question__label {
+      display: block;
+      width: 100%;
+      cursor: pointer;
+
+      .label__item {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        width: 100%;
+        height: 44px;
+        padding: 0;
+        font-size: 14px;
+        letter-spacing: -.42px;
+        font-family: 'AttenNew', sans-serif;
+        font-weight: 400;
+        color: $gray-700;
+
+        &.is-fail {
+          color: $gray-600;
+        }
+      }
+
+      input:checked + .label__item {
+        position: relative;
+        color: $white;
+        font-size: 16px;
+        font-weight: 500;
+        background-color: $gray-800;
+
+        &:before {
+          position: absolute;
+          top: -1px;
+          left: -1px;
+          display: block;
+          content: "";
+          width: calc(100% + 2px);
+          height: calc(100% + 2px);
+          border: 1px solid $gray-800;
+        }
+      }
+    }
+  }
+  // 자주하는 질문 회원/멤버 카테고리-question-category ( cs index scss 참고 )
+
+  .header__text {
+    span {
+      color: $primary;
+    }
+  }
+  .cs-faq__total {
+    text-align: center;
+  }
+  .cs-faq__result {
+    padding-top: 40px;
+  }
+
+  .cs-faq-find__fail {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 94px;
+    height: 94px;
+    border-radius: 50%;
+    background-color: $gray-100;
+  }
+  .icon-not-found {
+    background-image: url("~@/assets/common/icon/icon-not-found-black-64px.svg");
+  }
+}

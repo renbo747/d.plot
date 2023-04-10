@@ -1,0 +1,52 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.dplot.mapper.GoodsExcelMapMapper">
+	<select id="selectGoodsExcelMapList" parameterType="somap" resultType="somap">
+	 	SELECT	/* GoodsExcelMapMapper.xml - selectGoodsExcelMapList 상품엑셀업로드Map 조회 */
+	 		  goodsno
+			, excelidx
+			, pcimg
+			, moimg
+			, addimg
+			, regdate
+	 	FROM t_goodsexcel_map
+	 	WHERE excelidx = #{excelidx}
+	</select>
+	
+	<insert id="insertGoodsExcelMap" parameterType="somap">
+		/* GoodsExcelMapMapper.xml - insertGoodsExcelMap 상품엑셀업로드Map 저장 */
+		INSERT INTO t_goodsexcel_map (
+			  goodsno
+			, excelidx
+			, pcimg
+			, moimg
+			, addimg
+			, regdate
+		)
+		<choose>
+			<when test="imgnamelist != null and imgnamelist.size > 0">
+				VALUES
+				<foreach collection="imgnamelist" item="data" index="index" open="" separator="," close="">
+			    (	  #{data.goodsno}
+					, #{excelidx}
+					, #{data.pcimg}
+					, #{data.moimg}
+					, #{data.addimg}
+					, NOW()
+			    )
+			    </foreach>
+			</when>
+			<otherwise>
+			VALUES (
+				  #{goodsno}
+				, #{excelidx}
+				, #{pcimg}
+				, #{moimg}
+				, #{addimg}
+				, NOW()
+			)
+			</otherwise>
+		</choose>
+	</insert>
+</mapper>

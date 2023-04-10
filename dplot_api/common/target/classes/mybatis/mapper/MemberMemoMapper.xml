@@ -1,0 +1,36 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.dplot.mapper.MemberMemoMapper">
+	<insert id="insertMemberMemoArr" parameterType="somap">
+		INSERT INTO T_MEMBER_MEMO (USERNO, MEMO, ISUSE, REGUSERID, REGDATE)
+		SELECT NO, #{memo}, 'T', USERID, CURRENT_TIMESTAMP FROM T_USER
+		WHERE NO IN <foreach index="index" collection="usernoarr" item="_idx" open="(" close=")" separator="," >#{_idx}</foreach>
+	</insert>
+
+	<select id="selectMemberMemoList" parameterType="somap" resultType="somap">
+		SELECT
+			A.IDX, A.USERNO, A.MEMO, A.REGUSERID, DATE_FORMAT(A.REGDATE, '%Y-%m-%d %H:%i:%s') AS REGDATE
+			 , (CASE WHEN B.USERNO IS NOT NULL THEN B.NAME WHEN C.USERNO IS NOT NULL THEN C.NAME ELSE '' END) REGNAME
+		FROM T_MEMBER_MEMO A LEFT OUTER JOIN T_USER D ON A.REGUSERID = D.USERID LEFT OUTER JOIN T_ADMIN B ON D.NO = B.USERNO LEFT OUTER JOIN T_MEMBER C ON D.NO = C.USERNO
+		WHERE A.ISUSE = 'T'
+		AND A.USERNO = #{userno}
+		ORDER BY A.REGDATE DESC
+	</select>
+
+	<insert id="insertMemberMemo" parameterType="somap">
+		INSERT INTO T_MEMBER_MEMO (USERNO, MEMO, ISUSE, REGUSERID, REGDATE)
+		VALUES(#{userno}, #{memo}, 'T', #{userid}, CURRENT_TIMESTAMP)
+	</insert>
+
+	<update id="deleteMemberMemo" parameterType="somap">
+		UPDATE T_MEMBER_MEMO SET ISUSE = 'F'
+		WHERE IDX = #{idx}
+	</update>
+
+	<insert id="adminInsertMemberMemoArr" parameterType="somap">
+		INSERT INTO T_MEMBER_MEMO (USERNO, MEMO, ISUSE, REGUSERID, REGDATE)
+		SELECT NO, #{memo}, 'T', #{reguserid}, CURRENT_TIMESTAMP FROM T_USER
+		WHERE NO IN <foreach index="index" collection="usernoarr" item="_idx" open="(" close=")" separator="," >#{_idx}</foreach>
+	</insert>
+</mapper>

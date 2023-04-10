@@ -1,0 +1,348 @@
+<!doctype html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport"
+        content="width=device-width, user-scalable=no, initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0">
+  <meta http-equiv="X-UA-Compatible" content="ie=edge">
+  <title>주문내역 안내</title>
+
+  <!--font-->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@100;300;400;500;700;900&display=swap" rel="stylesheet">
+
+  <link th:each="font : ${fontList}" th:href="${font}" rel="stylesheet">
+</head>
+<body style="margin: 0;">
+<div id="email-order-detail" style="width: 800px; padding: 0 40px; margin: 0 auto; font-family: 'Noto Sans KR', sans-serif;">
+  <!-- 헤더 -->
+  <table style="width: 100%; padding: 30px 0 70px 0">
+    <tr>
+      <td>
+        <div>
+          <img th:src="${topLogo}" alt="로고">
+        </div>
+      </td>
+    </tr>
+  </table>
+  <table style="width: 100%;">
+    <tr>
+      <td style="text-align: center">
+        <span style="font-size: 26px; letter-spacing: -1.04px; font-weight: 500; color: #111111;">주문내역 안내</span>
+      </td>
+    </tr>
+  </table>
+  <table style="width: 100%; padding-top: 80px;">
+    <tr>
+      <td>
+          <span style="font-size: 16px; letter-spacing: -.64px; line-height: 26px; font-weight: 400; color:#111111;">
+            D.PLOT에서 주문하신 주문내역을 안내해드립니다.
+          </span>
+      </td>
+    </tr>
+    <tr>
+      <td style="padding-top: 40px;">
+        <div style="width: 100%; padding: 20px 0; background-color: #f8f8f8; ">
+          <div style="padding-left: 20px;">
+            <div>
+              <span style="font-size: 14px; letter-spacing: -.56px; color: #333333; ">고객명 : <span th:text="${ordname}"></span></span>
+              <span style="display:inline-block; width: 1px; height: 10px; margin: 0 10px; background-color: #dddddd;"></span>
+              <span style=" font-size: 14px; letter-spacing: -.66px; color: #333333;">주문일 : <span style="font-family: 'AttenNew', sans-serif; font-weight: 500;" th:text="${orderdate}"></span></span>
+              <span style="display:inline-block; width: 1px; height: 10px; margin: 0 10px; background-color: #dddddd;"></span>
+              <span style="font-size: 14px; letter-spacing: -.56px; color: #333333; ">주문번호 : <span style="font-family: 'AttenNew', sans-serif; font-weight: 500;" th:text="${ordno}"></span></span>
+            </div>
+          </div>
+        </div>
+      </td>
+    </tr>
+  </table>
+  <!--  상품 정보  -->
+  <table style="width: 100%;  border-collapse: separate; border-spacing: 0 30px; ">
+    <colgroup>
+      <col width="70%">
+      <col width="20%">
+      <col width="10%">
+    </colgroup>
+    <thead>
+      <tr>
+        <th style="padding: 15px 0; border-bottom: solid 1px #dddddd; border-top: solid 1px #999999; font-size: 16px; letter-spacing: -.64px; font-weight: 400; color:#666666;">상품정보</th>
+        <th style="padding: 15px 0; border-bottom: solid 1px #dddddd; border-top: solid 1px #999999;font-size: 16px; letter-spacing: -.64px; font-weight: 400; color:#666666;">판매금액</th>
+        <th style="padding: 15px 0; border-bottom: solid 1px #dddddd; border-top: solid 1px #999999;font-size: 16px; letter-spacing: -.64px; font-weight: 400; color:#666666;">수량</th>
+      </tr>
+    </thead>
+    <tbody th:each="dealer, index : ${dealerinfo}">
+      <tr>
+        <td colspan="3">
+          <table style="width:100%">
+            <tr th:each="goods, index : ${dealer.ordergoods}">
+              <td width="70%">
+                <table style="border-collapse: separate; border-spacing: 14px 0;">
+                  <tr>
+                    <td style="vertical-align:middle;">
+                      <img th:src="${goods.imgurl}" alt="" style="width: 150px; height: 150px; margin-left: -14px;">
+                    </td>
+                    <td style="vertical-align:middle;">
+                      <div>
+                        <span style="font-size: 14px; letter-spacing: -.56px; font-weight: 600; color: #111111; font-family: 'AttenNew', sans-serif;" th:if="${not #strings.isEmpty(goods.brandname)}" th:text="${goods.brandname}"></span>
+                        <span style="display:block; font-size: 16px; letter-spacing: -.64px; font-weight: 400; color: #666666;" th:text="${goods.goodsname}"></span>
+                      </div>
+                    </td>
+                  </tr>
+                </table>
+              </td>
+              <td>
+                <div style="text-align: center;">
+                  <span style="font-size: 18px; letter-spacing: -.56px; color: #111111;"><span style="font-family: 'AttenNew', sans-serif; font-size: 18px; letter-spacing: -.54px; font-weight: 600;" th:text="${#numbers.formatInteger(goods.price, 0, 'COMMA')}"></span>원</span>
+                </div>
+              </td>
+              <td>
+                <div style="text-align: center;">
+                  <span style="font-size: 16px; letter-spacing: -.64px; font-weight: 500; color: #111111;" th:text="${#numbers.formatInteger(goods.ordcnt, 0, 'COMMA')}"></span>개
+                </div>
+              </td>
+            </tr>
+          </table>
+        </td>
+      </tr>
+      <tr>
+        <td colspan="3" style="text-align: center; border-bottom: solid 1px #dddddd; padding-bottom: 20px;">
+            <span style="color: #666666; font-size: 16px; letter-spacing: -.64px;"><span th:text="${dealer.dealername}"></span>
+              <span style="color: #f54c2b; margin-left: 4px;" th:if="${dealer.delivamt} != 0" th:text="${#numbers.formatInteger(dealer.delivamt, 0, 'COMMA')}"></span>
+              <span style="color: #f54c2b; margin-left: 4px;" th:if="${dealer.delivamt} == 0">무료배송</span>
+            </span>
+        </td>
+      </tr>
+    </tbody>
+  </table>
+  <!-- 사은품 -->
+  <table style="width: 100%; border-bottom: solid 6px #f8f8f8;" th:if="${#lists.size(promotion) > 0}">
+    <tr>
+      <td style="padding-bottom: 20px;">
+        <span style="font-size: 16px; letter-spacing: -.64px; font-weight: 500; color: #111111;">사은품</span>
+      </td>
+    </tr>
+    <tr th:each="promo, index : ${promotion}">
+      <td style="padding-bottom: 20px;">
+        <p style="font-size: 16px; letter-spacing: -.64px; font-weight: 500; color: #111111; margin: 0 0 20px;" th:text="${promo.promoname}"></p>
+        <ul style="display: block; width: 100%; margin: 0; padding: 0; clear: both;" >
+          <li style="float: left; position: relative; width: 50%; margin-left: 0; margin-bottom: 20px; list-style: none;" th:each="gift, index : ${promo.promogift}">
+            <div style="float: left; width: 150px; height: 150px;">
+              <img th:src="${gift.imgurl}" alt="" style="width: 150px; height: 150px;">
+            </div>
+            <div style="float: left; width: 195px; margin-left: 20px; margin-top: 30px; padding-right: 30px;">
+              <p style="max-height: 48px; margin: 0 0 10px; font-size: 16px; letter-spacing: -.64px; font-weight: 400; color: #666666; line-height: 24px; word-break: break-all; overflow: hidden; text-overflow: ellipsis; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical;" th:text="${gift.giftname}"></p>
+              <span style="display:block; font-size: 16px; letter-spacing: -.64px; font-weight: 400; color: #666666;"><span th:text="${#numbers.formatInteger(gift.giftcnt, 0, 'COMMA')}"></span>개</span>
+            </div>
+          </li>
+        </ul>
+      </td>
+    </tr>
+  </table>
+  <!-- 배송정보 -->
+  <table style="padding: 30px 0; width: 100%; border-bottom: solid 6px #f8f8f8;">
+    <tr>
+      <td style="padding-bottom: 20px;">
+        <span style="font-size: 18px; letter-spacing: -.72px; color: #111111; font-weight: 500;">배송정보</span>
+      </td>
+    </tr>
+    <colgroup>
+      <col width="30%">
+      <col width="70%">
+    </colgroup>
+    <tr>
+      <th style="font-size: 16px; letter-spacing: -.64px; color:#666666; font-weight: 400; text-align: left; ">받는사람</th>
+      <td style="font-size: 16px; letter-spacing: -.64px; color:#666666; " th:text="${rcvname}"></td>
+    </tr>
+    <tr>
+      <th style="font-size: 16px; letter-spacing: -.64px; color:#666666; font-weight: 400; text-align: left; ">연락처</th>
+      <td style="font-size: 16px; letter-spacing: -.64px; color:#666666; " th:text="${rcvtel1}"></td>
+    </tr>
+    <tr>
+      <th style="font-size: 16px; letter-spacing: -.64px; color:#666666; font-weight: 400; text-align: left; ">주소</th>
+      <td style="font-size: 16px; letter-spacing: -.64px; color:#666666; " th:text="${rcvaddrroad}"></td>
+    </tr>
+    <tr>
+      <th style="font-size: 16px; letter-spacing: -.64px; color:#666666; font-weight: 400; text-align: left; ">배송요청사항</th>
+      <td style="font-size: 16px; letter-spacing: -.64px; color:#666666; " th:if="${rcvreqtype} == 'RVT006'" th:text="${rcvreqdetail}"></td>
+      <td style="font-size: 16px; letter-spacing: -.64px; color:#666666; " th:if="${rcvreqtype} != 'RVT006'" th:text="${rcvreqtypenm}"></td>
+    </tr>
+  </table>
+
+  <div style="padding-top: 30px; width: 100%; border-bottom: solid 6px #f8f8f8;">
+    <p style="font-size: 18px; letter-spacing: -.72px; color: #111111; font-weight: 500; margin: 0; padding: 0;">주문금액 정보</p>
+    <div style="margin-top: 20px; padding-top: 30px; border-top: 1px solid #ddd;">
+      <ul style="display: block; clear: both; margin: 0; padding: 0;">
+        <li style="display: block; clear: both; min-height: 35px; list-style: none; margin-left: 0;">
+          <p style="float: left; width: 50%; margin: 0; font-size: 16px; letter-spacing: -.64px; color:#666666; font-weight: 400; text-align: left;">총 주문금액</p>
+          <p style="float: left; width: 50%; margin: 0; text-align: right; font-size: 16px; font-weight: 500; letter-spacing: -.56px; color:#111111;"><span style="font-size: 14px; font-weight: 400; margin-left: 3px;" th:text="${#numbers.formatInteger(ordtotprice, 0, 'COMMA')}"></span><span>원</span></p>
+        </li>
+        <li style="display: block; clear: both; min-height: 35px; list-style: none; margin-left: 0;" th:if="${dadadelivamt + ptndelivamt} > 0">
+          <p style="float: left; width: 50%; margin: 0; font-size: 16px; letter-spacing: -.64px; color:#666666; font-weight: 400; text-align: left;">배송비</p>
+          <p style="float: left; width: 50%; margin: 0; text-align: right; font-size: 16px; font-weight: 500; letter-spacing: -.56px; color:#111111;"><span style="font-size: 14px; font-weight: 400; margin-left: 3px;" th:text="${#numbers.formatInteger(dadadelivamt + ptndelivamt, 0, 'COMMA')}"></span><span>원</span></p>
+        </li>
+        <li style="display: block; clear: both; min-height: 35px; list-style: none; margin-left: 0;" th:if="${totsalepromoamt + totgoodscpnamt + basketcpnamt + totdelivcpnamt} > 0">
+          <p style="float: left; width: 50%; margin: 0; font-size: 16px; letter-spacing: -.64px; color:#666666; font-weight: 400; text-align: left;">할인/쿠폰 적용</p>
+          <p style="float: left; width: 50%; margin: 0; text-align: right; font-size: 16px; font-weight: 500; letter-spacing: -.56px; color:#111111;"><span style="font-size: 14px; font-weight: 400; margin-left: 3px;" th:text="${#numbers.formatInteger( (totsalepromoamt + totgoodscpnamt + basketcpnamt + totdelivcpnamt) * -1 , 0, 'COMMA')}"></span><span>원</span></p>
+        </li>
+      </ul>
+      <div>
+        <ul style="margin: 0 0 15px; padding: 0 0 0 10px;">
+          <li style="display: block; clear: both; width: 100%; min-height: 30px; margin-top: 5px; list-style: none; margin-left: 0;" th:if="${totsalepromoamt} > 0">
+            <div style="float: left; width: 50%; margin: 0; font-size: 16px; letter-spacing: -.64px; color:#666666; font-weight: 400; text-align: left;"><div style="display: inline-block; width: 6px; height: 8px; border: 1px solid #c5c5c5; border-width: 0 0 1px 1px; margin-top: -6px; margin-right: 8px; vertical-align: middle;"></div>프로모션할인</div>
+            <p style="float: left; width: 50%; margin: 0; text-align: right; font-size: 15px; letter-spacing: -.48px; line-height: 20px; color: #666; font-weight: 400;"><span style="font-size: 14px; margin-left: 3px;" th:text="${#numbers.formatInteger( (totsalepromoamt) * -1, 0, 'COMMA')}"></span><span>원</span></p>
+          </li>
+          <li style="display: block; clear: both; width: 100%; min-height: 30px; margin-top: 5px; list-style: none; margin-left: 0;" th:if="${totgoodscpnamt} > 0">
+            <div style="float: left; width: 50%; margin: 0; font-size: 16px; letter-spacing: -.64px; color:#666666; font-weight: 400; text-align: left;"><div style="display: inline-block; width: 6px; height: 8px; border: 1px solid #c5c5c5; border-width: 0 0 1px 1px; margin-top: -6px; margin-right: 8px; vertical-align: middle;"></div>상품할인쿠폰</div>
+            <p style="float: left; width: 50%; margin: 0; text-align: right; font-size: 15px; letter-spacing: -.48px; line-height: 20px; color: #666; font-weight: 400;"><span style="font-size: 14px; margin-left: 3px;" th:text="${#numbers.formatInteger( (totgoodscpnamt) * -1, 0, 'COMMA')}"></span><span>원</span></p>
+          </li>
+          <li style="display: block; clear: both; width: 100%; min-height: 30px; margin-top: 5px; list-style: none; margin-left: 0;" th:if="${basketcpnamt} > 0">
+            <div style="float: left; width: 50%; margin: 0; font-size: 16px; letter-spacing: -.64px; color:#666666; font-weight: 400; text-align: left;"><div style="display: inline-block; width: 6px; height: 8px; border: 1px solid #c5c5c5; border-width: 0 0 1px 1px; margin-top: -6px; margin-right: 8px; vertical-align: middle;"></div>추가할인쿠폰</div>
+            <p style="float: left; width: 50%; margin: 0; text-align: right; font-size: 15px; letter-spacing: -.48px; line-height: 20px; color: #666; font-weight: 400;"><span style="font-size: 14px; margin-left: 3px;" th:text="${#numbers.formatInteger(basketcpnamt * -1, 0, 'COMMA')}"></span><span>원</span></p>
+          </li>
+          <li style="display: block; clear: both; width: 100%; min-height: 30px; margin-top: 5px; list-style: none; margin-left: 0;" th:if="${totdelivcpnamt} > 0">
+            <div style="float: left; width: 50%; margin: 0; font-size: 16px; letter-spacing: -.64px; color:#666666; font-weight: 400; text-align: left;"><div style="display: inline-block; width: 6px; height: 8px; border: 1px solid #c5c5c5; border-width: 0 0 1px 1px; margin-top: -6px; margin-right: 8px; vertical-align: middle;"></div>배송비쿠폰</div>
+            <p style="float: left; width: 50%; margin: 0; text-align: right; font-size: 15px; letter-spacing: -.48px; line-height: 20px; color: #666; font-weight: 400;"><span style="font-size: 14px; margin-left: 3px;" th:text="${#numbers.formatInteger(totdelivcpnamt * -1, 0, 'COMMA')}"></span><span>원</span></p>
+          </li>
+        </ul>
+      </div>
+    </div>
+    <div style="display: block; clear: both; height: 30px; padding: 20px 0 20px; border-top: 1px solid #ddd; font-weight: 500;">
+      <p style="float: left; width: 50%; margin: 0;">총 결제금액</p>
+      <p style="float: left; width: 50%; margin: 0; text-align: right; font-weight: 600;"><span style="font-size: 14px; font-weight: 400; margin-left: 3px;" th:text="${#numbers.formatInteger(paytotprice, 0, 'COMMA')}"></span><span>원</span></p>
+    </div>
+  </div>
+
+  <div style="padding: 30px 0 15px; width: 100%; border-bottom: solid 6px #f8f8f8;">
+    <p style="font-size: 18px; letter-spacing: -.72px; color: #111111; font-weight: 500; margin: 0; padding: 0;">결제 정보</p>
+    <div style="margin-top: 20px; padding-top: 30px; border-top: 1px solid #ddd;">
+      <ul style="display: block; clear: both; margin: 0; padding: 0;">
+        <li style="display: block; clear: both; min-height: 35px; list-style: none; margin-left: 0;" th:if="${epointtotamt} > 0">
+          <p style="float: left; width: 50%; margin: 0; font-size: 16px; letter-spacing: -.64px; color:#666666; font-weight: 400; text-align: left;">D포인트 사용</p>
+          <p style="float: left; width: 50%; margin: 0; text-align: right; font-size: 16px; font-weight: 500; letter-spacing: -.56px; color:#111111;"><span style="font-size: 14px; font-weight: 400; margin-left: 3px;" th:text="${#numbers.formatInteger(epointtotamt, 0, 'COMMA')}"></span><span>P</span></p>
+        </li>
+        <li style="display: block; clear: both; min-height: 35px; list-style: none; margin-left: 0;" th:if="${reservetotamt} > 0">
+          <p style="float: left; width: 50%; margin: 0; font-size: 16px; letter-spacing: -.64px; color:#666666; font-weight: 400; text-align: left;">적립금 사용</p>
+          <p style="float: left; width: 50%; margin: 0; text-align: right; font-size: 16px; font-weight: 500; letter-spacing: -.56px; color:#111111;"><span style="font-size: 14px; font-weight: 400; margin-left: 3px;" th:text="${#numbers.formatInteger(reservetotamt, 0, 'COMMA')}"></span><span>원</span></p>
+        </li>
+        <li style="display: block; clear: both; min-height: 35px; list-style: none; margin-left: 0;" th:if="(${dadamembertype} == 'DMT003' or ${dadamembertype} == 'DMT004' or ${dadamembertype} == 'DMT005') and ${empreservetotamt} > 0">
+          <p style="float: left; width: 50%; margin: 0; font-size: 16px; letter-spacing: -.64px; color:#666666; font-weight: 400; text-align: left;">임직원적립금 사용</p>
+          <p style="float: left; width: 50%; margin: 0; text-align: right; font-size: 16px; font-weight: 500; letter-spacing: -.56px; color:#111111;"><span style="font-size: 14px; font-weight: 400; margin-left: 3px;" th:text="${#numbers.formatInteger(empreservetotamt, 0, 'COMMA')}"></span><span>원</span></p>
+        </li>
+        <li style="display: block; clear: both; min-height: 35px; list-style: none; margin-left: 0;" th:if="${paywaytype == 'PWT001'}">
+          <p style="float: left; width: 50%; margin: 0; font-size: 16px; letter-spacing: -.64px; color:#666666; font-weight: 400; text-align: left;"><span th:text="${cardcompany}"></span><span>카드 </span><span th:text="${planmonthname}"></span></p>
+          <p style="float: left; width: 50%; margin: 0; text-align: right; font-size: 16px; font-weight: 500; letter-spacing: -.56px; color:#111111;"><span style="font-size: 14px; font-weight: 400; margin-left: 3px;" th:text="${#numbers.formatInteger(rpaytotprice, 0, 'COMMA')}"></span><span>원</span></p>
+        </li>
+        <li style="display: block; clear: both; min-height: 35px; list-style: none; margin-left: 0;" th:if="${paywaytype == 'PWT002'}">
+          <p style="float: left; width: 50%; margin: 0; font-size: 16px; letter-spacing: -.64px; color:#666666; font-weight: 400; text-align: left;">무통장입금</p>
+          <p style="float: left; width: 50%; margin: 0; text-align: right; font-size: 16px; font-weight: 500; letter-spacing: -.56px; color:#111111;"><span style="font-size: 14px; font-weight: 400; margin-left: 3px;" th:text="${#numbers.formatInteger(rpaytotprice, 0, 'COMMA')}"></span><span>원</span></p>
+        </li>
+        <li style="display: block; clear: both; min-height: 35px; list-style: none; margin-left: 0;" th:if="${paywaytype == 'PWT002'}">
+          <p style="float: left; width: 50%; margin: 0; font-size: 16px; letter-spacing: -.64px; color:#666666; font-weight: 400; text-align: left;">입금계좌</p>
+          <p style="float: left; width: 50%; margin: 0; text-align: right; font-size: 16px; font-weight: 500; letter-spacing: -.56px; color:#111111;">
+            <span style="font-size: 16px; letter-spacing: -.64px; color:#111111; font-family: 'AttenNew', sans-serif;"><span style="margin-right: 6px;font-size: 14px; letter-spacing: -.56px; color:#111111; text-transform: uppercase;" th:text="${virbank}"></span> <span th:text="${accntnumber}"></span></span>
+            <span style="display:block; font-size: 14px; letter-spacing: -.56px; color:#666666;">(예금주 : <span th:text="${vircusname}"></span>)</span>
+          </p>
+        </li>
+        <li style="display: block; clear: both; min-height: 35px; list-style: none; margin-left: 0;" th:if="${paywaytype == 'PWT002'}">
+          <p style="float: left; width: 50%; margin: 0; font-size: 16px; letter-spacing: -.64px; color:#666666; font-weight: 400; text-align: left;">입금기한</p>
+          <p style="float: left; width: 50%; margin: 0; text-align: right; font-size: 16px; font-weight: 500; letter-spacing: -.56px; color:#111111;"><span style="font-size: 14px; font-weight: 400; margin-left: 3px;" th:text="${virdueday}"></span><span>까지</span></p>
+        </li>
+
+        <li style="display: block; clear: both; min-height: 35px; list-style: none; margin-left: 0;" th:if="${paywaytype != 'PWT002' and paywaytype != 'PWT001'}">
+          <p style="float: left; width: 50%; margin: 0; font-size: 16px; letter-spacing: -.64px; color:#666666; font-weight: 400; text-align: left;" th:text="${paywaytypename}"></p>
+          <p style="float: left; width: 50%; margin: 0; text-align: right; font-size: 16px; font-weight: 500; letter-spacing: -.56px; color:#111111;"><span style="font-size: 14px; font-weight: 400; margin-left: 3px;" th:text="${#numbers.formatInteger(rpaytotprice, 0, 'COMMA')}"></span><span>원</span></p>
+        </li>
+      </ul>
+    </div>
+  </div>
+
+  <div style="padding: 30px 0 15px; width: 100%; border-bottom: solid 6px #f8f8f8;" th:if="${cashreceiptkey != null && cashreceiptkey != ''}">
+    <p style="font-size: 18px; letter-spacing: -.72px; color: #111111; font-weight: 500; margin: 0; padding: 0;">현금영수증 신청</p>
+    <div style="margin-top: 20px; padding-top: 30px; border-top: 1px solid #ddd;">
+      <ul style="display: block; clear: both; margin: 0; padding: 0;">
+        <li style="display: block; clear: both; min-height: 35px; list-style: none;">
+          <p style="float: left; width: 50%; margin: 0; font-size: 16px; letter-spacing: -.64px; color:#666666; font-weight: 400; text-align: left;">현금영수증</p>
+          <p style="float: left; width: 50%; margin: 0; text-align: right; letter-spacing: -.56px; color:#111111;"><span style="font-size: 14px; font-weight: 400; margin-left: 3px;">신청완료(<span th:text="${cashreceipttype}"></span>)</span></p>
+        </li>
+      </ul>
+    </div>
+  </div>
+  <table style="padding-top: 30px;">
+    <tr>
+      <td>
+        <span style="font-size: 14px; letter-spacing: -.56px; color: #666666; ">ㆍ주문하신 상품의 취소/반품/교환을 원하실 경우 마이페이지 주문/배송 메뉴를 이용하시거나 고객센터(1666-3642)를 통해 주문취소를 하실 수 있습니다.</span>
+        <span style="display:block; font-size: 14px; letter-spacing: -.56px; color: #666666; padding-top: 6px; ">ㆍ거래명세서와 구매영수증은 마이페이지의 주문 상세에서 확인하실 수 있습니다.</span>
+      </td>
+    </tr>
+  </table>
+  <!-- 버튼 -->
+  <table style="padding: 80px 100px 0 100px; width: 100%;">
+    <tr style="width: 100%; vertical-align: center;">
+      <td style="text-align: right;">
+        <a th:href="${mainUrl}" style="display: block; text-decoration: none;">
+          <div style="width: 280px; height: 48px; margin: 0 auto; border: solid 1px #333333; text-align: center; line-height: 48px;">
+            <span style="font-size: 16px; letter-spacing: -.64px; color: #333333;"><span style="font-family: 'AttenNew', sans-serif; margin-right: 4px;">D.PLOT</span>바로가기</span>
+          </div>
+        </a>
+      </td>
+      <td>
+        <a th:href="${url}" style="display: block; text-decoration: none;">
+          <div style="width: 280px; height: 48px; margin: 0 auto; background-color: #111111; text-align: center; line-height: 48px;">
+            <span style="font-size: 16px; letter-spacing: -.64px; color: #ffffff;">주문/배송 조회하기</span>
+          </div>
+        </a>
+      </td>
+    </tr>
+  </table>
+  <!-- 메일 푸터 -->
+  <table class="mail-footer" style="width: 100%; margin-top: 80px; background-color: #f8f8f8; padding: 40px 40px;">
+    <colgroup>
+      <col width="20%">
+      <col width="80%">
+    </colgroup>
+    <tr style="vertical-align: top; width: 100%;">
+      <td>
+        <div style="text-align: left; width: 100%;">
+          <img th:src="${footerLogo}" alt="footer logo">
+        </div>
+      </td>
+      <td>
+        <div style="margin-bottom: 10px;">
+          <span style="font-size: 14px; letter-spacing: -.42px; font-weight: 500; color: #111111;"><a th:href="${termurl}" style="text-decoration: none; color:#111111;">이용약관</a></span>
+<!--          <span style="display:inline-block; margin: 0 10px; width: 1px; height: 10px; background-color: #111111;"></span>-->
+<!--          <span style="font-size: 14px; letter-spacing: -.42px; font-weight: 500; color: #111111; "><a th:href="${drawurl}" style="text-decoration: none; color:#111111;">청약철회안내</a></span>-->
+        </div>
+        <div style="margin-bottom: 10px; line-height: 1;">
+            <span style="color: #666666; font-size: 14px; letter-spacing: -.42px;">
+              본 메일은 발신 전용으로 회신이 되지 않습니다.<br />
+              문의사항은 [<a th:href="${mainUrl}" style="color:#666666;">D.PLOT 홈페이지</a>]를 이용해주시기 바랍니다.
+            </span>
+        </div>
+        <div style="margin-bottom: 4px;">
+          <span style="font-size: 14px; letter-spacing: -.42px; color: #666666;">주식회사 다다엠엔씨</span>
+          <span style="display:inline-block; margin: 0 10px; width: 1px; height: 10px; background-color: #dddddd;"></span>
+          <span style="font-size: 14px; letter-spacing: -.42px; color: #666666;">고객센터 1666-3642</span>
+        </div>
+        <div style="margin-bottom: 4px;">
+          <span style="font-size: 14px; letter-spacing: -.42px; color: #666666;">04377 서울특별시 용산구 한강대로23길 55 (한강로3가) 아이파크몰 6층</span>
+        </div>
+        <div style="margin-bottom: 4px;">
+          <span style="font-size: 14px; letter-spacing: -.42px; color: #666666;">대표이사: 서승원</span>
+          <span style="display:inline-block; margin: 0 10px; width: 1px; height: 10px; background-color: #dddddd;"></span>
+          <span style="font-size: 14px; letter-spacing: -.42px; color: #666666;">개인정보관리책임자: 이재준</span>
+        </div>
+        <div style="margin-bottom: 4px;">
+          <span style="font-size: 14px; letter-spacing: -.42px; color: #666666;">사업자등록번호: 451-81-02355</span>
+          <span style="display:inline-block; margin: 0 10px; width: 1px; height: 10px; background-color: #dddddd;"></span>
+          <span style="font-size: 14px; letter-spacing: -.42px; color: #666666;">통신판매업신고: 제 2021-서울용산-0161호</span>
+        </div>
+        <div>
+          <span style="font-size: 14px; letter-spacing: -.42px; color: #666666;">COPYRIGHT © D.PLOT. ALL RIGHTS RESERVED.</span>
+        </div>
+      </td>
+    </tr>
+  </table>
+</div>
+</body>
+</html>

@@ -1,0 +1,173 @@
+.dp-as {
+  padding: 20px 0;
+  min-height: calc(100vh - 110px);
+
+  .as-section {
+    padding: 30px 0;
+
+    &.section01 {
+      padding-top: 0;
+    }
+
+    .product-cart__ul {
+      display: none;
+    }
+  }
+
+  // section as-center__guide
+  .as-center__guide {
+    .as-center__guide__header {
+      padding-bottom: 20px;
+      .as-center__guide__header__title {
+        color: $gray-800;
+      }
+    }
+    .as-center__guide__body {
+      padding-bottom: 14px;
+      line-height: 1;
+      .seller-name__area {
+        padding-bottom: 2px;
+        .seller-name {
+          color: $gray-700;
+        }
+      }
+      .seller-phone__area {
+        .seller-phone {
+          font-size: 20px;
+          letter-spacing: -.6px;
+          line-height: 24px;
+          font-weight: 600;
+        }
+      }
+      .phone-btn {
+        width: 105px;
+      }
+    }
+    .as-center__guide__footer {
+      .dp-caption {
+        position: relative;
+        padding-left: 8px;
+        color: $gray-700;
+        &:before {
+          position: absolute;
+          left: 0;
+          top: 8px;
+          content: "";
+          width: 2px;
+          height: 2px;
+          border-radius: 50%;
+          background-color: #666666;
+        }
+      }
+    }
+  }
+
+  .as-form {
+    .as-form__info {
+      font-size: 14px;
+      letter-spacing: -.56px;
+      line-height: 22px;
+      color: $gray-700;
+      margin-bottom: 30px;
+    }
+
+    .as-info__list__wrap {
+      li + li {
+        margin-top: 10px;
+      }
+    }
+
+    .form-group {
+      margin-bottom: 0;
+    }
+
+    .input-label {
+      font-weight: 500;
+    }
+
+    .as-info__adderss__input {
+      margin-right: 10px;
+    }
+
+    .as-info__address__btn button {
+      width: 110px;
+    }
+
+    .as-section__title {
+      font-size: 16px;
+      letter-spacing: -.64px;
+      line-height: 24px;
+      font-weight: 500;
+      margin-bottom: 14px;
+    }
+
+    .image-upload__label {
+      margin-left: 0;
+    }
+
+    .image-upload__list {
+      padding-right: 0;
+      width: calc(100% - 90px);
+    }
+  }
+
+  .as-footer__btn {
+    width: 100%;
+
+    .back-btn {
+      margin-right: 10px;
+    }
+  }
+
+
+  .textarea-h-320 {
+   textarea {
+      height: 320px !important;
+    }
+  }
+
+}
+
+// as신청완료 모달
+.as-apply-success-modal {
+  .page-layer__body {
+    padding-top: 50px;
+  }
+
+  .icon-section {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 94px;
+    height: 94px;
+    border-radius: 50%;
+    background: $gray-100;
+    margin-bottom: 20px;
+    .check-circle-icon {
+      position: absolute;
+      background: url("~@/assets/common/icon/icon-check-circle-64px.svg") no-repeat 0;
+    }
+  }
+
+  .as-modal__h2 {
+    font-size: 16px;
+    letter-spacing: -.64px;
+    line-height: 24px;
+    margin-bottom: 20px;
+  }
+
+  .as-modal__p {
+    font-size: 14px;
+    letter-spacing: -.56px;
+    line-height: 22px;
+    color: $gray-700;
+    text-align: center;
+    margin-bottom: 50px;
+  }
+
+  .as-ok-btn {
+    width: auto;
+    padding: 0 37px;
+    cursor: pointer;
+  }
+}

@@ -1,0 +1,73 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.dplot.mapper.CouponOrdGoodsMapper">
+
+	<!-- 구매확정대상 상품목록 조회 -->
+	<select id="selectCouponOrdGoodsList" parameterType="somap" resultType="somap">
+		SELECT	/* CouponOrdGoodsMapper.xml - selectCouponOrdGoodsList 구매확정대상 상품목록 조회 */
+			  A.COMCPNIDX
+		    , A.GOODSNO
+		    , B.ISPBGOODS
+		    , (CASE WHEN B.ISPBGOODS='T' THEN '직매입'
+		            WHEN B.ISPBGOODS='F' THEN '위탁'
+		            ELSE ''
+		       END) AS ISPBGOODSNAME
+		    , B.DEALERNO
+		    , (CASE WHEN B.DEALERNO IS NOT NULL AND B.DEALERNO != 0 
+		            THEN (SELECT NAME FROM T_DEALER WHERE USERNO = B.DEALERNO)
+		            ELSE '' 
+		       END) AS DEALERNAME
+		    , B.GOODSCODE
+		    , B.GOODSNAME
+		    , FN_GET_FULL_CATENAME(#{siteid}, D.CATEIDX) AS FULLCATEGORYNAME
+		    , FN_GET_FILE_URL(A.GOODSNO, #{filetype}, #{imgtype}) AS FULLPATH
+		    , FORMAT(C.PRICE, 0) AS PRICE
+			, A.OPTIONCODE
+			, FN_GET_OPTION_DETAIL(A.GOODSNO, A.OPTIONCODE, '\n') AS OPTIONCONTS
+		FROM T_COMCOUPON_ORD_GOODS A
+		INNER JOIN T_GOODS B ON A.GOODSNO = B.GOODSNO
+		INNER JOIN T_GOODS_OPTION_DETAIL C
+		        ON A.GOODSNO = C.GOODSNO
+		       AND A.OPTIONCODE = C.OPTIONCODE
+		LEFT OUTER JOIN T_GOODS_CATEGORY D
+		        ON A.GOODSNO = D.GOODSNO
+		       AND D.ISREPRE = 'T'
+		WHERE A.COMCPNIDX = #{comcpnidx}
+		ORDER BY A.REGDATE DESC, A.GOODSNO
+	</select>
+	
+	<!-- 구매확정대상 상품 저장 -->
+	<insert id="insertCouponOrdGoods" parameterType="somap">
+		/* CouponOrdGoodsMapper.xml - insertCouponOrdGoods 구매확정대상 상품 저장 */
+		INSERT INTO T_COMCOUPON_ORD_GOODS (
+			  COMCPNIDX 	/* 공통쿠폰IDX */
+			, GOODSNO  		/* 상품번호 */
+			, OPTIONCODE	/* 옵션코드 */
+			, REGUSERID		/* 등록자ID */
+			, REGDATE  		/* 등록일시 */
+		) VALUES
+		<foreach collection="cpnordgoodslist" item="data" open="" separator="," close="">
+	    (	  #{comcpnidx}
+	    	, #{data.goodsno}
+	    	, #{data.optioncode}
+			, #{authuserid}
+	    	, NOW()
+	    )
+	    </foreach>
+	</insert>
+	
+	<!-- 구매확정대상 상품 삭제 -->
+	<delete id="deleteCouponOrdGoods" parameterType="somap">
+		/* CouponOrdGoodsMapper.xml - deleteCouponOrdGoods 구매확정대상 상품 삭제 */
+		DELETE FROM T_COMCOUPON_ORD_GOODS
+		WHERE COMCPNIDX = #{comcpnidx}
+	</delete>
+
+	<select id="selectCouponOrdGoodERPData" parameterType="somap" resultType="somap">
+		SELECT
+			COMCPNIDX, GOODSNO, OPTIONCODE
+		FROM T_COMCOUPON_ORD_GOODS
+		WHERE COMCPNIDX = #{comcpnidx}
+	</select>
+</mapper>

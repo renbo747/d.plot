@@ -1,0 +1,51 @@
+package com.dplot.mapper;
+
+import com.dplot.annontation.MapperInterface;
+import com.dplot.common.SOMap;
+
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+
+/**
+ * @author : ywm2004
+ * @discription : 다다픽이벤트_상품 테이블 맵퍼 (T_dadaevent_goods)
+ * @fileName : DadaEventGoodsMapper.java
+ * @date : 2021-12-09
+ * =================================================================
+ * DATE			AUTHOR		NOTE
+ * -----------------------------------------------------------------
+ * 2021-12-09	ywm2004		최초생성
+ * -----------------------------------------------------------------
+ */
+@MapperInterface
+public interface DadaEventGoodsMapper {
+
+    /**
+     * 다다픽 이벤트 상품 등록
+     *
+     * @param params
+     */
+    void insertDadaEventGoods(SOMap params);
+
+    /**
+     * 다다픽 이벤트 상품 삭제
+     * 
+     * @param params
+     */
+    void deleteDadaEventGoods(SOMap params);
+
+    /**
+     * 다다픽 이벤트 상품 조회
+     *
+     * @param params
+     * @return
+     */
+    List<SOMap> selectAdminDadaEventGoods(SOMap params);
+    
+    /**FRONT 프로모션 상세 - 상품리스트
+     * @param params
+     * @return
+     */
+    List<SOMap> selectEventDtlGoodsList(SOMap params);
+}

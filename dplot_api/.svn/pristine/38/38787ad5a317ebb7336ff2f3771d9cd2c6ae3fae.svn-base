@@ -1,0 +1,208 @@
+package com.dplot.security.handler;
+
+import java.io.IOException;
+import java.util.HashMap;
+import java.util.Map;
+
+import javax.servlet.ServletException;
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Qualifier;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.web.authentication.AuthenticationSuccessHandler;
+import org.springframework.security.web.context.SecurityContextRepository;
+import org.springframework.stereotype.Component;
+import org.springframework.web.util.CookieGenerator;
+
+import com.dplot.common.CMConst;
+import com.dplot.common.Response;
+import com.dplot.common.SOMap;
+import com.dplot.common.service.MallConfigService;
+import com.dplot.common.service.util.AuthService;
+import com.dplot.mapper.ComCartMapper;
+import com.dplot.mapper.MemberMapper;
+import com.dplot.mapper.UserLogMapper;
+import com.dplot.mapper.UserMapper;
+import com.dplot.security.model.Member;
+import com.dplot.security.model.NonMember;
+import com.dplot.util.DateTimeUtil;
+import com.dplot.util.ServletRequestInfoUtil;
+import com.dplot.util.Util;
+import com.fasterxml.jackson.databind.ObjectMapper;
+
+@Component
+public class MemberAuthenticationSuccessHandler implements AuthenticationSuccessHandler {
+	/** The Constant logger. */
+	private static final Logger logger = LoggerFactory.getLogger(MemberAuthenticationSuccessHandler.class);
+	
+	@Autowired
+	private MemberMapper memberMapper;
+	
+	@Autowired
+	private UserLogMapper userLogMapper;
+	
+	@Autowired
+	private ComCartMapper comCartMapper;
+	
+	@Autowired
+	private UserMapper userMapper;
+	
+	@Autowired
+	MallConfigService cs;
+	
+	@Autowired
+	private AuthService authService;
+	
+	@Autowired
+	@Qualifier("memberSecurityContextRepository")
+	private SecurityContextRepository memberSecurityContextRepository;
+	
+	@Override
+	public void onAuthenticationSuccess(HttpServletRequest request, HttpServletResponse response,
+			Authentication authentication) throws IOException, ServletException {
+		try {
+			
+			Object principal = authentication.getPrincipal();
+			
+			cs.init(request.getServerName());
+			authService.setSessID(request, response, request.getSession());
+			
+			if (principal instanceof NonMember) {//비회원 인증인경우
+				// VUE는 리다이렉트할 필요가 없어서 수정!
+				NonMember authedMember = (NonMember) authentication.getPrincipal();
+				
+				ObjectMapper objectMapper = new ObjectMapper();
+				Map<String, Object> nonMemberMap = new HashMap<String, Object>();
+				
+				nonMemberMap.put("authtype", "nonMember");
+				nonMemberMap.put("username", authedMember.getName());
+				nonMemberMap.put("userid",  CMConst.GUEST_ID);
+				nonMemberMap.put("ispush",  false);
+				nonMemberMap.put("isbio",  false);
+				
+				SOMap result = new SOMap();
+				result.put("memberinfo", nonMemberMap);
+				result.put("issleep", false);
+				result.put("isneedchangepw", false);
+				
+				Response res = new Response(result);
+				response.setContentType("application/json");
+				response.setCharacterEncoding("utf-8");
+				response.getWriter().write(objectMapper.writeValueAsString(res));
+				
+			} else {//회원인증인경우
+				Member authedMember = (Member) authentication.getPrincipal();
+				
+				//이곳에서 로그인후 로그쌓고 하는것들 넣어야함.
+//				SOMap userTotal = new SOMap();
+//				userTotal.put("securecode", authedMember.getSecurecode());
+//				userTotal.put("visitip", ServletRequestInfoUtil.getRequestIp());
+//				userTotal.put("userno", authedMember.getUserno());
+				//userTotalMapper.updateUserTotal(userTotal);
+
+				SOMap member = new SOMap();
+				member.put("userno", authedMember.getUserno());
+				memberMapper.updateMemberAutoDeleteNull(member);
+				
+				SOMap userLog = new SOMap();
+				userLog.put("userno", authedMember.getUserno());
+				userLog.put("ip", ServletRequestInfoUtil.getRequestIp());
+				userLogMapper.insertUserLog(userLog);
+				
+				// 오래된 장바구니 정리
+				SOMap cart = new SOMap();
+				cart.put("siteid", cs.getStr("siteid"));
+				cart.put("userno",authedMember.getUserno());
+				cart.put("sessid", cs.getStr("csessid"));
+				cart.put("lifetime", 3);
+				comCartMapper.deleteCartByMonth(cart);
+				// 장바구니 식별자 갱신
+				//comCartMapper.updateSessId(cart);
+				
+//				String isSaveId = detail.getIsSaveId();
+				
+				// 아이디 저장
+//				if (Util.flag2Bool(isSaveId)) {
+//					CookieGenerator cg = new CookieGenerator();
+//					cg.setCookieDomain(cs.getStr("cookiedomain"));
+//					cg.setCookiePath("/");
+//					cg.setCookieName(CMConst.COOKIE_SAVE_ID);
+//					cg.setCookieMaxAge(365*24*60*60);
+//					cg.addCookie(response, URLEncoder.encode(authedMember.getUserid(), "UTF-8"));
+//					
+//				} else {
+//					CookieGenerator cg = new CookieGenerator();
+//					cg.setCookieDomain(cs.getStr("cookiedomain"));
+//					cg.setCookiePath("/");
+//					cg.setCookieName(CMConst.COOKIE_SAVE_ID);
+//					cg.setCookieMaxAge(0);
+//					cg.addCookie(response, "");
+//				}
+				
+				// 로그인 5회 실패 쿠키 삭제
+				CookieGenerator cg = new CookieGenerator();
+				cg.setCookieDomain(Util.getMainDomain(request.getHeader("origin")));
+				cg.setCookiePath("/");
+				cg.setCookieName(CMConst.COOKIE_OVER_TIME_LOGIN_ATTEMPT);
+				cg.setCookieMaxAge(0);
+				cg.addCookie(response, "");
+				
+				ObjectMapper objectMapper = new ObjectMapper();
+				Map<String, Object> memberMap = new HashMap<String, Object>();
+				
+				memberMap.put("userno",  authedMember.getUserno());
+				memberMap.put("username",  authedMember.getName());
+				memberMap.put("userid",  authedMember.getUserid());
+				memberMap.put("ispush",  authedMember.isPush());
+				memberMap.put("isbio",  authedMember.isBio());
+				memberMap.put("joinchtype", authedMember.getJoinchtype());
+				memberMap.put("authtype", "member");
+				
+				// 비밀번호 실패횟수 초기화
+				SOMap param = new SOMap();
+				param.put("userid", authedMember.getUserid());
+				userMapper.resetPwFailCnt(param);
+				
+				SOMap result = new SOMap();
+				result.put("issleep", authedMember.isSleep());
+				
+				// 비밀번호 변경한지 90일 초과했으면 플래그
+				boolean isNeedChangePw = false;
+				if (authedMember.getPwmoddate() != null && !"".equals(authedMember.getPwmoddate())) {
+					String pwmoddate = authedMember.getPwmoddate();
+					int diffday = DateTimeUtil.getDiffDays(DateTimeUtil.getNowDatePartStr(), pwmoddate) ;
+					isNeedChangePw = diffday * -1 > 90 ? true : false;
+				} else {
+					// 비밀번호 변경 정보없으면 그냥 true
+					isNeedChangePw = true;
+				}
+				
+				//기 다다픽 회원  임시비밀번호 변경 요청
+				boolean isNeedInitPw = false;
+				int migUserPwCnt = userMapper.selectMigUserPwCk(memberMap);
+				if (migUserPwCnt > 0) {
+					isNeedInitPw = true;
+				}else {
+					isNeedInitPw = false;
+				}
+				
+				result.put("isneedinitpw", isNeedInitPw);
+				result.put("isneedchangepw", isNeedChangePw);
+				result.put("memberinfo", memberMap);
+				result.put("isRemember", false);
+				Response res = new Response(result);
+				response.setContentType("application/json");
+				response.setCharacterEncoding("utf-8");
+				response.getWriter().write(objectMapper.writeValueAsString(res));
+			}
+		
+		} catch (Exception e) {
+			logger.error("", e);
+			throw new ServletException();
+		}
+	}
+}

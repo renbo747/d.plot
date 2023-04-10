@@ -1,0 +1,152 @@
+package com.dplot.admin.service.order;
+
+import java.util.List;
+import java.util.Map;
+
+import org.springframework.web.multipart.MultipartFile;
+
+import com.dplot.common.Response;
+import com.dplot.common.SOMap;
+
+/**
+ * @discription	: 주문관리 Service
+ * @fileName	: AdminOrderService.java
+ * @author		: JSK
+ * @date		: 2022.02.10
+ * =================================================================
+ * DATE			AUTHOR		NOTE
+ * -----------------------------------------------------------------
+ * 2022.02.10	JSK			최초생성
+ * -----------------------------------------------------------------
+ */
+public interface AdminClaimService {
+
+    /**
+     * 클레임(취소, 반품, 교환) 목록조회
+     * @param params
+     * @return SOMap
+     * @throws Exception
+     */
+    SOMap selectClaimList(SOMap params) throws Exception;
+
+    /**
+     * 클레임(취소, 반품, 교환) 목록조회(엑셀용)
+     * @param params
+     * @return List<Map<String, Object>>
+     * @throws Exception
+     */
+    List<Map<String, Object>> selectClaimListForExcel(SOMap params) throws Exception;
+
+    /**
+     * 환불관리 목록조회
+     * @param params
+     * @return SOMap
+     * @throws Exception
+     */
+    SOMap selectClaimRefundList(SOMap params) throws Exception;
+
+    /**
+     * 환불관리 목록조회(엑셀용)
+     * @param params
+     * @return List<Map<String, Object>>
+     * @throws Exception
+     */
+    List<Map<String, Object>> selectClaimRefundListForExcel(SOMap params) throws Exception;
+    
+    /**
+     * 클레임상태이력 목록조회
+     * @param params
+     * @return SOMap
+     * @throws Exception
+     */
+    SOMap selectClaimStatusHistList(SOMap params) throws Exception;
+	
+    /**
+     * 클레임신청 전 유효성체크
+     * @param params
+     * @return Response
+     * @throws Exception
+     */
+    Response checkBeforeClaimValid(SOMap params) throws Exception;
+	
+    /**
+     * 클레임신청 정보조회
+     * @param params
+     * @return SOMap
+     * @throws Exception
+     */
+    SOMap selectClaimApplyInfo(SOMap params) throws Exception;
+
+	/**
+	 * 클레임신청 저장
+	 * @param files
+	 * @param params
+	 * @return SOMap
+	 * @throws Exception
+	 */
+    SOMap saveClaimApply(Map<String, MultipartFile> files, SOMap params) throws Exception;
+	
+    /**
+     * 클레임 상세정보 조회
+     * @param params
+     * @return SOMap
+     * @throws Exception
+     */
+    SOMap selectClaimDetailInfo(SOMap params) throws Exception;
+
+	/**
+	 * 단건 클레임 상태 변경
+	 * @param params
+	 * @return SOMap
+	 * @throws Exception
+	 */
+    SOMap saveClaimStatus(SOMap params) throws Exception;
+
+	/**
+	 * 다건 클레임 상태 변경
+	 * @param params
+	 * @return SOMap
+	 * @throws Exception
+	 */
+    SOMap saveClaimStatusAll(SOMap params) throws Exception;
+	
+    /**
+     * 환불상세내역 조회
+     * @param params
+     * @return SOMap
+     * @throws Exception
+     */
+    SOMap selectClaimRefundInfo(SOMap params) throws Exception;
+
+	/**
+	 * 회수진행
+	 * @param params
+	 * @return SOMap
+	 * @throws Exception
+	 */
+    SOMap procReturn(SOMap params) throws Exception;
+    
+    /**
+     * 회수진행
+     * @param params
+     * @return SOMap
+     * @throws Exception
+     */
+    SOMap procReturnMan(SOMap params) throws Exception;
+
+	/**
+	 * 교환배송진행
+	 * @param params
+	 * @return SOMap
+	 * @throws Exception
+	 */
+    SOMap procDelivery(SOMap params) throws Exception;
+
+	/**
+	 * 조정금액 저장
+	 * @param params
+	 * @return SOMap
+	 * @throws Exception
+	 */
+    SOMap saveAdjustamt(SOMap params) throws Exception;
+}

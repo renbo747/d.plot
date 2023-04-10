@@ -1,0 +1,41 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.dplot.mapper.IsolationFareMapper">
+	
+	<!-- 제주/도서산간지역 목록 조회 -->
+	<select id="selectIsolationList" parameterType="somap" resultType="somap" >
+		SELECT
+			tif.idx, tif.post, tif.addr, tif.ischuju, tif.isios
+		FROM t_isolation_fare tif
+		<where>
+			<if test="sword != null and sword != ''">
+			AND (tif.post LIKE CONCAT('%', #{sword}, '%') OR tif.addr LIKE CONCAT('%', #{sword}, '%'))
+			</if>
+		</where>
+		ORDER BY tif.addr
+		LIMIT #{startpage}, #{endpage}
+	</select>
+	
+	<!-- 제주/도서산간지역 전체건수 조회 -->
+	<select id="selectIsolationListCount" parameterType="somap" resultType="Integer" >
+		SELECT
+			COUNT(*) AS cnt
+		FROM t_isolation_fare tif
+		<where>
+			<if test="sword != null and sword != ''">
+			AND (tif.post LIKE CONCAT('%', #{sword}, '%') OR tif.addr LIKE CONCAT('%', #{sword}, '%'))
+			</if>
+		</where>
+	</select>
+	
+	<!-- 제주/도서산간지역 여부조회 -->
+	<select id="selectIsolationType" parameterType="somap" resultType="String" >
+		SELECT
+			IF(ischuju = 'T', 'J', IF(isios = 'T', 'I', 'N'))
+		FROM t_isolation_fare
+		WHERE POST = #{post}
+		LIMIT 1
+	</select>
+	
+</mapper>

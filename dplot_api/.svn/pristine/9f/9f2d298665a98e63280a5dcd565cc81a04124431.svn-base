@@ -1,0 +1,807 @@
+package com.dplot.admin.service.order;
+
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Map;
+import java.util.Properties;
+import java.util.stream.Collectors;
+
+import javax.annotation.Resource;
+
+import org.apache.commons.lang3.ArrayUtils;
+import org.apache.logging.log4j.core.util.JsonUtils;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Propagation;
+import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.multipart.MultipartFile;
+
+import com.dplot.common.CMConst;
+import com.dplot.common.Response;
+import com.dplot.common.SOMap;
+import com.dplot.common.Status;
+import com.dplot.common.service.CommonClaimService;
+import com.dplot.common.service.DeliveryTrackingService;
+import com.dplot.common.service.util.FileService;
+import com.dplot.common.service.util.MallBaseService;
+import com.dplot.exception.BizException;
+import com.dplot.exception.CustomException;
+import com.dplot.mapper.ClaimGoodsGiftMapper;
+import com.dplot.mapper.ClaimGoodsHistMapper;
+import com.dplot.mapper.ClaimGoodsMapper;
+import com.dplot.mapper.ClaimMapper;
+import com.dplot.mapper.ComOrderGoodsDelivMapper;
+import com.dplot.mapper.DealerDelivMapper;
+import com.dplot.util.DateTimeUtil;
+import com.dplot.util.JsonUtil;
+import com.dplot.util.Util;
+import com.fasterxml.jackson.annotation.JsonFormat;
+
+import facebook4j.internal.org.json.JSONArray;
+import net.sf.json.JSON;
+import net.sf.json.util.JSONUtils;
+
+/**
+ * @discription	: 주문관리 ServiceImpl
+ * @fileName	: AdminOrderServiceImpl.java
+ * @author		: JSK
+ * @date		: 2022.02.10
+ * =================================================================
+ * DATE			AUTHOR		NOTE
+ * -----------------------------------------------------------------
+ * 2022.02.10	JSK			최초생성
+ * -----------------------------------------------------------------
+ */
+@Service
+public class AdminClaimServiceImpl extends MallBaseService implements AdminClaimService {
+    private static final Logger logger = LoggerFactory.getLogger(AdminClaimServiceImpl.class);
+
+    @Autowired
+    private ClaimMapper claimMapper;
+    @Autowired
+    private ClaimGoodsMapper claimGoodsMapper;
+    @Autowired
+    private ClaimGoodsHistMapper claimGoodsHistMapper;
+    @Autowired
+    private DealerDelivMapper dealerDelivMapper;
+    @Autowired
+    private ComOrderGoodsDelivMapper comOrderGoodsDelivMapper;
+    @Autowired
+    private ClaimGoodsGiftMapper claimGoodsGiftMapper;
+
+	@Autowired
+	private FileService fileService;
+    @Autowired
+    private CommonClaimService commonClaimService;
+    @Autowired
+    private DeliveryTrackingService deliveryTrackingService;
+
+    @Resource(name="propertiesFactory")
+    private Properties prop;
+
+    /**
+     * 클레임(취소, 반품, 교환) 목록조회
+     * @param params
+     * @return SOMap
+     * @throws Exception
+     */
+    @Override
+    public SOMap selectClaimList(SOMap params) throws Exception {
+        SOMap result = new SOMap();
+
+        // 페이징 처리
+        int page = Integer.parseInt(params.get("page").toString());
+        int pageCount = Integer.parseInt(params.get("pagecount").toString());
+        int startPage = (page > 1) ? ((page - 1) * pageCount) : 0;
+        params.put("startpage", startPage);
+        params.put("endpage", pageCount);
+
+        params.put("siteid", cs.getStr("siteid"));
+        List<SOMap> resultList = claimMapper.selectAdminClaimList(params);
+        SOMap count = claimMapper.selectAdminClaimListCount(params);
+
+        result.put("list", resultList);
+        result.put("count", count);
+        return result;
+    }
+    /**
+     * 클레임(취소, 반품, 교환) 목록조회(엑셀용)
+     * @param params
+     * @return List<Map<String, Object>>
+     * @throws Exception
+     */
+    @Override
+    public List<Map<String, Object>> selectClaimListForExcel(SOMap params) throws Exception {
+		List<Map<String, Object>> resultList = new ArrayList<Map<String, Object>>();
+        params.put("siteid", cs.getStr("siteid"));
+		resultList = claimMapper.selectAdminClaimListForExcel(params);
+		return resultList;
+    }
+
+    /**
+     * 환불관리 목록조회
+     * @param params
+     * @return SOMap
+     * @throws Exception
+     */
+    @Override
+    public SOMap selectClaimRefundList(SOMap params) throws Exception {
+        SOMap result = new SOMap();
+
+        // 페이징 처리
+        int page = Integer.parseInt(params.get("page").toString());
+        int pageCount = Integer.parseInt(params.get("pagecount").toString());
+        int startPage = (page > 1) ? ((page - 1) * pageCount) : 0;
+        params.put("startpage", startPage);
+        params.put("endpage", pageCount);
+
+        params.put("siteid", cs.getStr("siteid"));
+        List<SOMap> resultList = claimMapper.selectAdminRefundList(params);
+        SOMap count = claimMapper.selectAdminRefundListCount(params);
+
+        result.put("list", resultList);
+        result.put("count", count);
+        return result;
+    }
+
+    /**
+     * 환불관리 목록조회(엑셀용)
+     * @param params
+     * @return List<Map<String, Object>>
+     * @throws Exception
+     */
+    @Override
+    public List<Map<String, Object>> selectClaimRefundListForExcel(SOMap params) throws Exception {
+		List<Map<String, Object>> resultList = new ArrayList<Map<String, Object>>();
+        params.put("siteid", cs.getStr("siteid"));
+		resultList = claimMapper.selectAdminRefundListForExcel(params);
+		return resultList;
+    }
+
+
+    /**
+     * 클레임상태이력 목록조회
+     * @param params
+     * @return SOMap
+     * @throws Exception
+     */
+    @Override
+    public SOMap selectClaimStatusHistList(SOMap params) throws Exception {
+        SOMap result = new SOMap();
+        List<SOMap> resultList = claimGoodsHistMapper.selectClaimStatusHistList(params);
+        result.put("list", resultList);
+        return result;
+    }
+
+    /**
+     * 클레임신청 전 유효성체크
+     * @param params
+     * @return SOMap
+     * @throws Response
+     */
+    @Override
+    public Response checkBeforeClaimValid(SOMap params) throws Exception {
+    	Response result = new Response(Status.OK);
+    	if (Util.equal(params.getStr("clmtype"), CMConst.CLM_CANCEL)) {
+    		List<Integer> orgdelividxList = params.getArrayList("orgdelividxlist");
+    		if (orgdelividxList != null && orgdelividxList.size() > 0) {
+    			for (int orgdelividx : orgdelividxList) {
+    				SOMap dbParams = new SOMap();
+    				dbParams.put("orgdelividx", orgdelividx);
+    	    		int invoicecnt = comOrderGoodsDelivMapper.selectOrderInvoiceCount(dbParams);
+    				if (invoicecnt > 1) {
+    					result.setStatusCode(Status.FAIL.getKey());
+    					result.setMessage("추가등록된 송장이 있는 상품은 취소가 불가능합니다. 삭제후 진행해주세요.");
+    					break;
+    				}
+    			}
+    		}
+    	}
+        return result;
+    }
+
+    /**
+     * 클레임신청 정보조회
+     * @param params
+     * @return SOMap
+     * @throws Exception
+     */
+    @Override
+    public SOMap selectClaimApplyInfo(SOMap params) throws Exception {
+    	if (isDealer()) {
+    		params.put("dealerno", cs.getInt("authdealerno"));
+    	}
+    	SOMap result = commonClaimService.selectClaimApply(params);
+		if (!Util.equal(params.getStr("clmtype"), CMConst.CLM_CANCEL)) {
+			SOMap claimGoods = Util.convertToListSOMap(result.getArrayList("items")).get(0);
+			SOMap delivParam = new SOMap();
+			delivParam.put("siteid", cs.getStr("siteid"));
+			delivParam.put("userno", claimGoods.get("dealerno"));
+	    	result.put("rtnlogislist", dealerDelivMapper.selectPartnersDeliveryList(delivParam));
+		}
+        return result;
+    }
+
+    /**
+     * 클레임신청 저장
+     * @param files
+     * @param params
+     * @return SOMap
+     * @throws Exception
+     */
+    @Override
+    @Transactional(propagation = Propagation.REQUIRED, rollbackFor = {Exception.class, CustomException.class})
+    public SOMap saveClaimApply(Map<String, MultipartFile> files, SOMap params) throws Exception {
+    	SOMap result = new SOMap();
+
+        try {
+        	// 클레임신청구분, 클레임처리구분 세팅 (관리자, 파트너사)
+        	if (isAdmin()) {
+        		params.put("clmreqtype", CMConst.CLM_REQ_ADMIN);
+        		params.put("clmprctype", CMConst.CLM_PRC_ADMIN);
+        	} else if (isDealer()) {
+        		params.put("clmreqtype", CMConst.CLM_REQ_PARTNER);
+        		params.put("clmprctype", CMConst.CLM_PRC_PARTNER);
+        	}
+        	result = commonClaimService.saveClaimApply(files, params);
+        } catch(Exception e){
+            logger.error(e.getMessage());
+            throw new CustomException("클레임 신청시 오류가 발생하였습니다. 관리자에게 문의해주세요.");
+        }
+
+        return result;
+    }
+
+    /**
+     * 클레임 상세 기본정보 조회
+     * @param params
+     * @return SOMap
+     * @throws Exception
+     */
+    @Override
+    public SOMap selectClaimDetailInfo(SOMap params) throws Exception {
+    	SOMap result = new SOMap();
+    	params.put("siteid", cs.getStr("siteid"));
+		SOMap claimInfo = claimMapper.selectClaimInfo(params);
+
+		// 클레임상품 조회
+    	params.put("type", "oneclaim");
+    	params.put("imgtype", CMConst.IMG_TYPE_GOODS_IMG_PC_S);
+		List<SOMap> claimGoodsList = claimGoodsMapper.selectOrderClaimGoodsList(params);
+		result.put("claimGoodsList", claimGoodsList);
+
+		// 클레임계산결과 조회
+		List<SOMap> claim = new ArrayList<SOMap>();
+		claim.addAll(claimGoodsList);
+		params.put("claim", claim);
+
+    	String clmstatus = claimGoodsList.size() > 0? (claimGoodsList.get(0).getStr("clmstatus")) : "";
+    	if(Util.isEmpty(clmstatus)) {
+        	if (Util.equal(params.getStr("clmtype"), CMConst.CLM_CANCEL)) {
+        		clmstatus = params.getStr("cncstatus");
+        	} else if (Util.equal(params.getStr("clmtype"), CMConst.CLM_RETURN)) {
+        		clmstatus = params.getStr("rtnstatus");
+        	} else if (Util.equal(params.getStr("clmtype"), CMConst.CLM_EXCHANGE)) {
+        		clmstatus = params.getStr("excstatus");
+        	}
+    	}
+    	String[] compStatusArr = {
+    			CMConst.CNC_PRCCOMP,				// 취소완료 (처리완료)
+    			CMConst.CNC_WITHDRAW,				// 취소완료 (취소철회)
+    			CMConst.RETURN_COMPLETE,			// 반품완료 (처리완료)
+    			CMConst.RETURN_APPROVAL_REFUSE,		// 반품처리 (반품반려)
+    			CMConst.RETURN_CANCEL,				// 반품처리 (반품철회)
+    			CMConst.RETURN_A_RETURN,			// 반품완료 (반송처리)
+    			CMConst.EXCHANGE_COMPLETE,			// 교환완료 (처리완료)
+    			CMConst.EXCHANGE_REJECT,			// 교환처리 (교환반려)
+    			CMConst.EXCHANGE_CANCEL,			// 교환처리 (교환철회)
+    			CMConst.EXCHANGE_A_RETURN,			// 교환완료 (반송처리)
+    	};
+    	if (ArrayUtils.indexOf(compStatusArr, clmstatus) > -1) {
+    		result.putAll(commonClaimService.selectCompClaimDetail(params));
+		} else {
+			result.putAll(commonClaimService.selectClaimDetail(params));
+		}
+
+		if (!Util.equal(params.getStr("clmtype"), CMConst.CLM_CANCEL)) {
+			// 회수택배사 목록 조회
+			SOMap claimGoods = Util.convertToListSOMap(result.getArrayList("items")).get(0);
+			SOMap delivParam = new SOMap();
+			delivParam.put("siteid", params.get("siteid"));
+			delivParam.put("userno", claimGoods.get("dealerno"));
+	    	result.put("rtnlogislist", dealerDelivMapper.selectPartnersDeliveryTemp(delivParam));
+//	    	result.put("rtnlogislist", dealerDelivMapper.selectPartnersDeliveryList(delivParam));
+
+	    	// 첨부파일 목록 조회
+			SOMap dbParam = new SOMap();
+			dbParam.put("filetypes", new String[] { CMConst.FILE_TYPE_IMG, CMConst.FILE_TYPE_VIDEO });
+			dbParam.put("imgtype", CMConst.IMG_TYPE_CLAIM);
+			dbParam.put("orgidx", claimInfo.get("clmidx"));
+			SOMap fileMap = fileService.selectFileList(dbParam);
+			List<SOMap> uploadedFiles = fileMap.getArrayList("uploadedfile");
+			result.put("uploadedFiles", uploadedFiles);
+
+			// 교환 요청상품 조회
+			if (Util.equal(params.getStr("clmtype"), CMConst.CLM_EXCHANGE)) {
+				result.put("excItems", claimGoodsList);
+			} else {
+				// 반품사은품, 재적용사은품
+				List<SOMap> claimGiftList = claimGoodsGiftMapper.selectClaimGoodsGift(params);
+				result.put("claimGiftList", claimGiftList);
+			}
+		} else {
+			String isCncComp = "T";
+			if (claimGoodsList != null && claimGoodsList.size() > 0) {
+				for (SOMap clmGoodsMap : claimGoodsList) {
+					// 취소승인 완료여부 (취소반려, 취소철회, 승인완료, 처리완료)
+					if (Util.equal(isCncComp, "T")
+						&& !Util.equal(clmGoodsMap.getStr("clmstatus"), CMConst.CNC_REJECT)
+						&& !Util.equal(clmGoodsMap.getStr("clmstatus"), CMConst.CNC_WITHDRAW)
+						&& !Util.equal(clmGoodsMap.getStr("clmstatus"), CMConst.CNC_COMP_APPRV)
+						&& !Util.equal(clmGoodsMap.getStr("clmstatus"), CMConst.CNC_PRCCOMP)) {
+						isCncComp = "F";
+					}
+				}
+			}
+			claimInfo.put("isCncComp", isCncComp);
+
+			// 취소사은품, 재적용사은품
+			List<SOMap> claimGiftList = claimGoodsGiftMapper.selectClaimGoodsGift(params);
+			result.put("claimGiftList", claimGiftList);
+		}
+		result.put("claimInfo", claimInfo);
+        return result;
+    }
+
+	/**
+	 * 단건 클레임 상태 변경
+	 * @param params
+	 * @return SOMap
+	 * @throws Exception
+	 */
+    @Override
+    @Transactional(propagation = Propagation.REQUIRED, rollbackFor = {Exception.class, BizException.class, CustomException.class})
+    public SOMap saveClaimStatus(SOMap params) throws Exception {
+    	SOMap result = new SOMap();
+        params.put("siteid", cs.getStr("siteid"));
+
+        try {
+        	if (!Util.equal(params.getStr("clmtype"), CMConst.CLM_CANCEL)) {
+            	// 클레임 회수지 갱신
+            	claimMapper.updateClaimRecExcdlvInfo(params);
+        	}
+        	if (Util.equal(params.getStr("clmtype"), CMConst.CLM_CANCEL) && !Util.equal(params.getStr("cncstatus"), params.getStr("orgcncstatus"))) {
+            	params.put("ischangestatus", "T");
+        	}
+
+        	// 완료시 금액 업데이트(상태변경 포함)
+        	String clmstatus = "";
+        	if (Util.equal(params.getStr("clmtype"), CMConst.CLM_CANCEL)) {
+        		clmstatus = params.getStr("cncstatus");
+        	} else if (Util.equal(params.getStr("clmtype"), CMConst.CLM_RETURN)) {
+        		clmstatus = params.getStr("rtnstatus");
+        	} else if (Util.equal(params.getStr("clmtype"), CMConst.CLM_EXCHANGE)) {
+        		clmstatus = params.getStr("excstatus");
+        	}
+        	String[] compStatusArr = {
+        			CMConst.CNC_PRCCOMP,				// 취소완료 (처리완료)
+        			CMConst.RETURN_COMPLETE				// 반품완료 (처리완료)
+        	};
+        	if (ArrayUtils.indexOf(compStatusArr, clmstatus) > -1
+        			|| (Util.equal(clmstatus, CMConst.CNC_WITHDRAW) && Util.isEmpty(params.getDbStr("clmgdidx")))) {
+        		commonClaimService.updateClaimInfo(params);
+        	} else {
+        		// 클레임 상태변경
+            	result = commonClaimService.saveClaimStatus(params);
+        	}
+        } catch (BizException e) {
+    		logger.error(e.getMessage());
+            throw e;
+    	} catch(Exception e){
+            logger.error(e.getMessage());
+            throw new CustomException("클레임 상태 저장시 오류가 발생하였습니다. 관리자에게 문의해주세요.");
+        }
+
+        return result;
+    }
+
+	/**
+	 * 다건 클레임 상태 변경
+	 * @param params
+	 * @return SOMap
+	 * @throws Exception
+	 */
+    @Override
+    @Transactional(propagation = Propagation.REQUIRED, rollbackFor = {Exception.class, BizException.class, CustomException.class})
+    public SOMap saveClaimStatusAll(SOMap params) throws Exception {
+    	SOMap result = new SOMap();
+    	int resultCnt = 0;
+        params.put("siteid", cs.getStr("siteid"));
+
+        List<String> possibleStatusArr = new ArrayList<String>();
+        String possibleStatusStr = "";
+        if (Util.equal(params.getStr("clmtype"), CMConst.CLM_CANCEL)) {
+            switch(params.getStr("reqstatus")) {
+            	// 승인완료(승인대기)
+	            case CMConst.CNC_COMP_APPRV:
+	            	possibleStatusArr.add(CMConst.CNC_WAITING_APPRV);
+	                possibleStatusStr = "취소신청(승인대기)";
+	                break;
+                default:
+                    break;
+            }
+    	} else if (Util.equal(params.getStr("clmtype"), CMConst.CLM_RETURN)) {
+            switch(params.getStr("reqstatus")) {
+                // 반품승인/반려승인요청(승인대기, 결제완료)
+                case CMConst.RETURN_APPROVAL_COMPLETE:
+                case CMConst.RETURN_REQUEST_REFUSE:
+                	possibleStatusArr.add(CMConst.RETURN_WAITING_APPLY);
+                	possibleStatusArr.add(CMConst.RETURN_COMPLEATE_PAYMENT);
+                    possibleStatusStr = "반품신청(승인대기), 반품처리(결제완료)";
+                    break;
+                // 반품반려(승인대기, 결제대기, 결제완료)
+                case CMConst.RETURN_APPROVAL_REFUSE:
+                	possibleStatusArr.add(CMConst.RETURN_WAITING_APPLY);
+                	possibleStatusArr.add(CMConst.RETURN_COMPLEATE_PAYMENT);
+                	possibleStatusArr.add(CMConst.RETURN_WAITING_DEPOSIT);
+                    possibleStatusStr = "반품신청(승인대기), 반품처리(결제대기), 반품처리(결제완료)";
+                    break;
+                // 반품철회(결제대기)
+//                case CMConst.RETURN_CANCEL:
+//                	possibleStatusArr.add(CMConst.RETURN_WAITING_DEPOSIT);
+//                    possibleStatusStr = "반품처리(결제대기)";
+//                    break;
+                // 회수완료(회수진행)
+                case CMConst.RETURN_COMPLETE_DELIVERY:
+                	possibleStatusArr.add(CMConst.RETURN_IN_DELIVERY);
+                    possibleStatusStr = "반품처리(회수진행)";
+                    break;
+                // 반송처리/처리완료(회수완료)
+                case CMConst.RETURN_A_RETURN:
+                case CMConst.RETURN_COMPLETE:
+                	possibleStatusArr.add(CMConst.RETURN_COMPLETE_DELIVERY);
+                    possibleStatusStr = "반품처리(회수완료)";
+                    break;
+                default:
+                    break;
+            }
+        } else if (Util.equal(params.getStr("clmtype"), CMConst.CLM_EXCHANGE)) {
+            switch(params.getStr("reqstatus")) {
+        	 	// 교환승인/반려승인요청(승인대기, 결제완료)
+            	case CMConst.EXCHANGE_APPROVAL_COMPLETE:
+            	case CMConst.EXCHANGE_REQUEST_REFUSE:
+                	possibleStatusArr.add(CMConst.EXCHANGE_WAITING_APPLY);
+                	possibleStatusArr.add(CMConst.EXCHANGE_COMPLEATE_PAYMENT);
+                    possibleStatusStr = "교환신청(승인대기), 교환처리(결제완료)";
+                    break;
+            	// 교환반려(승인대기, 결제대기, 결제완료)
+            	case CMConst.EXCHANGE_REJECT:
+                	possibleStatusArr.add(CMConst.EXCHANGE_WAITING_APPLY);
+                	possibleStatusArr.add(CMConst.EXCHANGE_COMPLEATE_PAYMENT);
+                	possibleStatusArr.add(CMConst.EXCHANGE_WAITING_DEPOSIT);
+                    possibleStatusStr = "교환신청(승인대기), 교환처리(결제대기), 교환처리(결제완료)";
+                    break;
+		        // 교환철회(결제대기)
+//		        case CMConst.EXCHANGE_CANCEL:
+//                	possibleStatusArr.add(CMConst.EXCHANGE_WAITING_DEPOSIT);
+//		            possibleStatusStr = "교환처리(결제대기)";
+//		            break;
+		        // 회수완료(회수진행)
+		        case CMConst.EXCHANGE_RETURN_COMPLETE:
+                	possibleStatusArr.add(CMConst.EXCHANGE_RETURN_DELIVERY);
+		            possibleStatusStr = "교환처리(회수진행)";
+		            break;
+		        // 반송처리(회수완료)
+		        case CMConst.EXCHANGE_A_RETURN:
+                	possibleStatusArr.add(CMConst.EXCHANGE_RETURN_COMPLETE);
+		            possibleStatusStr = "교환처리(회수완료)";
+		            break;
+		        // 배송완료(배송진행)
+		        case CMConst.EXCHANGE_COMPLETE_DELIV:
+                	possibleStatusArr.add(CMConst.EXCHANGE_IN_DELIVERY);
+		            possibleStatusStr = "교환처리(배송진행)";
+		            break;
+		        // 구매확정(배송완료)
+		        case CMConst.EXCHANGE_COMPLETE:
+                	possibleStatusArr.add(CMConst.EXCHANGE_COMPLETE_DELIV);
+		            possibleStatusStr = "교환처리(배송완료)";
+		            break;
+	        default:
+	            break;
+            }
+        }
+
+        try {
+        	List<SOMap> targetlist = Util.convertToListSOMap(params.getArrayList("targetlist"));
+        	if (targetlist != null && targetlist.size() > 0) {
+        		for (SOMap target : targetlist) {
+        			SOMap dbParams = new SOMap();
+        			dbParams.putAll(params);
+        			dbParams.put("clmidx", target.get("clmidx"));
+        			dbParams.put("clmgdidx", target.get("clmgdidx"));
+        			dbParams.put("orderidx", target.get("orderidx"));
+        			dbParams.put("cncstatus", Util.equal(params.getStr("clmtype"), CMConst.CLM_CANCEL)? params.get("reqstatus"):null);
+        			dbParams.put("rtnstatus", Util.equal(params.getStr("clmtype"), CMConst.CLM_RETURN)? params.get("reqstatus"):null);
+        			dbParams.put("excstatus", Util.equal(params.getStr("clmtype"), CMConst.CLM_EXCHANGE)? params.get("reqstatus"):null);
+
+        			SOMap currStatusInfo = claimMapper.selectClaimStatusInfo(dbParams);
+        			if (possibleStatusArr != null && possibleStatusArr.size() > 0 && possibleStatusArr.indexOf(currStatusInfo.getStr("clmstatus")) < 0) {
+						String errorMsg = params.getStr("reqname") + " 처리는 \'" + possibleStatusStr + "\'" + "상태에서만 가능합니다. 확인후 진행해주세요.";
+        				throw new BizException(errorMsg);
+        			}
+                	// 클레임 상태변경
+                	commonClaimService.saveClaimStatus(dbParams);
+            		resultCnt += 1;
+        		}
+        	}
+        	result.put("resultCnt", resultCnt);
+        } catch (BizException e) {
+    		logger.error(e.getMessage());
+            throw e;
+    	} catch(Exception e){
+            logger.error(e.getMessage());
+            throw new CustomException("클레임 상태 저장시 오류가 발생하였습니다. 관리자에게 문의해주세요.");
+        }
+
+        return result;
+    }
+
+    /**
+     * 환불상세내역 조회
+     * @param params
+     * @return SOMap
+     * @throws Exception
+     */
+    @Override
+    public SOMap selectClaimRefundInfo(SOMap params) throws Exception {
+    	SOMap result = new SOMap();
+        params.put("siteid", cs.getStr("siteid"));
+
+        // 환불상세내역 조회
+        SOMap refundInfo = claimMapper.selectAdminClaimRefundInfo(params);
+        List<SOMap> clmprcHistList = claimGoodsHistMapper.selectClaimStatusHistList(params);
+        result.put("refundInfo", refundInfo);
+        result.put("clmprcHistList", clmprcHistList);
+
+        return result;
+    }
+
+	/**
+	 * 회수진행
+	 * @param params
+	 * @return SOMap
+	 * @throws Exception
+	 */
+	@Override
+	@Transactional(propagation = Propagation.REQUIRED, rollbackFor = {Exception.class, CustomException.class})
+	public SOMap procReturn(SOMap params) throws Exception {
+		params.put("siteid", cs.getStr("siteid"));
+		SOMap result = new SOMap();
+
+		try {
+			if (Util.equal(params.getStr("rtndelivtype"), CMConst.DELIV_DIRECT)) { // 직배송 회수
+				// 클레임 회수지 갱신
+				claimMapper.updateClaimRecExcdlvInfo(params);
+				// 클레임 상태변경
+				result = commonClaimService.saveClaimStatus(params);
+			} else { // 계약(자동)택배사 회수
+            	// 클레임상품 정보
+            	SOMap claimGoodsMap = params.getSOMap("claimgoods");
+
+            	// 반품 회수요청 파라미터 세팅
+            	SOMap sendParams = new SOMap();
+            	String transUniqueCd = String.format("%s_%s", params.get("clmno"), DateTimeUtil.getNowFullShortStr());
+            	sendParams.put("trans_unique_cd", transUniqueCd);
+            	sendParams.put("center_code", params.get("centercode"));
+            	sendParams.put("deliver_code", deliveryTrackingService.getGoodsFlowLogisCode(params.getStr("reclogistype")));
+            	sendParams.put("recname", params.get("recname"));
+            	sendParams.put("rectel", params.get("rectel"));
+            	sendParams.put("recpost", params.get("recpost"));
+            	sendParams.put("recaddrroad", params.get("recaddrroad"));
+            	sendParams.put("recaddrdetailroad", params.get("recaddrdetailroad"));
+            	sendParams.put("dealername", claimGoodsMap.get("dealername"));
+            	sendParams.put("rfpost", claimGoodsMap.get("rfpost"));
+            	sendParams.put("rfaddr", claimGoodsMap.get("rfaddr"));
+            	sendParams.put("rfaddrdetail", claimGoodsMap.get("rfaddrdetail"));
+            	sendParams.put("rcvtel", params.getStr("rcvtel").replaceAll("-", ""));
+            	sendParams.put("dealerno", claimGoodsMap.get("dealerno"));
+            	sendParams.put("paymenttypecode", CMConst.RETURN_PAYMENT_BH);
+
+        		List<SOMap> sendOrderList = new ArrayList<SOMap>();
+            	SOMap orderMap = new SOMap();
+            	orderMap.put("trans_unique_cd", transUniqueCd);
+            	orderMap.put("ordno", params.get("ordno"));
+            	orderMap.put("goodsname", claimGoodsMap.get("goodsname"));
+            	orderMap.put("clmcnt", claimGoodsMap.get("clmcnt"));
+            	orderMap.put("orderdate", params.get("clmreqday"));
+            	orderMap.put("clmgdidx", claimGoodsMap.get("clmgdidx"));
+            	sendOrderList.add(orderMap);
+
+            	// 반품회수 요청
+            	result = deliveryTrackingService.requestReturn(sendParams, sendOrderList);
+    			if (!"200".equals(result.getStr("status"))) {
+    				String errorMsg = String.format("%s(%s)", "회수요청중 오류가 발생하였습니다. ", result.getStr("message"));
+    				logger.error(":: status  :: " + result.getStr("status"));
+    				logger.error(":: details :: " + result.getStr("details"));
+    				logger.error(":: sendParams :: " + sendParams.toString());
+    				for (SOMap map : sendOrderList) {
+    					logger.error("== sendOrderList :: " + map.toString());
+    				}
+    				throw new CustomException(errorMsg);
+    			}
+    			params.put("istracking", "T");
+            	// 클레임 회수지 갱신
+            	claimMapper.updateClaimRecExcdlvInfo(params);
+        	}
+        } catch(CustomException e){
+            logger.error(e.getMessage());
+            throw e;
+        } catch(Exception e){
+            logger.error(e.getMessage());
+            throw new CustomException("회수진행시 오류가 발생하였습니다. 관리자에게 문의해주세요.");
+        }
+
+        return result;
+    }
+
+	/**
+	 * 교환배송진행
+	 * @param params
+	 * @return SOMap
+	 * @throws Exception
+	 */
+    @Override
+    @Transactional(propagation = Propagation.REQUIRED, rollbackFor = {Exception.class, CustomException.class})
+    public SOMap procDelivery(SOMap params) throws Exception {
+        params.put("siteid", cs.getStr("siteid"));
+    	SOMap result = new SOMap();
+
+        try {
+        	if (Util.equal(params.getStr("delivtype"), CMConst.DELIV_DIRECT)) {
+            	// 클레임 회수지 갱신
+            	claimMapper.updateClaimRecExcdlvInfo(params);
+            	// 클레임 상태변경
+            	result = commonClaimService.saveClaimStatus(params);
+        	} else {
+	        	// 클레임상품 정보
+	        	SOMap claimGoodsMap = params.getSOMap("claimgoods");
+
+	        	// 교환배송 추적요청 파라미터 세팅
+	        	SOMap sendParams = new SOMap();
+	        	String transUniqueCd = String.format("%s_%s", params.get("clmno"), DateTimeUtil.getNowFullShortStr());
+	        	sendParams.put("trans_unique_code", transUniqueCd);
+	        	sendParams.put("from_name", Util.equal(claimGoodsMap.getStr("ispbgoods"), "T")? cs.getStr("cfgsitename"):claimGoodsMap.getStr("dealername"));
+	        	sendParams.put("logistics_code", deliveryTrackingService.getGoodsFlowLogisCode(params.getStr("excdlvlogistype")));
+	        	sendParams.put("invoice_no", params.get("excdlvinvoiceno"));
+	        	sendParams.put("dlvret_type", "D");
+	        	sendParams.put("to_name", params.get("excdlvname"));
+
+	    		List<SOMap> sendOrderList = new ArrayList<SOMap>();
+	        	SOMap orderMap = new SOMap();
+	        	orderMap.put("order_no", params.get("ordno"));
+	        	orderMap.put("order_line", 1);
+	        	orderMap.put("item_name", claimGoodsMap.get("goodsname"));
+	        	orderMap.put("item_qty", claimGoodsMap.get("clmcnt"));
+
+    	        if (Util.equal(prop.getProperty("Globals.Profile"), "prod")) {
+    	        	orderMap.put("order_date", DateTimeUtil.getFormatStr(params.getStr("clmreqday"), DateTimeUtil.MALL_DATE_FORMAT_FULL_SHORT));
+    	        	orderMap.put("payment_date", DateTimeUtil.getFormatStr(orderMap.getStr("clmreqday"), DateTimeUtil.MALL_DATE_FORMAT_FULL_SHORT));
+    	        } else {
+        			// 로컬, 개발서버 배송추적요청 테스트를 위한 날짜 임의 세팅
+    	        	orderMap.put("order_date", DateTimeUtil.getFormatStr("20220401000000", DateTimeUtil.MALL_DATE_FORMAT_FULL_SHORT));
+    	        	orderMap.put("payment_date", DateTimeUtil.getFormatStr("20220401000000", DateTimeUtil.MALL_DATE_FORMAT_FULL_SHORT));
+    	        }
+	        	sendOrderList.add(orderMap);
+
+	        	// 교환배송추적요청
+	        	result = deliveryTrackingService.sendTraceRequest(sendParams, sendOrderList);
+				if (!"200".equals(result.getStr("status"))) {
+					String errorMsg = String.format("%s(%s)", "교환배송추적요청중 오류가 발생하였습니다. ", result.getStr("message"));
+					throw new CustomException(errorMsg);
+				}
+				params.put("istracking", "T");
+	        	// 클레임 배송지 갱신
+	        	claimMapper.updateClaimRecExcdlvInfo(params);
+        	}
+        } catch(CustomException e){
+            logger.error(e.getMessage());
+            throw e;
+        } catch(Exception e){
+            logger.error(e.getMessage());
+            throw new CustomException("회수진행시 오류가 발생하였습니다. 관리자에게 문의해주세요.");
+        }
+
+        return result;
+    }
+
+	/**
+	 * 수동반품배송진행
+	 * @param params
+	 * @return SOMap
+	 * @throws Exception
+	 */
+	@Override
+	@Transactional(propagation = Propagation.REQUIRED, rollbackFor = {Exception.class, CustomException.class})
+	public SOMap procReturnMan(SOMap params) throws Exception {
+		params.put("siteid", cs.getStr("siteid"));
+		SOMap result = new SOMap();
+
+		try {
+			// 클레임상품 정보
+			SOMap claimGoodsMap = params.getSOMap("claimgoods");
+
+			// 교환배송 추적요청 파라미터 세팅
+			SOMap sendParams = new SOMap();
+			String transUniqueCd = String.format("%s_%s", params.get("clmno"), DateTimeUtil.getNowFullShortStr());
+
+			sendParams.put("trans_unique_code", transUniqueCd);
+			sendParams.put("from_name", Util.equal(claimGoodsMap.getStr("ispbgoods"), "T")? cs.getStr("cfgsitename"):claimGoodsMap.getStr("dealername"));
+			sendParams.put("logistics_code", deliveryTrackingService.getGoodsFlowLogisCode(params.getStr("reclogistype")));
+			sendParams.put("invoice_no", params.get("recinvoiceno"));
+			sendParams.put("dlvret_type", "D");
+			sendParams.put("to_name", params.get("recname"));
+
+			List<SOMap> sendOrderList = new ArrayList<SOMap>();
+			SOMap orderMap = new SOMap();
+			orderMap.put("order_no", params.get("ordno"));
+			orderMap.put("order_line", 1);
+			orderMap.put("item_name", claimGoodsMap.get("goodsname"));
+			orderMap.put("item_qty", claimGoodsMap.get("clmcnt"));
+
+			if (Util.equal(prop.getProperty("Globals.Profile"), "prod")) {
+				orderMap.put("order_date", DateTimeUtil.getFormatStr(params.getStr("clmreqday"), DateTimeUtil.MALL_DATE_FORMAT_FULL_SHORT));
+				orderMap.put("payment_date", DateTimeUtil.getFormatStr(orderMap.getStr("clmreqday"), DateTimeUtil.MALL_DATE_FORMAT_FULL_SHORT));
+			} else {
+				// 로컬, 개발서버 배송추적요청 테스트를 위한 날짜 임의 세팅
+				orderMap.put("order_date", DateTimeUtil.getFormatStr("20220401000000", DateTimeUtil.MALL_DATE_FORMAT_FULL_SHORT));
+				orderMap.put("payment_date", DateTimeUtil.getFormatStr("20220401000000", DateTimeUtil.MALL_DATE_FORMAT_FULL_SHORT));
+			}
+			sendOrderList.add(orderMap);
+
+			// 개별반품배송추적요청
+			result = deliveryTrackingService.sendTraceRequest(sendParams, sendOrderList);
+			if (!"200".equals(result.getStr("status"))) {
+				String errorMsg = String.format("%s(%s)", "수동 교환/반품 배송추적요청중 오류가 발생하였습니다. ", result.getStr("message"));
+				throw new CustomException(errorMsg);
+			}
+			// 클레임 배송지 갱신
+			params.put("isrectracking", "T");
+			claimMapper.updateClaimRecExcdlvInfo(params);
+			// 클레임 상태변경
+			params.put("rtnstatus", CMConst.RETURN_IN_DELIVERY);
+			params.put("excstatus", CMConst.EXCHANGE_RETURN_DELIVERY);
+			result = commonClaimService.saveClaimStatus(params);
+		} catch(CustomException e){
+			logger.error(e.getMessage());
+			throw e;
+		} catch(Exception e){
+			logger.error(e.getMessage());
+			throw new CustomException("회수진행시 오류가 발생하였습니다. 관리자에게 문의해주세요.");
+		}
+
+		return result;
+	}
+
+	/**
+	 * 조정금액 저장
+	 * @param params
+	 * @return SOMap
+	 * @throws Exception
+	 */
+    @Override
+    @Transactional(propagation = Propagation.REQUIRED, rollbackFor = {Exception.class, CustomException.class})
+    public SOMap saveAdjustamt(SOMap params) throws Exception {
+    	SOMap result = new SOMap();
+
+        try {
+        	claimMapper.updateClaimFinAdjustAmt(params);
+        } catch(Exception e){
+            logger.error(e.getMessage());
+            throw new CustomException("조정금액 저장시 오류가 발생하였습니다. 관리자에게 문의해주세요.");
+        }
+
+        return result;
+    }
+}

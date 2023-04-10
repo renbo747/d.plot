@@ -1,0 +1,92 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.dplot.mapper.OptionErpMapper">
+	<!-- 연결상품 목록 조회 -->
+	<select id="selectOptionErpList" parameterType="somap" resultType="somap">
+		SELECT	/* OptionErpMapper.xml - selectOptionErpList 연결상품 목록 조회 */
+			  goodsno		/* 상품코드 */
+			, optioncode	/* 옵션코드 */
+			, erpoptcode	/* ERP옵션코드 */
+			, erpoptname	/* ERP옵션명 */
+			, cnt
+		FROM t_option_erp
+		WHERE goodsno = #{goodsno}
+		AND optioncode = #{optioncode}
+		ORDER BY erpoptcode
+    </select>
+	
+	<!-- 연결상품 추가 -->
+	<insert id="insertOptionErp" parameterType="somap">
+		/* OptionErpMapper.xml - insertOptionErp 연결상품 추가 */
+		INSERT INTO t_option_erp (
+			  optioncode  	/* 옵션코드 */
+			, erpoptcode  	/* ERP옵션코드 */
+			, erpoptname	/* ERP옵션명 */
+			, goodsno  		/* 상품번호 */
+			, cnt			/* 수량 */
+			, reguserid  	/* 등록자ID */
+			, regdate  		/* 등록일시 */
+		)
+		<choose>
+			<when test="erpoptlist != null and erpoptlist.size > 0">
+				VALUES
+				<foreach collection="erpoptlist" item="data" index="index" open="" separator="," close="">
+			    (	  #{optioncode}
+					, #{data.erpoptcode}
+					, #{data.erpoptname}
+					, #{goodsno}
+					, #{data.cnt}
+					, #{authuserid}
+					, NOW()
+			    )
+			    </foreach>
+			</when>
+			<otherwise>
+			VALUES (
+				  #{optioncode}
+				, #{erpoptcode}
+				, #{erpoptname}
+				, #{goodsno}
+				, #{cnt}
+				, #{authuserid}
+				, NOW()
+			)
+			</otherwise>
+		</choose>
+	</insert>
+	
+	<!-- 연결상품 삭제 -->
+	<delete id="deleteOptionErp" parameterType="somap">
+		/* OptionErpMapper.xml - deleteOptionErp 연결상품 삭제 */
+		DELETE FROM t_option_erp
+		WHERE goodsno = #{goodsno}
+		<choose>
+			<when test="deloptioncodelist != null and deloptioncodelist.size > 0">
+			AND optioncode IN
+			<foreach collection="deloptioncodelist" item="_optioncode" index="index" open="(" separator="," close=")">
+				#{_optioncode}
+			</foreach>
+			</when>
+			<otherwise>
+				<if test='optioncode != null and optioncode != ""'>
+				AND optioncode = #{optioncode}
+				</if>
+				<if test='erpoptcode != null and erpoptcode != ""'>
+				AND erpoptcode = #{erpoptcode}
+				</if>
+			</otherwise>
+		</choose>
+	</delete>
+
+	<select id="selectOptionErpListERP" parameterType="somap" resultType="somap">
+		SELECT
+			GOODSNO,
+			OPTIONCODE,
+			ERPOPTCODE,
+			CNT
+		FROM T_OPTION_ERP
+		WHERE GOODSNO = #{goodsno}
+		AND OPTIONCODE = #{optioncode}
+	</select>
+</mapper>

@@ -1,0 +1,170 @@
+.id-find {
+  .btn.dp-btn {
+    font-size: 16px;
+    letter-spacing: -.64px;
+    line-height: 24px;
+  }
+
+  .id-find__description-pc {
+    padding-bottom: 40px;
+  }
+
+  .id-find__title-pc {
+    padding-bottom: 30px;
+  }
+
+  .id-find__email-box {
+    padding-bottom: 40px;
+  }
+
+  .id-find__label-pc {
+    margin-bottom: 10px;
+  }
+
+  .email-phone-find {
+    display: flex;
+    align-items: center;
+  }
+
+  .base-select-id-find {
+    width: 36%;
+    margin-right: 12px;
+  }
+
+  .base-input-id-find {
+    width: 64%;
+  }
+
+  // 아이디찾기 성공 페이지01
+  .id-find__box-pc {
+    background-color: $gray-100;
+    padding-top: 24px;
+    padding-bottom: 24px;
+    margin-top: 20px;
+    text-align: center;
+  }
+
+  .id-find__date-pc {
+    margin-top: 4px;
+  }
+
+  .id-find__email-pc {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-top: 30px;
+    margin-bottom: 20px;
+  }
+
+  .btn.id-find-email-btn {
+    width: 110px;
+    height: 40px;
+    border-color: $gray-400;
+  }
+
+  .id-find__phone-pc {
+    margin-top: 20px;
+    margin-bottom: 20px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
+
+  .btn.id-find-phone-btn {
+    width: 110px;
+    height: 40px;
+    border-color: $gray-400;
+  }
+
+  .id-find-send-info-pc {
+    color: #888888;
+    padding-bottom: 40px;
+  }
+
+  .id-find__success-btn01 {
+    margin-right: 16px;
+    border-color: $gray-400;
+  }
+
+  // 아이디찾기 성공 페이지02
+  .id-find-success-btn {
+    padding-top: 40px;
+  }
+
+  // 아이디 찾기 실패 페이지
+  .id-find-fail-wrap {
+    .dp-panel {
+      padding-bottom: 30px;
+    }
+  }
+
+  .id-find-fail__description {
+    padding-bottom: 6px;
+  }
+
+  .id-find-fail__description2 {
+    color: #888888;
+
+    & > p {
+      font-size: 18px;
+      letter-spacing: -.72px;
+      line-height: 28px;
+      margin-bottom: 0;
+      word-break: keep-all;
+    }
+
+    & > p + p {
+      margin-top: 30px;
+    }
+  }
+
+  .customer-center__title-pc {
+    color: #888888;
+  }
+
+  .customer-center-pc {
+    margin-bottom: 40px;
+  }
+
+  .customer-center__number-pc {
+    font-size: 26px;
+    line-height: -1.04px;
+    padding-top: 10px;
+  }
+
+  .customer-center-wrap {
+    padding-top: 20px;
+  }
+
+  .customer-center__time01 {
+    margin-bottom: 10px;
+  }
+
+  .center-title-pc {
+    color: #888888;
+    margin-right: 16px;
+  }
+}
+
+
+// 휴면계정 안내 페이지
+.dormant-account-pc {
+  .btn {
+    height: 48px;
+    font-size: 16px;
+    letter-spacing: -.64px;
+    line-height: 24px;
+  }
+
+  .info-text {
+    font-size: 16px;
+    letter-spacing: -.64px;
+    line-height: 24px;
+    color: $gray-700;
+    margin-bottom: 0;
+  }
+
+  .info-text + .info-text {
+    margin-top: 10px;
+  }
+}

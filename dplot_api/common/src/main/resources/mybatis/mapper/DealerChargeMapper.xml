@@ -1,0 +1,89 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.dplot.mapper.DealerChargeMapper">
+
+    <insert id="insertPartnershipCharge" parameterType="somap">
+        INSERT /* DealerChargeMapper.xml - insertPartnershipCharge 파트너사 담당자 등록 */ INTO t_dealer_charge (userno, chargetype, chargename, chargemobile, chargeemail)
+        VALUES (#{userno}, #{chargetype}, #{chargename}, #{chargemobile}, #{chargeemail})
+    </insert>
+
+    <update id="updatePartnershipCharge" parameterType="somap">
+        UPDATE t_dealer_charge SET /* DealerChargeMapper.xml - updatePartnershipCharge 파트너사 담당자 수정 */
+                chargetype = #{chargetype}
+              , chargename = #{chargename}
+              , chargemobile = #{chargemobile}
+              , chargeemail = #{chargeemail}
+              , uptdate = CURRENT_TIMESTAMP
+        WHERE idx = #{idx}
+    </update>
+
+    <delete id="deletePartnershipCharge">
+        DELETE FROM T_DEALER_CHARGE
+        WHERE USERNO = #{userno}
+        AND CHARGETYPE = #{chargetype}
+    </delete>
+
+
+    <select id="selectDealerCharge" parameterType="somap" resultType="somap">
+        SELECT /* DealerChargeMapper.xml - selectDealerCharge 파트너사 담당자 조회 */
+            A.idx, A.userno, A.chargetype
+             , (SELECT CODENAME FROM T_COMMON_CODE WHERE CMCLASS='CHARGETYPE' AND CMCODE = A.CHARGETYPE) AS chargetypename
+             , A.chargename, A.chargemobile, A.chargeemail, A.regdate
+        FROM T_DEALER_CHARGE A
+        WHERE A.USERNO = #{userno}
+    </select>
+
+    <select id="selectDealerChargeList" parameterType="somap" resultType="somap">
+        SELECT /* DealerChargeMapper.xml - selectDealerChargeList 파트너사 담당자 리스트 조회 */
+               concat('[', a.chargetype, '담당] ', a.chargename) AS charge, a.*
+        FROM (
+                 SELECT a.idx
+                      , (SELECT codename
+                         FROM t_common_code
+                         WHERE cmclass = 'CHARGETYPE'
+                           AND cmcode = a.chargetype) AS chargetype
+                      , a.chargename
+                 FROM t_dealer_charge a
+                          JOIN t_dealer b ON a.userno = b.userno
+                 WHERE 1 = 1
+                   AND a.userno = #{userno}
+             ) a
+        WHERE 1 = 1;
+    </select>
+
+    <select id="selectDealerChargeListERP" parameterType="somap" resultType="somap">
+        SELECT
+            idx,
+            B.userno,
+            chargetype,
+            chargename,
+            chargemobile,
+            chargeemail
+        FROM T_DEALER A INNER JOIN T_DEALER_CHARGE B ON A.USERNO = B.USERNO
+        WHERE B.USERNO = #{userno}
+        AND A.DEALERST = 'DST001'
+        AND A.REQDEALST = 'RDS002'
+    </select>
+
+    <select id="getChargerInfo" parameterType="somap" resultType="somap">
+        SELECT /* DealerChargeMapper.xml - getChargerInfo 파트너사 담당자 조회 */
+            IDX, USERNO, CHARGETYPE, CHARGENAME, CHARGEMOBILE, CHARGEEMAIL
+        FROM T_DEALER_CHARGE
+        <where>
+            <if test="userno != null and userno != ''">
+                AND USERNO = #{userno}
+            </if>
+            <if test="chargetype != null and chargetype != ''">
+                AND CHARGETYPE = #{chargetype}
+            </if>
+            <if test='name != null and name != ""'>
+                AND CHARGENAME = #{name}
+            </if>
+            <if test='phone != null and phone != ""'>
+                AND CHARGEMOBILE = #{phone}
+            </if>
+        </where>
+        LIMIT 1
+    </select>
+</mapper>

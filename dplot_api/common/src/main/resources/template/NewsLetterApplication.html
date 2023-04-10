@@ -1,0 +1,130 @@
+<!doctype html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport"
+        content="width=device-width, user-scalable=no, initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0">
+  <meta http-equiv="X-UA-Compatible" content="ie=edge">
+  <title>뉴스레터 신청을 감사드립니다.</title>
+
+  <!--font-->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@100;300;400;500;700;900&display=swap" rel="stylesheet">
+
+  <link th:each="font : ${fontList}" th:href="${font}" rel="stylesheet">
+</head>
+<body style="margin: 0;">
+  <div id="email-news-letter-application" style="width: 800px; padding: 0 40px; margin: 0 auto; font-family: 'Noto Sans KR', sans-serif;">
+    <!-- 헤더 -->
+    <table style="width: 100%; padding: 30px 0 70px 0">
+      <tr>
+        <td>
+          <div>
+            <img th:src="${topLogo}" alt="로고">
+          </div>
+        </td>
+      </tr>
+    </table>
+    <table style="width: 100%;">
+      <tr>
+        <td style="text-align: center">
+          <span style="font-size: 26px; letter-spacing: -1.04px; font-weight: 500; color: #111111;">뉴스레터 신청을 감사드립니다.</span>
+        </td>
+      </tr>
+    </table>
+    <table style="width: 100%; padding: 80px 0 60px 0">
+      <tr>
+        <td>
+            <span style="font-size: 16px; letter-spacing: -.64px; line-height: 26px; font-weight: 400; color:#111111;">
+              이제 가장 먼저 D.PLOT의 최근 소식과 이벤트를 만나보실 수 있습니다.<br />
+              언제나 좋은 서비스를 제공할 수 있도록 노력하겠습니다.
+            </span>
+        </td>
+      </tr>
+    </table>
+    <!-- 보더박스 -->
+<!--    <table style="width: 680px; margin: 0 auto;">-->
+<!--      <tr>-->
+<!--        <td>-->
+<!--          <div style="width: 100%; padding: 50px 0; border: solid 1px #dddddd;">-->
+<!--            <div style="vertical-align: middle; text-align: center;">-->
+<!--              <div style="padding-bottom: 40px;">-->
+<!--                <span style="font-size: 14px; letter-spacing: -.56px; font-weight: 500; color:#333333;"><span style="letter-spacing: -.42px; font-family: 'AttenNew', sans-serif;">D.PLOT</span> 뉴스레터 신청에 감사드리는 의미로 20% 할인 쿠폰 코드를 보내드립니다.</span>-->
+<!--              </div>-->
+<!--              <div style="padding: 30px 0; background-color: #f8f8f8; width: 360px; margin: 0 auto;">-->
+<!--                <span style="margin-right: 10px; font-size: 14px; letter-spacing: -.56px; color: #333333; ">쿠폰코드번호</span>-->
+<!--                <span style=" font-family: 'AttenNew', sans-serif; font-size: 22px;letter-spacing: -.66px; font-weight: 600; color:#2c2c2c;">D.PLOT20%</span>-->
+<!--              </div>-->
+<!--              <div style="padding: 40px 0 0 72px; text-align: left;">-->
+<!--                <span style="font-size: 14px; letter-spacing: -.56px; color:#666666; margin-bottom: 6px;">ㆍ쿠폰코드 등록 방법: D.PLOT > 마이페이지 > 쿠폰 > 프로모션 코드 등록시 쿠폰이 발급됩니다. </span>-->
+<!--                <span style="display:block; font-size: 14px; letter-spacing: -.56px; color:#666666;">ㆍ사용기한 :  발급일로부터 00일 이내에 사용가능합니다.</span>-->
+<!--              </div>-->
+<!--            </div>-->
+<!--          </div>-->
+<!--        </td>-->
+<!--      </tr>-->
+<!--    </table>-->
+    <!-- 버튼 -->
+    <table style="width: 100%; padding: 80px 0;">
+      <tr style="width: 100%; vertical-align: middle">
+        <td>
+          <a th:href="${loginUrl}" style="display: block; text-decoration: none;">
+            <div style="width: 360px; height: 48px; margin: 0 auto; background-color: #333333; text-align: center; line-height: 48px;">
+              <span style="font-size: 16px; letter-spacing: -.64px; color: #ffffff;"><span style="font-family: 'AttenNew', sans-serif; ">D.PLOT</span> 로그인</span>
+            </div>
+          </a>
+        </td>
+      </tr>
+    </table>
+    <table>
+      <tr>
+        <td>
+          <div>
+            <span style="font-size: 14px; letter-spacing: -.56px; color:#666666;">본 메일은 정보통신망 이용촉진 및 정보보호 등에 관한 법률 시행규칙에 의거 2022년 7월 15일 기준으로 고객님의 이메일 수신동의 여부를 확인한 결과, 수신동의를 하셨기에 발송되는 메일입니다.</span>
+            <span style="display:block; margin-top: 8px; font-size: 14px; letter-spacing: -.56px; color:#666666;">뉴스레터 메일 수신을 원하지 않으시면 <a th:href="${refuseUrl}" style=" color: #111111;">수신거부</a>를 눌러주세요. If you don’t want to receive this e-mail anymore,
+              <a th:href="${refuseUrl}" style="color: #111111;">click here</a>.</span>
+          </div>
+
+        </td>
+      </tr>
+    </table>
+    <!-- 메일 푸터 -->
+    <table class="mail-footer" style="width: 100%; margin-top: 80px; background-color: #f8f8f8; padding: 40px 40px;">
+      <colgroup>
+        <col width="20%">
+        <col width="80%">
+      </colgroup>
+      <tr style="vertical-align: top; width: 100%;">
+        <td>
+          <div style="text-align: left; width: 100%;">
+            <img th:src="${footerLogo}" alt="footer logo">
+          </div>
+        </td>
+        <td>
+          <div style="margin-bottom: 10px; line-height: 1;">
+            <span style="color: #666666; font-size: 14px; letter-spacing: -.42px;">
+              본 메일은 발신 전용으로 회신이 되지 않습니다.<br />
+              문의사항은 [<a th:href="${mainUrl}" style="color:#666666;">D.PLOT 홈페이지</a>]를 이용해주시기 바랍니다.
+            </span>
+          </div>
+          <div style="margin-bottom: 4px;">
+            <span style="font-size: 14px; letter-spacing: -.42px; color: #666666;">주식회사 다다엠엔씨</span>
+            <span style="display:inline-block; margin: 0 10px; width: 1px; height: 10px; background-color: #dddddd;"></span>
+            <span style="font-size: 14px; letter-spacing: -.42px; color: #666666;">고객센터 1666-3642</span>
+<!--            <span style="display:inline-block; margin: 0 10px; width: 1px; height: 10px; background-color: #dddddd;"></span>-->
+<!--            <span style="font-size: 14px; letter-spacing: -.42px; color: #666666;">1:1 문의</span>-->
+          </div>
+          <div style="margin-bottom: 4px;">
+            <span style="font-size: 14px; letter-spacing: -.42px; color: #666666;">04377 서울특별시 용산구 한강대로23길 55 (한강로3가) 아이파크몰 6층</span>
+          </div>
+
+          <div>
+            <span style="font-size: 14px; letter-spacing: -.42px; color: #666666;">COPYRIGHT © D.PLOT. ALL RIGHTS RESERVED.</span>
+          </div>
+        </td>
+      </tr>
+    </table>
+  </div>
+</body>
+</html>

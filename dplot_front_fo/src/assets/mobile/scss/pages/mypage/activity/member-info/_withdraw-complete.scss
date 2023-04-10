@@ -1,0 +1,22 @@
+.dp-withdraw-complete {
+  height: calc((var(--vh, 1vh) * 100) - 110px);
+
+  .withdraw-complete__body {
+    padding-top: 100px;
+
+    .dp-logo_-area {
+      padding-bottom: 24px;
+    }
+
+    .withdraw-complete__text-area {
+      .withdraw-complete__text {
+        text-align: center;
+        color: $gray-700;
+      }
+    }
+  }
+
+  .withdraw-complete__footer {
+    padding-top: 50px;
+  }
+}

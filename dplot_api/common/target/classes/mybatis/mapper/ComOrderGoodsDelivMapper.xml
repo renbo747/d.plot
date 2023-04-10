@@ -1,0 +1,424 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.dplot.mapper.ComOrderGoodsDelivMapper">
+	
+	<insert id="insertComOrderGoodsDeliv" parameterType="somap" useGeneratedKeys="true" keyProperty="orgdelividx">
+		INSERT   /* ComOrderGoodsDelivMapper - insertComOrderGoodsDeliv 주문배송정보 저장*/
+			INTO t_comorder_goods_deliv (
+			  ordgdidx
+			, logistype
+			, invoiceno
+			, ordstatus
+			, delivcnt
+			, istracking
+			, istrash
+			, reguserid
+			, regdate
+		) VALUES (
+			  #{ordgdidx}
+			, #{logistype}
+			, #{invoiceno}
+			, #{ordstatus}
+			, #{ordcnt}
+			, 'F'
+			, 'F'
+			, #{userid}
+			, sysdate()
+		)
+	</insert>
+
+	<insert id="insertComOrderGoodsDelivByERP" parameterType="somap" useGeneratedKeys="true" keyProperty="orgdelividx">
+		INSERT   /* ComOrderGoodsDelivMapper - insertComOrderGoodsDelivByERP 주문배송정보 저장*/
+		INTO t_comorder_goods_deliv (
+				  ordgdidx
+				, logistype
+				, invoiceno
+				, invoiceday
+				, ordstatus
+				, delivcnt
+				, istracking
+				, istrash
+				, reguserid
+				, regdate
+		) VALUES (
+					 #{ordgdidx}
+				 , #{logistype}
+				 , #{invoiceno}
+				 , DATE_FORMAT(CURRENT_TIMESTAMP, '%Y%m%d')
+				 , #{ordstatus}
+				 , #{ordcnt}
+				 , 'T'
+				 , 'F'
+				 , #{userid}
+				 , sysdate()
+				 )
+	</insert>
+	
+	<update id="updateOrderGoodsDeliv" parameterType="somap">
+		/* ComOrderGoodsDelivMapper.xml -updateOrderGoodsDeliv 주문배송정보 수정 */
+		UPDATE t_comorder_goods_deliv
+		SET 
+		    ordstatus =  #{ordstatus}
+		  <if test='ordcfmtype != null and ordcfmtype !=""'>
+		  , ordcfmtype  = #{ordcfmtype}
+		  </if>
+		  <if test='logistype != null and logistype !=""'>
+		  , logistype = #{logistype}
+		  </if>
+		  <if test='invoiceno != null and invoiceno !=""'>
+	      , invoiceno = #{invoiceno}
+	      </if>
+		WHERE 1 = 1
+		AND orgdelividx = #{orgdelividx}
+	</update>
+	
+	<update id="updateAdminOrderGoodsDeliv" parameterType="somap">
+		/* ComOrderGoodsDelivMapper.xml - updateAdminOrderGoodsDeliv 관리자 주문배송정보 갱신 */
+		UPDATE t_comorder_goods_deliv SET
+			    ordstatus = #{ordstatus}
+			<if test='ordstatus != "ODS008" and istracking != null and istracking != ""'>
+				, trckerrmsg = NULL
+				, istracking = #{istracking}
+			</if>
+			<choose>
+				<when test='isrollback != null and isrollback == "T"'>
+				, logistype = NULL
+				, invoiceno = NULL
+				, invoiceday = NULL
+				, trckerrmsg = NULL
+				</when>
+				<otherwise>
+					<if test='ordstatus != "ODS008" and logistype != null and logistype != ""'>
+					, logistype = #{logistype}
+					</if>
+					<if test='ordstatus != "ODS008" and invoiceno != null and invoiceno != ""'>
+				  	, invoiceno = #{invoiceno}
+					, invoiceday = DATE_FORMAT(now(), '%Y%m%d')
+					</if>
+					<if test='isupdateordcnt != null and isupdateordcnt=="T" and ordcnt != null and !ordcnt.equals("")'>
+				  	, delivcnt = #{ordcnt}
+					</if>
+				</otherwise>
+			</choose>
+		<where>
+		<choose>
+			<when test="orgdelividxlist != null and orgdelividxlist.size > 0">
+				AND orgdelividx IN
+				<foreach collection="orgdelividxlist" item="_orgdelividx" index="index" open="(" separator="," close=")">
+					#{_orgdelividx}
+				</foreach>
+			</when>
+			<when test='ordgdidx != null and ordgdidx != "" '>
+				AND ordgdidx = #{ordgdidx}
+				<if test="orgdelividx != null and orgdelividx != ''">
+				AND orgdelividx = #{orgdelividx}
+				</if>
+			</when>
+			<otherwise>
+				AND orgdelividx = #{orgdelividx}
+			</otherwise>
+		</choose>
+		</where>
+	</update>
+	
+	<update id="updateComOrderGoodsDelivUse" parameterType="somap">
+		/* ComOrderGoodsDelivMapper.xml - updateComOrderGoodsDelivUse 주문상품배송정보 사용여부 갱신 */
+		UPDATE t_comorder_goods_deliv SET
+			   istrash = #{istrash}
+		WHERE 1 = 1
+		<choose>
+			<when test="delorgdelividxlist != null and delorgdelividxlist.size > 0">
+			AND orgdelividx IN
+			<foreach collection="delorgdelividxlist" item="_orgdelividx" index="index" open="(" separator="," close=")">
+				#{_orgdelividx}
+			</foreach>
+			</when>
+			<otherwise>
+				<if test="orgdelividx != null and orgdelividx != ''">
+				AND orgdelividx = #{orgdelividx}
+				</if>
+				<if test="ordgdidx != null and ordgdidx != ''">
+				AND ordgdidx = #{ordgdidx}
+				</if>
+			</otherwise>
+		</choose>
+	</update>
+
+	<select id="selectOrderInvoiceList" parameterType="somap" resultType="somap">
+		SELECT  /* ComOrderGoodsDelivMapper.xml - selectOrderInvoiceList 주문배송정보 송장정보 목록조회 */
+			  'N' AS status /* 상태구분 */
+			, a.ordstatus	/* 주문배송상태 */
+			, a.ordgdidx	/* 주문상품IDX */
+			, a.orgdelividx	/* 주문배송IDX */
+			, a.invoiceno	/* 운송장번호 */
+			, a.logistype	/* 택배사 */
+			, (select detail from t_common_code where cmclass='LOGISTYPE' and cmcode = a.logistype) as logiscode /* 택배사코드 */
+			, a.istracking	/* 배송추적요청여부 */
+			, a.trckerrmsg	/* 배송추적요청에러메세지 */
+			, a.delivcnt AS ordcnt	/* 배송수량 */
+			, b.frstordcnt - ifnull(e.cnccompcnt, 0) AS frstordcnt	/* 최초주문수량 */
+			, b.orderidx
+			, b.goodsno
+			, b.optioncode
+			, a.dirdelivmsg /* 직배송안내메시지 */
+			, b.delivtype /* 배송방법 -DLT001_택배배송 DLT002_직배송 */
+			, c.name
+			, d.tel
+		FROM t_comorder_goods_deliv a
+		INNER JOIN t_comorder_goods b ON a.ordgdidx = b.ordgdidx
+		LEFT OUTER JOIN t_dealer c ON c.userno = b.dealerno
+		LEFT OUTER JOIN t_dealer_info d ON d.dealerno = c.userno 
+		LEFT JOIN (
+            SELECT
+            	  ta.orderidx, tb.ordgdidx
+                , SUM(CASE WHEN ta.clmtype='CLM001' AND tb.cncstatus = 'CNS005' THEN tb.clmcnt ELSE 0 END) AS cnccompcnt
+            FROM t_claim ta
+            INNER JOIN t_claim_goods tb ON ta.clmidx = tb.clmidx and tb.isclmoption = 'T'
+           	WHERE (tb.CNCSTATUS NOT IN ('CNS003','CNS004') OR ta.RTNSTATUS NOT IN ('RTS004','RTS005','RTS009') OR ta.EXCSTATUS NOT IN ('EXS004','EXS005','EXS011')) -- 반려, 철회, 반송
+           	AND ta.istrash = 'F'
+			GROUP BY ta.orderidx, tb.ordgdidx
+        ) e ON b.ordgdidx = e.ordgdidx
+		WHERE a.istrash = 'F'
+		AND a.ordgdidx = #{ordgdidx}
+		<if test="orgdelividx != null and orgdelividx != ''">
+			AND a.orgdelividx = #{orgdelividx}
+		</if>
+		ORDER BY a.orgdelividx
+	</select>
+	
+	<select id="selectOrderInvoiceListByOrderidx" parameterType="somap" resultType="somap">
+		SELECT  /* ComOrderGoodsDelivMapper.xml - selectOrderInvoiceList 주문배송정보 송장정보 목록조회 */
+			  'N' AS status /* 상태구분 */
+			, a.ordstatus	/* 주문배송상태 */
+			, a.ordgdidx	/* 주문상품IDX */
+			, a.orgdelividx	/* 주문배송IDX */
+			, a.invoiceno	/* 운송장번호 */
+			, a.logistype	/* 택배사 */
+			, (select detail from t_common_code where cmclass='LOGISTYPE' and cmcode = a.logistype) as logiscode /* 택배사코드 */
+			, a.istracking	/* 배송추적요청여부 */
+			, a.trckerrmsg	/* 배송추적요청에러메세지 */
+			, a.delivcnt AS ordcnt	/* 배송수량 */
+			, sum(a.delivcnt) over() AS frstordcnt	/* 최초주문수량 */
+		FROM t_comorder_goods_deliv a
+		INNER JOIN t_comorder_goods b ON a.ordgdidx = b.ordgdidx
+		WHERE a.istrash = 'F'
+		AND b.orderidx = #{orderidx}
+		ORDER BY a.orgdelividx
+	</select>
+	
+	<select id="selectOrderInvoiceCount" parameterType="somap" resultType="int">
+		SELECT  /* ComOrderGoodsDelivMapper.xml - selectOrderInvoiceCount 송장건수 조회 */
+			COUNT(*) AS cnt
+		FROM t_comorder_goods_deliv a
+		WHERE a.istrash = 'F'
+		<if test='ordgdidx != null and ordgdidx != ""'>
+		AND a.ordgdidx = #{ordgdidx}
+		</if>
+		<if test='orgdelividx != null and orgdelividx != ""'>
+		AND a.ordgdidx = (SELECT ordgdidx FROM t_comorder_goods_deliv where orgdelividx = #{orgdelividx})
+		</if>
+	</select>
+
+	<select id="selectOrderInvoiceListByInvoiceArr" parameterType="somap" resultType="somap">
+		SELECT /* ComOrderGoodsDelivMapper.xml - selectOrderInvoiceListByInvoiceArr 송장번호 ARRAY 를 통한 주문상품배송리스트 조회 */
+			A.ORGDELIVIDX, A.ORDGDIDX, A.LOGISTYPE, A.INVOICENO, A.ORDSTATUS, A.ORDCFMTYPE, B.DELIVTYPE
+		FROM T_COMORDER_GOODS_DELIV A LEFT OUTER JOIN T_COMORDER_GOODS B ON A.ORDGDIDX = B.ORDGDIDX
+		WHERE A.ISTRASH = 'F'
+		AND B.DELIVTYPE = 'DLT001'
+		AND A.ORDSTATUS = #{target_ord_status}
+ 		AND A.INVOICENO IN <foreach collection="invoice_no_arr" item="invoice" index="index" open="(" separator="," close=")">#{invoice}</foreach>
+	</select>
+
+	<update id="updateDeliveryTrackingErrorMessage" parameterType="somap">
+		UPDATE /* ComOrderGoodsDelivMapper.xml - updateDeliveryTrackingErrorMessage v */
+			T_COMORDER_GOODS_DELIV SET
+			TRCKERRMSG = #{errormsg}
+		WHERE orgdelividx = #{orgdelividx}
+	</update>
+	
+	<update id="updateDeliveryStatusByOrderIdx"  parameterType="somap">
+		UPDATE /* ComOrderGoodsDelivMapper.xml - updateDeliveryStatusByOrderIdx 주문IDX로 배송상태 수정 */
+			T_COMORDER_GOODS_DELIV A
+		SET ORDSTATUS = #{ordstatus}
+		WHERE exists (select 1 from t_comorder_goods where orderidx = #{orderidx} and ordgdidx = A.ordgdidx)
+	</update>
+	
+	<update id="updateDeliveryStatusByOrdgdIdx"  parameterType="somap">
+		UPDATE /* ComOrderGoodsDelivMapper.xml - updateDeliveryStatusByOrdgdIdx 주문상품IDX로 배송상태 수정 */
+			T_COMORDER_GOODS_DELIV A
+		SET ORDSTATUS = #{ordstatus}
+			<if test='ordcfmtype != null and ordcfmtype != ""'>
+			, ORDCFMTYPE = #{ordcfmtype}
+			</if>
+		WHERE ORDGDIDX = #{ordgdidx}
+	</update>
+
+	<select id="selectDeliveringList" parameterType="somap" resultType="somap">
+		SELECT /* ComOrderGoodsDelivMapper.xml - selectDeliveringList */
+			A.ORGDELIVIDX, A.ORDGDIDX, A.LOGISTYPE, A.INVOICENO, A.ORDSTATUS, A.ORDCFMTYPE, B.DELIVTYPE
+			, #{transUniqueCode} AS TRANSUNIQUECODE, #{seq} AS SEQ, #{errorName} AS ERRORMSG
+		FROM T_COMORDER_GOODS_DELIV A LEFT OUTER JOIN T_COMORDER_GOODS B ON A.ORDGDIDX = B.ORDGDIDX
+		WHERE A.ISTRASH = 'F'
+	    AND B.DELIVTYPE = 'DLT001'
+		AND A.LOGISTYPE = #{logistType}
+		AND A.INVOICENO = #{invoiceNo}
+		<if test='status != null and status != ""'>
+	    	AND A.ORDSTATUS = #{status}
+		</if>
+	</select>
+
+	<select id="selectOrderDelivERPData" parameterType="somap" resultType="somap">
+		SELECT
+			GROUP_CONCAT(ORGDELIVIDX) AS ORGDELIVIDX,
+			GROUP_CONCAT(ORDGDIDX) AS ORDGDIDX,
+			INVOICENO,
+			LOGISTYPE,
+			GROUP_CONCAT(DISTINCT DELIVTYPE) AS DELIVTYPE,
+			MAX(ORDSTATUS) AS ORDSTATUS,
+			SUM(DELIVCNT) AS DELIVCNT
+		FROM (
+			SELECT
+				ORGDELIVIDX, ORDGDIDX
+				, IF((SELECT DELIVTYPE FROM T_COMORDER_GOODS WHERE ORDGDIDX = A.ORDGDIDX) = 'DLT002', ORGDELIVIDX, INVOICENO) AS INVOICENO
+				, IF((SELECT DELIVTYPE FROM T_COMORDER_GOODS WHERE ORDGDIDX = A.ORDGDIDX) = 'DLT002', ORDGDIDX, LOGISTYPE) AS LOGISTYPE
+				, (SELECT DELIVTYPE FROM T_COMORDER_GOODS WHERE ORDGDIDX = A.ORDGDIDX) AS DELIVTYPE
+				, ORDSTATUS
+				, DELIVCNT
+			FROM T_COMORDER_GOODS_DELIV A
+			WHERE ORDSTATUS IN ('ODS007', 'ODS008')
+			AND A.ISTRASH = 'F'
+			<if test='orgdelividxlist != null and orgdelividxlist != ""'>
+				AND ORGDELIVIDX IN
+				<foreach collection="orgdelividxlist" item="_orgdelividx" index="index" open="(" separator="," close=")">
+					#{_orgdelividx}
+				</foreach>
+			</if>
+		)T
+		GROUP BY INVOICENO, LOGISTYPE
+	</select>
+
+	<select id="selectOrderConfirmERPData" parameterType="somap" resultType="somap">
+		SELECT
+			ORDERIDX, A.ORDGDIDX, B.DELIVCNT, A.DELIVTYPE, B.INVOICENO, B.ORGDELIVIDX
+			 , AUD_TYPE_CD, IFLOGIDX
+		FROM T_COMORDER_GOODS A INNER JOIN T_COMORDER_GOODS_DELIV B ON A.ORDGDIDX = B.ORDGDIDX AND A.ISTRASH = 'F' AND B.ISTRASH = 'F'
+		    INNER JOIN  (
+			SELECT
+				ORGNO, GROUP_CONCAT(IFLOGIDX) AS IFLOGIDX, MIN(REGDATE) AS REGDATE
+				 ,AUDDIV AS AUD_TYPE_CD
+			FROM T_IFLOG A
+			WHERE IFTYPE = 'IFT011'
+			  AND IFDATE IS NULL
+			GROUP BY ORGNO, AUDDIV
+		)C ON B.ORGDELIVIDX = C.ORGNO
+	</select>
+
+	<select id="selectInDelivCntByOrdgdidx" parameterType="somap" resultType="int">
+		SELECT  /* ComOrderGoodsDelivMapper.xml - selectInDelivCntByOrdgdidx 주문상품IDX로 배송중 주문상품배송 건수 조회 */
+			COUNT(*) AS cnt
+		FROM t_comorder_goods_deliv a
+		WHERE a.istrash = 'F'
+		AND a.ordstatus = 'ODS007'	/* 배송중 */
+		AND a.ordgdidx = #{ordgdidx}
+	</select>
+	
+	<update id="updateDelivCnt"  parameterType="somap">
+		UPDATE /* ComOrderGoodsDelivMapper.xml - updateDelivCnt 배송수량 갱신(취소수량 제외) */
+			  T_COMORDER_GOODS_DELIV A
+			, ( SELECT a.clmidx, b.CLMGDIDX, d.ORGDELIVIDX, d.DELIVCNT, b.CLMCNT 
+				FROM t_claim a
+				INNER JOIN t_claim_goods b 
+				ON a.CLMIDX = b.CLMIDX AND b.ISCLMOPTION = 'T'
+				INNER JOIN t_comorder_goods c 
+				ON b.ORDGDIDX = c.ORDGDIDX 
+				INNER JOIN t_comorder_goods_deliv d 
+				ON c.ORDGDIDX = d.ORDGDIDX 
+				WHERE a.ISTRASH = 'F'
+				AND b.ISTRASH = 'F'
+				AND a.CLMIDX = #{clmidx}
+				AND b.CNCSTATUS IN ('CNS005', 'CNS007')
+			) B
+		SET A.DELIVCNT = B.DELIVCNT - B.CLMCNT
+		WHERE A.ORGDELIVIDX = B.ORGDELIVIDX
+	</update>
+	
+	<update id="updateDirDelivMsg"  parameterType="somap">
+		/* ComOrderGoodsDelivMapper.xml - updateDirDelivMsg 직배송 안내문구 저장 */
+		UPDATE T_COMORDER_GOODS_DELIV 
+		SET DIRDELIVMSG = #{dirdelivmsg}
+		WHERE ORGDELIVIDX = #{orgdelividx}
+	</update>
+	
+	
+	<select id="selectSameInvoiceInfo"  parameterType="somap" resultType="somap">
+		/* ComOrderGoodsDelivMapper.xml - selectSameInvoiceInfo 배송중인 같은 운송장 배송정보 조회*/
+		SELECT orgdelividx
+		FROM T_COMORDER_GOODS_DELIV
+		WHERE istrash = 'F'
+		AND invoiceno IS NOT NULL
+		AND invoiceno = #{invoiceno}
+		AND logistype = #{logistype}
+		<if test='orgdelividxlist != null and orgdelividxlist.size > 0'>
+			AND orgdelividx NOT IN
+			<foreach collection="orgdelividxlist" item="_orgdelividx" index="index" open="(" separator="," close=")">
+				#{_orgdelividx}
+			</foreach>
+		</if>
+	</select>
+
+	<select id="selectOrderDeliveryMatchedERPData" parameterType="somap" resultType="somap">
+		SELECT
+			ORGDELIVIDX, INVOICENO
+		FROM T_COMORDER_GOODS_DELIV
+		WHERE ISTRASH = 'F'
+		  AND ORDGDIDX = #{order_gd_idx}
+		  AND INVOICENO = #{invoice_no}
+		  AND LOGISTYPE = #{logis_type}
+		  AND ORDSTATUS = 'ODS007'
+
+	</select>
+	
+	<select id="selectRewardConfirmOrder" parameterType="somap" resultType="somap">
+		SELECT	/* ComOrderGoodsDelivMapper.xml - selectRewardConfirmOrder 추천리워드 구매확정 시 추천인 지급 대상자 조회 */
+			  d.recuserno		/* 추천인 userno */
+			, c.isfrstorder		/* 첫구매확정 여부 */
+			, c.userno			/* 피추천인 userno */
+			, a.ordstatus	/* 주문배송상태 */
+			, b.orderidx
+		FROM t_comorder_goods_deliv a
+		INNER JOIN t_comorder_goods b ON a.ordgdidx = b.ordgdidx
+		INNER JOIN t_comorder c ON c.orderidx  = b.orderidx
+		INNER JOIN t_member_recom d ON d.revuserno = c.userno 
+		AND d.relogidx = #{relogidx}
+		LEFT JOIN (
+			SELECT 
+				  userno
+				, paypoint
+			FROM t_reserve_pay
+			WHERE respaytype ='RPT014'
+		) f
+		ON f.userno = c.userno 
+		LEFT JOIN (
+			SELECT
+				  ta.orderidx
+				, tb.ordgdidx
+				, SUM(CASE WHEN ta.clmtype='CLM001' AND tb.cncstatus = 'CNS005' THEN tb.clmcnt ELSE 0 END) AS cnccompcnt
+			FROM t_claim ta
+			INNER JOIN t_claim_goods tb ON ta.clmidx = tb.clmidx AND tb.isclmoption = 'T'
+			WHERE (tb.cncstatus NOT IN ('CNS003','CNS004') OR ta.rtnstatus NOT IN ('RTS004','RTS005','RTS009') OR ta.excstatus NOT IN ('EXS004','EXS005','EXS011')) -- 반려, 철회, 반송
+			AND ta.istrash = 'F'
+			GROUP BY ta.orderidx, tb.ordgdidx
+		) e ON b.ordgdidx = e.ordgdidx
+		WHERE a.istrash = 'F'
+		AND c.isfrstorder ='T'
+		AND a.ordstatus='ODS009'
+		AND DATE_FORMAT(DATE_ADD(NOW(), INTERVAL -1 DAY),'%Y%m%d') = DATE_FORMAT(a.regdate,'%Y%m%d')
+		AND DATE_FORMAT(a.regdate,'%Y-%m-%d') BETWEEN #{stday} and #{edday}
+		GROUP BY d.recuserno
+			, c.isfrstorder
+			, c.userno
+			, a.ordstatus
+			, b.orderidx
+	</select>
+</mapper>

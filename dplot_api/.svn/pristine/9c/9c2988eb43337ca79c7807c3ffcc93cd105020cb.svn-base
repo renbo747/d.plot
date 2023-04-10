@@ -1,0 +1,114 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.dplot.mapper.SerialNoMapper">
+
+    <!-- 시리얼 번호 저장 -->
+    <insert id="insertSerialNo" parameterType="somap" useGeneratedKeys="true" keyProperty="srpidx">
+        INSERT INTO t_serial_no (SERIALNO, SRPIDX, USECNT, REGUSERID, REGDATE)
+        <choose>
+            <when test="serialno != null and serialno != ''">
+                VALUES (#{serialno}, #{srpidx}, #{usecnt}, #{reguserid},now())
+            </when>
+            <when test="serialnolist != null and serialnolist.size > 0">
+                VALUE
+                <foreach collection="serialnolist" item="item" separator=",">
+                    ( #{item.serialno} ,#{item.srpidx} ,#{item.usecnt} ,#{item.reguserid},now() )
+                </foreach>
+            </when>
+        </choose>
+    </insert>
+
+    <!-- 시리얼 번호 삭제 -->
+    <delete id="deleteSerialNo" parameterType="somap">
+        DELETE FROM t_serial_no
+        WHERE 1 = 1
+        <if test="srpidx != null and srpidx != ''">
+            AND srpidx = #{srpidx}
+        </if>
+    </delete>
+
+    <!-- 시리얼 번호 중복 체크 -->
+    <select id="isCheckDuplicationSerialNo" parameterType="somap" resultType="somap">
+        SELECT if(count(*) > 0, true, false) as 'check'
+        FROM t_serial_no
+        WHERE 1 = 1
+        AND serialno IN
+        <foreach collection="serialnolist" open="(" separator="," close=")" item="item">
+            #{item}
+        </foreach>
+    </select>
+
+    <!-- 시리얼 번호 조회 -->
+    <select id="selectAdminSerialNoList" parameterType="somap" resultType="somap">
+        SELECT serialno, srpidx, usecnt, reguserid, regdate
+        FROM t_serial_no
+        WHERE 1 = 1
+        <if test="serialnolist != null and serialnolist.size > 0">
+            AND serialno IN
+            <foreach collection="serialnolist" open="(" separator="," close=")" item="item">
+                #{item}
+            </foreach>
+        </if>
+        <if test="srpidx != null and srpidx != ''">
+            AND srpidx = #{srpidx}
+        </if>
+    </select>
+
+    <!-- 유저 정보 시리얼 리스트 조회 -->
+    <select id="selectAdminSerialNoUserInfoList" parameterType="somap" resultType="somap">
+        SELECT a.serialno
+        , c.userid
+        , d.name
+        , FN_GET_CODENAME_STR(d.dadamembertype, 'dadamembertype') AS dadamembertype
+        , FN_GET_CODENAME_STR(d.memlvtype, 'memlvtype') AS memlvtype
+        , date_format(a.regdate, '%Y-%m-%d') AS regdate
+        , d.userno
+        FROM t_serial_no a
+        LEFT JOIN t_serial_member b ON a.serialno = b.serialno
+        LEFT JOIN t_user c ON b.userno = c.no
+        LEFT JOIN t_member d ON c.no = d.userno
+        WHERE 1 = 1
+        AND a.srpidx = #{srpidx}
+        <if test="psort != null and psort != ''">
+            <choose>
+                <when test="psort == 'dadamembertype_desc'">
+                    ORDER BY dadamembertype DESC
+                </when>
+                <when test="psort == 'dadamembertype_asc'">
+                    ORDER BY dadamembertype
+                </when>
+                <when test="psort == 'memlvtype_desc'">
+                    ORDER BY memlvtype DESC
+                </when>
+                <when test="psort == 'memlvtype_asc'">
+                    ORDER BY memlvtype
+                </when>
+                <when test="psort == 'regdate_desc'">
+                    ORDER BY regdate DESC
+                </when>
+                <when test="psort == 'regdate_asc'">
+                    ORDER BY regdate
+                </when>
+            </choose>
+        </if>
+    </select>
+    
+    <select id="selectFrontUserSerialCnt" parameterType="somap" resultType="int">
+		SELECT /*SerialNoMapper.xml - selectFrontUserSerialCnt:: 사용자 해당 시리얼번호 지급수 체크*/
+		       count(*) 
+		FROM t_serial_no a
+		INNER JOIN t_serial_member b ON a.SERIALNO  = b.SERIALNO 
+		WHERE b.SERIALNO = #{serialno}
+		<if test='userno != null and userno != ""'>
+		AND b.USERNO  = #{userno}
+		</if>
+    </select>
+    
+    <update id="updateUseCnt" parameterType="somap">
+       /*SerialNoMapper.xml - updateUseCnt:: 사용자 해당 시리얼번호 사용횟수 +1*/
+       UPDATE t_serial_no
+       SET USECNT = USECNT + 1
+       WHERE SERIALNO = #{serialno}
+    </update>
+</mapper>

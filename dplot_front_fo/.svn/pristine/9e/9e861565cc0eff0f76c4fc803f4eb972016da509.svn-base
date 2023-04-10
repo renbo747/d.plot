@@ -1,0 +1,5 @@
+.dormant-account {
+  .member__footer-group {
+    margin-bottom: 30px;
+  }
+}

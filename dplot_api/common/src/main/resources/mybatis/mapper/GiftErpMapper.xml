@@ -1,0 +1,37 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.dplot.mapper.GiftErpMapper">
+	<!-- 사은픔ERP 저장 -->
+	<insert id="insertGiftERP" parameterType="somap">
+        /* GiftErpMapper.xml - insertGiftERP 사은픔ERP 저장  */
+        INSERT INTO t_gift_erp
+        (giftidx, erpgiftcode, erpgiftname, cnt, reguserid, regdate)
+        VALUES
+        <foreach collection="erpgiftlist" index="index" item="item" separator=",">
+        	(#{giftidx}, #{item.erpoptcode}, #{item.erpoptname}, #{item.cnt}, #{reguserid}, now())
+        </foreach>
+    </insert>
+    
+    <!-- 사은픔ERP 조회 -->
+	<select id="selectGiftERP" resultType="somap" parameterType="somap">
+        /* GiftErpMapper.xml - selectGiftERP 사은픔ERP 조회  */
+        SELECT giftidx, erpgiftcode as erpoptcode, erpgiftname as erpoptname, cnt 
+        FROM t_gift_erp
+        WHERE giftidx = #{giftidx}
+    </select>
+    
+    <!-- 사은픔ERP 삭제 -->
+	<delete id="deleteGiftERP" parameterType="somap">
+        /* GiftErpMapper.xml - deleteGiftERP 사은픔ERP 삭제  */
+        DELETE FROM t_gift_erp
+        WHERE giftidx = #{giftidx}
+    </delete>
+
+    <select id="selectGiftERPSendData" parameterType="somap" resultType="somap">
+        SELECT
+            GIFTIDX, ERPGIFTCODE, ERPGIFTNAME, CNT
+        FROM T_GIFT_ERP
+        WHERE GIFTIDX = #{giftidx}
+    </select>
+</mapper>

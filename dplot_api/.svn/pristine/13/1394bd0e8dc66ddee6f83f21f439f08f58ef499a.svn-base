@@ -1,0 +1,2614 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.dplot.mapper.ClaimMapper">
+	<select id="selectClaimInfo" parameterType="somap" resultType="somap">
+		SELECT	/* ClaimMapper.xml - selectClaimInfo 주문클레임 정보 조회 */ 
+			  a.CLMIDX			/* 클레임ID */ 
+			, a.ORDERIDX		/* 주문IDX(FK) */
+			, (SELECT ORDNO FROM T_COMORDER WHERE ORDERIDX = a.ORDERIDX) as ORDNO
+			, a.CLMNO			/* 클레임번호 */ 
+			, sub.CLMTURN AS CLMTURN			/* 클레임차수 */ 
+			, a.CLMTYPE			/* 클레임구분 */
+			, FN_GET_CODENAME(#{siteid}, 'CLMTYPE', a.CLMTYPE) as CLMTYPENM 
+			, a.CNCTYPE			/* 취소사유 */
+			, FN_GET_CODENAME(#{siteid}, 'CNCTYPE', a.CNCTYPE) as CNCTYPENM
+			, a.RTNTYPE			/* 반품사유 */
+			, FN_GET_CODENAME(#{siteid}, 'RTNTYPE', a.RTNTYPE) as RTNTYPENM 
+			, a.EXCTYPE			/* 교환사유 */ 
+			, FN_GET_CODENAME(#{siteid}, 'EXCTYPE', a.EXCTYPE) as EXCTYPENM
+			, a.CLMDETAIL		/* 상세사유 */
+			, a.CNCSTATUS			/* 취소상태 */
+			, FN_GET_CODENAME(#{siteid}, 'CNCSTATUS', a.CNCSTATUS) as CNCSTATUSNM
+			, a.RTNSTATUS			/* 반품상태 */
+			, FN_GET_CODENAME(#{siteid}, 'RTNSTATUS', a.RTNSTATUS) as RTNSTATUSNM
+			, a.EXCSTATUS			/* 교환상태 */
+			, FN_GET_CODENAME(#{siteid}, 'EXCSTATUS', a.EXCSTATUS) as EXCSTATUSNM
+			, DATE_FORMAT(a.CLMREQDATE, '%Y%m%d%H%i%s') as CLMREQDAY		/* 클레임신청일 */ 
+			, DATE_FORMAT(a.CLMREQDATE, '%Y-%m-%d %H:%i:%s') as CLMREQDATE	/* 클레임신청일 */ 
+			, DATE_FORMAT(a.CLMCOMPDATE, '%Y-%m-%d %H:%i:%s') as CLMCOMPDATE	/* 클레임완료일 */ 
+			, a.ORDTOTPRICE			/* 주문총금액 */ 
+			, a.DADADELIVAMT		/* 자사배송비 */ 
+			, a.PTNDELIVAMT			/* 파트너배송비 */ 
+			, a.BASKETCPNIDX		/* 장바구니쿠폰IDX */ 
+			, a.TOTSALEPROMOAMT		/* 총프로모션 할인금액 */ 
+			, a.TOTGOODSCPNAMT		/* 총상품쿠폰할인금액 */ 
+			, a.TOTDELIVCPNAMT		/* 총배송비쿠폰할인금액 */ 
+			, a.BASKETCPNAMT		/* 장바구니쿠폰할인금액 */ 
+			, a.ADDPAYTOTPRICE		/* 추가결제예정금액 */ 
+			, a.ADDPAYWAYTYPE		/* 추가결제수단타입 */ 
+			, FN_GET_CODENAME(#{siteid}, 'PAYWAYTYPE',a.ADDPAYWAYTYPE) as ADDPAYWAYTYPENM		/* 추가결제수단타입 */ 
+			, a.ADDRPAYTOTPRICE		/* 추가실결제총금액 */ 
+			, DATE_FORMAT(a.ADDPAYMENTDATE, '%Y-%m-%d %H:%i:%s') as ADDPAYMENTDATE		/* 추가결제일 */ 
+			, a.ADDPAYNAME			/* 추가결제자명 */ 
+			, a.RTNAMT				/* 환불금액 */ 
+			, a.RTNRESAMT			/* 적립금반환금액 */ 
+			, a.RTNEPOAMT			/* E포인트반환금액 */ 
+			, a.RTNEMPRESAMT		/* 임직원적립금반환금액 */ 
+			, a.RTNPAYAMT			/* 결제취소금액 */ 
+			, a.RECNAME				/* 회수자명 */ 
+			, a.RECTEL				/* 회수연락처 */ 
+			, a.RECADDR				/* 회수지주소 */ 
+			, a.RECADDRDETAIL		/* 회수지주소상세 */ 
+			, a.RECADDRROAD			/* 회수지주소도로명 */ 
+			, a.RECADDRDETAILROAD	/* 회수지주소상세도로명 */ 
+			, a.RECLOGISTYPE		/* 회수택배사 */ 
+			, (select detail from t_common_code where cmclass='LOGISTYPE' and cmcode = a.RECLOGISTYPE) as reclogiscode /* 회수택배사코드 */
+			, a.RECINVOICENO		/* 회수운송장번호 */ 
+			, DATE_FORMAT(a.RECCOMDATE, '%Y-%m-%d %H:%i:%s') as RECCOMDAY	/* 회수완료일시 */ 
+			, DATE_FORMAT(a.RECCOMDATE, '%Y-%m-%d') as RECCOMDATE			/* 회수완료일자 */ 
+			, DATE_FORMAT(a.RECCOMDATE, '%H:%i:%s') as RECCOMTIME			/* 회수완료시간 */ 
+			, a.RECDELIVNAME		/* 회수처리자 */ 
+			, a.RECSTATNAME			/* 회수상태명 */ 
+			, a.FINADJUSTAMT		/* 최종조정금액 */ 
+			, a.ADJUSTREASON		/* 조정사유 */ 
+			, a.RTNLOGISTYPE		/* 반송택배사 */ 
+			, a.RTNINVOICENO		/* 반송운송장번호 */ 
+			, a.EXCDLVNAME			/* 교환배송수령인명 */ 
+			, a.EXCDLVTEL			/* 교환배송연락처 */ 
+			, a.EXCDLVADDR			/* 교환배송지주소 */ 
+			, a.EXCDLVADDRDETAIL	/* 교환배송지주소상세 */ 
+			, a.EXCDLVADDRROAD		/* 교환배송지주소도로명 */ 
+			, a.EXCDLVADDRDETAILROAD	/* 교환배송지주소상세도로명 */ 
+			, a.EXCDLVLOGISTYPE		/* 교환배송택배사 */ 
+			, (select detail from t_common_code where cmclass='LOGISTYPE' and cmcode = a.EXCDLVLOGISTYPE) as exclogiscode /* 교환배송택배사코드 */
+			, a.EXCDLVINVOICENO		/* 교환배송운송장번호 */
+			, DATE_FORMAT(a.EXCDLVCOMDATE, '%Y-%m-%d %H:%i:%s') as EXCDLVCOMDAY	/* 교환배송완료일시 */ 
+			, DATE_FORMAT(a.EXCDLVCOMDATE, '%Y-%m-%d') as EXCDLVCOMDATE			/* 교환배송완료일자 */ 
+			, DATE_FORMAT(a.EXCDLVCOMDATE, '%H:%i:%s') as EXCDLVCOMTIME			/* 교환배송완료시간 */ 
+			, a.EXCDLVDELIVNAME		/* 교환배송처리자 */ 
+			, a.EXCDLVSTATNAME		/* 교환배송상태명 */ 
+			, a.REJREASON			/* 반려사유 */ 
+			, a.DROPREASON			/* 철회사유 */
+			, a.REJSUBREASON		/* 반려승인요청사유 */
+			, a.REJDENYREASON		/* 반려승인거부사유 */
+			, a.ISTRASH				/* 삭제여부 */ 
+			, a.RECSIGUNGUCODE		/* 회수지시군구코드 */ 
+			, a.RECBUILDINGCODE		/* 회수지빌딩코드 */ 
+			, a.EXCSIGUNGUCODE		/* 교환배송지시군구코드 */ 
+			, a.EXCBUILDINGCODE		/* 교환배송지빌딩코드 */ 
+			, a.CLMREQTYPE			/* 클레임신청구분 */ 
+			, a.RECPOST				/* 회수지우편번호 */ 
+			, a.RCVREQTYPE			/* 회수지배송요청타입 */ 
+			, FN_GET_CODENAME(#{siteid}, 'RCVREQTYPE',a.RCVREQTYPE) as RCVREQTYPENM
+			, a.RCVREQDETAIL		/* 회수지배송요청사항 */ 
+			, a.EXCPOST				/* 교환지우편번호 */ 
+			, a.EXCREQTYPE			/* 교환지배송요청타입 */ 
+			, a.EXCREQTYPE			/* 교환지배송요청타입 */
+			, FN_GET_CODENAME(#{siteid}, 'RCVREQTYPE',a.EXCREQTYPE) as EXCREQTYPENM
+			, a.EXCREQDETAIL		/* 교환지배송요청사항 */ 
+			, a.CASHRECEIPTTYPE		/* 현금영수증결제타입 */ 
+			, a.CASHRECEIPTURL		/* 현금영수증URL */ 
+			, a.CASHRECEIPTKEY		/* 현금영수증결제키 */ 
+			, a.REFACCNUMBER		/* 환불계좌번호 */ 
+			, a.REFBANK				/* 환불계좌은행 */ 
+			, FN_GET_CODENAME(#{siteid}, 'TBANKTYPE', a.REFBANK) as REFBANKNM
+			, a.REFCUSNAME			/* 환불계좌고객이름 */ 
+			, a.ADDDELIVAMT			/* 추가배송비 */ 
+			, a.TOTRTNDELIVAMT		/* 반환배송비 */ 
+			, a.RECROADNAMECODE   	/* 주문자도로명코드*/
+			, a.EXCROADNAMECODE   	/* 수령인도로명코드*/
+			, b.PAYMENTKEY			/* 결제정보키 */
+			, b.CARDCOMPANY			/* 카드사 */
+			, b.PLANMONTH			/* 할부개월수 */
+			, b.MOPCARRIER			/* 통신사 */
+			, a.RTNREASON			/* 반송사유 */
+			, a.ISRECTRACKING		/* 회수추적요청여부 */
+			, a.ISEXCTRACKING		/* 교환배송추적요청여부 */
+			-- , FORMAT(a.RTNPAYAMT, 0) AS REFUNDAMT	/* 메세지 전송용 환불금액 */ 
+		FROM T_CLAIM a
+        INNER JOIN (
+			SELECT ORDERIDX, CLMIDX, row_number() over(partition by ORDERIDX ORDER BY CLMCOMPDATE IS NULL, CLMCOMPDATE, CLMREQDATE) AS CLMTURN
+            FROM T_CLAIM
+			WHERE ISTRASH = 'F'
+        ) sub ON a.ORDERIDX = sub.ORDERIDX and a.CLMIDX = sub.CLMIDX
+		LEFT OUTER JOIN T_TOSSRECEIPT b
+        ON a.clmidx = b.clmidx
+        INNER JOIN T_COMORDER c
+        ON a.orderidx = c.orderidx
+		WHERE 1 = 1
+		<choose>
+		<when test='clmidx != null'>
+		AND a.clmidx = #{clmidx}
+		</when>
+		<otherwise>
+		AND a.CLMNO = #{clmno}
+		</otherwise>
+		</choose>
+		<if test='isuser == "T"'>
+		AND c.USERNO = #{userno}
+		</if>
+		<if test='isnonemember == "T"'>
+		AND a.ORDERIDX = #{orderidx}
+		</if>
+	</select>
+	
+    <select id="selectReturnAndExchangeInvoiceList" parameterType="somap" resultType="somap">
+        SELECT
+            CLMIDX,
+            CASE WHEN EXCDLVINVOICENO IS NOT NULL AND EXCDLVINVOICENO != '' THEN 'EXCHANGE_DELIVERY'
+                 WHEN RTNINVOICENO IS NOT NULL AND RTNINVOICENO != '' AND EXCSTATUS IN <foreach collection="target_exchange_status_arr" item="exchange_status" index="index" open="(" separator="," close=")">#{exchange_status}</foreach> THEN 'EXCHANGE_RETURN'
+                 WHEN RTNINVOICENO IS NOT NULL AND RTNINVOICENO != '' AND RTNSTATUS = #{target_return_status} THEN 'RETURN_RETURN'
+                 ELSE '' END AS TYPE,
+            IF(EXCDLVINVOICENO IS NOT NULL AND EXCDLVINVOICENO != '', EXCDLVINVOICENO, RTNINVOICENO) AS INVOICENO
+        FROM T_CLAIM
+        WHERE ISTRASH = 'F'
+        AND (EXCSTATUS IN <foreach collection="target_exchange_status_arr" item="exchange_status" index="index" open="(" separator="," close=")">#{exchange_status}</foreach> OR RTNSTATUS = #{target_return_status})
+        AND (
+                EXCDLVINVOICENO IN <foreach collection="invoice_no_arr" item="invoice" index="index" open="(" separator="," close=")">#{invoice}</foreach>
+                OR RTNINVOICENO IN <foreach collection="invoice_no_arr" item="invoice" index="index" open="(" separator="," close=")">#{invoice}</foreach>
+            )
+    </select>
+
+	<select id="selectClaimDeliveringList" parameterType="somap" resultType="somap">
+		SELECT
+		 	CLMIDX, #{transUniqueCode} AS TRANSUNIQUECODE, #{seq} AS SEQ
+		    , IF(EXCDLVINVOICENO IS NOT NULL AND EXCDLVINVOICENO != '', EXCDLVINVOICENO, RTNINVOICENO) AS INVOICENO
+			, IF(EXCDLVLOGISTYPE IS NOT NULL AND EXCDLVLOGISTYPE != '', EXCDLVLOGISTYPE, RTNLOGISTYPE) AS LOGISTYPE
+			, CASE WHEN EXCDLVINVOICENO IS NOT NULL AND EXCDLVINVOICENO != '' THEN 'EXCHANGE_DELIVERY'
+				 WHEN RTNINVOICENO IS NOT NULL AND RTNINVOICENO != '' AND EXCSTATUS IN <foreach collection="target_exchange_status_arr" item="exchange_status" index="index" open="(" separator="," close=")">#{exchange_status}</foreach> THEN 'EXCHANGE_RETURN'
+				 WHEN RTNINVOICENO IS NOT NULL AND RTNINVOICENO != '' AND RTNSTATUS = #{target_return_status} THEN 'RETURN_RETURN'
+			ELSE '' END AS TYPE
+		FROM T_CLAIM
+		WHERE ISTRASH = 'F'
+		AND (EXCSTATUS IN <foreach collection="target_exchange_status_arr" item="exchange_status" index="index" open="(" separator="," close=")">#{exchange_status}</foreach> OR RTNSTATUS = #{target_return_status})
+		AND (EXCDLVINVOICENO = #{invoiceNo} OR RTNINVOICENO = #{invoiceNo})
+	</select>
+	
+	<select id="selectClaimRtnManDeliveringList" parameterType="somap" resultType="somap">
+		SELECT
+			  CLMIDX
+			, #{transUniqueCode} AS TRANSUNIQUECODE
+			, #{seq} AS SEQ
+			, RECINVOICENO AS INVOICENO
+			, RECLOGISTYPE AS LOGISTYPE
+			<if test="mantype == 'RTNMANDELIVTYPE' or mantype == 'RTNMANDELIVTYPE'">
+			, 'RTNMANDELIVTYPE' AS TYPE
+			</if>
+			<if test="mantype == 'EXMANDELIVTYPE' or mantype == 'EXMANDELIVTYPE'">
+			, 'EXMANDELIVTYPE' AS TYPE
+			</if>
+		FROM T_CLAIM
+		WHERE ISTRASH = 'F'
+		<if test="mantype == 'RTNMANDELIVTYPE' or mantype == 'RTNMANDELIVTYPE'">
+		AND RTNSTATUS = #{target_return_status}
+		</if>
+		<if test="mantype == 'EXMANDELIVTYPE' or mantype == 'EXMANDELIVTYPE'">
+		AND EXCSTATUS = #{target_return_status}
+		</if>
+		AND RECINVOICENO = #{invoiceNo}
+	</select>
+
+    <update id="updateClaimDeliveryStatus" parameterType="somap">
+        UPDATE T_CLAIM SET
+            <if test="type == 'EXCHANGE_DELIVERY' or type == 'EXCHANGE_RETURN'">
+                EXCSTATUS = #{af_status}
+                , EXCDLVSTATNAME = #{excdlvstatname}
+				<if test='iscomplete != null and iscomplete != "" and iscomplete == "T"'>
+				, EXCDLVCOMDATE = CURRENT_TIMESTAMP
+				</if>
+            </if>
+            <if test="type == 'RTNMANDELIVTYPE'">
+                  RTNSTATUS = #{af_status}
+                , RECCOMDATE = sysdate()
+                , RECSTATNAME = #{recstatname}
+            </if>
+            <if test="type == 'EXMANDELIVTYPE'">
+                  EXCSTATUS = #{af_status}
+                , RECCOMDATE = sysdate()
+                , RECSTATNAME = #{recstatname}
+            </if>
+            <if test="type == 'RETURN_RETURN'">
+                RTNSTATUS = #{af_status}
+            </if>
+		WHERE ISTRASH = 'F'
+        <if test="type == 'EXCHANGE_DELIVERY' or type == 'EXCHANGE_RETURN'">
+            AND EXCSTATUS = #{bf_status}
+        </if>
+        <if test="type == 'RETURN_RETURN'">
+            AND RTNSTATUS = #{bf_status}
+        </if>
+        AND CLMIDX IN <foreach collection="clmidxarr" item="clmidx" index="index" open="(" separator="," close=")">#{clmidx}</foreach>
+    </update>
+
+    <select id="selectClaimClmtypeCnt" parameterType="somap" resultType="somap">
+        SELECT	/* ClaimMapper.xml - selectClaimClmtypeCnt 클레임구분별 건수 조회 */
+			  IFNULL(tb.CLMTOTALCNT, 0) AS TOTALCNT
+			, IFNULL(tb.CANCELCNT, 0) AS CANCELCNT
+			, IFNULL(tb.RETURNCNT, 0) AS RETURNCNT
+			, IFNULL(tb.EXCHANGECNT, 0) AS EXCHANGECNT
+			, IFNULL(tc.CSCNT, 0) AS CSCNT
+		FROM t_comorder ta
+		LEFT OUTER JOIN (
+			SELECT 
+				  t.ORDERIDX
+				, COUNT(*) AS CLMTOTALCNT
+				, SUM(CASE WHEN t.CLMTYPE = 'CLM001' THEN 1 ELSE 0 END) AS CANCELCNT
+				, SUM(CASE WHEN t.CLMTYPE = 'CLM002' THEN 1 ELSE 0 END) AS RETURNCNT
+				, SUM(CASE WHEN t.CLMTYPE = 'CLM003' THEN 1 ELSE 0 END) AS EXCHANGECNT
+			FROM t_claim t
+			WHERE t.ISTRASH = 'F'
+			<if test='orderidx != null and orderidx != ""'>
+			AND t.ORDERIDX = #{orderidx}
+			</if>
+			<if test="dealerno != null and dealerno != '' ">
+			AND EXISTS (
+				SELECT 1
+				FROM t_claim_goods t1
+				INNER JOIN t_comorder_goods t2
+				WHERE t1.istrash = 'F'
+				AND t1.isclmoption = 'T'
+				AND t1.ordgdidx = t2.ordgdidx
+				AND dealerno = #{dealerno}
+			)
+			</if>
+			GROUP BY ORDERIDX
+		) tb ON ta.ORDERIDX = tb.ORDERIDX
+		LEFT OUTER JOIN (
+			SELECT
+				  tc.ORDERIDX
+				, count(*) AS CSCNT
+			FROM t_inquiry ti 
+			INNER JOIN t_inquiry_order tio ON ti.IDX = tio.INQIDX
+			INNER JOIN t_comorder_goods tcg ON tio.ORDGDIDX = tcg.ORDGDIDX
+			INNER JOIN t_comorder tc ON tcg.ORDERIDX  = tc.ORDERIDX
+			WHERE ti.ISTRASH = 'F'
+			<if test='orderidx != null and orderidx != ""'>
+			AND tc.ORDERIDX = #{orderidx}
+			</if>
+			<if test="dealerno != null and dealerno != '' ">
+			AND tcg.dealerno = #{dealerno}
+			</if>
+			GROUP BY tc.ORDERIDX
+		) tc ON ta.ORDERIDX = tc.ORDERIDX
+		WHERE ta.ISTRASH  = 'F'
+		<if test='ordno != null and ordno != ""'>
+		AND ta.ORDNO = #{ordno}
+		</if>
+    </select>
+    
+    <select id="selectAdminClaimList" parameterType="somap" resultType="somap">
+		/* ClaimMapper - selectAdminClaimList 상태별 클레임목록 조회 */
+		<include refid="selectAdminClaimSQL"/>
+		<include refid="adminClaimSortSQL"/>
+		<if test="startpage != null and !startpage.equals('') and endpage != null and !endpage.equals('')">
+		LIMIT #{startpage}, #{endpage}
+		</if>
+	</select>
+	
+	<select id="selectAdminClaimListCount" parameterType="somap" resultType="somap">
+		/* ClaimMapper - selectAdminClaimListCount 상태별 클레임목록 건수 조회*/
+		SELECT
+			  COUNT(*) AS TOTALCNT
+		FROM (<include refid="selectAdminClaimSQL"/>) t
+	</select>
+	
+	<select id="selectAdminClaimListForExcel" parameterType="somap" resultType="somap">
+		/* ClaimMapper - selectAdminClaimListForExcel 상태별 클레임목록 조회(엑셀용) */
+		<include refid="selectAdminClaimSQL"/>
+		<include refid="adminClaimSortSQL"/>
+	</select>
+    
+    <select id="selectAdminRefundList" parameterType="somap" resultType="somap">
+		/* ClaimMapper - selectAdminRefundList 클레임환불목록 조회 */
+		<include refid="selectAdminClaimRefundSQL"/>
+		<include refid="adminClaimSortSQL"/>
+		<if test="startpage != null and !startpage.equals('') and endpage != null and !endpage.equals('')">
+		LIMIT #{startpage}, #{endpage}
+		</if>
+	</select>
+	
+	<select id="selectAdminRefundListCount" parameterType="somap" resultType="somap">
+		/* ClaimMapper - selectAdminRefundListCount 클레임환불목록 건수 조회*/
+		SELECT
+			  COUNT(*) AS TOTALCNT
+		FROM (<include refid="selectAdminClaimRefundSQL"/>) t
+	</select>
+	
+	<select id="selectAdminRefundListForExcel" parameterType="somap" resultType="somap">
+		/* ClaimMapper - selectAdminRefundListForExcel 클레임환불목록 조회(엑셀용) */
+		<include refid="selectAdminClaimRefundSQL"/>
+		<include refid="adminClaimSortSQL"/>
+	</select>
+	
+	<sql id="selectAdminClaimSQL">
+		/* ClaimMapper - selectAdminClaimSQL 관리자용 클레임 조회*/
+		SELECT
+			  ta.ORDERIDX			/* 주문IDX */
+			, ta.CLMIDX				/* 클레임IDX */
+			, ta.CLMGDIDX			/* 클레임상품IDX */
+			, ta.ORDGDIDX			/* 주문상품IDX */
+			, DATE_FORMAT(ta.CLMREQDATE, '%Y-%m-%d %H:%i:%s') AS CLMREQDAY		/* 클레임요청일시 */
+			, DATE_FORMAT(ta.CLMREQDATE, '%Y-%m-%d') AS CLMREQDATE				/* 클레임요청일자 */
+			, DATE_FORMAT(ta.CLMREQDATE, '%H:%i:%s') AS CLMREQTIME				/* 클레임요청시간 */
+			, DATE_FORMAT(ta.CLMCOMPDATE, '%Y-%m-%d %H:%i:%s') AS CLMCOMPDAY	/* 클레임완료일시 */
+			, DATE_FORMAT(ta.CLMCOMPDATE, '%Y-%m-%d') AS CLMCOMPDATE			/* 클레임완료일자 */
+			, DATE_FORMAT(ta.CLMCOMPDATE, '%H:%i:%s') AS CLMCOMPTIME			/* 클레임완료시간 */
+		    , ta.CLMNO              /* 취소번호 */
+			, DATE_FORMAT(ta.ORDERDATE, '%Y-%m-%d %H:%i:%s') AS ORDERDAY		/* 주문일시 */
+			, DATE_FORMAT(ta.ORDERDATE, '%Y-%m-%d') AS ORDERDATE				/* 주문일자 */
+			, DATE_FORMAT(ta.ORDERDATE, '%H:%i:%s') AS ORDERTIME				/* 주문시간 */
+			, ta.ORDPATHTYPENAME	/* 주문경로명 */
+			, ta.ISNONMEMBER		/* 비회원여부 */
+			, ta.ISNONMEMBERNAME	/* 비회원여부명 */
+		    , ta.ORDUSERNO     		/* 주문자번호 */
+		    , ta.ORDNAME     		/* 주문자명 */
+		    , ta.ORDID     			/* 주문자ID */
+		    , ta.ORDTEL          	/* 주문자연락처 */
+		    , ta.ORDEMAIL			/* 주문자 EMAIL */
+		    , ta.DADAMEMBERTYPE   	/* 회원유형 */
+		    , ta.MEMBERTYPENAME   	/* 회원유형명 */
+		    , ta.MEMLVTYPE      	/* 회원등급 */
+		    , ta.MEMLVTYPENAME  	/* 회원등급명 */
+		    , ta.CLMTURN          	/* 클레임차수 */
+		    , ta.ISPBGOODS       	/* 직매입여부 */
+		    , ta.ISPBGOODSNAME    	/* 판매구분명 */
+		    , ta.DEALERNO           /* 파트너사번호 */
+		    , ta.DEALERNAME   		/* 파트너사명 */
+		    , ta.GOODSNO          	/* 상품번호 */
+		    , ta.GOODSCODE        	/* 상품코드 */
+		    , ta.OPTIONCODE      	/* 옵션코드 */
+		    , ta.GOODSNAME       	/* 상품명 */
+		    , ta.FULLPATH    		/* 이미지경로 */
+		    , ta.OPTIONCONTS        /* 옵션내용 */
+		    , ta.ORDCNT             /* 주문수량 */
+		    , ta.CLMCNT             /* 취소수량 */
+		    , ta.BFORDCNT 			/* 이전 주문수량 */
+		    , ta.BFORDCNT AS delivcnt			/* 이전 주문수량 */
+		    , ta.PRICE            	/* 판매단가 */
+		    , ta.TOTPRICE    		/* 판매금액 */
+		    , ta.CLMAMT    			/* 클레임(취소, 반품)금액 */
+		    , ta.CLMREQTYPENAME   	/* 신청구분명 */
+		    , ta.CNCSTATUS			/* 취소상태 */
+		    , ta.RTNSTATUS			/* 반품상태 */
+		    , ta.EXCSTATUS			/* 교환상태 */
+		    , ta.CNCSTATUSNAME      /* 취소상태명 */
+		    , ta.RTNSTATUSNAME      /* 반품상태명 */
+		    , ta.EXCSTATUSNAME      /* 교환상태명 */
+		    , ta.ORDNO              /* 주문번호 */
+		    , ta.GOODSTURN			/* 상품순번 */
+		FROM (
+				SELECT
+					  a.ORDERIDX
+					, a.CLMIDX
+					, c.CLMGDIDX
+					, c.ORDGDIDX
+					, a.CLMREQDATE
+				    , a.CLMCOMPDATE
+				    , a.CLMNO
+				    , b.ORDERDATE
+				    , b.ORDPATHTYPE
+				    , FN_GET_CODENAME(null, 'MUAPPCHTYPE', b.ORDPATHTYPE) AS ORDPATHTYPENAME
+				    , b.ISNONMEMBER
+					, IF(b.ISNONMEMBER = 'T', '비회원', '회원') AS ISNONMEMBERNAME
+				    , b.USERNO AS ORDUSERNO
+				    , b.ORDNAME
+				    , h.USERID AS ORDID
+				    , b.ORDTEL
+				    , b.ORDEMAIL
+				    , b.DADAMEMBERTYPE
+				    , FN_GET_CODENAME(NULL, 'DADAMEMBERTYPE', b.DADAMEMBERTYPE) AS MEMBERTYPENAME
+				    , b.MEMLVTYPE
+				    , FN_GET_CODENAME(NULL, 'MEMLVTYPE', b.MEMLVTYPE) AS MEMLVTYPENAME
+				    , sub.CLMTURN
+				    , d.ISPBGOODS
+				    , IF(d.ISPBGOODS='T', '자사', '파트너사') AS ISPBGOODSNAME
+				    , e.DEALERNO
+				    , (CASE WHEN e.DEALERNO is not null and e.DEALERNO != 0
+				            THEN (select NAME from t_dealer where USERNO = e.DEALERNO)
+				            ELSE ''
+				       END) AS DEALERNAME
+				    , c.GOODSNO
+				    , d.GOODSCODE
+				    , c.OPTIONCODE
+				    , d.GOODSNAME
+				    , FN_GET_FILE_URL(c.GOODSNO, 'FLT001', 'IGT003') AS FULLPATH
+				    , (CASE WHEN a.clmtype = 'CLM003' and j.BFCLMIDX = 0
+                            THEN FN_GET_OPTION_DETAIL(e.goodsno, e.optioncode, '\n')
+                            WHEN a.clmtype = 'CLM003' and j.BFCLMIDX > 0
+							THEN (SELECT FN_GET_OPTION_DETAIL(goodsno, optioncode, '\n') FROM t_claim_goods WHERE clmidx = j.bfclmidx AND ordgdidx = c.ordgdidx AND isclmoption = 'T')
+                            ELSE FN_GET_OPTION_DETAIL(c.goodsno, c.optioncode, '\n')
+					   END) AS OPTIONCONTS
+					, ifnull(e.FRSTORDCNT, 0) as bfordcnt
+				    , f.DELIVCNT AS ORDCNT
+				    , c.CLMCNT
+				    , c.PRICE
+				    , (e.PRICE*ifnull(e.FRSTORDCNT, 0)) AS TOTPRICE
+				    , (CASE WHEN (a.CLMTYPE = 'CLM001' AND c.CNCSTATUS NOT IN ('CNS003', 'CNS004'))
+				    		  OR (a.CLMTYPE = 'CLM002' AND a.RTNSTATUS NOT IN ('RTS004', 'RTS005') AND IFNULL(i.RTSRTNCNT, 0)=0)
+				    		  OR (a.CLMTYPE = 'CLM003' AND a.EXCSTATUS NOT IN ('EXS004', 'EXS005') AND IFNULL(i.EXSRTNCNT, 0)=0)
+				    		THEN c.PRICE*c.CLMCNT
+				    		ELSE NULL
+				       END) AS CLMAMT
+				    , FN_GET_CODENAME(null, 'CLMREQTYPE', a.CLMREQTYPE) AS CLMREQTYPENAME
+				    , c.CNCSTATUS
+				    , a.RTNSTATUS
+				    , a.EXCSTATUS
+				    , FN_GET_CODENAME(null, 'CNCSTATUS', c.CNCSTATUS) AS CNCSTATUSNAME
+				    , FN_GET_CODENAME(null, 'RTNSTATUS', a.RTNSTATUS) AS RTNSTATUSNAME
+				    , FN_GET_CODENAME(null, 'EXCSTATUS', a.EXCSTATUS) AS EXCSTATUSNAME
+				    , b.ORDNO
+				    , e.GOODSTURN
+				FROM t_claim a
+				INNER JOIN t_comorder b
+				    ON a.ORDERIDX = b.ORDERIDX 
+				   AND b.ISTRASH = 'F'
+				INNER JOIN t_claim_goods c
+				    ON a.CLMIDX = c.CLMIDX
+				INNER JOIN t_goods d 
+				    ON c.GOODSNO = d.GOODSNO
+				INNER JOIN t_comorder_goods e
+				    ON c.ORDGDIDX = e.ORDGDIDX 
+				    AND c.GOODSNO = e.GOODSNO
+				INNER JOIN (
+					SELECT ORDGDIDX, SUM(DELIVCNT) AS DELIVCNT
+					FROM t_comorder_goods_deliv
+					WHERE ISTRASH = 'F'
+					GROUP BY ORDGDIDX
+				) AS f ON e.ORDGDIDX = f.ORDGDIDX 
+				INNER JOIN (
+					SELECT 
+						  ta.ORDERIDX, ta.CLMTYPE, ta.CLMIDX
+						, row_number() over(partition by ta.ORDERIDX ORDER BY ta.CLMCOMPDATE IS NULL, ta.CLMCOMPDATE, ta.CLMREQDATE) AS CLMTURN
+					FROM t_claim ta
+					WHERE ta.ISTRASH = 'F'
+					<if test="clmtype != null and clmtype != '' ">
+					AND ta.CLMTYPE = #{clmtype}
+					</if>
+				) sub ON a.CLMIDX = sub.CLMIDX
+				LEFT OUTER JOIN t_tossreceipt g
+				    ON e.ORDERIDX = g.ORDERIDX 
+				LEFT OUTER JOIN t_user h ON b.USERNO = h.NO
+				LEFT OUTER JOIN (
+					SELECT
+					      cgh.CLMGDIDX
+					    , SUM(CASE WHEN cgh.AFTVAL='RTS009' THEN 1 ELSE 0 END) AS RTSRTNCNT
+					    , SUM(CASE WHEN cgh.AFTVAL='EXS011' THEN 1 ELSE 0 END) AS EXSRTNCNT
+					FROM t_claim_goods_hist cgh
+					WHERE cgh.AFTVAL IN ('RTS009', 'EXS011')
+					GROUP BY cgh.CLMGDIDX
+				) i ON c.CLMGDIDX = i.CLMGDIDX
+				LEFT OUTER JOIN T_EXCHANGE_HIST j ON a.CLMIDX = j.AFCLMIDX
+				WHERE a.SITEID = #{siteid}
+				AND a.ISTRASH = 'F'
+				AND c.ISCLMOPTION = 'T'
+				<if test="clmtype != null and clmtype != '' ">
+				AND a.CLMTYPE = #{clmtype}
+				</if>
+				<if test="dealerno != null and dealerno != '' ">
+				AND e.DEALERNO = #{dealerno}
+				</if>
+				<if test="sword != null and sword != '' ">
+					<choose>
+						<when test="skey == 'ordno'">
+						AND b.ORDNO LIKE CONCAT('%', #{sword}, '%')
+						</when>
+						<when test="skey == 'ordname'">
+						AND b.ORDNAME LIKE CONCAT('%', #{sword}, '%')
+						</when>
+						<when test="skey == 'ordid'">
+						AND h.USERID LIKE CONCAT('%', #{sword}, '%')
+						</when>
+						<when test="skey == 'ordtel'">
+						AND b.ORDTEL LIKE CONCAT('%', #{sword}, '%')
+						</when>
+						<when test="skey == 'clmno'">
+						AND a.CLMNO LIKE CONCAT('%', #{sword}, '%')
+						</when>
+						<otherwise>
+							<if test="skeyarr != null and skeyarr.size > 0">
+							AND
+							<foreach index="index" collection="skeyarr" item="item" open="(" close=")" separator="OR" >
+								<if test="item.key == 'ordno'">
+								b.ORDNO LIKE CONCAT('%', #{sword}, '%')
+								</if>
+								<if test="item.key == 'ordname'">
+								b.ORDNAME LIKE CONCAT('%', #{sword}, '%')
+								</if>
+								<if test="item.key == 'ordid'">
+								h.USERID LIKE CONCAT('%', #{sword}, '%')
+								</if>
+								<if test="item.key == 'ordtel'">
+								b.ORDTEL LIKE CONCAT('%', #{sword}, '%')
+								</if>
+								<if test="item.key == 'clmno'">
+								a.CLMNO LIKE CONCAT('%', #{sword}, '%')
+								</if>
+							</foreach>
+							</if>
+						</otherwise>
+					</choose>
+				</if>
+				<if test="sword == null or sword == '' ">
+					<if test="dtkey != null and dtkey != '' ">
+						<choose>
+							<when test="dtkey == 'clmreq'">
+							AND a.CLMREQDATE BETWEEN STR_TO_DATE(CONCAT(#{startdate},'000000'), '%Y-%m-%d%H%i%s') AND STR_TO_DATE(CONCAT(#{enddate},'235959'), '%Y-%m-%d%H%i%s')
+							</when>
+							<when test="dtkey == 'clmcomp'">
+							AND a.CLMCOMPDATE BETWEEN STR_TO_DATE(CONCAT(#{startdate},'000000'), '%Y-%m-%d%H%i%s') AND STR_TO_DATE(CONCAT(#{enddate},'235959'), '%Y-%m-%d%H%i%s')
+							</when>
+							<when test="dtkey == 'order'">
+							AND b.ORDERDATE BETWEEN STR_TO_DATE(CONCAT(#{startdate},'000000'), '%Y-%m-%d%H%i%s') AND STR_TO_DATE(CONCAT(#{enddate},'235959'), '%Y-%m-%d%H%i%s')
+							</when>
+							<otherwise>
+							AND ( a.CLMREQDATE BETWEEN STR_TO_DATE(CONCAT(#{startdate},'000000'), '%Y-%m-%d%H%i%s') AND STR_TO_DATE(CONCAT(#{enddate},'235959'), '%Y-%m-%d%H%i%s')
+								OR a.CLMCOMPDATE BETWEEN STR_TO_DATE(CONCAT(#{startdate},'000000'), '%Y-%m-%d%H%i%s') AND STR_TO_DATE(CONCAT(#{enddate},'235959'), '%Y-%m-%d%H%i%s')
+								OR b.ORDERDATE BETWEEN STR_TO_DATE(CONCAT(#{startdate},'000000'), '%Y-%m-%d%H%i%s') AND STR_TO_DATE(CONCAT(#{enddate},'235959'), '%Y-%m-%d%H%i%s') )
+							</otherwise>
+						</choose>
+					</if>
+			    </if>
+				<if test='clmreqtypearr != null and clmreqtypearr.size > 0'>
+				AND
+					<foreach index="index" collection="clmreqtypearr" item="_item" open="(" close=")" separator="OR" >
+					a.CLMREQTYPE = #{_item}
+					</foreach>
+				</if>
+				<if test='cncstatusarr != null and cncstatusarr.size > 0'>
+				AND
+					<foreach index="index" collection="cncstatusarr" item="_item" open="(" close=")" separator="OR" >
+					c.CNCSTATUS = #{_item}
+					</foreach>
+				</if>
+				<if test='rtnstatusarr != null and rtnstatusarr.size > 0'>
+				AND
+					<foreach index="index" collection="rtnstatusarr" item="_item" open="(" close=")" separator="OR" >
+					a.RTNSTATUS = #{_item}
+					</foreach>
+				</if>
+				<if test='excstatusarr != null and excstatusarr.size > 0'>
+				AND
+					<foreach index="index" collection="excstatusarr" item="_item" open="(" close=")" separator="OR" >
+					a.EXCSTATUS = #{_item}
+					</foreach>
+				</if>
+			) ta
+		WHERE 1 = 1
+		<if test="gdword != null and gdword != '' ">
+			<choose>
+				<when test="gdkey == 'goodsname'">
+				AND ta.GOODSNAME LIKE CONCAT('%', #{gdword}, '%')
+				</when>
+				<when test="gdkey == 'goodscode'">
+				AND ta.GOODSCODE LIKE CONCAT('%', #{gdword}, '%')
+				</when>
+				<when test="gdkey == 'optioncode'">
+				AND ta.OPTIONCODE LIKE CONCAT('%', #{gdword}, '%')
+				</when>
+				<when test="gdkey == 'optionname'">
+				AND ta.OPTIONCONTS LIKE CONCAT('%', #{gdword}, '%')
+				</when>
+				<otherwise>
+				AND ( ta.GOODSNAME LIKE CONCAT('%', #{gdword}, '%')
+				   OR ta.GOODSCODE LIKE CONCAT('%', #{gdword}, '%')
+				   OR ta.OPTIONCODE LIKE CONCAT('%', #{gdword}, '%')
+				   OR ta.OPTIONCONTS LIKE CONCAT('%', #{gdword}, '%') )
+				</otherwise>
+			</choose>
+		</if>
+	</sql>
+	
+	<sql id="selectAdminClaimRefundSQL">
+		/* ClaimMapper - selectAdminClaimRefundSQL 관리자용 환불내역 조회*/
+		SELECT
+			  ta.CLMIDX			/* 클레임IDX */
+			, ta.CLMNO			/* 클레임번호 */
+			, DATE_FORMAT(ta.CLMCOMPDATE, '%Y-%m-%d %H:%s:%i') AS CLMCOMPDATE	/* 클레임완료일 */
+			, DATE_FORMAT(ta.ORDERDATE, '%Y-%m-%d %H:%s:%i') AS ORDERDATE		/* 주문일 */
+		    , ta.ISNONMEMBERNAME/* 비회원여부 */
+		    , ta.ORDNO			/* 주문번호 */
+		    , ta.ORDUSERNO		/* 주문자번호 */
+		    , ta.ORDNAME		/* 주문자명 */
+		    , ta.ORDID			/* 주문자ID */
+		    , ta.ORDTEL			/* 주문자연락처 */
+		    , ta.DADAMEMBERTYPE	/* 회원유형 */
+		    , ta.MEMBERTYPENAME	/* 회원유형명 */
+		    , ta.MEMLVTYPE		/* 회원등급 */
+		    , ta.MEMLVTYPENAME	/* 회원등급명 */
+		    , ta.PAYWAYTYPE		/* 결제수단(환불) */
+		    , ta.PAYWAYTYPENAME	/* 결제수단명(환불) */
+		    , ta.FINADJUSTAMT	/* 최종조정금액(환불금액) */
+		    , ta.REFBANK		/* 환불은행 */
+		    , ta.REFACCNUMBER	/* 환불계좌번호 */
+		    , ta.REFCUSNAME		/* 환불예금주 */
+		    , ta.CLMSTATUSNAME	/* 클레임상태명 */
+		    , '' AS BFORDCNT	/* 공통정렬 사용 */
+		FROM (
+			SELECT
+				  a.CLMIDX
+				, a.CLMNO
+			    , a.CLMCOMPDATE
+			    , a.CLMREQDATE
+			    , b.ORDERDATE
+			    , b.ORDNO
+				, IF(b.ISNONMEMBER = 'T', '비회원', '회원') AS ISNONMEMBERNAME
+			    , b.USERNO AS ORDUSERNO
+			    , b.ORDNAME
+			    , c.USERID AS ORDID
+			    , b.ORDTEL
+			    , b.DADAMEMBERTYPE
+			    , FN_GET_CODENAME(NULL, 'DADAMEMBERTYPE', b.DADAMEMBERTYPE) AS MEMBERTYPENAME
+			    , b.MEMLVTYPE
+			    , FN_GET_CODENAME(NULL, 'MEMLVTYPE', b.MEMLVTYPE) AS MEMLVTYPENAME
+			    , b.PAYWAYTYPE
+			    , FN_GET_CODENAME(null, 'PAYWAYTYPE', b.PAYWAYTYPE) AS PAYWAYTYPENAME
+			    , a.FINADJUSTAMT
+			    , a.REFBANK
+			    , a.REFACCNUMBER
+			    , a.REFCUSNAME
+			    , (CASE WHEN a.CLMTYPE = 'CLM001' THEN a.CNCSTATUS
+			            WHEN a.CLMTYPE = 'CLM002' THEN a.RTNSTATUS
+			            WHEN a.CLMTYPE = 'CLM003' THEN a.EXCSTATUS
+			            ELSE ''
+			       END) AS CLMSTATUS
+			    , (CASE WHEN a.CLMTYPE = 'CLM001' THEN FN_GET_CODENAME(NULL, 'CNCSTATUS', a.CNCSTATUS)
+			            WHEN a.CLMTYPE = 'CLM002' THEN FN_GET_CODENAME(NULL, 'RTNSTATUS', a.RTNSTATUS)
+			            WHEN a.CLMTYPE = 'CLM003' THEN FN_GET_CODENAME(NULL, 'EXCSTATUS', a.EXCSTATUS)
+			            ELSE ''
+			       END) AS CLMSTATUSNAME
+			    , NULL AS GOODSCODE 	/* SortSql 같이 쓰기위한 용도 */
+			FROM T_CLAIM a
+			INNER JOIN T_COMORDER b
+			    ON a.ORDERIDX = b.ORDERIDX
+			   AND b.ISTRASH = 'F'
+			LEFT OUTER JOIN T_USER c ON b.USERNO = c.NO
+			WHERE a.SITEID = #{siteid}
+			AND a.ISTRASH = 'F'
+			AND a.FINADJUSTAMT <![CDATA[>]]> 0
+			<if test="sword != null and sword != '' ">
+				<choose>
+					<when test="skey == 'ordno'">
+					AND b.ORDNO LIKE CONCAT('%', #{sword}, '%')
+					</when>
+					<when test="skey == 'ordname'">
+					AND b.ORDNAME LIKE CONCAT('%', #{sword}, '%')
+					</when>
+					<when test="skey == 'ordid'">
+					AND c.USERID LIKE CONCAT('%', #{sword}, '%')
+					</when>
+					<when test="skey == 'ordtel'">
+					AND b.ORDTEL LIKE CONCAT('%', #{sword}, '%')
+					</when>
+					<otherwise>
+					AND ( b.ORDNO LIKE CONCAT('%', #{sword}, '%')
+					   OR b.ORDNAME LIKE CONCAT('%', #{sword}, '%')
+					   OR c.USERID LIKE CONCAT('%', #{sword}, '%')
+					   OR b.ORDTEL LIKE CONCAT('%', #{sword}, '%') )
+					</otherwise>
+				</choose>
+			</if>
+			<if test="sword == null or sword == ''">
+				<if test="dtkey != null and dtkey != '' ">
+			        <choose>
+			            <when test="dtkey == 'clmcomp'">
+			            AND a.CLMCOMPDATE BETWEEN STR_TO_DATE(CONCAT(#{startdate},'000000'), '%Y-%m-%d%H%i%s') AND STR_TO_DATE(CONCAT(#{enddate},'235959'), '%Y-%m-%d%H%i%s')
+			            </when>
+			            <when test="dtkey == 'order'">
+			            AND b.ORDERDATE BETWEEN STR_TO_DATE(CONCAT(#{startdate},'000000'), '%Y-%m-%d%H%i%s') AND STR_TO_DATE(CONCAT(#{enddate},'235959'), '%Y-%m-%d%H%i%s')
+			            </when>
+			            <otherwise>
+			            AND ( a.CLMCOMPDATE BETWEEN STR_TO_DATE(CONCAT(#{startdate},'000000'), '%Y-%m-%d%H%i%s') AND STR_TO_DATE(CONCAT(#{enddate},'235959'), '%Y-%m-%d%H%i%s')
+						   OR b.ORDERDATE BETWEEN STR_TO_DATE(CONCAT(#{startdate},'000000'), '%Y-%m-%d%H%i%s') AND STR_TO_DATE(CONCAT(#{enddate},'235959'), '%Y-%m-%d%H%i%s') )
+			            </otherwise>
+			        </choose>
+				</if>
+		    </if>
+		) ta
+		WHERE 1 = 1
+		<if test='clmstatusarr != null and clmstatusarr.size > 0'>
+		AND
+			<foreach index="index" collection="clmstatusarr" item="_item" open="(" close=")" separator="OR" >
+			ta.CLMSTATUS = #{_item}
+			</foreach>
+		</if>
+	</sql>
+	
+	<!-- 관리자용 클레임목록 정렬조건 -->
+	<sql id="adminClaimSortSQL">
+		<choose>
+			<when test="psort == 'clmreqdate_asc'">
+			ORDER BY ta.CLMREQDATE ASC, ta.ORDERDATE DESC, ta.GOODSCODE
+			</when>
+			<when test="psort == 'clmreqdate_desc'">
+			ORDER BY ta.CLMREQDATE DESC, ta.ORDERDATE DESC, ta.GOODSCODE
+			</when>
+			<when test="psort == 'clmcompdate_asc'">
+			ORDER BY ta.CLMCOMPDATE ASC, ta.CLMREQDATE DESC, ta.ORDERDATE DESC, ta.GOODSCODE
+			</when>
+			<when test="psort == 'clmcompdate_desc'">
+			ORDER BY ta.CLMCOMPDATE DESC, ta.CLMREQDATE DESC, ta.ORDERDATE DESC, ta.GOODSCODE
+			</when>
+			<when test="psort == 'clmno_asc'">
+			ORDER BY ta.CLMNO ASC, ta.CLMREQDATE DESC, ta.ORDERDATE DESC, ta.GOODSCODE
+			</when>
+			<when test="psort == 'clmno_desc'">
+			ORDER BY ta.CLMNO DESC, ta.CLMREQDATE DESC, ta.ORDERDATE DESC, ta.GOODSCODE
+			</when>
+			<when test="psort == 'orderdate_asc'">
+			ORDER BY ta.ORDERDATE ASC, ta.CLMREQDATE DESC, ta.GOODSCODE
+			</when>
+			<when test="psort == 'orderdate_desc'">
+			ORDER BY ta.ORDERDATE DESC, ta.CLMREQDATE DESC, ta.GOODSCODE
+			</when>
+			<when test="psort == 'ordname_asc'">
+			ORDER BY ta.ORDNAME ASC, ta.CLMREQDATE DESC, ta.ORDERDATE DESC, ta.GOODSCODE
+			</when>
+			<when test="psort == 'ordname_desc'">
+			ORDER BY ta.ORDNAME DESC, ta.CLMREQDATE DESC, ta.ORDERDATE DESC, ta.GOODSCODE
+			</when>
+			<when test="psort == 'ordid_asc'">
+			ORDER BY ta.ORDID ASC, ta.CLMREQDATE DESC, ta.ORDERDATE DESC, ta.GOODSCODE
+			</when>
+			<when test="psort == 'ordid_desc'">
+			ORDER BY ta.ORDID DESC, ta.CLMREQDATE DESC, ta.ORDERDATE DESC, ta.GOODSCODE
+			</when>
+			<when test="psort == 'ordtel_asc'">
+			ORDER BY ta.ORDTEL ASC, ta.CLMREQDATE DESC, ta.ORDERDATE DESC, ta.GOODSCODE
+			</when>
+			<when test="psort == 'ordtel_desc'">
+			ORDER BY ta.ORDTEL DESC, ta.CLMREQDATE DESC, ta.ORDERDATE DESC, ta.GOODSCODE
+			</when>
+			<when test="psort == 'isnonmember_asc'">
+			ORDER BY ta.ISNONMEMBERNAME ASC, ta.CLMREQDATE DESC, ta.ORDERDATE DESC, ta.GOODSCODE
+			</when>
+			<when test="psort == 'isnonmember_desc'">
+			ORDER BY ta.ISNONMEMBERNAME DESC, ta.CLMREQDATE DESC, ta.ORDERDATE DESC, ta.GOODSCODE
+			</when>
+			<when test="psort == 'membertype_asc'">
+			ORDER BY ta.MEMBERTYPENAME ASC, ta.CLMREQDATE DESC, ta.ORDERDATE DESC, ta.GOODSCODE
+			</when>
+			<when test="psort == 'membertype_desc'">
+			ORDER BY ta.MEMBERTYPENAME DESC, ta.CLMREQDATE DESC, ta.ORDERDATE DESC, ta.GOODSCODE
+			</when>
+			<when test="psort == 'memlvtype_asc'">
+			ORDER BY ta.MEMLVTYPENAME ASC, ta.CLMREQDATE DESC, ta.ORDERDATE DESC, ta.GOODSCODE
+			</when>
+			<when test="psort == 'memlvtype_desc'">
+			ORDER BY ta.MEMLVTYPENAME DESC, ta.CLMREQDATE DESC, ta.ORDERDATE DESC, ta.GOODSCODE
+			</when>
+			<when test="psort == 'clmturn_asc'">
+			ORDER BY ta.CLMTURN ASC, ta.CLMREQDATE DESC, ta.ORDERDATE DESC, ta.GOODSCODE
+			</when>
+			<when test="psort == 'clmturn_desc'">
+			ORDER BY ta.CLMTURN DESC, ta.CLMREQDATE DESC, ta.ORDERDATE DESC, ta.GOODSCODE
+			</when>
+			<when test="psort == 'ispbgoods_asc'">
+			ORDER BY ta.ISPBGOODSNAME ASC, ta.CLMREQDATE DESC, ta.ORDERDATE DESC, ta.GOODSCODE
+			</when>
+			<when test="psort == 'ispbgoods_desc'">
+			ORDER BY ta.ISPBGOODSNAME DESC, ta.CLMREQDATE DESC, ta.ORDERDATE DESC, ta.GOODSCODE
+			</when>
+			<when test="psort == 'dealername_asc'">
+			ORDER BY ta.DEALERNAME ASC, ta.CLMREQDATE DESC, ta.ORDERDATE DESC, ta.GOODSCODE
+			</when>
+			<when test="psort == 'dealername_desc'">
+			ORDER BY ta.DEALERNAME DESC, ta.CLMREQDATE DESC, ta.ORDERDATE DESC, ta.GOODSCODE
+			</when>
+			<when test="psort == 'goodscode_asc'">
+			ORDER BY ta.GOODSCODE ASC, ta.CLMREQDATE DESC, ta.ORDERDATE DESC
+			</when>
+			<when test="psort == 'goodscode_desc'">
+			ORDER BY ta.GOODSCODE DESC, ta.CLMREQDATE DESC, ta.ORDERDATE DESC
+			</when>
+			<when test="psort == 'optioncode_asc'">
+			ORDER BY ta.OPTIONCODE ASC, ta.CLMREQDATE DESC, ta.ORDERDATE DESC, ta.GOODSCODE
+			</when>
+			<when test="psort == 'optioncode_desc'">
+			ORDER BY ta.OPTIONCODE DESC, ta.CLMREQDATE DESC, ta.ORDERDATE DESC, ta.GOODSCODE
+			</when>
+			<when test="psort == 'goodsname_asc'">
+			ORDER BY ta.GOODSNAME ASC, ta.CLMREQDATE DESC, ta.ORDERDATE DESC, ta.GOODSCODE
+			</when>
+			<when test="psort == 'goodsname_desc'">
+			ORDER BY ta.GOODSNAME DESC, ta.CLMREQDATE DESC, ta.ORDERDATE DESC, ta.GOODSCODE
+			</when>
+			<when test="psort == 'optionconts_asc'">
+			ORDER BY ta.OPTIONCONTS ASC, ta.CLMREQDATE DESC, ta.ORDERDATE DESC, ta.GOODSCODE
+			</when>
+			<when test="psort == 'optionconts_desc'">
+			ORDER BY ta.OPTIONCONTS DESC, ta.CLMREQDATE DESC, ta.ORDERDATE DESC, ta.GOODSCODE
+			</when>
+			<when test="psort == 'ordcnt_asc'">
+			ORDER BY ta.ORDCNT ASC, ta.CLMREQDATE DESC, ta.ORDERDATE DESC, ta.GOODSCODE
+			</when>
+			<when test="psort == 'ordcnt_desc'">
+			ORDER BY ta.ORDCNT DESC, ta.CLMREQDATE DESC, ta.ORDERDATE DESC, ta.GOODSCODE
+			</when>
+			<when test="psort == 'bfordcnt_asc'">
+			ORDER BY ta.BFORDCNT ASC, ta.CLMREQDATE DESC, ta.ORDERDATE DESC, ta.GOODSCODE
+			</when>
+			<when test="psort == 'bfordcnt_desc'">
+			ORDER BY ta.BFORDCNT DESC, ta.CLMREQDATE DESC, ta.ORDERDATE DESC, ta.GOODSCODE
+			</when>
+			<when test="psort == 'clmcnt_asc'">
+			ORDER BY ta.CLMCNT ASC, ta.CLMREQDATE DESC, ta.ORDERDATE DESC, ta.GOODSCODE
+			</when>
+			<when test="psort == 'clmcnt_desc'">
+			ORDER BY ta.CLMCNT DESC, ta.CLMREQDATE DESC, ta.ORDERDATE DESC, ta.GOODSCODE
+			</when>
+			<when test="psort == 'price_asc'">
+			ORDER BY ta.PRICE ASC, ta.CLMREQDATE DESC, ta.ORDERDATE DESC, ta.GOODSCODE
+			</when>
+			<when test="psort == 'price_desc'">
+			ORDER BY ta.PRICE DESC, ta.CLMREQDATE DESC, ta.ORDERDATE DESC, ta.GOODSCODE
+			</when>
+			<when test="psort == 'totprice_asc'">
+			ORDER BY ta.TOTPRICE ASC, ta.CLMREQDATE DESC, ta.ORDERDATE DESC, ta.GOODSCODE
+			</when>
+			<when test="psort == 'totprice_desc'">
+			ORDER BY ta.TOTPRICE DESC, ta.CLMREQDATE DESC, ta.ORDERDATE DESC, ta.GOODSCODE
+			</when>
+			<when test="psort == 'clmamt_asc'">
+			ORDER BY ta.CLMAMT ASC, ta.CLMREQDATE DESC, ta.ORDERDATE DESC, ta.GOODSCODE
+			</when>
+			<when test="psort == 'clmamt_desc'">
+			ORDER BY ta.CLMAMT DESC, ta.CLMREQDATE DESC, ta.ORDERDATE DESC, ta.GOODSCODE
+			</when>
+			<when test="psort == 'clmreqtype_asc'">
+			ORDER BY ta.CLMREQTYPENAME ASC, ta.CLMREQDATE DESC, ta.ORDERDATE DESC, ta.GOODSCODE
+			</when>
+			<when test="psort == 'clmreqtype_desc'">
+			ORDER BY ta.CLMREQTYPENAME DESC, ta.CLMREQDATE DESC, ta.ORDERDATE DESC, ta.GOODSCODE
+			</when>
+			<when test="psort == 'cncstatus_asc'">
+			ORDER BY ta.CNCSTATUSNAME ASC, ta.CLMREQDATE DESC, ta.ORDERDATE DESC, ta.GOODSCODE
+			</when>
+			<when test="psort == 'cncstatus_desc'">
+			ORDER BY ta.CNCSTATUSNAME DESC, ta.CLMREQDATE DESC, ta.ORDERDATE DESC, ta.GOODSCODE
+			</when>
+			<when test="psort == 'rtnstatus_asc'">
+			ORDER BY ta.RTNSTATUSNAME ASC, ta.CLMREQDATE DESC, ta.ORDERDATE DESC, ta.GOODSCODE
+			</when>
+			<when test="psort == 'rtnstatus_desc'">
+			ORDER BY ta.RTNSTATUSNAME DESC, ta.CLMREQDATE DESC, ta.ORDERDATE DESC, ta.GOODSCODE
+			</when>
+			<when test="psort == 'excstatus_asc'">
+			ORDER BY ta.EXCSTATUSNAME ASC, ta.CLMREQDATE DESC, ta.ORDERDATE DESC, ta.GOODSCODE
+			</when>
+			<when test="psort == 'excstatus_desc'">
+			ORDER BY ta.EXCSTATUSNAME DESC, ta.CLMREQDATE DESC, ta.ORDERDATE DESC, ta.GOODSCODE
+			</when>
+			<when test="psort == 'ordno_asc'">
+			ORDER BY ta.ORDNO ASC, ta.CLMREQDATE DESC, ta.ORDERDATE DESC, ta.GOODSCODE
+			</when>
+			<when test="psort == 'ordno_desc'">
+			ORDER BY ta.ORDNO DESC, ta.CLMREQDATE DESC, ta.ORDERDATE DESC, ta.GOODSCODE
+			</when>
+			<when test="psort == 'paywaytype_asc'">
+			ORDER BY ta.PAYWAYTYPENAME ASC, ta.CLMREQDATE DESC, ta.ORDERDATE DESC, ta.GOODSCODE
+			</when>
+			<when test="psort == 'paywaytype_desc'">
+			ORDER BY ta.PAYWAYTYPENAME DESC, ta.CLMREQDATE DESC, ta.ORDERDATE DESC, ta.GOODSCODE
+			</when>
+			<when test="psort == 'finadjustamt_asc'">
+			ORDER BY ta.FINADJUSTAMT ASC, ta.CLMREQDATE DESC, ta.ORDERDATE DESC, ta.GOODSCODE
+			</when>
+			<when test="psort == 'finadjustamt_desc'">
+			ORDER BY ta.FINADJUSTAMT DESC, ta.CLMREQDATE DESC, ta.ORDERDATE DESC, ta.GOODSCODE
+			</when>
+			<when test="psort == 'refbank_asc'">
+			ORDER BY ta.REFBANK ASC, ta.CLMREQDATE DESC, ta.ORDERDATE DESC, ta.GOODSCODE
+			</when>
+			<when test="psort == 'refbank_desc'">
+			ORDER BY ta.REFBANK DESC, ta.CLMREQDATE DESC, ta.ORDERDATE DESC, ta.GOODSCODE
+			</when>
+			<when test="psort == 'refaccnumber_asc'">
+			ORDER BY ta.REFACCNUMBER ASC, ta.CLMREQDATE DESC, ta.ORDERDATE DESC, ta.GOODSCODE
+			</when>
+			<when test="psort == 'refaccnumber_desc'">
+			ORDER BY ta.REFACCNUMBER DESC, ta.CLMREQDATE DESC, ta.ORDERDATE DESC, ta.GOODSCODE
+			</when>
+			<when test="psort == 'refcusname_asc'">
+			ORDER BY ta.REFCUSNAME ASC, ta.CLMREQDATE DESC, ta.ORDERDATE DESC, ta.GOODSCODE
+			</when>
+			<when test="psort == 'refcusname_desc'">
+			ORDER BY ta.REFCUSNAME DESC, ta.CLMREQDATE DESC, ta.ORDERDATE DESC, ta.GOODSCODE
+			</when>
+			<when test="psort == 'clmstatus_asc'">
+			ORDER BY ta.CLMSTATUSNAME ASC, ta.CLMREQDATE DESC, ta.ORDERDATE DESC, ta.GOODSCODE
+			</when>
+			<when test="psort == 'clmstatus_desc'">
+			ORDER BY ta.CLMSTATUSNAME DESC, ta.CLMREQDATE DESC, ta.ORDERDATE DESC, ta.GOODSCODE
+			</when>
+			<otherwise>
+			ORDER BY ta.CLMREQDATE DESC, ta.ORDERDATE DESC, ta.GOODSCODE
+			</otherwise>
+		</choose>
+	</sql>
+
+    <select id="selectAdminClaimRefundInfo" parameterType="somap" resultType="somap">
+        SELECT	/* ClaimMapper.xml - selectAdminClaimRefundInfo 환불상세정보 조회 */
+			  a.CLMIDX 				/* 클레임IDX */
+			, a.CLMNO 				/* 클레임번호 */
+			, a.ORDERIDX 			/* 주문IDX */
+			, b.ORDNO 				/* 주문번호 */
+			, DATE_FORMAT(a.CLMCOMPDATE, '%Y-%m-%d %H:%s:%i') AS CLMCOMPDATE	/* 클레임완료일 */
+			, b.USERNO 				/* 주문자번호 */
+			, IF(b.ISNONMEMBER = 'T', '비회원', '회원') AS ISNONMEMBERNAME
+			, b.ORDNAME				/* 주문자명 */
+			, c.USERID AS ORDID		/* 주문자ID */
+			, b.ORDTEL 				/* 주문자연락처 */
+			, a.RTNRESAMT 			/* 적립금반환금액 */
+			, a.RTNEPOAMT 			/* E포인트반환금액 */
+			, a.RTNEMPRESAMT 		/* 임직원적립금반환금액 */
+			, a.ADDRPAYTOTPRICE 	/* 추가실결제총금액 */
+			, a.FINADJUSTAMT 		/* 최종조정금액(환불금액) */
+			, b.PAYWAYTYPE 			/* 결제수단(환불) */
+			, FN_GET_CODENAME(NULL, 'PAYWAYTYPE', b.PAYWAYTYPE) AS PAYWAYTYPENAME	/* 결제수단명(환불) */
+			, a.REFBANK 			/* 환불계좌은행 */
+			, a.REFACCNUMBER 		/* 환불계좌번호 */
+			, a.REFCUSNAME 			/* 환불계좌고객이름 */
+		FROM t_claim a 
+		INNER JOIN t_comorder b 
+			ON a.ORDERIDX = b.ORDERIDX
+		   AND b.ISTRASH = 'F'
+		LEFT OUTER JOIN t_user c ON b.USERNO = c.NO
+		WHERE a.SITEID = #{siteid}
+		AND a.CLMIDX = #{clmidx}
+    </select>
+
+	<update id="updateClaimDeliveryInvoice" parameterType="somap">
+		UPDATE T_CLAIM SET
+		     RECINVOICENO = #{recinvoiceno}
+		   , RECLOGISTYPE  = (SELECT CMCODE FROM T_COMMON_CODE WHERE CMCLASS = 'LOGISTYPE' AND FIND_IN_SET(#{logisticscode}, DETAIL) LIMIT 1)
+		   , RECSTATNAME = #{recstatname}
+		WHERE SITEID = #{siteid}
+		AND CLMTYPE IN ('CLM002', 'CLM003')
+		AND CLMIDX = (SELECT CLMIDX FROM T_CLAIM_GOODS WHERE CLMGDIDX = #{clmgdidx})
+	</update>
+
+	<update id="updateClaimStatusNonCancel" parameterType="somap">
+		UPDATE T_CLAIM A INNER JOIN (
+			SELECT A.CLMIDX,
+			A.RTNSTATUS,
+			A.EXCSTATUS,
+			B.CLMGDIDX
+			FROM T_CLAIM A INNER JOIN T_CLAIM_GOODS B ON A.CLMIDX = B.CLMIDX
+			WHERE A.SITEID = #{siteid}
+			AND CASE  WHEN A.CLMTYPE = 'CLM002' THEN RTNSTATUS = #{rtnstatus}
+			WHEN A.CLMTYPE = 'CLM003' THEN EXCSTATUS = #{excstatus}
+			ELSE 1 <![CDATA[<>]]> 1 END
+		)B ON A.CLMIDX = B.CLMIDX
+		SET
+			  A.RTNSTATUS = IF(A.CLMTYPE = 'CLM002', #{after_rtnstatus}, NULL)
+			, A.EXCSTATUS = IF(A.CLMTYPE = 'CLM003', #{after_excstatus}, NULL)
+			, A.RECCOMDATE = (CASE WHEN 'EXS008' = #{after_excstatus} OR 'RTS008' = #{after_rtnstatus} THEN CURRENT_TIMESTAMP ELSE NULL END)
+			, A.RECSTATNAME = #{recstatname}
+		WHERE B.CLMGDIDX IN <foreach collection="clmgd_idx_arr" item="clmgdidx" index="index" open="(" separator="," close=")">#{clmgdidx}</foreach>
+	</update>
+
+	<update id="updateClaimTrackingError" parameterType="somap">
+		UPDATE T_CLAIM SET
+			<if test="type != null and type != '' and type == 'TRANS' ">
+				RECSTATNAME = #{errorname}, ISRECTRACKING = 'F'
+			</if>
+			<if test="type != null and type != '' and type == 'TRACE' ">
+				EXCDLVSTATNAME = #{errorname}, ISEXCTRACKING = 'F'
+			</if>
+		WHERE SITEID = #{siteid}
+		AND CLMNO = #{clmno}
+	</update>
+	
+	<select id="selectClaimDeliveringListForError" parameterType="somap" resultType="somap">
+		SELECT
+			CLMIDX, SITEID, ORDERIDX, CLMNO, CLMTURN, CLMTYPE, CNCTYPE, RTNTYPE, EXCTYPE
+		     , CNCSTATUS, RTNSTATUS, EXCSTATUS, CLMREQDATE, CLMCOMPDATE, CLMDETAIL, ORDTOTPRICE
+		     , DADADELIVAMT, PTNDELIVAMT, BASKETCPNIDX, TOTSALEPROMOAMT, TOTGOODSCPNAMT, TOTDELIVCPNAMT
+		     , BASKETCPNAMT, ADDPAYTOTPRICE, ADDPAYWAYTYPE, ADDRPAYTOTPRICE, ADDPAYMENTDATE, ADDPAYNAME
+		     , RTNAMT, RTNRESAMT, RTNEPOAMT, RTNEMPRESAMT, RTNPAYAMT, RECNAME, RECTEL, RECADDR, RECADDRDETAIL
+		     , RECADDRROAD, RECADDRDETAILROAD, RECLOGISTYPE, RECINVOICENO, RECCOMDATE, RECDELIVNAME, RECSTATNAME
+		     , FINADJUSTAMT, ADJUSTREASON, RTNLOGISTYPE, RTNINVOICENO, EXCDLVNAME, EXCDLVTEL, EXCDLVADDR
+		     , EXCDLVADDRDETAIL, EXCDLVADDRROAD, EXCDLVADDRDETAILROAD, EXCDLVLOGISTYPE, EXCDLVINVOICENO
+		     , EXCDLVCOMDATE, EXCDLVDELIVNAME, EXCDLVSTATNAME, REJREASON, DROPREASON, ISTRASH, REGUSERID, REGDATE
+		     , RECSIGUNGUCODE, RECBUILDINGCODE, EXCSIGUNGUCODE, EXCBUILDINGCODE, CLMREQTYPE, RECPOST, RCVREQTYPE
+		     , RCVREQDETAIL, EXCPOST, EXCREQTYPE, EXCREQDETAIL, CASHRECEIPTTYPE, CASHRECEIPTURL
+		     , CASHRECEIPTKEY, REFACCNUMBER, REFBANK, REFCUSNAME, RECROADNAMECODE, EXCROADNAMECODE
+			 , #{transUniqueCode} AS TRANSUNIQUECODE, #{seq} AS SEQ, #{errorName} AS ERRORMSG
+		FROM T_CLAIM
+		WHERE (EXCDLVINVOICENO = #{invoiceNo} OR RTNINVOICENO = #{invoiceNo})
+	  	AND (RTNLOGISTYPE = #{logisType} OR EXCDLVLOGISTYPE = #{logisType})
+		AND (EXCSTATUS IN ('EXS008', 'EXS009', 'EXS011') OR  RTNSTATUS IN ('RTS008', 'RTS009'))
+
+	</select>
+
+	<select id="selectClaimReturnListForError" parameterType="somap" resultType="somap">
+		SELECT
+			CLMIDX, SITEID, ORDERIDX, CLMNO, CLMTURN, CLMTYPE, CNCTYPE, RTNTYPE, EXCTYPE
+			 , CNCSTATUS, RTNSTATUS, EXCSTATUS, CLMREQDATE, CLMCOMPDATE, CLMDETAIL, ORDTOTPRICE
+			 , DADADELIVAMT, PTNDELIVAMT, BASKETCPNIDX, TOTSALEPROMOAMT, TOTGOODSCPNAMT, TOTDELIVCPNAMT
+			 , BASKETCPNAMT, ADDPAYTOTPRICE, ADDPAYWAYTYPE, ADDRPAYTOTPRICE, ADDPAYMENTDATE, ADDPAYNAME
+			 , RTNAMT, RTNRESAMT, RTNEPOAMT, RTNEMPRESAMT, RTNPAYAMT, RECNAME, RECTEL, RECADDR, RECADDRDETAIL
+			 , RECADDRROAD, RECADDRDETAILROAD, RECLOGISTYPE, RECINVOICENO, RECCOMDATE, RECDELIVNAME, RECSTATNAME
+			 , FINADJUSTAMT, ADJUSTREASON, RTNLOGISTYPE, RTNINVOICENO, EXCDLVNAME, EXCDLVTEL, EXCDLVADDR
+			 , EXCDLVADDRDETAIL, EXCDLVADDRROAD, EXCDLVADDRDETAILROAD, EXCDLVLOGISTYPE, EXCDLVINVOICENO
+			 , EXCDLVCOMDATE, EXCDLVDELIVNAME, EXCDLVSTATNAME, REJREASON, DROPREASON, ISTRASH, REGUSERID, REGDATE
+			 , RECSIGUNGUCODE, RECBUILDINGCODE, EXCSIGUNGUCODE, EXCBUILDINGCODE, CLMREQTYPE, RECPOST, RCVREQTYPE
+			 , RCVREQDETAIL, EXCPOST, EXCREQTYPE, EXCREQDETAIL, CASHRECEIPTTYPE, CASHRECEIPTURL
+			 , CASHRECEIPTKEY, REFACCNUMBER, REFBANK, REFCUSNAME, RECROADNAMECODE, EXCROADNAMECODE
+			 , #{transUniqueCode} AS TRANSUNIQUECODE, #{seq} AS SEQ, #{errorName} AS ERRORMSG
+		FROM T_CLAIM
+		WHERE RECINVOICENO = #{recinvoiceno}
+	  	AND RECLOGISTYPE = #{logisttype}
+	  	AND (EXCSTATUS IN ('EXS006') OR  RTNSTATUS IN ('RTS006'))
+	</select>
+	
+	<select id="selectClaimList" parameterType="somap" resultType="somap">
+		SELECT	/* ClaimMapper.xml - selectClaimList 주문클레임 목록 조회 */ 
+			  a.CLMIDX				/* 클레임ID */ 
+			, a.ORDERIDX			/* 주문IDX(FK) */ 
+			, a.CLMNO				/* 클레임번호 */ 
+			, a.CLMTURN				/* 클레임차수 */ 
+			, a.CLMTYPE				/* 클레임구분 */
+			, FN_GET_CODENAME(#{siteid}, 'CLMTYPE', a.CLMTYPE) as CLMTYPENM 
+			, a.CNCTYPE				/* 취소사유 */
+			, FN_GET_CODENAME(#{siteid}, 'CNCTYPE', a.CNCTYPE) as CNCTYPENM
+			, a.RTNTYPE				/* 반품사유 */
+			, FN_GET_CODENAME(#{siteid}, 'RTNTYPE', a.RTNTYPE) as RTNTYPENM 
+			, a.EXCTYPE				/* 교환사유 */ 
+			, FN_GET_CODENAME(#{siteid}, 'EXCTYPE', a.EXCTYPE) as EXCTYPENM
+			, a.CNCSTATUS			/* 취소상태 */
+			, FN_GET_CODENAME(#{siteid}, 'CNCSTATUS', a.CNCSTATUS) as CNCSTATUSNM
+			, a.RTNSTATUS			/* 반품상태 */
+			, FN_GET_CODENAME(#{siteid}, 'RTNSTATUS', a.RTNSTATUS) as RTNSTATUSNM
+			, a.EXCSTATUS			/* 교환상태 */
+			, FN_GET_CODENAME(#{siteid}, 'EXCSTATUS', a.EXCSTATUS) as EXCSTATUSNM
+			, DATE_FORMAT(a.CLMREQDATE, '%Y-%m-%d %H:%i:%s') as CLMREQDATE		/* 클레임신청일 */ 
+			, DATE_FORMAT(a.CLMCOMPDATE, '%Y-%m-%d %H:%i:%s') as CLMCOMPDATE	/* 클레임완료일 */ 
+			, a.ORDTOTPRICE			/* 주문총금액 */ 
+			, a.DADADELIVAMT		/* 자사배송비 */ 
+			, a.PTNDELIVAMT			/* 파트너배송비 */ 
+			, a.BASKETCPNIDX		/* 장바구니쿠폰IDX */ 
+			, a.TOTSALEPROMOAMT		/* 총프로모션 할인금액 */ 
+			, a.TOTGOODSCPNAMT		/* 총상품쿠폰할인금액 */ 
+			, a.TOTDELIVCPNAMT		/* 총배송비쿠폰할인금액 */ 
+			, a.BASKETCPNAMT		/* 장바구니쿠폰할인금액 */ 
+			, a.ADDPAYTOTPRICE		/* 추가결제예정금액 */ 
+			, a.ADDPAYWAYTYPE		/* 추가결제수단타입 */ 
+			, FN_GET_CODENAME(#{siteid}, 'PAYWAYTYPE',a.ADDPAYWAYTYPE) as ADDPAYWAYTYPENM		/* 추가결제수단타입 */ 
+			, a.ADDRPAYTOTPRICE		/* 추가실결제총금액 */ 
+			, DATE_FORMAT(a.ADDPAYMENTDATE, '%Y-%m-%d %H:%i:%s') as ADDPAYMENTDATE	/* 추가결제일 */ 
+			, a.ADDPAYNAME			/* 추가결제자명 */ 
+			, a.RTNAMT				/* 환불금액 */ 
+			, a.RTNRESAMT			/* 적립금반환금액 */ 
+			, a.RTNEPOAMT			/* E포인트반환금액 */ 
+			, a.RTNEMPRESAMT		/* 임직원적립금반환금액 */ 
+			, a.RTNPAYAMT			/* 결제취소금액 */ 
+			, a.RECNAME				/* 회수자명 */ 
+			, a.RECTEL				/* 회수연락처 */ 
+			, a.RECADDR				/* 회수지주소 */ 
+			, a.RECADDRDETAIL		/* 회수지주소상세 */ 
+			, a.RECADDRROAD			/* 회수지주소도로명 */ 
+			, a.RECADDRDETAILROAD	/* 회수지주소상세도로명 */ 
+			, a.RECLOGISTYPE		/* 회수택배사 */ 
+			, a.RECINVOICENO		/* 회수운송장번호 */ 
+			, DATE_FORMAT(a.RECCOMDATE, '%Y%m%d%H%i%s') as RECCOMDATE	/* 회수완료일 */ 
+			, a.RECDELIVNAME		/* 회수처리자 */ 
+			, a.RECSTATNAME			/* 회수상태명 */ 
+			, a.FINADJUSTAMT		/* 최종조정금액 */ 
+			, a.ADJUSTREASON		/* 조정사유 */ 
+			, a.RTNLOGISTYPE		/* 반송택배사 */ 
+			, a.RTNINVOICENO		/* 반송운송장번호 */ 
+			, a.EXCDLVNAME			/* 교환배송수령인명 */ 
+			, a.EXCDLVTEL			/* 교환배송연락처 */ 
+			, a.EXCDLVADDR			/* 교환배송지주소 */ 
+			, a.EXCDLVADDRDETAIL	/* 교환배송지주소상세 */ 
+			, a.EXCDLVADDRROAD		/* 교환배송지주소도로명 */ 
+			, a.EXCDLVADDRDETAILROAD	/* 교환배송지주소상세도로명 */ 
+			, a.EXCDLVLOGISTYPE		/* 교환배송택배사 */ 
+			, a.EXCDLVINVOICENO		/* 교환배송운송장번호 */ 
+			, DATE_FORMAT(a.EXCDLVCOMDATE, '%Y%m%d%H%i%s') as EXCDLVCOMDATE	/* 교환배송완료일시 */ 
+			, a.EXCDLVDELIVNAME		/* 교환배송처리자 */ 
+			, a.EXCDLVSTATNAME		/* 교환배송상태명 */ 
+			, a.REJREASON			/* 반려사유 */ 
+			, a.DROPREASON			/* 철회사유 */ 
+			, a.ISTRASH				/* 삭제여부 */ 
+			, a.RECSIGUNGUCODE		/* 회수지시군구코드 */ 
+			, a.RECBUILDINGCODE		/* 회수지빌딩코드 */ 
+			, a.EXCSIGUNGUCODE		/* 교환배송지시군구코드 */ 
+			, a.EXCBUILDINGCODE		/* 교환배송지빌딩코드 */ 
+			, a.CLMREQTYPE			/* 클레임신청구분 */ 
+			, a.RECPOST				/* 회수지우편번호 */ 
+			, a.RCVREQTYPE			/* 회수지배송요청타입 */ 
+			, a.RCVREQDETAIL		/* 회수지배송요청사항 */ 
+			, a.EXCPOST				/* 교환지우편번호 */ 
+			, a.EXCREQTYPE			/* 교환지배송요청타입 */ 
+			, a.EXCREQDETAIL		/* 교환지배송요청사항 */ 
+			, a.CASHRECEIPTTYPE		/* 현금영수증결제타입 */ 
+			, a.CASHRECEIPTURL		/* 현금영수증URL */ 
+			, a.CASHRECEIPTKEY		/* 현금영수증결제키 */ 
+			, a.REFACCNUMBER		/* 환불계좌번호 */ 
+			, a.REFBANK				/* 환불계좌은행 */ 
+			, a.REFCUSNAME			/* 환불계좌고객이름 */ 
+			, FN_GET_CODENAME(#{siteid}, 'TBANKTYPE', a.REFBANK) as REFBANKNM
+			, a.ADDDELIVAMT			/* 추가배송비 */ 
+			, a.TOTRTNDELIVAMT		/* 반환배송비 */ 
+			, a.RECROADNAMECODE   	/* 주문자도로명코드*/
+			, a.EXCROADNAMECODE   	/* 수령인도로명코드*/
+			, b.CARDCOMPANY
+			, b.PLANMONTH
+			, a.REJSUBREASON		/* 반려승인요청사유 */
+			, a.REJDENYREASON		/* 반려승인거부사유 */
+			, a.RTNREASON			/* 반송사유 */
+			, a.ISRECTRACKING		/* 회수추적요청여부 */
+			, a.ISEXCTRACKING		/* 교환배송추적요청여부 */
+		FROM T_CLAIM a
+		LEFT JOIN T_TOSSRECEIPT b
+        ON a.clmidx = b.clmidx
+		WHERE a.istrash = 'F'
+		<choose>
+			<when test="orderidx != null">
+			AND a.ORDERIDX = #{orderidx}
+			</when>
+			<otherwise>
+			AND a.CLMIDX = #{clmidx}
+			</otherwise>
+		</choose>
+		<if test='clmtype != null and clmtype != ""'>
+		AND a.clmtype = #{clmtype}
+		</if>
+		ORDER BY a.CLMCOMPDATE DESC, a.CLMREQDATE DESC
+	</select>
+	
+	<select id="selectClaimListForPrev" parameterType="somap" resultType="somap">
+		SELECT	/* ClaimMapper.xml - selectClaimListForPrev 클레임 목록 이전클레임비교 조회 */ 
+			  TTT.*
+			, FN_GET_CODENAME('base', 'CLMTYPE', CLMTYPE) as CLMTYPENAME
+            , FN_GET_CODENAME('base', 'PAYWAYTYPE', PAYWAYTYPE) as PAYWAYTYPENAME
+            , FN_GET_CODENAME('base', 'PAYWAYTYPE', ADDPAYWAYTYPE) as ADDPAYWAYTYPENAME
+            , FN_GET_CODENAME('base', 'TBANKTYPE', REFBANK) as REFBANKNAME
+		FROM (
+		    SELECT
+		    	  TT.NUM
+                , TT.ORDNO
+                , TT.CLMIDX
+                , TT.CLMNO
+                , TT.CLMTYPE
+                , DATE_FORMAT(TT.ORDERDATE, '%Y%m%d%H%i%s') as ORDERDATE
+                , DATE_FORMAT(TT.CLMREQDATE, '%Y%m%d%H%i%s') as CLMREQDATE
+                , DATE_FORMAT(TT.CLMCOMPDATE, '%Y%m%d%H%i%s') as CLMCOMPDATE
+                , DATE_FORMAT(TT.ADDPAYMENTDATE, '%Y%m%d%H%i%s') as ADDPAYMENTDATE
+                , TT.ORDTOTPRICE
+                , TT.DADADELIVAMT
+                , TT.PTNDELIVAMT 
+                , TT.TOTSALEPROMOAMT
+                , TT.TOTGOODSCPNAMT
+                , TT.TOTDELIVCPNAMT
+                , TT.BASKETCPNAMT
+                , TT.PAYWAYTYPE
+                , LAG(TT.CLMIDX) OVER (ORDER BY NUM) AS BFCLMIDX
+                , IFNULL(TT.ORDTOTPRICE - LAG(RTNORDTOTPRICE) OVER (ORDER BY NUM), TT.ORDTOTPRICE) AS BFORDTOTPRICE
+                , IFNULL(TT.DADADELIVAMT - LAG(RTNDADADELIVAMT) OVER (ORDER BY NUM), TT.DADADELIVAMT) AS BFDADADELIVAMT
+                , IFNULL(TT.PTNDELIVAMT - LAG(RTNPTNDELIVAMT) OVER (ORDER BY NUM), TT.PTNDELIVAMT) AS BFPTNDELIVAMT
+                , IFNULL(TT.TOTSALEPROMOAMT - LAG(RTNTOTSALEPROMOAMT) OVER (ORDER BY NUM), TT.TOTSALEPROMOAMT) AS BFTOTSALEPROMOAMT
+                , IFNULL(TT.TOTGOODSCPNAMT - LAG(RTNTOTGOODSCPNAMT) OVER (ORDER BY NUM), TT.TOTGOODSCPNAMT) AS BFTOTGOODSCPNAMT
+                , IFNULL(TT.TOTDELIVCPNAMT - LAG(RTNTOTDELIVCPNAMT) OVER (ORDER BY NUM), TT.TOTDELIVCPNAMT) AS BFTOTDELIVCPNAMT
+                , IFNULL(TT.BASKETCPNAMT - LAG(RTNBASKETCPNAMT) OVER (ORDER BY NUM), TT.BASKETCPNAMT) AS BFBASKETCPNAMT        
+                , IFNULL(TT.PAYTOTPRICE - LAG(TOTRTNAMT) OVER (ORDER BY NUM), TT.PAYTOTPRICE) AS BFPAYTOTPRICE
+                , IFNULL(TT.RPAYTOTPRICE - LAG(TOTRTNPAYAMT) OVER (ORDER BY NUM), TT.RPAYTOTPRICE) AS BFRPAYTOTPRICE
+                , IFNULL(TT.RESERVETOTAMT - LAG(TOTRTNRESAMT) OVER (ORDER BY NUM), TT.RESERVETOTAMT) AS BFRESERVETOTAMT
+                , IFNULL(TT.EPOINTTOTAMT - LAG(TOTRTNEPOAMT) OVER (ORDER BY NUM), TT.EPOINTTOTAMT) AS BFEPOINTTOTAMT
+                , IFNULL(TT.EMPRESERVETOTAMT - LAG(TOTRTNEMPRESAMT) OVER (ORDER BY NUM), TT.EMPRESERVETOTAMT) AS BFEMPRESERVETOTAMT
+                , TT.AFORDTOTPRICE
+                , TT.AFDADADELIVAMT
+                , TT.AFPTNDELIVAMT
+                , TT.AFTOTSALEPROMOAMT
+                , TT.AFTOTGOODSCPNAMT
+                , TT.AFTOTDELIVCPNAMT
+                , TT.AFBASKETCPNAMT
+                , TT.AFPAYTOTPRICE
+                , TT.AFRPAYTOTPRICE
+                , TT.AFRESERVETOTAMT
+                , TT.AFEPOINTTOTAMT
+                , TT.AFEMPRESERVETOTAMT
+                , TT.RTNORDTOTPRICE
+                , TT.RTNDADADELIVAMT
+                , TT.RTNPTNDELIVAMT
+                , TT.RTNTOTSALEPROMOAMT
+                , TT.RTNTOTGOODSCPNAMT
+                , TT.RTNTOTDELIVCPNAMT
+                , TT.RTNBASKETCPNAMT
+                , TT.RTNAMT
+                , TT.RTNPAYAMT
+                , TT.RTNRESAMT
+                , TT.RTNEPOAMT
+                , TT.RTNEMPRESAMT
+                , TT.FINADJUSTAMT
+                , TT.ADDPAYTOTPRICE
+                , TT.ADDRPAYTOTPRICE
+                , TT.ADDDELIVAMT
+                , TT.TOTRTNDELIVAMT
+                , TT.ADDPAYWAYTYPE
+                , TT.ADDPAYNAME
+                , TT.REFACCNUMBER
+                , TT.REFBANK
+                , TT.REFCUSNAME
+                , TT.CARDCOMPANY
+                , TT.PLANMONTH
+                , TT.VIRBANK
+                , TT.ACCNTNUMBER
+                , TT.TRSBANK
+                , TT.MOPCARRIER
+            FROM (
+                SELECT
+                      B.NUM
+                    , A.ORDERIDX
+                    , A.ORDNO
+                    , B.CLMIDX
+                    , B.CLMNO
+                    , A.ORDERDATE 
+                    , B.CLMREQDATE
+                    , B.CLMCOMPDATE
+                    , B.CLMTYPE
+                    , A.PAYWAYTYPE
+                    , B.ADDPAYMENTDATE
+                    , A.ORDTOTPRICE
+                    , A.DADADELIVAMT
+                    , A.PTNDELIVAMT 
+                    , A.TOTSALEPROMOAMT
+                    , A.TOTGOODSCPNAMT
+                    , A.TOTDELIVCPNAMT
+                    , A.BASKETCPNAMT
+                    , A.PAYTOTPRICE
+                    , A.RESERVETOTAMT
+                    , A.EPOINTTOTAMT
+                    , A.EMPRESERVETOTAMT
+                    , A.RPAYTOTPRICE
+                    , A.ORDTOTPRICE - SUM(B.ORDTOTPRICE) OVER (ORDER BY NUM) AS AFORDTOTPRICE
+                    , A.DADADELIVAMT - SUM(B.DADADELIVAMT) OVER (ORDER BY NUM) AS AFDADADELIVAMT
+                    , A.PTNDELIVAMT - SUM(B.PTNDELIVAMT) OVER (ORDER BY NUM) AS AFPTNDELIVAMT
+                    , A.TOTSALEPROMOAMT - SUM(B.TOTSALEPROMOAMT) OVER (ORDER BY NUM) AS AFTOTSALEPROMOAMT
+                    , A.TOTGOODSCPNAMT - SUM(B.TOTGOODSCPNAMT) OVER (ORDER BY NUM) AS AFTOTGOODSCPNAMT
+                    , A.TOTDELIVCPNAMT - SUM(B.TOTDELIVCPNAMT) OVER (ORDER BY NUM) AS AFTOTDELIVCPNAMT
+                    , A.BASKETCPNAMT - SUM(B.BASKETCPNAMT) OVER (ORDER BY NUM) AS AFBASKETCPNAMT
+                    , A.PAYTOTPRICE - SUM(B.RTNAMT) OVER (ORDER BY NUM) AS AFPAYTOTPRICE
+                    , A.RPAYTOTPRICE - SUM(B.RTNPAYAMT) OVER (ORDER BY NUM) AS AFRPAYTOTPRICE 
+                    , A.RESERVETOTAMT - SUM(B.RTNRESAMT) OVER (ORDER BY NUM) AS AFRESERVETOTAMT 
+                    , A.EPOINTTOTAMT - SUM(B.RTNEPOAMT) OVER (ORDER BY NUM) AS AFEPOINTTOTAMT
+                    , A.EMPRESERVETOTAMT - SUM(B.RTNEMPRESAMT) OVER (ORDER BY NUM) AS AFEMPRESERVETOTAMT
+                    , SUM(B.ORDTOTPRICE) OVER (ORDER BY NUM) AS RTNORDTOTPRICE
+                    , SUM(B.DADADELIVAMT) OVER (ORDER BY NUM) AS RTNDADADELIVAMT
+                    , SUM(B.PTNDELIVAMT) OVER (ORDER BY NUM) AS RTNPTNDELIVAMT
+                    , SUM(B.TOTSALEPROMOAMT) OVER (ORDER BY NUM) AS RTNTOTSALEPROMOAMT
+                    , SUM(B.TOTGOODSCPNAMT) OVER (ORDER BY NUM) AS RTNTOTGOODSCPNAMT
+                    , SUM(B.TOTDELIVCPNAMT) OVER (ORDER BY NUM) AS RTNTOTDELIVCPNAMT
+                    , SUM(B.BASKETCPNAMT) OVER (ORDER BY NUM) AS RTNBASKETCPNAMT
+                    , SUM(B.RTNAMT) OVER (ORDER BY NUM) AS TOTRTNAMT
+                    , SUM(B.RTNPAYAMT) OVER (ORDER BY NUM) AS TOTRTNPAYAMT
+                    , SUM(B.RTNRESAMT) OVER (ORDER BY NUM) AS TOTRTNRESAMT
+                    , SUM(B.RTNEPOAMT) OVER (ORDER BY NUM) AS TOTRTNEPOAMT
+                    , SUM(B.RTNEMPRESAMT) OVER (ORDER BY NUM) AS TOTRTNEMPRESAMT
+                    , SUM(B.FINADJUSTAMT) OVER (ORDER BY NUM) AS TOTFINADJUSTAMT
+                    , SUM(B.ADDPAYTOTPRICE) OVER (ORDER BY NUM) AS TOTADDPAYTOTPRICE
+                    , SUM(B.ADDRPAYTOTPRICE) OVER (ORDER BY NUM) AS TOTADDRPAYTOTPRICE
+                    , SUM(B.ADDDELIVAMT) OVER (ORDER BY NUM) AS TOTADDDELIVAMT
+                    , SUM(B.TOTRTNDELIVAMT) OVER (ORDER BY NUM) AS TOTRTNDELIVAMT
+                    , B.RTNAMT
+                    , B.RTNPAYAMT
+                    , B.RTNRESAMT
+                    , B.RTNEPOAMT
+                    , B.RTNEMPRESAMT
+                    , B.FINADJUSTAMT
+                    , B.ADDPAYTOTPRICE
+                    , B.ADDRPAYTOTPRICE
+                    , B.ADDDELIVAMT
+                    , B.TOTRTNDELIVAMT AS RTNDELIVAMT
+                    , B.ADDPAYWAYTYPE
+                    , B.ADDPAYNAME
+                    , B.REFACCNUMBER
+                    , B.REFBANK
+                    , B.REFCUSNAME
+                    , C.CARDCOMPANY 
+                    , C.PLANMONTH
+                    , C.VIRBANK
+                    , C.ACCNTNUMBER
+                    , C.TRSBANK
+                    , C.MOPCARRIER
+                FROM T_COMORDER A
+                INNER JOIN (
+                    SELECT
+                          NUM
+                        , T.CLMIDX
+                        , T.ORDERIDX
+                        , T.CLMNO
+                        , T.CLMREQDATE
+                        , T.CLMCOMPDATE
+                        , T.CLMTYPE
+                        , T.CNCSTATUS
+                        , T.RTNSTATUS
+                        , T.EXCSTATUS
+                        , T.ORDTOTPRICE
+                        , T.DADADELIVAMT
+                        , T.PTNDELIVAMT
+                        , T.TOTSALEPROMOAMT
+                        , T.TOTGOODSCPNAMT
+                        , T.TOTDELIVCPNAMT
+                        , T.BASKETCPNAMT
+                        , T.RTNAMT
+                        , T.RTNRESAMT
+                        , T.RTNEPOAMT
+                        , T.RTNEMPRESAMT
+                        , T.RTNPAYAMT
+                        , T.FINADJUSTAMT
+                        , T.ADJUSTREASON
+                        , T.ADDPAYTOTPRICE
+                        , T.ADDRPAYTOTPRICE
+                        , T.ADDPAYWAYTYPE
+                        , T.ADDPAYMENTDATE
+                        , T.ADDPAYNAME
+                        , T.ADDDELIVAMT
+                        , T.TOTRTNDELIVAMT
+                        , T.REFACCNUMBER
+                        , T.REFBANK
+                        , T.REFCUSNAME
+		            FROM (
+		                SELECT
+		                      ROW_NUMBER() OVER(ORDER BY TC.CLMCOMPDATE IS NULL, TC.CLMCOMPDATE, TC.CLMREQDATE) AS NUM
+		                    , TC.*
+		                FROM T_CLAIM TC
+		                WHERE TC.ORDERIDX = #{orderidx}
+		                AND (TC.CNCSTATUS NOT IN ('CNS003','CNS004') OR TC.RTNSTATUS NOT IN ('RTS004','RTS005', 'RTS009') OR TC.EXCSTATUS NOT IN ('EXS004','EXS005','EXS011'))
+		                AND TC.ISTRASH = 'F'
+		            ) T
+		        ) B
+		        LEFT OUTER JOIN T_TOSSRECEIPT C
+		        ON B.CLMIDX = C.CLMIDX
+		        WHERE A.ORDERIDX = #{orderidx}
+		    ) TT
+		) TTT
+	</select>
+	
+	<select id="selectAdminClaimListForPrev" parameterType="somap" resultType="somap">
+		SELECT  /* ClaimMapper.xml - selectAdminClaimListForPrev 관리자 클레임 목록 이전클레임비교 조회 */ 
+		    TTT.*
+		FROM (
+		    SELECT
+		    	  TT.NUM
+				, TT.ORDNO
+				, TT.ORDNAME
+		        , TT.CLMIDX
+		        , TT.CLMNO
+		        , TT.CLMTYPE
+		        , TT.CLMSTATUS
+				, (CASE WHEN TT.CLMTYPE = 'CLM001' THEN FN_GET_CODENAME(#{siteid}, 'CNCSTATUS', TT.CLMSTATUS)
+						WHEN TT.CLMTYPE = 'CLM002' THEN FN_GET_CODENAME(#{siteid}, 'RTNSTATUS', TT.CLMSTATUS)
+						WHEN TT.CLMTYPE = 'CLM003' THEN FN_GET_CODENAME(#{siteid}, 'EXCSTATUS', TT.CLMSTATUS)
+				   END) AS CLMSTATUSNAME
+		        , DATE_FORMAT(TT.ORDERDATE, '%Y-%m-%d %H:%i:%s') as ORDERDATE
+		        , DATE_FORMAT(TT.CLMREQDATE, '%Y-%m-%d %H:%i:%s') as CLMREQDATE
+		        , DATE_FORMAT(TT.CLMCOMPDATE, '%Y-%m-%d %H:%i:%s') as CLMCOMPDATE
+		        , DATE_FORMAT(TT.ADDPAYMENTDATE, '%Y-%m-%d %H:%i:%s') as ADDPAYMENTDATE
+		        , FN_GET_CODENAME(#{siteid}, 'PAYWAYTYPE', TT.PAYWAYTYPE) as PAYWAYTYPENAME
+		        , FN_GET_CODENAME(#{siteid}, 'PAYWAYTYPE', TT.ADDPAYWAYTYPE) as ADDPAYWAYTYPENAME
+				, FN_GET_CODENAME(#{siteid}, 'TBANKTYPE', TT.REFBANK) as REFBANKNAME
+		        , TT.ORDTOTPRICE
+		        , TT.DADADELIVAMT
+		        , TT.PTNDELIVAMT 
+		        , TT.TOTSALEPROMOAMT
+		        , TT.TOTGOODSCPNAMT
+		        , TT.TOTDELIVCPNAMT
+		        , TT.BASKETCPNAMT
+		        , LAG(TT.CLMIDX) OVER (ORDER BY NUM) AS BFCLMIDX
+		        , IFNULL(TT.ORDTOTPRICE - LAG(RTNORDTOTPRICE) OVER (ORDER BY NUM), TT.ORDTOTPRICE) AS BFORDTOTPRICE
+                , IFNULL(TT.DADADELIVAMT - LAG(RTNDADADELIVAMT) OVER (ORDER BY NUM), TT.DADADELIVAMT) AS BFDADADELIVAMT
+                , IFNULL(TT.PTNDELIVAMT - LAG(RTNPTNDELIVAMT) OVER (ORDER BY NUM), TT.PTNDELIVAMT) AS BFPTNDELIVAMT
+		        , IFNULL(TT.TOTSALEPROMOAMT - LAG(RTNTOTSALEPROMOAMT) OVER (ORDER BY NUM), TT.TOTSALEPROMOAMT) AS BFTOTSALEPROMOAMT
+		        , IFNULL(TT.TOTGOODSCPNAMT - LAG(RTNTOTGOODSCPNAMT) OVER (ORDER BY NUM), TT.TOTGOODSCPNAMT) AS BFTOTGOODSCPNAMT
+		        , IFNULL(TT.TOTDELIVCPNAMT - LAG(RTNTOTDELIVCPNAMT) OVER (ORDER BY NUM), TT.TOTDELIVCPNAMT) AS BFTOTDELIVCPNAMT
+		        , IFNULL(TT.BASKETCPNAMT - LAG(RTNBASKETCPNAMT) OVER (ORDER BY NUM), TT.BASKETCPNAMT) AS BFBASKETCPNAMT        
+		        , IFNULL(TT.PAYTOTPRICE - LAG(TOTRTNAMT) OVER (ORDER BY NUM), TT.PAYTOTPRICE) AS BFPAYTOTPRICE
+		        , IFNULL(TT.RPAYTOTPRICE - LAG(TOTRTNPAYAMT) OVER (ORDER BY NUM), TT.RPAYTOTPRICE) AS BFRPAYTOTPRICE
+		        , IFNULL(TT.RESERVETOTAMT - LAG(TOTRTNRESAMT) OVER (ORDER BY NUM), TT.RESERVETOTAMT) AS BFRESERVETOTAMT
+		        , IFNULL(TT.EPOINTTOTAMT - LAG(TOTRTNEPOAMT) OVER (ORDER BY NUM), TT.EPOINTTOTAMT) AS BFEPOINTTOTAMT
+		        , IFNULL(TT.EMPRESERVETOTAMT - LAG(TOTRTNEMPRESAMT) OVER (ORDER BY NUM), TT.EMPRESERVETOTAMT) AS BFEMPRESERVETOTAMT
+		        , TT.AFORDTOTPRICE
+		        , TT.AFDADADELIVAMT
+		        , TT.AFPTNDELIVAMT
+		        , TT.AFTOTSALEPROMOAMT
+		        , TT.AFTOTGOODSCPNAMT
+		        , TT.AFTOTDELIVCPNAMT
+		        , TT.AFBASKETCPNAMT
+		        , TT.AFPAYTOTPRICE
+		        , TT.AFRPAYTOTPRICE
+		        , TT.AFRESERVETOTAMT
+		        , TT.AFEPOINTTOTAMT
+		        , TT.AFEMPRESERVETOTAMT
+		        , TT.RTNORDTOTPRICE
+		        , TT.RTNTOTSALEPROMOAMT
+		        , TT.RTNTOTGOODSCPNAMT
+		        , TT.RTNTOTDELIVCPNAMT
+		        , TT.RTNBASKETCPNAMT
+		        , TT.RTNAMT
+		        , TT.RTNPAYAMT
+		        , TT.RTNRESAMT
+		        , TT.RTNEPOAMT
+		        , TT.RTNEMPRESAMT
+		        , TT.FINADJUSTAMT
+		        , TT.ADDPAYTOTPRICE
+		        , TT.ADDRPAYTOTPRICE
+		        , TT.ADDDELIVAMT
+		        , TT.RTNDELIVAMT
+		        , TT.TOTRTNDELIVAMT
+		        , TT.ADDPAYWAYTYPE
+		        , TT.ADDPAYNAME
+		        , TT.REFACCNUMBER
+		        , TT.REFBANK
+		        , TT.REFCUSNAME
+		        , TT.CARDCOMPANY
+		        , TT.PLANMONTH
+				, TT.VIRBANK
+				, TT.ACCNTNUMBER
+				, TT.TRSBANK
+				, TT.MOPCARRIER
+				, TT.DEALERNOARR
+				, IFNULL((SELECT IF(ischuju = 'T', 'J', IF(isios = 'T', 'I', 'N')) FROM T_ISOLATION_FARE WHERE POST =  TT.RCVPOST  LIMIT 1), 'N') AS ISOLATETYPE 	/* 제주,도서산간구분(N : 일반, J :제주, I:도서산간) */
+		    FROM (
+		        SELECT
+		              B.NUM
+		            , A.ORDERIDX
+		            , A.ORDNO
+		            , A.ORDNAME
+		            , B.CLMIDX
+		            , B.CLMNO
+		            , A.ORDERDATE 
+		            , B.CLMREQDATE
+		            , B.CLMCOMPDATE
+		            , B.CLMTYPE
+		            , A.PAYWAYTYPE
+		            , B.ADDPAYMENTDATE
+		            , A.ORDTOTPRICE
+		            , A.DADADELIVAMT
+		            , A.PTNDELIVAMT 
+		            , A.TOTSALEPROMOAMT
+		            , A.TOTGOODSCPNAMT
+		            , A.TOTDELIVCPNAMT
+		            , A.BASKETCPNAMT
+		            , A.PAYTOTPRICE
+		            , A.RESERVETOTAMT
+		            , A.EPOINTTOTAMT
+		            , A.EMPRESERVETOTAMT
+		            , A.RPAYTOTPRICE
+		            , A.ORDTOTPRICE - SUM(B.ORDTOTPRICE) OVER (ORDER BY NUM) AS AFORDTOTPRICE
+		            , A.DADADELIVAMT - SUM(B.DADADELIVAMT) OVER (ORDER BY NUM) AS AFDADADELIVAMT
+		            , A.PTNDELIVAMT - SUM(B.PTNDELIVAMT) OVER (ORDER BY NUM) AS AFPTNDELIVAMT
+		            , A.TOTSALEPROMOAMT - SUM(B.TOTSALEPROMOAMT) OVER (ORDER BY NUM) AS AFTOTSALEPROMOAMT
+		            , A.TOTGOODSCPNAMT - SUM(B.TOTGOODSCPNAMT) OVER (ORDER BY NUM) AS AFTOTGOODSCPNAMT
+		            , A.TOTDELIVCPNAMT - SUM(B.TOTDELIVCPNAMT) OVER (ORDER BY NUM) AS AFTOTDELIVCPNAMT
+		            , A.BASKETCPNAMT - SUM(B.BASKETCPNAMT) OVER (ORDER BY NUM) AS AFBASKETCPNAMT
+		            , A.PAYTOTPRICE - SUM(B.RTNAMT) OVER (ORDER BY NUM) AS AFPAYTOTPRICE
+		            , A.RPAYTOTPRICE - SUM(B.RTNPAYAMT) OVER (ORDER BY NUM) AS AFRPAYTOTPRICE 
+		            , A.RESERVETOTAMT - SUM(B.RTNRESAMT) OVER (ORDER BY NUM) AS AFRESERVETOTAMT 
+		            , A.EPOINTTOTAMT - SUM(B.RTNEPOAMT) OVER (ORDER BY NUM) AS AFEPOINTTOTAMT
+		            , A.EMPRESERVETOTAMT - SUM(B.RTNEMPRESAMT) OVER (ORDER BY NUM) AS AFEMPRESERVETOTAMT
+		            , SUM(B.ORDTOTPRICE) OVER (ORDER BY NUM) AS RTNORDTOTPRICE
+		            , SUM(B.DADADELIVAMT) OVER (ORDER BY NUM) AS RTNDADADELIVAMT
+		            , SUM(B.PTNDELIVAMT) OVER (ORDER BY NUM) AS RTNPTNDELIVAMT
+		            , SUM(B.TOTSALEPROMOAMT) OVER (ORDER BY NUM) AS RTNTOTSALEPROMOAMT
+		            , SUM(B.TOTGOODSCPNAMT) OVER (ORDER BY NUM) AS RTNTOTGOODSCPNAMT
+		            , SUM(B.TOTDELIVCPNAMT) OVER (ORDER BY NUM) AS RTNTOTDELIVCPNAMT
+		            , SUM(B.BASKETCPNAMT) OVER (ORDER BY NUM) AS RTNBASKETCPNAMT
+		            , SUM(B.RTNAMT) OVER (ORDER BY NUM) AS TOTRTNAMT
+		            , SUM(B.RTNPAYAMT) OVER (ORDER BY NUM) AS TOTRTNPAYAMT
+		            , SUM(B.RTNRESAMT) OVER (ORDER BY NUM) AS TOTRTNRESAMT
+		            , SUM(B.RTNEPOAMT) OVER (ORDER BY NUM) AS TOTRTNEPOAMT
+		            , SUM(B.RTNEMPRESAMT) OVER (ORDER BY NUM) AS TOTRTNEMPRESAMT
+		            , SUM(B.FINADJUSTAMT) OVER (ORDER BY NUM) AS TOTFINADJUSTAMT
+		            , SUM(B.ADDPAYTOTPRICE) OVER (ORDER BY NUM) AS TOTADDPAYTOTPRICE
+		            , SUM(B.ADDRPAYTOTPRICE) OVER (ORDER BY NUM) AS TOTADDRPAYTOTPRICE
+		            , SUM(B.ADDDELIVAMT) OVER (ORDER BY NUM) AS TOTADDDELIVAMT
+		            , SUM(B.TOTRTNDELIVAMT) OVER (ORDER BY NUM) AS TOTRTNDELIVAMT
+		            , B.RTNAMT
+		            , B.RTNPAYAMT
+		            , B.RTNRESAMT
+		            , B.RTNEPOAMT
+		            , B.RTNEMPRESAMT
+		            , B.FINADJUSTAMT
+		            , B.ADDPAYTOTPRICE
+		            , B.ADDRPAYTOTPRICE
+		            , B.ADDDELIVAMT
+		            , B.TOTRTNDELIVAMT AS RTNDELIVAMT
+			        , B.ADDPAYWAYTYPE
+			        , B.ADDPAYNAME
+			        , B.REFACCNUMBER
+			        , B.REFBANK
+			        , B.REFCUSNAME
+					, B.DEALERNOARR
+					, B.CLMSTATUS
+		            , C.CARDCOMPANY	
+		            , C.PLANMONTH
+					, C.VIRBANK
+					, C.ACCNTNUMBER
+					, C.TRSBANK
+					, C.MOPCARRIER
+					, A.RCVPOST
+		        FROM T_COMORDER A
+		        INNER JOIN (
+		            SELECT
+		                  NUM
+		                , T.CLMIDX
+		                , T.ORDERIDX
+		                , T.CLMNO
+		                , T.CLMREQDATE
+		                , T.CLMCOMPDATE
+		                , T.CLMTYPE
+		                , T.CNCSTATUS
+		                , T.RTNSTATUS
+		                , T.EXCSTATUS
+		                , IF(ISVALID='T', T.ORDTOTPRICE, 0) AS ORDTOTPRICE
+		                , IF(ISVALID='T', T.DADADELIVAMT, 0) AS DADADELIVAMT
+		                , IF(ISVALID='T', T.PTNDELIVAMT, 0) AS PTNDELIVAMT
+		                , IF(ISVALID='T', T.TOTSALEPROMOAMT, 0) AS TOTSALEPROMOAMT
+		                , IF(ISVALID='T', T.TOTGOODSCPNAMT, 0) AS TOTGOODSCPNAMT
+		                , IF(ISVALID='T', T.TOTDELIVCPNAMT, 0) AS TOTDELIVCPNAMT
+		                , IF(ISVALID='T', T.BASKETCPNAMT, 0) AS BASKETCPNAMT
+		                , IF(ISVALID='T', T.RTNAMT, 0) AS RTNAMT
+		                , IF(ISVALID='T', T.RTNRESAMT, 0) AS RTNRESAMT
+		                , IF(ISVALID='T', T.RTNEPOAMT, 0) AS RTNEPOAMT
+		                , IF(ISVALID='T', T.RTNEMPRESAMT, 0) AS RTNEMPRESAMT
+		                , IF(ISVALID='T', T.RTNPAYAMT, 0) AS RTNPAYAMT
+		                , IF(ISVALID='T', T.FINADJUSTAMT, 0) AS FINADJUSTAMT
+		                , T.ADJUSTREASON
+		                , IF(ISVALID='T', T.ADDPAYTOTPRICE, 0) AS ADDPAYTOTPRICE
+		                , IF(ISVALID='T', T.ADDRPAYTOTPRICE, 0) AS ADDRPAYTOTPRICE
+		                , T.ADDPAYWAYTYPE
+		                , T.ADDPAYMENTDATE
+		                , T.ADDPAYNAME
+		                , IF(ISVALID='T', T.ADDDELIVAMT, 0) AS ADDDELIVAMT
+		                , IF(ISVALID='T', T.TOTRTNDELIVAMT, 0) AS TOTRTNDELIVAMT
+		                , T.REFACCNUMBER
+		                , T.REFBANK
+		                , T.REFCUSNAME
+		                , T.DEALERNOARR
+		                , (CASE WHEN T.CLMTYPE = 'CLM001' THEN T.CNCSTATUS
+		                		WHEN T.CLMTYPE = 'CLM002' THEN T.RTNSTATUS
+		                		WHEN T.CLMTYPE = 'CLM003' THEN T.EXCSTATUS
+		                		ELSE ''
+		                   END) AS CLMSTATUS
+		            FROM (
+		                SELECT
+		                      ROW_NUMBER() OVER(ORDER BY TC.CLMCOMPDATE IS NULL, TC.CLMCOMPDATE, TC.CLMREQDATE) AS NUM
+			                , CASE WHEN (TC.CNCSTATUS NOT IN ('CNS003','CNS004') OR TC.RTNSTATUS NOT IN ('RTS004','RTS005', 'RTS009') OR TC.EXCSTATUS NOT IN ('EXS004','EXS005', 'EXS011'))
+			                	   THEN 'T' ELSE 'F'
+			                   END AS ISVALID
+			                , TCG.DEALERNOARR
+		                    , TC.*
+		                FROM T_CLAIM TC
+		                INNER JOIN (
+							SELECT T1.CLMIDX, group_concat(T2.DEALERNO) AS DEALERNOARR
+							FROM T_CLAIM_GOODS T1
+							INNER JOIN T_COMORDER_GOODS T2 ON T1.ORDGDIDX = T2.ORDGDIDX
+							WHERE T1.ISTRASH = 'F'
+							AND T1.ISCLMOPTION = 'T'
+							GROUP BY T1.CLMIDX
+				        ) TCG ON TC.CLMIDX = TCG.CLMIDX
+		                WHERE TC.ORDERIDX = #{orderidx}
+		                AND TC.ISTRASH = 'F'
+		            ) T
+		        ) B
+		        LEFT OUTER JOIN T_TOSSRECEIPT C
+		        ON B.CLMIDX = C.CLMIDX
+		        WHERE A.ORDERIDX = #{orderidx}
+		    ) TT
+		) TTT
+	</select>
+	
+	<select id="selectOrderClaimApplyInfo" parameterType="somap" resultType="somap">
+		SELECT	/* ClaimMapper.xml - selectOrderClaimApplyInfo 주문클레임 신청정보 조회 */ 
+		      A.ORDERIDX
+		    , A.ORDNO
+		    , A.ORDNAME
+		    , A.ISFRSTORDER
+		    , A.PAYWAYTYPE
+		    , FN_GET_CODENAME(#{siteid}, 'PAYWAYTYPE', A.PAYWAYTYPE) AS PAYWAYTYPENAME
+		    , A.ORDTOTPRICE - IFNULL(B.ORDTOTPRICE, 0) AS ORDTOTPRICE       /* 주문총금액 */
+		    , A.DADADELIVAMT - IFNULL(B.DADADELIVAMT, 0) AS DADADELIVAMT   	/* 자사배송비 */
+		    , A.PTNDELIVAMT - IFNULL(B.PTNDELIVAMT, 0) AS PTNDELIVAMT   	/* 파트너배송비 */
+		    , A.TOTSALEPROMOAMT - IFNULL(B.TOTSALEPROMOAMT, 0) AS TOTSALEPROMOAMT /* 총프로모션 할인금액 */
+		    , A.TOTGOODSCPNAMT - IFNULL(B.TOTGOODSCPNAMT, 0) AS TOTGOODSCPNAMT    /* 총상품쿠폰할인금액 */
+		    , A.TOTDELIVCPNAMT - IFNULL(B.TOTDELIVCPNAMT, 0) AS TOTDELIVCPNAMT    /* 총배송비쿠폰할인금액 */
+		    , A.BASKETCPNAMT - IFNULL(B.BASKETCPNAMT, 0) AS BASKETCPNAMT    /* 장바구니쿠폰할인금액 */
+		    , A.PAYTOTPRICE - IFNULL(B.RTNAMT, 0) AS PAYTOTPRICE			/* 결제총금액 */
+		    , A.RPAYTOTPRICE - IFNULL(B.RTNPAYAMT, 0) AS RPAYTOTPRICE		/* 실결제총금액 */
+		    , A.RESERVETOTAMT - IFNULL(B.RTNRESAMT, 0) AS RESERVETOTAMT   	/* 적립금총사용금액 */
+		    , A.EPOINTTOTAMT - IFNULL(B.RTNEPOAMT, 0) AS EPOINTTOTAMT    	/* EPOINT총사용금액 */
+		    , A.EMPRESERVETOTAMT - IFNULL(B.RTNEMPRESAMT, 0) AS EMPRESERVETOTAMT  /* 임직원적립금총사용금액 */
+		    , A.RCVTEL1														/* 수령인연락처1 */
+			, A.RCVTEL2														/* 수령인연락처2 */
+			, A.RCVADDR														/* 수령인주소 */
+			, A.RCVADDRDETAIL												/* 수령인주소상세 */
+			, A.RCVADDRROAD													/* 수령인주소도로명 */
+			, A.RCVADDRDETAILROAD											/* 수령인주소상세도로명 */
+			, A.RCVREQTYPE													/* 배송요청타입 */
+			, A.RCVNAME														/* 수령인명 */
+			, A.RCVPOST														/* 수령인우편번호 */
+			, A.RCVBUILDINGCODE												/* 수령인빌딩코드 */
+			, A.RCVSIGUNGUCODE												/* 수령인시군구코드 */
+			, A.RCVROADNAMECODE												/* 수령인도로명코드 */
+			, IFNULL((SELECT IF(ischuju = 'T', 'J', IF(isios = 'T', 'I', 'N')) FROM T_ISOLATION_FARE WHERE POST =  A.RCVPOST LIMIT 1), 'N') AS ISOLATETYPE /* 제주,도서산간구분(N : 일반, J :제주, I:도서산간) */
+			, DATE_FORMAT(A.ORDERDATE, '%Y%m%d%H%i%s') as ORDERDATE			/* 주문일자 */
+			, A.ORDPATHTYPE
+		    , A.MEMLVTYPE
+		    , A.DADAMEMBERTYPE
+		    , IFNULL(B.TOTADDDELIVAMT, 0) AS TOTADDDELIVAMT
+		    , IFNULL(B.TOTRTNDELIVAMT, 0) AS TOTRTNDELIVAMT
+			<if test = 'clmtype != null and clmtype != ""'>
+			, IFNULL(C.CLMTURN, 0) as CLMTURN
+			</if>
+		FROM T_COMORDER A
+		LEFT JOIN (
+		        SELECT
+		              ORDERIDX
+		            , SUM(ORDTOTPRICE) AS ORDTOTPRICE        	/* 주문총금액 */
+		            , SUM(DADADELIVAMT) AS DADADELIVAMT       	/* 자사배송비 */
+		            , SUM(PTNDELIVAMT) AS PTNDELIVAMT        	/* 파트너배송비 */
+		            , SUM(TOTSALEPROMOAMT) AS TOTSALEPROMOAMT   /* 총프로모션 할인금액 */
+		            , SUM(TOTGOODSCPNAMT) AS TOTGOODSCPNAMT     /* 총상품쿠폰할인금액 */
+		            , SUM(TOTDELIVCPNAMT) AS TOTDELIVCPNAMT     /* 총배송비쿠폰할인금액 */
+		            , SUM(BASKETCPNAMT) AS BASKETCPNAMT       	/* 장바구니쿠폰할인금액 */
+		            , SUM(RTNAMT) AS RTNAMT 					/* 환불금액 */
+		            , SUM(RTNPAYAMT) AS RTNPAYAMT   			/* 결제취소금액 */
+		            , SUM(RTNRESAMT) AS RTNRESAMT          		/* 적립금총사용금액 */
+		            , SUM(RTNEPOAMT) AS RTNEPOAMT          		/* EPOINT총사용금액 */
+		            , SUM(RTNEMPRESAMT) AS RTNEMPRESAMT       	/* 임직원적립금총사용금액 */
+		        	, SUM(ADDDELIVAMT) AS TOTADDDELIVAMT
+		        	, SUM(TOTRTNDELIVAMT) AS TOTRTNDELIVAMT
+		        FROM T_CLAIM
+		        WHERE ORDERIDX = #{orderidx}
+		        AND ISTRASH = 'F'
+		        <if test='status == "APPLY"'>
+	            AND (CNCSTATUS NOT IN ('CNS003','CNS004') OR RTNSTATUS NOT IN ('RTS004','RTS005', 'RTS009') OR EXCSTATUS NOT IN ('EXS004','EXS005', 'EXS011')) -- 반려, 철회, 반송
+	            </if>
+	            <if test='status == "DETAIL"'>
+	            AND CLMIDX <![CDATA[<>]]> #{clmidx}
+	            AND (CNCSTATUS IN ('CNS005','CNS007') 
+	                    OR RTNSTATUS IN ('RTS006','RTS007','RTS008','RTS009','RTS010') 
+	                    OR EXCSTATUS IN ('EXS006','EXS007','EXS008','EXS009','EXS010','EXS011','EXS012'))
+	            </if>
+	            <if test='status == "COMPLETE"'>
+	            AND CLMIDX <![CDATA[<>]]> #{clmidx}
+				AND CLMCOMPDATE <![CDATA[<]]> (SELECT CLMCOMPDATE FROM t_claim WHERE CLMIDX = #{clmidx})
+	            AND (CNCSTATUS IN ('CNS005') 
+	            		OR RTNSTATUS IN ('RTS009','RTS010') 
+	                 	OR EXCSTATUS IN ('EXS011','EXS012'))
+	            </if>
+	            <if test='status == "ERP"'>
+	            AND CNCSTATUS = 'CNS005'
+	            </if>
+				<if test='status == "ERP_RETURN"'>
+				AND	(CNCSTATUS IN ('CNS005')
+					OR RTNSTATUS IN ('RTS009','RTS010')
+					OR EXCSTATUS IN ('EXS011','EXS012'))
+				</if>
+		        GROUP BY ORDERIDX
+		    ) B 
+		ON A.ORDERIDX = B.ORDERIDX
+		<if test = 'clmtype != null and clmtype != ""'>
+		LEFT OUTER JOIN (
+				SELECT
+					  ORDERIDX
+					, CLMTYPE
+					, max(CLMTURN) as CLMTURN
+				FROM T_CLAIM
+				WHERE ORDERIDX = #{orderidx}
+				AND CLMTYPE = #{clmtype}
+				AND ISTRASH = 'F'
+				GROUP BY ORDERIDX, CLMTYPE
+			) C
+		ON A.ORDERIDX = C.ORDERIDX
+		</if>
+		WHERE A.ORDERIDX = #{orderidx}
+	</select>
+	
+	<select id="selectMyClaimList" parameterType="somap" resultType="somap">
+		SELECT /* -- ClaimMapper.xml selectMyClaimList 마이페이지 클레임 목록조회 -- */
+            t.*
+            , case
+                when clmtype = 'CLM003' then price - promoamt - cpnamt
+                else saleamt
+              end realgoodsamt
+            , COUNT(*) OVER() as totcnt
+        FROM (
+            SELECT
+                  a.orderidx
+                , a.ordno
+                , date_format(a.orderdate, '%Y%m%d%H%i%s') as orderdate
+                , b.clmidx
+                , b.clmno
+                , b.clmtype
+                , FN_GET_CODENAME('base', 'CLMTYPE', b.clmtype) AS clmtypenm
+                , date_format(b.clmreqdate, '%Y%m%d%H%i%s') as clmreqdate
+                , CASE
+                    WHEN clmtype = 'CLM001' THEN c.cncstatus
+                    WHEN clmtype = 'CLM002' THEN b.rtnstatus
+                    ELSE b.excstatus
+                  END as clmstatus
+                , CASE
+                    WHEN clmtype = 'CLM001' THEN (SELECT detail FROM t_common_code WHERE cmclass = 'CNCSTATUS' AND cmcode = c.cncstatus)
+                    WHEN clmtype = 'CLM002' THEN (SELECT detail FROM t_common_code WHERE cmclass = 'RTNSTATUS' AND cmcode = b.rtnstatus)
+                    ELSE (SELECT detail FROM t_common_code WHERE cmclass = 'EXCSTATUS' AND cmcode = b.excstatus)
+                  END as clmstatusnm
+                , recinvoiceno
+                , rtninvoiceno
+                , c.clmgdidx
+                , c.ordgdidx
+                , d.dealerno
+                , c.goodsno
+                , d.goodscode
+                , c.optioncode
+                , c.price
+                , c.clmcnt
+                , c.delivfaretype
+                , c.realgoodsamt as saleamt
+                , ifnull((
+	                select ROUND(IF(ispercent = 'F', disprice, c.price * (dispercent/100)))
+	                from t_promotion 
+	                where promoidx = c.salepromoidx
+	              ), 0) as promoamt
+                , case
+                    when fn_check_directcoupon(c.goodscpnidx) = 'T' then (select goodscpnamt / frstordcnt from t_comorder_goods where ordgdidx = c.ordgdidx)
+                    else 0
+                  end as cpnamt
+                , c.delivtype
+                , d.goodsname
+                , case 
+                    when d.dealerno is null or d.dealerno = 0 then 'D.PLOT'
+                    else 
+                    (select name
+                     from t_dealer
+                     where userno = d.dealerno)
+                  end as dealernm
+                , FN_GET_OPTION_CONCAT(c.goodsno, c.optioncode, ' | ') as optionname
+                , e.name as brandname
+                , FN_GET_FILE_URL(c.goodsno, 'FLT001', #{imgtype}) as fullpath
+                , f.bfclmidx
+                , case
+                    when clmtype = 'CLM003' and (f.bfclmidx is null or f.bfclmidx = 0) then (SELECT FN_GET_OPTION_CONCAT(goodsno, optioncode, ' | ') FROM t_comorder_goods WHERE ordgdidx = c.ordgdidx)
+                    when clmtype = 'CLM003' and f.bfclmidx > 0 then (SELECT FN_GET_OPTION_CONCAT(goodsno, optioncode, ' | ') FROM t_claim_goods WHERE clmidx = f.bfclmidx and ordgdidx = c.ordgdidx and isclmoption = 'T')
+                    else null
+                  end as bfoptionname
+                , (select count(*) from t_exchange_hist where bfclmidx = b.clmidx) as bfclmcnt
+                , FN_GET_ORDER_STATUS(c.ordgdidx) as ordstatus
+            FROM t_comorder a
+            INNER JOIN t_claim b
+            on a.orderidx = b.orderidx
+            INNER JOIN t_claim_goods c
+            ON b.clmidx = c.clmidx
+            AND c.isclmoption = 'T'
+            INNER JOIN t_goods d
+            ON c.goodsno = d.goodsno
+            LEFT OUTER JOIN t_brand e
+            ON d.brandidx = e.idx
+            LEFT OUTER JOIN t_exchange_hist f
+            ON b.clmidx = f.afclmidx
+            WHERE a.istrash = 'F'
+            AND b.istrash  = 'F'
+            <choose>
+		    	<when test='ordno != null and ordno !=""'>
+		    	AND a.ordno = #{ordno}
+		    	</when>
+		    	<otherwise>
+		    	AND a.userno = #{userno}
+		    	</otherwise>
+		    </choose>
+		    <choose>
+				<when test='date == "m1"'>
+				AND date_format(b.clmreqdate, '%Y-%m-%d') <![CDATA[>=]]> DATE_FORMAT(date_add(now(), interval -1 month),'%Y-%m-%d')
+				</when>
+				<when test='date == "m3"'>
+				AND date_format(b.clmreqdate, '%Y-%m-%d') <![CDATA[>=]]> DATE_FORMAT(date_add(now(), interval -3 month),'%Y-%m-%d')
+				</when>
+				<when test='date == "m6"'>
+				AND date_format(b.clmreqdate, '%Y-%m-%d') <![CDATA[>=]]> DATE_FORMAT(date_add(now(), interval -6 month),'%Y-%m-%d')
+				</when>
+				<when test='date == "y1"'>
+				AND date_format(b.clmreqdate, '%Y-%m-%d') <![CDATA[>=]]> DATE_FORMAT(date_add(now(), interval -1 year),'%Y-%m-%d')
+				</when>
+				<when test='date == "y"'>
+				AND date_format(b.clmreqdate, '%Y-%m-%d') <![CDATA[<]]> DATE_FORMAT(date_add(now(), interval -1 year),'%Y-%m-%d')
+				</when>
+				<otherwise>
+				</otherwise>
+			</choose>
+			<if test='state != null and state != ""'>
+		 		AND b.clmtype  = #{state}
+		 	</if>
+		 	<if test='state == null or state == "" or state == "CLM001"'>
+		    UNION ALL 
+            SELECT
+                a.orderidx
+                , a.ordno
+                , date_format(a.orderdate, '%Y%m%d%H%i%s') as orderdate
+                , a.ordno as clmidx
+                , null as clmno
+                , 'CLM001' as clmtype
+                , '취소' AS clmtypenm
+                , date_format(a.orderdate, '%Y%m%d%H%i%s') as clmreqdate
+                , c.ordstatus as clmstatus
+                , (SELECT detail FROM t_common_code WHERE cmclass = 'ORDSTATUS' AND cmcode = c.ordstatus) as clmstatusnm
+                , null as recinvoiceno
+                , null as rtninvoiceno
+                , 0 as clmgdidx
+                , b.ordgdidx
+                , d.dealerno
+                , b.goodsno
+                , d.goodscode
+                , b.optioncode
+                , b.price
+                , b.frstordcnt as clmcnt
+                , b.delivfaretype
+                , b.realgoodsamt as saleamt
+                , ifnull((
+                    select ROUND(IF(ispercent = 'F', disprice, b.price * (dispercent/100)))
+                    from t_promotion 
+                    where promoidx = b.salepromoidx
+                  ), 0) as promoamt
+                , case
+                    when fn_check_directcoupon(b.goodscpnidx) = 'T' then 
+                     (select goodscpnamt / frstordcnt
+                     from t_comorder_goods
+                     where ordgdidx = b.ordgdidx)
+                    else 0
+                  end as cpnamt
+                , b.delivtype
+                , d.goodsname
+                , case 
+                    when d.dealerno is null or d.dealerno = 0 then 'D.PLOT'
+                    else
+                    (select name
+                    from t_dealer
+                    where userno = d.dealerno)
+                  end as dealernm
+                , FN_GET_OPTION_CONCAT(b.goodsno, b.optioncode, ' | ') as optionname
+                , e.name as brandname
+                , FN_GET_FILE_URL(b.goodsno, 'FLT001', #{imgtype}) as fullpath
+                , 0 as bfclmidx
+                , null as bfoptionname
+                , 0 as bfclmcnt
+                , FN_GET_ORDER_STATUS(b.ordgdidx) as ordstatus
+            FROM t_comorder a
+            INNER JOIN t_comorder_goods b 
+            ON a.orderidx = b.orderidx
+            INNER JOIN t_comorder_goods_deliv c
+            on b.ordgdidx = c.ordgdidx
+            INNER JOIN t_goods d
+            ON b.goodsno = d.goodsno
+            LEFT OUTER JOIN t_brand e
+            ON d.brandidx = e.idx
+            WHERE a.istrash = 'F'
+            AND b.istrash = 'F'
+            AND c.ordstatus = 'ODS002'
+            <choose>
+		    	<when test='ordno != null and ordno !=""'>
+		    	AND a.ordno = #{ordno}
+		    	</when>
+		    	<otherwise>
+		    	AND a.userno = #{userno}
+		    	</otherwise>
+		    </choose>
+		    <choose>
+				<when test='date == "m1"'>
+				AND date_format(a.orderdate, '%Y-%m-%d') <![CDATA[>=]]> DATE_FORMAT(date_add(now(), interval -1 month),'%Y-%m-%d')
+				</when>
+				<when test='date == "m3"'>
+				AND date_format(a.orderdate, '%Y-%m-%d') <![CDATA[>=]]> DATE_FORMAT(date_add(now(), interval -3 month),'%Y-%m-%d')
+				</when>
+				<when test='date == "m6"'>
+				AND date_format(a.orderdate, '%Y-%m-%d') <![CDATA[>=]]> DATE_FORMAT(date_add(now(), interval -6 month),'%Y-%m-%d')
+				</when>
+				<when test='date == "y1"'>
+				AND date_format(a.orderdate, '%Y-%m-%d') <![CDATA[>=]]> DATE_FORMAT(date_add(now(), interval -1 year),'%Y-%m-%d')
+				</when>
+				<when test='date == "y"'>
+				AND date_format(a.orderdate, '%Y-%m-%d') <![CDATA[<]]> DATE_FORMAT(date_add(now(), interval -1 year),'%Y-%m-%d')
+				</when>
+				<otherwise>
+				</otherwise>
+			</choose>
+			</if>
+        ) t
+        WHERE  1 = 1
+        order by clmreqdate desc, goodsno, optioncode
+        LIMIT #{startpage}, #{endpage}
+	</select>
+	
+	<select id="selectClaimNo" parameterType="somap" resultType="string">
+		SELECT FN_GET_CLAIM_NO()
+	</select>
+	
+	<update id="updateClaimPayment" parameterType="somap">
+		UPDATE	/*ClaimMapper - updateClaimPayment:: 클레임 결제 수정*/
+			 T_CLAIM
+		SET  ADDPAYMENTDATE = #{paymentdate}
+			, ADDPAYWAYTYPE = #{paywaytype}
+		WHERE CLMIDX = #{clmidx}
+	</update>
+	
+	<update id="updateClaim" parameterType="somap">
+		UPDATE  /* ClaimMapper - updateClaim 클레임내역 수정*/
+		    T_CLAIM
+		SET
+		      ORDTOTPRICE 		= #{ordtotprice}
+		    , DADADELIVAMT 		= #{dadadelivamt}
+		    , PTNDELIVAMT 		= #{ptndelivamt}
+		    , BASKETCPNIDX 		= #{basketcpnidx}
+		    , TOTSALEPROMOAMT 	= #{totsalepromoamt}
+		    , TOTGOODSCPNAMT 	= #{totgoodscpnamt}
+		    , TOTDELIVCPNAMT 	= #{totdelivcpnamt}
+		    , BASKETCPNAMT 		= #{basketcpnamt}
+		    , ADDPAYTOTPRICE 	= #{addpaytotprice}
+		    , ADDRPAYTOTPRICE 	= #{addrpaytotprice}
+		    , RTNAMT 			= #{rtnamt}
+		    , RTNRESAMT 		= #{rtnresamt}
+		    , RTNEPOAMT 		= #{rtnepoamt}
+		    , RTNEMPRESAMT 		= #{rtnempresamt}
+		    , RTNPAYAMT 		= #{rtnpayamt}
+		    , FINADJUSTAMT 		= #{finadjustamt}
+		    , ADDDELIVAMT 		= #{adddelivamt}
+		    , TOTRTNDELIVAMT 	= #{totrtndelivamt}
+		    , MODDATE			= sysdate()
+		WHERE
+		    CLMIDX = #{clmidx}
+	</update>
+	
+	<insert id="insertClaim" parameterType="somap" useGeneratedKeys="true" keyProperty="clmidx">
+		INSERT  /* ClaimMapper - insertClaim 클레임내역 저장*/
+			INTO T_CLAIM (
+			  SITEID			/* 사이트ID */ 
+			, ORDERIDX			/* 주문IDX(FK) */ 
+			, CLMNO				/* 클레임번호 */ 
+			, CLMTURN			/* 클레임차수 */ 
+			, CLMTYPE			/* 클레임구분 */ 
+			, CNCTYPE			/* 취소사유 */ 
+			, RTNTYPE			/* 반품사유 */ 
+			, EXCTYPE			/* 교환사유 */ 
+			, CNCSTATUS			/* 취소상태 */ 
+			, RTNSTATUS			/* 반품상태 */ 
+			, EXCSTATUS			/* 교환상태 */ 
+			, CLMREQDATE		/* 클레임신청일 */ 
+			, CLMCOMPDATE		/* 클레임완료일 */ 
+			, CLMDETAIL			/* 클레임상세사유 */ 
+			, ORDTOTPRICE		/* 주문총금액 */ 
+			, DADADELIVAMT		/* 자사배송비 */ 
+			, PTNDELIVAMT		/* 파트너배송비 */ 
+			, BASKETCPNIDX		/* 장바구니쿠폰IDX */ 
+			, TOTSALEPROMOAMT	/* 총프로모션 할인금액 */ 
+			, TOTGOODSCPNAMT	/* 총상품쿠폰할인금액 */ 
+			, TOTDELIVCPNAMT	/* 총배송비쿠폰할인금액 */ 
+			, BASKETCPNAMT		/* 장바구니쿠폰할인금액 */ 
+			, ADDPAYTOTPRICE	/* 추가결제예정금액 */ 
+			, ADDPAYWAYTYPE		/* 추가결제수단타입 */ 
+			, ADDRPAYTOTPRICE	/* 추가실결제총금액 */ 
+			, ADDPAYMENTDATE	/* 추가결제일 */ 
+			, ADDPAYNAME		/* 추가결제자명 */ 
+			, RTNAMT			/* 환불금액 */ 
+			, RTNRESAMT			/* 적립금반환금액 */ 
+			, RTNEPOAMT			/* E포인트반환금액 */ 
+			, RTNEMPRESAMT		/* 임직원적립금반환금액 */ 
+			, RTNPAYAMT			/* 결제취소금액 */ 
+			, RECNAME			/* 회수자명 */ 
+			, RECTEL			/* 회수연락처 */ 
+			, RECADDR			/* 회수지주소 */ 
+			, RECADDRDETAIL		/* 회수지주소상세 */ 
+			, RECADDRROAD		/* 회수지주소도로명 */ 
+			, RECADDRDETAILROAD	/* 회수지주소상세도로명 */ 
+			, RECLOGISTYPE		/* 회수택배사 */ 
+			, RECINVOICENO		/* 회수운송장번호 */ 
+			, RECCOMDATE		/* 회수완료일시 */ 
+			, RECDELIVNAME		/* 회수처리자 */ 
+			, RECSTATNAME		/* 회수상태명 */ 
+			, FINADJUSTAMT		/* 최종조정금액 */ 
+			, ADJUSTREASON		/* 조정사유 */ 
+			, RTNLOGISTYPE		/* 반송택배사 */ 
+			, RTNINVOICENO		/* 반송운송장번호 */ 
+			, EXCDLVNAME		/* 교환배송수령인명 */ 
+			, EXCDLVTEL			/* 교환배송연락처 */ 
+			, EXCDLVADDR		/* 교환배송지주소 */ 
+			, EXCDLVADDRDETAIL	/* 교환배송지주소상세 */ 
+			, EXCDLVADDRROAD	/* 교환배송지주소도로명 */ 
+			, EXCDLVADDRDETAILROAD	/* 교환배송지주소상세도로명 */ 
+			, EXCDLVLOGISTYPE	/* 교환배송택배사 */ 
+			, EXCDLVINVOICENO	/* 교환배송운송장번호 */ 
+			, EXCDLVCOMDATE		/* 교환배송완료일시 */ 
+			, EXCDLVDELIVNAME	/* 교환배송처리자 */ 
+			, EXCDLVSTATNAME	/* 교환배송상태명 */ 
+			, REJREASON			/* 반려사유 */ 
+			, DROPREASON		/* 철회사유 */ 
+			, ISTRASH			/* 삭제여부 */ 
+			, RECSIGUNGUCODE	/* 회수지시군구코드 */ 
+			, RECBUILDINGCODE	/* 회수지빌딩코드 */ 
+			, EXCSIGUNGUCODE	/* 교환배송지시군구코드 */ 
+			, EXCBUILDINGCODE	/* 교환배송지빌딩코드 */ 
+			, CLMREQTYPE		/* 클레임신청구분 */ 
+			, RECPOST			/* 회수지우편번호 */ 
+			, RCVREQTYPE		/* 회수지배송요청타입 */ 
+			, RCVREQDETAIL		/* 회수지배송요청사항 */ 
+			, EXCPOST			/* 교환지우편번호 */ 
+			, EXCREQTYPE		/* 교환지배송요청타입 */ 
+			, EXCREQDETAIL		/* 교환지배송요청사항 */ 
+			, CASHRECEIPTTYPE	/* 현금영수증결제타입 */ 
+			, CASHRECEIPTURL	/* 현금영수증URL */ 
+			, CASHRECEIPTKEY	/* 현금영수증결제키 */ 
+			, REFACCNUMBER		/* 환불계좌번호 */ 
+			, REFBANK			/* 환불계좌은행 */ 
+			, REFCUSNAME		/* 환불계좌고객이름 */ 
+			, ADDDELIVAMT		/* 추가배송비 */ 
+			, TOTRTNDELIVAMT	/* 반환배송비 */ 
+			, RECROADNAMECODE   /* 주문자도로명코드*/
+			, EXCROADNAMECODE   /* 수령인도로명코드*/
+			, REGUSERID			/* 등록자ID */ 
+			, REGDATE			/* 등록일시 */ 
+			, MODDATE			/* 수정일자 */	
+		) VALUES (
+			  #{siteid}
+			, #{orderidx}
+			, #{clmno}
+			, (
+				SELECT CLMNO 
+				FROM (
+					SELECT IFNULL(MAX(CLMTURN), 0) + 1 AS CLMNO 
+					FROM T_CLAIM 
+					WHERE ORDERIDX = #{orderidx} 
+					AND CLMTYPE = #{clmtype}
+				) T
+			  )
+			, #{clmtype}
+			, #{cnctype}
+			, #{rtntype}
+			, #{exctype}
+			, #{cncstatus}
+			, #{rtnstatus}
+			, #{excstatus}
+			, sysdate()
+			, #{clmcompdate}
+			, #{clmdetail}
+			, #{ordtotprice}
+			, #{dadadelivamt}
+			, #{ptndelivamt}
+			, 0
+			, #{totsalepromoamt}
+			, #{totgoodscpnamt}
+			, #{totdelivcpnamt}
+			, #{basketcpnamt}
+			, #{addpaytotprice}
+			, #{addpaywaytype}
+			, #{addrpaytotprice}
+			, #{addpaymentdate}
+			, #{addpayname}
+			, #{rtnamt}
+			, #{rtnresamt}
+			, #{rtnepoamt}
+			, #{rtnempresamt}
+			, #{rtnpayamt}
+			, #{recname}
+			, #{rectel}
+			, #{recaddr}
+			, #{recaddrdetail}
+			, #{recaddrroad}
+			, #{recaddrdetailroad}
+			, #{reclogistype}
+			, #{recinvoiceno}
+			, #{reccomdate}
+			, #{recdelivname}
+			, #{recstatname}
+			, #{finadjustamt}
+			, #{adjustreason}
+			, #{rtnlogistype}
+			, #{rtninvoiceno}
+			, #{excdlvname}
+			, #{excdlvtel}
+			, #{excdlvaddr}
+			, #{excdlvaddrdetail}
+			, #{excdlvaddrroad}
+			, #{excdlvaddrdetailroad}
+			, #{excdlvlogistype}
+			, #{excdlvinvoiceno}
+			, #{excdlvcomdate}
+			, #{excdlvdelivname}
+			, #{excdlvstatname}
+			, #{rejreason}
+			, #{dropreason}
+			, ifnull(#{istrash}, 'F')
+			, #{recsigungucode}
+			, #{recbuildingcode}
+			, #{excsigungucode}
+			, #{excbuildingcode}
+			, #{clmreqtype}
+			, #{recpost}
+			, #{rcvreqtype}
+			, #{rcvreqdetail}
+			, #{excpost}
+			, #{excreqtype}
+			, #{excreqdetail}
+			, #{cashreceipttype}
+			, #{cashreceipturl}
+			, #{cashreceiptkey}
+			, #{refaccnumber}
+			, #{refbank}
+			, #{refcusname}
+			, #{adddelivamt}
+			, #{totrtndelivamt}
+			, #{recroadnamecode}
+			, #{excroadnamecode}
+			, #{userid}
+			, sysdate()
+			, sysdate()
+		)
+	</insert>
+
+    <update id="updateClaimStatus" parameterType="somap">
+    	/* ClaimMapper - updateClaimStatus 클레임 상태 변경*/
+        UPDATE t_claim SET
+       	<choose>
+       		<when test='clmtype != null and clmtype == "CLM001"'>
+			  CNCSTATUS = #{cncstatus}
+       		</when>
+       		<when test='clmtype != null and clmtype == "CLM002"'>
+			  RTNSTATUS = #{rtnstatus}
+			  <if test='rtnstatus != null and rtnstatus == "RTS008"'>
+			  , RECCOMDATE = sysdate()
+			  </if>
+       		</when>
+       		<otherwise>
+			  EXCSTATUS = #{excstatus}
+			  <if test='excstatus != null and excstatus == "EXS010"'>
+			  , EXCDLVCOMDATE = sysdate()
+			  </if>
+       		</otherwise>
+       	</choose>
+       	<if test='rejreason != null and rejreason != ""'>
+           , REJREASON = #{rejreason}
+        </if>
+        <if test='dropreason != null and dropreason != ""'>
+           , DROPREASON = #{dropreason}
+        </if>
+        <if test='rejsubreason != null and rejsubreason != ""'>
+           , REJSUBREASON = #{rejsubreason}
+        </if>
+        <if test='rejdenyreason != null and rejdenyreason != ""'>
+           , REJDENYREASON = #{rejdenyreason}
+       	</if>
+        <if test='rtnreason != null and rtnreason != ""'>
+           , RTNREASON = #{rtnreason}
+       	</if>
+        <if test='rtnlogistype != null and rtnlogistype != ""'>
+           , RTNLOGISTYPE = #{rtnlogistype}
+       	</if>
+        <if test='rtninvoiceno != null and rtninvoiceno != ""'>
+           , RTNINVOICENO = #{rtninvoiceno}
+       	</if>
+        WHERE 1 = 1
+		<choose>
+			<when test="clmidx != null and clmidx != ''">
+			AND CLMIDX = #{clmidx}
+			</when>
+			<otherwise>
+			AND CLMIDX = (SELECT CLMIDX FROM t_claim_goods WHERE CLMGDIDX = #{clmgdidx})
+			</otherwise>
+		</choose>
+    </update>
+	
+	<update id="updateClaimCompdate" parameterType="somap">
+    	/* ClaimMapper - updateClaimStatus 클레임 완료일 변경*/
+        UPDATE t_claim SET
+        	CLMCOMPDATE = sysdate()
+        WHERE CLMIDX = #{clmidx}
+    </update>
+    
+	<select id="selectClaimDashBoard" parameterType="somap" resultType="somap">
+		/* ClaimMapper - selectClaimDashBoard */
+		SELECT
+			FORMAT(IFNULL(SUM(IF(CLMTYPE = 'CLM001', 1, 0)), 0), 0) AS CLM001
+			, FORMAT(IFNULL(SUM(IF(CLMTYPE = 'CLM002', 1, 0)), 0), 0) AS CLM002
+			, FORMAT(IFNULL(SUM(IF(CLMTYPE = 'CLM003', 1, 0)), 0), 0) AS CLM003
+			, FORMAT(IFNULL(SUM(IF(CLMTYPE = 'CLM002' AND RTNSTATUS = 'RTS011', 1, 0)), 0), 0) AS RTNCNT
+			, FORMAT(IFNULL(SUM(IF(CLMTYPE = 'CLM003' AND EXCSTATUS = 'EXS013', 1, 0)), 0), 0) AS EXCCNT
+		FROM T_CLAIM A INNER JOIN T_CLAIM_GOODS B ON A.CLMIDX = B.CLMIDX AND B.ISTRASH = 'F'
+					   INNER JOIN T_COMORDER_GOODS C ON B.ORDGDIDX = C.ORDGDIDX
+		WHERE A.SITEID = #{siteid}
+		  AND A.ISTRASH = 'F'
+		  AND B.ISCLMOPTION = 'T'
+		  AND (CASE WHEN CLMTYPE = 'CLM001' THEN B.CNCSTATUS = 'CNS001'
+					WHEN CLMTYPE = 'CLM002' THEN RTNSTATUS IN ('RTS001', 'RTS003', 'RTS011')
+					WHEN CLMTYPE = 'CLM003' THEN EXCSTATUS IN ('EXS001', 'EXS003', 'EXS013') END)
+		  AND CLMREQDATE BETWEEN DATE_FORMAT(DATE_ADD(CURRENT_TIMESTAMP, INTERVAL -364 DAY), '%Y-%m-%d 00:00:00') AND CURRENT_TIMESTAMP
+		<if test='userno !=null and userno !="" '>
+			AND C.DEALERNO = #{userno}
+		</if>
+	</select>
+	
+	<update id="updateClaimRecExcdlvInfo" parameterType="somap">
+    	/* ClaimMapper - updateClaimRecExcdlvInfo 회수지/교환배송지정보 변경*/
+        UPDATE t_claim
+        SET
+        <choose>
+        	<when test='type != null and type == "rec"'>
+			  RECNAME = #{recname}
+			, RECTEL = #{rectel}
+			, RECPOST = #{recpost}
+        	, RECADDR = #{recaddr}
+			, RECADDRDETAIL = #{recaddrdetail}
+			, RECADDRROAD = #{recaddrroad}
+			, RECADDRDETAILROAD = #{recaddrdetailroad}
+			, RECBUILDINGCODE = #{recbuildingcode}
+			, RECROADNAMECODE = #{recroadnamecode}
+			, RECSIGUNGUCODE = #{recsigungucode}
+			, RECLOGISTYPE = #{reclogistype}
+			  <if test='istracking != null and istracking != ""'>
+			  , ISRECTRACKING = #{istracking}
+			  , RECSTATNAME = null
+			  </if>
+        	</when>
+        	<when test='type != null and type == "exc"'>
+        	  EXCDLVNAME = #{excdlvname}
+			, EXCDLVTEL = #{excdlvtel}
+			, EXCPOST = #{excpost}
+			, EXCDLVADDR = #{excdlvaddr}
+			, EXCDLVADDRDETAIL = #{excdlvaddrdetail}
+			, EXCDLVADDRROAD = #{excdlvaddrroad}
+			, EXCDLVADDRDETAILROAD = #{excdlvaddrdetailroad}
+			, EXCBUILDINGCODE = #{excbuildingcode}
+			, EXCROADNAMECODE = #{excroadnamecode}
+			, EXCSIGUNGUCODE = #{excsigungucode}
+			, EXCDLVLOGISTYPE = #{excdlvlogistype}
+			, EXCDLVINVOICENO = #{excdlvinvoiceno}
+			  <if test='istracking != null and istracking != ""'>
+			  , ISEXCTRACKING = #{istracking}
+			  , EXCDLVSTATNAME = null
+			  </if>
+        	</when>
+        	<otherwise>
+			  RECNAME = #{recname}
+			, RECTEL = #{rectel}
+			, RECPOST = #{recpost}
+        	, RECADDR = #{recaddr}
+			, RECADDRDETAIL = #{recaddrdetail}
+			, RECADDRROAD = #{recaddrroad}
+			, RECADDRDETAILROAD = #{recaddrdetailroad}
+			, RECBUILDINGCODE = #{recbuildingcode}
+			, RECROADNAMECODE = #{recroadnamecode}
+			, RECSIGUNGUCODE = #{recsigungucode}
+			, RECLOGISTYPE = #{reclogistype}
+			, RECINVOICENO = #{recinvoiceno}
+        	, EXCDLVNAME = #{excdlvname}
+			, EXCDLVTEL = #{excdlvtel}
+			, EXCPOST = #{excpost}
+			, EXCDLVADDR = #{excdlvaddr}
+			, EXCDLVADDRDETAIL = #{excdlvaddrdetail}
+			, EXCDLVADDRROAD = #{excdlvaddrroad}
+			, EXCDLVADDRDETAILROAD = #{excdlvaddrdetailroad}
+			, EXCBUILDINGCODE = #{excbuildingcode}
+			, EXCROADNAMECODE = #{excroadnamecode}
+			, EXCSIGUNGUCODE = #{excsigungucode}
+			, EXCDLVLOGISTYPE = #{excdlvlogistype}
+			, EXCDLVINVOICENO = #{excdlvinvoiceno}
+			  <if test='isrectracking != null and isrectracking != ""'>
+			  , ISRECTRACKING = #{isrectracking}
+			  , RECSTATNAME = null
+			  </if>
+			  <if test='isexctracking != null and isexctracking != ""'>
+			  , ISEXCTRACKING = #{isexctracking}
+			  , EXCDLVSTATNAME = null
+			  </if>
+        	</otherwise>
+		</choose>
+        WHERE CLMIDX = #{clmidx}
+    </update>
+	
+	<update id="updateClaimFinAdjustAmt" parameterType="somap">
+    	/* ClaimMapper - updateClaimFinAdjustAmt 조정금액 저장*/
+        UPDATE t_claim SET
+        	FINADJUSTAMT = #{finadjustamt},
+        	ADJUSTREASON = #{adjustreason}
+        WHERE CLMIDX = #{clmidx}
+    </update>
+    
+    <select id="selectClaimStatusInfo"  parameterType="somap" resultType="somap">
+    	SELECT	/* ClaimMapper - selectClaimStatusInfo 클레임상태 조회 */
+    		FN_GET_CLAIM_STATUS(#{clmidx}, #{clmgdidx}) as clmstatus
+    	FROM dual
+    </select>
+
+	<select id="selectOrderCancelERPData" parameterType="somap" resultType="somap">
+		SELECT
+			LOG.CLMIDX, LOG.ORDERIDX, LOG.IFLOGIDX, (ORD.FRSTORDCNT - IFNULL(CLM.CLMCNT, 0)) AS CNT
+		  , LOG.CLMIDXARR, CLM.CLMGDIDXARR
+		FROM (
+			SELECT MAX(CLMIDX) AS CLMIDX ,ORDERIDX ,GROUP_CONCAT(B.IFLOGIDX) AS IFLOGIDX, MIN(B.REGDATE) AS REGDATE, GROUP_CONCAT(A.CLMIDX) AS CLMIDXARR
+			FROM T_CLAIM A INNER JOIN (
+				SELECT ORGNO, GROUP_CONCAT(IFLOGIDX) AS IFLOGIDX, MIN(REGDATE) AS REGDATE , AUDDIV AS AUD_TYPE_CD
+				FROM T_IFLOG A
+				WHERE IFTYPE = 'IFT012'
+				AND IFDATE IS NULL
+				GROUP BY ORGNO, AUDDIV
+				ORDER BY REGDATE
+			)B ON A.CLMIDX = B.ORGNO
+			WHERE SITEID = #{siteid}
+			AND ISTRASH = 'F'
+			AND CNCSTATUS = 'CNS005'
+			GROUP BY ORDERIDX
+		)LOG INNER JOIN (
+			SELECT
+				A.ORDERIDX, SUM(B.FRSTORDCNT) AS FRSTORDCNT
+			FROM T_COMORDER A INNER JOIN T_COMORDER_GOODS B ON A.ORDERIDX = B.ORDERIDX
+			WHERE A.ISTRASH = 'F'
+			AND B.ISTRASH = 'F'
+			GROUP BY A.ORDERIDX
+		)ORD ON LOG.ORDERIDX = ORD.ORDERIDX INNER JOIN (
+			SELECT
+				A.ORDERIDX ,SUM(B.CLMCNT) AS CLMCNT, GROUP_CONCAT(B.CLMGDIDX) AS CLMGDIDXARR
+			FROM T_CLAIM A INNER JOIN T_CLAIM_GOODS B ON A.CLMIDX = B.CLMIDX
+			WHERE A.ISTRASH = 'F'
+			AND B.ISTRASH = 'F'
+			AND B.ISCLMOPTION = 'T'
+			AND CLMTYPE = 'CLM001'
+			AND A.CNCSTATUS = 'CNS005'
+			AND B.CNCSTATUS = 'CNS005'
+			GROUP BY A.ORDERIDX
+		)CLM ON LOG.ORDERIDX = CLM.ORDERIDX
+		ORDER BY LOG.REGDATE
+	</select>
+
+	<select id="selectClaimApplyERPData" parameterType="somap" resultType="somap">
+		SELECT
+			C.AUD_TYPE_CD, A.ORDERIDX, A.CLMIDX, B.CLMGDIDX, B.ORDGDIDX, B.CLMCNT, IFLOGIDX
+			, B.GOODSNO AS GOODSNO
+			, B.OPTIONCODE AS OPTIONCODE
+			,EXCDLVNAME
+			,EXCDLVTEL
+			,EXCDLVADDR
+			,EXCDLVADDRDETAIL
+			,EXCDLVADDRROAD
+			,EXCDLVADDRDETAILROAD
+			,EXCDLVLOGISTYPE
+			,EXCDLVINVOICENO
+			,DATE_FORMAT(EXCDLVCOMDATE, '%Y%m%d%H%i%s') AS EXCDLVCOMDATE
+			,EXCDLVDELIVNAME
+			,EXCDLVSTATNAME
+			,EXCSIGUNGUCODE
+			,EXCBUILDINGCODE
+			,EXCROADNAMECODE
+			,RECNAME
+			,RECTEL
+			,RECADDR
+			,RECADDRDETAIL
+			,RECADDRROAD
+			,RECADDRDETAILROAD
+			,RECLOGISTYPE
+			,RECINVOICENO
+			,DATE_FORMAT(RECCOMDATE, '%Y%m%d%H%i%s') AS RECCOMDATE
+			,RECDELIVNAME
+			,RECSTATNAME
+			,RECSIGUNGUCODE
+			,RECBUILDINGCODE
+			,RECROADNAMECODE
+			,ISEXCTRACKING
+			,RTNREASON
+		FROM T_CLAIM A INNER JOIN T_CLAIM_GOODS B ON A.CLMIDX = B.CLMIDX AND ISCLMOPTION = 'T' AND B.ISTRASH = 'F'
+					   INNER JOIN (
+			SELECT ORGNO, GROUP_CONCAT(IFLOGIDX) AS IFLOGIDX, MIN(REGDATE) AS REGDATE, AUDDIV AS AUD_TYPE_CD
+			FROM T_IFLOG A
+			WHERE IFTYPE = #{iftype}
+			  AND IFDATE IS NULL
+			GROUP BY ORGNO, AUDDIV
+			ORDER BY REGDATE
+		)C ON A.CLMIDX = C.ORGNO
+		WHERE A.ISTRASH = 'F'
+		AND CLMTYPE = #{clmtype}
+		ORDER BY C.REGDATE
+	</select>
+
+	<select id="selectReturnCompleteERPData" parameterType="somap" resultType="somap">
+		SELECT
+			B.AUDDIV AS AUD_TYPE_CD
+			 ,B.IFLOGIDX
+			 ,CLMIDX
+			 ,ORDERIDX
+			 ,CLMNO
+			 ,CLMTURN
+			 ,CLMTYPE
+			 ,RTNTYPE
+			 ,RTNSTATUS
+			 ,DATE_FORMAT(CLMREQDATE, '%Y%m%d%H%i%s') AS CLMREQDATE
+			 ,DATE_FORMAT(CLMCOMPDATE, '%Y%m%d%H%i%s') AS CLMCOMPDATE
+			 ,CLMDETAIL
+			 ,ORDTOTPRICE
+			 ,DADADELIVAMT
+			 ,PTNDELIVAMT
+			 ,BASKETCPNIDX
+			 ,TOTSALEPROMOAMT
+			 ,TOTGOODSCPNAMT
+			 ,TOTDELIVCPNAMT
+			 ,BASKETCPNAMT
+			 ,ADDPAYTOTPRICE
+			 ,ADDPAYWAYTYPE
+			 ,ADDRPAYTOTPRICE
+			 ,DATE_FORMAT(ADDPAYMENTDATE, '%Y%m%d%H%i%s') AS ADDPAYMENTDATE
+			 ,ADDPAYNAME
+			 ,RTNAMT
+			 ,RTNRESAMT
+			 ,RTNEPOAMT
+			 ,RTNEMPRESAMT
+			 ,RTNPAYAMT
+			 ,RECNAME
+			 ,RECTEL
+			 ,RECADDR
+			 ,RECADDRDETAIL
+			 ,RECADDRROAD
+			 ,RECADDRDETAILROAD
+			 ,RECLOGISTYPE
+			 ,RECINVOICENO
+			 ,DATE_FORMAT(RECCOMDATE, '%Y%m%d%H%i%s') AS RECCOMDATE
+			 ,CONCAT(RECSIGUNGUCODE, RECROADNAMECODE) AS RECROADNAMECODE
+			 ,RECDELIVNAME
+			 ,RECSTATNAME
+			 ,FINADJUSTAMT
+			 ,ADJUSTREASON
+			 ,RTNLOGISTYPE
+			 ,RTNINVOICENO
+			 ,RECSIGUNGUCODE
+			 ,RECBUILDINGCODE
+			 ,CLMREQTYPE
+			 ,RECPOST
+			 ,RCVREQTYPE
+			 ,RCVREQDETAIL
+			 ,CASHRECEIPTTYPE
+			 ,CASHRECEIPTURL
+			 ,CASHRECEIPTKEY
+			 ,REFACCNUMBER
+			 ,REFBANK
+			 ,REFCUSNAME
+			 ,ADDDELIVAMT
+			 ,TOTRTNDELIVAMT
+			 ,RECROADNAMECODE
+			 ,ISRECTRACKING
+		FROM T_CLAIM A INNER JOIN T_IFLOG B ON A.CLMIDX = B.ORGNO AND A.ISTRASH = 'F' AND B.IFDATE IS NULL AND B.IFTYPE = 'IFT016'
+		ORDER BY A.CLMCOMPDATE
+	</select>
+
+	<select id="selectExchangeCompleteERPData" parameterType="somap" resultType="somap">
+		SELECT
+			A.CLMIDX ,A.ORDERIDX ,C.IFLOGIDX, A.EXCSTATUS, C.AUD_TYPE_CD
+			 , A.ADDDELIVAMT AS TOTADDDELIVAMT
+			 , A.TOTRTNDELIVAMT
+			 , B.GOODSNO
+			 , B.OPTIONCODE
+			 , (SELECT GOODSNO FROM T_CLAIM_GOODS WHERE ISTRASH = 'F' AND CLMIDX = A.CLMIDX AND ORDGDIDX = B.ORDGDIDX AND ISCLMOPTION = 'F') AS ORGGOODSNO
+			 , (SELECT OPTIONCODE FROM T_CLAIM_GOODS WHERE ISTRASH = 'F' AND CLMIDX = A.CLMIDX AND ORDGDIDX = B.ORDGDIDX AND ISCLMOPTION = 'F') AS ORGOPTIONCODE
+		     ,EXCSTATUS
+			 ,EXCDLVNAME
+			 ,EXCDLVTEL
+			 ,EXCDLVADDR
+			 ,EXCDLVADDRDETAIL
+			 ,EXCDLVADDRROAD
+			 ,EXCDLVADDRDETAILROAD
+			 ,EXCDLVLOGISTYPE
+			 ,EXCDLVINVOICENO
+			 ,DATE_FORMAT(EXCDLVCOMDATE, '%Y%m%d%H%i%s') AS EXCDLVCOMDATE
+			 ,EXCDLVDELIVNAME
+			 ,EXCDLVSTATNAME
+			 ,EXCSIGUNGUCODE
+			 ,EXCBUILDINGCODE
+			 ,EXCROADNAMECODE
+			 ,RECNAME
+			 ,RECTEL
+			 ,RECADDR
+			 ,RECADDRDETAIL
+			 ,RECADDRROAD
+			 ,RECADDRDETAILROAD
+			 ,RECLOGISTYPE
+			 ,RECINVOICENO
+			 ,DATE_FORMAT(RECCOMDATE, '%Y%m%d%H%i%s') AS RECCOMDATE
+			 ,RECDELIVNAME
+			 ,RECSTATNAME
+			 ,RECSIGUNGUCODE
+			 ,RECBUILDINGCODE
+			 ,RECROADNAMECODE
+			 ,ISEXCTRACKING
+			 ,RTNREASON
+			 ,CONCAT(RECSIGUNGUCODE, RECROADNAMECODE) AS RECROADNAMECODE
+			 ,CONCAT(EXCSIGUNGUCODE, EXCROADNAMECODE) AS EXCROADNAMECODE
+		FROM T_CLAIM A INNER JOIN T_CLAIM_GOODS B ON A.CLMIDX = B.CLMIDX AND ISCLMOPTION = 'T' AND B.ISTRASH = 'F'
+		    INNER JOIN (
+			SELECT ORGNO, GROUP_CONCAT(IFLOGIDX) AS IFLOGIDX, MIN(REGDATE) AS REGDATE , AUDDIV AS AUD_TYPE_CD
+			FROM T_IFLOG A
+			WHERE IFTYPE = 'IFT014'
+			  AND IFDATE IS NULL
+			GROUP BY ORGNO, AUDDIV
+			ORDER BY REGDATE
+		)C ON A.CLMIDX = C.ORGNO
+		WHERE SITEID = #{siteid}
+		  AND A.ISTRASH = 'F'
+		  AND A.EXCSTATUS IN ('EXS011', 'EXS012')
+	</select>
+
+	<select id="selectOrderReturnERPData" parameterType="somap" resultType="somap">
+		SELECT
+			LOG.CLMIDX, LOG.ORDERIDX, LOG.IFLOGIDX, (ORD.FRSTORDCNT - IFNULL(CLM.CLMCNT, 0)) AS CNT, RTNSTATUS
+		FROM (
+				 SELECT GROUP_CONCAT(CLMIDX) AS CLMIDX ,ORDERIDX ,GROUP_CONCAT(B.IFLOGIDX) AS IFLOGIDX, MIN(B.REGDATE) AS REGDATE, GROUP_CONCAT(RTNSTATUS) AS RTNSTATUS
+				 FROM T_CLAIM A INNER JOIN (
+					 SELECT ORGNO, GROUP_CONCAT(IFLOGIDX) AS IFLOGIDX, MIN(REGDATE) AS REGDATE , AUDDIV AS AUD_TYPE_CD
+					 FROM T_IFLOG A
+					 WHERE IFTYPE = 'IFT016'
+					   AND IFDATE IS NULL
+					 GROUP BY ORGNO, AUDDIV
+					 ORDER BY REGDATE
+				 )B ON A.CLMIDX = B.ORGNO
+				 WHERE SITEID = #{siteid}
+				   AND ISTRASH = 'F'
+				   AND RTNSTATUS IN ('RTS009', 'RTS010')
+				 GROUP BY ORDERIDX
+			 )LOG INNER JOIN (
+			SELECT
+				A.ORDERIDX, SUM(B.FRSTORDCNT) AS FRSTORDCNT
+			FROM T_COMORDER A INNER JOIN T_COMORDER_GOODS B ON A.ORDERIDX = B.ORDERIDX
+			WHERE A.ISTRASH = 'F'
+			  AND B.ISTRASH = 'F'
+			GROUP BY A.ORDERIDX
+		)ORD ON LOG.ORDERIDX = ORD.ORDERIDX INNER JOIN (
+			SELECT
+				A.ORDERIDX ,SUM(B.CLMCNT) AS CLMCNT
+			FROM T_CLAIM A INNER JOIN T_CLAIM_GOODS B ON A.CLMIDX = B.CLMIDX
+			WHERE A.ISTRASH = 'F'
+			  AND B.ISTRASH = 'F'
+			  AND B.ISCLMOPTION = 'T'
+			  AND ((A.CNCSTATUS = 'CNS005' AND B.CNCSTATUS = 'CNS005') OR RTNSTATUS IN ('RTS010'))
+			GROUP BY A.ORDERIDX
+		)CLM ON LOG.ORDERIDX = CLM.ORDERIDX
+		ORDER BY LOG.REGDATE
+	</select>
+
+	<update id="updateClaimRecDeliveryERP" parameterType="somap">
+		UPDATE T_CLAIM SET
+			RECINVOICENO = #{recinvoiceno}
+			, RECLOGISTYPE = #{reclogistype}
+			, RECSTATNAME = #{recstatname}
+		    , RECDELIVNAME = 'SYSTEM'
+		    , ISRECTRACKING = 'T'
+			<if test='type == "E"'>
+			, EXCSTATUS = #{status}
+			</if>
+			<if test='type == "R"'>
+			, RTNSTATUS = #{status}
+			</if>
+			<if test='status == "RTS008" or status == "EXS008"'>
+			, RECCOMDATE = CURRENT_TIMESTAMP
+			</if>
+		WHERE CLMIDX = #{clmidx}
+	</update>
+
+	<update id="updateClaimExcDeliveryERP" parameterType="somap">
+		UPDATE T_CLAIM SET
+			EXCDLVINVOICENO = #{excdlvinvoiceno}
+			, EXCDLVLOGISTYPE = #{excdlvlogistype}
+			, EXCDLVDELIVNAME = 'SYSTEM'
+		    , EXCDLVSTATNAME = #{excdlvstatname}
+			, EXCSTATUS = #{excstatus}
+		    , ISEXCTRACKING = 'T'
+			<if test='excstatus == "EXS010"'>
+				, EXCDLVCOMDATE = CURRENT_TIMESTAMP
+			</if>
+		WHERE CLMIDX = #{clmidx}
+		AND EXCSTATUS = #{bf_status}
+	</update>
+</mapper>
+	

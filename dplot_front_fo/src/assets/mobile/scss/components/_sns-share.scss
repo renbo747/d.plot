@@ -1,0 +1,31 @@
+.sns-share {
+  .modal-content {
+    background: transparent;
+  }
+  .modal-header {
+    background: #fff;
+  }
+  .modal-body {
+    background: rgba(0,0,0,.5);
+  }
+  .page-layer__body {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 100%;
+    padding: 0;
+  }
+  .sns-share__link-group {
+    display: flex;
+    a {
+      width: 56px;
+      height: 56px;
+      img {
+        width: 100%;
+      }
+    }
+    a + a {
+      margin-left: 16px;
+    }
+  }
+}

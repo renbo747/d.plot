@@ -1,0 +1,524 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.dplot.mapper.CategoryMapper">
+
+	<!-- 카테고리 목록 조회 -->
+	<select id="selectCategoryList" parameterType="somap" resultType="somap" >
+	    /*CategoryMapper.xml - selectCategoryList:: 카테고리 목록  조회*/
+		WITH tbl AS (   -- 현재 전시중인 상품 전체
+			SELECT cateidx, count(cateidx) count
+			FROM t_goods a
+				JOIN t_goods_category b ON a.GOODSNO = b.GOODSNO
+			WHERE 1 = 1
+			<if test='isfront != null and isfront != "" and isfront == "T"'>
+			AND a.isdisplay = 'T'			-- 게시중인 상품
+			AND a.goodsapprtype = 'GAT004' -- 승인완료
+			AND a.goodsselltype IN ('GST002', 'GST004', 'GST005')
+			AND date_format(now(), '%Y%m%d%H%i%s')  BETWEEN disstdate AND diseddate
+			</if>
+			<if test='chkcate != null and chkcate != "" and chkcate == "T"'>
+			AND (a.ispbgoods = 'T' OR (a.ispbgoods = 'F' AND a.goodsapprtype = 'GAT004')) 
+			AND a.goodsselltype != 'GST006'
+			</if>
+			GROUP BY cateidx
+		)
+		SELECT
+			 tc.idx                        -- 카테고리번호
+		  <![CDATA[
+			 , concat(tc.ENGNAME, '<span style=''color: red''> (', ifnull(count, 0) ,')</span>') AS text                      -- 카테고리_명칭
+		 ]]>
+		   , tc.ENGNAME as value                      -- 카테고리_명칭
+		   , tc.depth                      -- 카테고리_깊이
+		   , tc.parent                     -- 부모코드->1depth(0)
+		   , tc.parent as oriparent        -- 원본 부모코드
+		   , tc.sort					   -- 정렬순서
+		   , tc.hidden					   -- 숨김여부
+		   , tc.istrash						-- 노출여부
+		   , IF((SELECT count(*) FROM t_category WHERE parent = tc.idx) > 0, 'T', 'F') AS ischild -- 자식 카테고리가 있는지 여부
+		   , ifnull(b.count, 0) AS count
+		   , ifnull(b.count, 0) AS oricount
+		   <if test='imgtype!= null and imgtype!=""'>
+		   , fn_get_file_url(tc.idx,'FLT001',#{imgtype}) as imgurl
+		   </if>
+		FROM t_category tc
+			LEFT JOIN tbl b ON tc.idx = b.cateidx
+		<where>
+			AND siteid = #{siteid}
+			AND istrash = 'F'
+			<choose>
+				<when test='showall != null and showall != ""'>
+			-- hidden 결정 후 추가
+				</when>
+				<otherwise>
+	 		AND hidden = 0
+				</otherwise>
+			</choose>
+			<if test='idx != null and !idx.equals("")'>
+			AND tc.parent = #{idx}
+			</if>
+			<if test='isfront != null and isfront != ""'>
+			AND ifnull(b.count, 0)  > 0
+			</if>
+		</where>
+		ORDER BY tc.depth, tc.sort, tc.name
+	</select>
+	
+	<select id="selectFrontCategoryList" parameterType="somap" resultType="somap">
+	/*CategoryMapper.xml - selectFrontCategoryList:: 카테고리 목록 조회*/
+	WITH RECURSIVE CATEGORY AS (
+			SELECT ta.idx AS cateidx
+			      , ta.name
+			      , ta.depth
+			      , ta.parent
+			      , ta.name AS PATH
+			      , cast(TA.IDX AS char(50)) AS FULLCATEIDX
+                  , CONCAT(ta.idx, '') AS depth1idx
+				  , cast(null AS char(10)) AS depth2idx
+				  , cast(null AS char(10)) AS depth3idx
+				  , cast(null AS char(10)) AS depth4idx
+			FROM T_CATEGORY ta
+			WHERE depth = 1
+			AND ta.istrash = 'F'
+			AND ta.hidden = 0
+			AND ta.siteid = #{siteid}
+			UNION ALL
+			SELECT ta.idx AS cateidx
+			     , ta.name
+			     , ta.depth
+			     , ta.parent
+			     , CONCAT_WS(' > ', tb.path, ta.name) AS PATH
+			     , CONCAT_WS(' > ', TB.FULLCATEIDX, cast(TA.IDX AS char(50))) AS FULLCATEIDX
+				 , tb.depth1idx
+				 , IF(tb.depth2idx IS NULL AND ta.depth >  1, CAST(ta.idx AS char(10)), tb.depth2idx) AS depth2idx
+				 , IF(tb.depth3idx IS NULL AND ta.depth >  2, CAST(ta.idx AS char(10)), tb.depth3idx) AS depth3idx
+				 , IF(tb.depth4idx IS NULL AND ta.depth >  3, CAST(ta.idx AS char(10)), tb.depth4idx) AS depth4idx
+			FROM T_CATEGORY ta
+			INNER JOIN CATEGORY tb ON ta.parent = tb.cateidx
+			WHERE ta.istrash = 'F'
+			AND ta.hidden = 0
+			AND ta.siteid = #{siteid}
+		)
+		SELECT aaa.cateidx
+		     , aaa.goodscnt
+		     , bbb.name AS catename
+		     , bbb.`DEPTH` 
+		     , bbb.PARENT 
+		     , bbb.ENGNAME 
+		FROM (
+			SELECT <choose>
+				    <when test="depth == 2">
+				      aa.DEPTH2IDX  AS CATEIDX
+				    </when>
+				    <when test="depth == 3">
+				      aa.DEPTH3IDX   AS CATEIDX
+				    </when>
+				    <when test="depth == 4">
+				      aa.DEPTH4IDX   AS CATEIDX
+				    </when>
+				    <otherwise>
+				      aa.DEPTH1IDX AS CATEIDX
+				    </otherwise>
+				 </choose>
+			    , count(*) AS goodscnt 
+			FROM CATEGORY aa
+			INNER JOIN t_goods_category bb ON aa.cateidx = bb.CATEIDX
+			INNER JOIN t_goods cc ON bb.goodsno = cc.GOODSNO 
+			AND cc.SITEID = #{siteid}
+			AND cc.isdisplay = 'T'
+			<if test="muappchtype != null and muappchtype != ''">
+				AND cc.muappchtype LIKE CONCAT('%',#{muappchtype},'%')
+			</if>
+			<if test="mumembertype != null and mumembertype != ''">
+				AND cc.mumembertype LIKE CONCAT('%',#{mumembertype},'%')
+			</if>
+			<if test="mumemlvtype != null and mumemlvtype != ''">
+				AND (cc.mumemlvtype LIKE CONCAT('%',#{mumemlvtype},'%')
+				 	OR EXISTS (
+					 	SELECT * 
+					 	FROM t_member_goods tmg
+					 	WHERE userno = #{userno}
+					 	AND cc.GOODSNO  = tmg.GOODSNO 
+				 	)) /* 특정 회원 대상 지급 */
+			</if>
+			AND cc.goodsapprtype = 'GAT004' /* 승인완료 */
+			AND cc.goodsselltype IN ('GST002', 'GST004', 'GST005')
+			AND date_format(now(), '%Y%m%d%H%i%s')  BETWEEN disstdate AND diseddate
+			  <choose>
+				<when test="depth == 2">
+				  <if test='idx != null and idx != ""'>
+				  AND DEPTH1IDX = #{idx}
+				  </if>
+				  GROUP BY depth2idx
+				</when>
+				<when test="depth == 3">
+				  <if test='idx != null and idx != ""'>
+				  AND DEPTH2IDX = #{idx}
+				  </if>
+				  GROUP BY depth3idx
+				</when>
+				<when test="depth == 4">
+				  <if test='idx != null and idx != ""'>
+				  AND DEPTH3IDX = #{idx}
+				  </if>
+				  GROUP BY depth4idx
+				</when>
+				<otherwise>
+				  GROUP BY depth1idx
+				</otherwise>
+			  </choose> 
+		    ) aaa
+		INNER JOIN T_CATEGORY bbb ON aaa.cateidx = bbb.idx
+		ORDER BY BBB.SORT ASC, BBB.IDX ASC
+	</select>
+	
+	<select id="selectCategoryByIdx" parameterType="somap" resultType="somap">
+		/*CategoryMapper.xml - selectCategoryList:: 카테고리 목록  조회*/
+		WITH tbl AS (   -- 현재 전시중인 상품 전체
+			SELECT cateidx, count(cateidx) count
+			FROM t_goods a
+				JOIN t_goods_category b ON a.GOODSNO = b.GOODSNO
+			WHERE 1 = 1
+			AND a.isdisplay = 'T'			-- 게시중인 상품
+		    AND a.goodsapprtype = 'GAT004' -- 승인완료
+			AND a.goodsselltype IN ('GST002', 'GST004', 'GST005')
+			AND date_format(now(), '%Y%m%d%H%i%s')  BETWEEN disstdate AND diseddate
+			GROUP BY cateidx
+		)
+		SELECT /*CategoryMapper.xml - selectCategoryByIdx:: 카테고리 정보 (BY idx)  조회*/
+		       tc.idx
+		     , tc.name
+		     , tc.depth
+		     , tc.parent
+		     , tc2.name as parentname
+		     , tc.engname
+		     , IF((SELECT count(*) 
+	               FROM t_category sub1
+	               LEFT JOIN tbl sub2 ON sub1.idx = sub2.cateidx
+	               WHERE tc.siteid = #{siteid}
+				   AND sub1.istrash = 'F'
+				   AND sub1.hidden = 0 
+	               AND sub1.parent = tc.idx) > 0, 'T', 'F') AS ischild -- 자식 카테고리가 있는지 여부
+		FROM t_category tc
+		left outer JOIN tbl b ON tc.idx = b.cateidx
+		left outer join t_category tc2 on tc.parent = tc2.idx  
+		WHERE tc.siteid = #{siteid}
+		AND tc.istrash = 'F'
+		AND tc.hidden = 0
+		AND tc.idx = #{idx}
+	</select>
+	
+	<select id="selectGoodsListCateInfo" parameterType="somap" resultType="somap">
+		WITH RECURSIVE CATEGORY AS (
+					SELECT ta.idx AS cateidx
+					      , ta.name
+					      , ta.depth
+					      , ta.parent
+					      , ta.name AS PATH
+					      , cast(TA.IDX AS char(50)) AS FULLCATEIDX
+		                  , CONCAT(ta.idx, '') AS depth1idx
+						  , cast(null AS char(10)) AS depth2idx
+						  , cast(null AS char(10)) AS depth3idx
+						  , cast(null AS char(10)) AS depth4idx
+					FROM T_CATEGORY ta
+					WHERE depth = 1
+					AND ta.istrash = 'F'
+					AND ta.hidden = 0
+					AND ta.siteid = #{siteid}
+					UNION ALL
+					SELECT ta.idx AS cateidx
+					     , ta.name
+					     , ta.depth
+					     , ta.parent
+					     , CONCAT_WS(' > ', tb.path, ta.name) AS PATH
+					     , CONCAT_WS(' > ', TB.FULLCATEIDX, cast(TA.IDX AS char(50))) AS FULLCATEIDX
+						 , tb.depth1idx
+						 , IF(tb.depth2idx IS NULL AND ta.depth >  1, CAST(ta.idx AS char(10)), tb.depth2idx) AS depth2idx
+						 , IF(tb.depth3idx IS NULL AND ta.depth >  2, CAST(ta.idx AS char(10)), tb.depth3idx) AS depth3idx
+						 , IF(tb.depth4idx IS NULL AND ta.depth >  3, CAST(ta.idx AS char(10)), tb.depth4idx) AS depth4idx
+					FROM T_CATEGORY ta
+					INNER JOIN CATEGORY tb ON ta.parent = tb.cateidx
+					WHERE ta.istrash = 'F'
+					AND ta.hidden = 0
+					AND ta.siteid = #{siteid}
+				)
+		SELECT *
+		FROM CATEGORY a
+		WHERE cateidx= #{idx}
+	</select>
+
+	<!-- 카테고리명 목록 조회 -->
+	<select id="selectCategorynameList" parameterType="somap" resultType="somap" >
+		/*CategoryMapper.xml - selectCategorynameList::카테고리명 목록 조회*/
+		<include refid="selectCategorynameListSQL"/>
+		<where>
+			<if test='categoryname != null and categoryname != ""'>
+			AND t.fullcategoryname LIKE CONCAT('%', #{categoryname} , '%')
+			</if>
+		</where>
+		ORDER BY t.depth1idx, t.depth2idx, t.depth3idx, t.depth4idx
+	</select>
+
+	<!-- 카테고리 조회 -->
+	<select id="selectCategoryDetail" parameterType="somap" resultType="somap" >
+		WITH RECURSIVE tc AS ( /* CategoryMapper.xml - selectCategoryDetail 카테고리 상세 조회(idx) */
+			SELECT idx, name, engname, depth, parent, name as path, hidden, istrash, sort
+			FROM t_category
+			WHERE depth = 1
+			UNION ALL
+			SELECT a.idx, a.name, a.engname, a.depth, a.parent, concat_ws(' > ',b.path,a.name) AS path, a.hidden, a.istrash, a.sort
+			FROM t_category a
+			INNER JOIN tc b ON a.parent = b.idx
+		)
+		SELECT idx, name, engname, depth, parent, path, hidden, istrash, sort FROM tc
+		<where>
+			<if test='idx != null and idx != ""'>
+			AND tc.idx = #{idx}
+			</if>
+		</where>
+	</select>
+
+	<select id="selectProdTypeList" parameterType="somap" resultType="somap">
+		SELECT
+			idx, name, depth, sort, parent
+		FROM T_CATEGORY
+		WHERE hidden = 0
+		  AND depth = 1
+		  AND siteid = #{siteid}
+		ORDER BY sort
+	</select>
+
+	<select id="selectCategoryBreadCrumb" parameterType="somap" resultType="somap">
+		/* CategoryMapper.xml - selectCategoryBreadCrumb 상품 상세 카테고리 브래드크럼 조회 */
+		WITH RECURSIVE category_tree(idx, name, parent, depth) AS
+		(
+		  SELECT idx, name, parent, depth
+		    FROM t_category
+		    WHERE idx = ${idx}
+		    AND hidden = 0
+		    AND siteid = #{siteid}
+		  UNION ALL
+		  SELECT c.idx, c.name, c.parent, c.depth
+		    FROM category_tree AS cp JOIN t_category as c
+		      ON cp.parent = c.idx
+		)
+		SELECT * FROM category_tree
+		ORDER BY depth
+	</select>
+
+	<update id="updateCategoryTree" parameterType="somap">
+		UPDATE T_CATEGORY tc /* CategoryMapper.xml - updateCategoryTree 카테고리 트리구조 변경 저장 */
+		JOIN (
+			<foreach collection="changelist" item="item" separator="UNION ALL">
+				SELECT #{item.idx} as idx,
+				       #{item.parent} as upt_parent,
+				       #{item.sort} as upt_sort,
+				       #{item.depth} as upt_depth
+			</foreach>
+		) a ON tc.idx = a.idx
+		SET parent = upt_parent, sort = upt_sort, depth = upt_depth
+	</update>
+
+	<insert id="insertCategory" parameterType="somap" useGeneratedKeys="true" keyProperty="idx">
+		INSERT INTO t_category
+		(siteid,name,engname,depth,sort,parent,hidden,cms,regdate,istrash)
+		VALUES (
+			#{siteid}
+			, #{name}
+			, #{engname}
+			, #{depth}
+			<choose>
+				<when test="sort == null or sort == ''">
+				, (select max(sort) + 1 from t_category a where istrash = 'F' and parent = #{parent})
+				</when>
+				<otherwise>
+				, #{sort}				
+				</otherwise>			
+			</choose>
+			, #{parent}
+			, #{hidden}
+			, 0
+			, now()
+			, #{istrash}
+		)
+	</insert>
+
+	<update id="updateCategory" parameterType="somap">
+		UPDATE t_category
+		<set>
+			<if test="siteid != null">
+				siteid = #{siteid},
+			</if>
+			<if test="name != null">
+				name = #{name},
+			</if>
+			<if test="engname != null">
+				engname = #{engname},
+			</if>
+			<if test="depth != null">
+				depth = #{depth},
+			</if>
+			<if test="sort != null">
+				sort = #{sort},
+			</if>
+			<if test="hidden != null">
+				hidden = #{hidden},
+			</if>
+			<if test="parent != null">
+				parent = #{parent},
+			</if>
+			<if test="istrash != null">
+				istrash = #{istrash},
+			</if>
+			<if test="cms != null">
+				cms = #{cms},
+			</if>
+		</set>
+		WHERE idx = #{idx}
+	</update>
+
+	<!-- idx 기준을 하위 노드가 있는지, 해당 카테고리 상품이 있는지 검사 -->
+	<select id="isSubNodesAndGoodsExists" parameterType="somap" resultType="boolean">
+		SELECT if(count(a.idx) > 0, 1, 0)	-- 0보다 클 경우 : 노드, 상품이 존재 // true
+		FROM (
+				 SELECT idx				-- 하위 노드가 존재 하는지
+				 FROM t_category
+				 WHERE parent = #{idx}
+				 AND istrash = 'F'
+				 UNION
+				 SELECT cateidx			-- 카테고리에 상품이 있는지
+				 FROM t_goods_category a
+						  JOIN t_goods b ON a.goodsno = b.goodsno AND b.goodsselltype != 'GST006'
+				 WHERE a.cateidx = #{idx}
+			 ) AS a
+	</select>
+
+	<select id="selectCategoryListERP" parameterType="somap" resultType="somap">
+		SELECT
+			IDX,
+			NAME,
+			DEPTH,
+			PARENT,
+			ENGNAME,
+			B.IFLOGIDX,
+			B.AUD_TYPE_CD
+		FROM T_CATEGORY A INNER JOIN (
+				SELECT
+					ORGNO, GROUP_CONCAT(IFLOGIDX) AS IFLOGIDX, MIN(REGDATE) AS REGDATE
+					 , AUDDIV AS AUD_TYPE_CD
+				FROM T_IFLOG A
+				WHERE IFTYPE = 'IFT003'
+				AND IFDATE IS NULL
+				GROUP BY ORGNO, AUDDIV
+			)B ON A.IDX = B.ORGNO
+		WHERE A.SITEID = #{siteid}
+		ORDER BY B.REGDATE
+	</select>
+	
+	<select id="selectSearchCateList" parameterType="somap" resultType="somap">
+	 SELECT /*CategoryMapper.xml - selectSearchCateList:: 검색 카테고리 조회*/ 
+	       idx as cateidx
+		 , name as catename
+	     , depth
+	     , engname
+	 FROM t_category
+	 WHERE SITEID = #{siteid}
+	 <choose>
+	  <when test="catelist != null and catelist.size > 0">
+		AND IDX IN (<foreach collection="catelist" item="cate" index="index" open="" separator="," close="">#{cate.cateidx}</foreach>)
+	  </when>
+	 </choose>
+	 order by idx
+	</select>
+	
+	<select id="selectCategorynameListForExcel" parameterType="somap" resultType="HashMap" >
+		/*CategoryMapper.xml - selectCategorynameListForExcel::상품 일괄업로드 카테고리 목록 조회*/
+		<include refid="selectCategorynameListSQL"/>
+	</select>
+	
+	<sql id="selectCategorynameListSQL">
+		WITH tc AS (
+		    SELECT
+				tc.idx, tc.name, tc.depth, tc.parent
+			FROM t_category tc
+			WHERE siteid = #{siteid}
+	 		AND hidden = 0
+		)
+		SELECT
+			t.depth1idx, t.depth2idx, t.depth3idx, t.depth4idx,
+			t.depth1name, t.depth2name, t.depth3name, t.depth4name,
+			t.fullcategoryname, t.fullcategoryidx, t.cateidx
+		FROM (
+			SELECT
+				a.idx AS depth1idx, b.idx AS depth2idx, c.idx AS depth3idx, d.idx AS depth4idx,
+				a.name AS depth1name, b.name AS depth2name, c.name AS depth3name, d.name AS depth4name,
+				concat_ws(' > ', a.name, b.name, c.name, d.name) AS fullcategoryname,
+				concat(a.idx, b.idx, c.idx, d.idx) AS fullcategoryidx,
+				(CASE WHEN d.idx IS NOT NULL THEN d.idx
+					  WHEN c.idx IS NOT NULL THEN c.idx
+					  WHEN b.idx IS NOT NULL THEN b.idx
+					  ELSE a.idx
+				 END) AS cateidx
+			FROM tc a
+			LEFT OUTER JOIN tc b ON a.idx = b.parent
+			LEFT OUTER JOIN tc c ON b.idx = c.parent
+			LEFT OUTER JOIN tc d ON c.idx = d.parent
+			WHERE a.depth = 1
+		) t
+	</sql>
+	
+	<select id="selectCategoryCount" parameterType="somap" resultType="Integer">
+	 	SELECT COUNT(*) AS totalcnt	/* selectCategoryCount */
+	 	FROM T_CATEGORY
+	 	WHERE ISTRASH = 'F'
+		<choose>
+			<when test="goodscategorylist != null and goodscategorylist.size > 0">
+			AND IDX IN (<foreach collection="goodscategorylist" item="data" index="index" open="" separator="," close="">#{data.cateidx}</foreach>)
+			</when>
+			<otherwise>
+			AND IDX = #{cateidx}
+			</otherwise>
+		</choose>
+	</select>
+	
+	<update id="updateCategorySort" parameterType="somap">
+		UPDATE t_category a INNER JOIN 
+		(
+			SELECT idx, @cnt:=@cnt+1 cnt 
+			FROM t_category, (SELECT @cnt:=#{sort}) b 
+			WHERE siteid=#{siteid} 
+			AND istrash = 'F' 
+			AND parent = #{parent} 
+			AND idx != #{idx}
+			<![CDATA[
+			AND	sort >= #{sort}
+			]]>
+		) b on a.idx = b.idx
+		SET sort = cnt
+		WHERE siteid = #{siteid} AND istrash = 'F' AND parent = #{parent} AND a.idx != #{idx}
+		<![CDATA[
+		AND	sort >= #{sort}
+		]]>
+	</update>
+
+	<select id="selectPcCategoryList" parameterType="somap" resultType="somap">
+		/*CategoryMapper.xml - selectPcCategoryList:: 카테고리 목록 조회*/
+		SELECT	A.IDX, 
+				A.NAME, 
+				GROUP_CONCAT(CONCAT(B.IDX, '.', B.NAME) ORDER BY B.SORT ASC SEPARATOR '|') AS DEPTH2IDX
+		FROM	T_CATEGORY A
+		LEFT JOIN T_CATEGORY B
+		ON		A.IDX = B.PARENT
+		AND		B.HIDDEN = '0'
+		AND		B.DEPTH = '2'
+		AND		B.ISTRASH = 'F'
+		AND		B.SITEID = #{siteid}
+		WHERE	A.PARENT = '0'
+		AND 	A.SITEID = #{siteid}
+		AND		A.HIDDEN = '0'
+		AND		A.DEPTH = '1'
+		AND		A.ISTRASH = 'F'
+		GROUP BY A.IDX, A.NAME
+		ORDER BY A.SORT
+	</select>
+</mapper>

@@ -1,0 +1,13 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="56" height="56" viewBox="0 0 56 56">
+    <defs>
+        <clipPath id="2meff1fnda">
+            <path data-name="사각형 7485" transform="translate(-.47 -.469)" style="stroke:#707070;fill:#fff" d="M0 0h17v17H0z"/>
+        </clipPath>
+    </defs>
+    <g transform="translate(-117 -568)">
+        <rect data-name="사각형 7484" width="56" height="56" rx="28" transform="translate(117 568)" style="fill:#03c75a"/>
+        <g data-name="마스크 그룹 282" transform="translate(136.469 587.469)" style="clip-path:url(#2meff1fnda)">
+            <path data-name="naver" d="M12.988 10.258 5.891 0H0v19.158h6.171V8.9l7.1 10.258h5.891V0h-6.174z" transform="translate(-1.036 -1.038)" style="fill:#fff"/>
+        </g>
+    </g>
+</svg>

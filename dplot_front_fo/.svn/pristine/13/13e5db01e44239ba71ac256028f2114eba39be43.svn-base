@@ -1,0 +1,11 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="64" height="64" viewBox="0 0 64 64">
+    <g data-name="그룹 23227">
+        <path data-name="사각형 6330" style="fill:none" d="M0 0h64v64H0z"/>
+        <g data-name="장바구니 아이콘">
+            <g data-name="그룹 22190">
+                <path data-name="패스 17820" d="M37.834 37.5H.5L3.753 4.109h30.829z" transform="translate(12.631 15.373)" style="stroke:#111;stroke-linecap:round;stroke-linejoin:round;stroke-width:1.5px;fill:none"/>
+                <path data-name="패스 17821" d="M4.954 12.229V5.817C4.954 2.881 7.754.5 11.208.5s6.251 2.381 6.251 5.317v6.412" transform="translate(20.765 10.505)" style="stroke:#111;stroke-linecap:round;stroke-linejoin:round;stroke-width:1.5px;fill:none"/>
+            </g>
+        </g>
+    </g>
+</svg>

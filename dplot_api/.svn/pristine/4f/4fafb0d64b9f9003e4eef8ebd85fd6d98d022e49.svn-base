@@ -1,0 +1,267 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.dplot.mapper.DadaEventGoodsMapper">
+    <!-- 이벤트 상품 수정추가 -->
+    <update id="insertDadaEventGoods" parameterType="somap">
+        INSERT INTO t_dadaevent_goods /* insertDadaEventGoods */
+            (eventidx, goodsno, sortnum, reguserid, regdate)
+        VALUES
+        <foreach collection="productlist" item="item" index="index" separator=",">
+            (#{eventidx}, #{item.goodsno}, #{index} ,#{reguserid}, now())
+        </foreach>
+    </update>
+
+    <!-- 이벤트 상품 삭제 -->
+    <delete id="deleteDadaEventGoods" parameterType="somap">
+        DELETE FROM t_dadaevent_goods /* deleteDadaEventGoods */
+        WHERE eventidx = #{eventidx}
+    </delete>
+
+    <!-- 이벤트 상품 조회 -->
+    <select id="selectAdminDadaEventGoods" parameterType="somap" resultType="somap">
+        SELECT ta.goodsno /* selectAdminDadaEventGoods */
+             , (CASE
+                    WHEN ta.ispbgoods = 'T' THEN '직매입'
+                    WHEN ta.ispbgoods = 'F' THEN '위탁'
+                    ELSE ''
+            END) AS ispbgoodsname
+             , ta.brandname
+             , ta.goodscode
+             , ta.fullpath
+             , ta.fullcategoryname
+             , ta.goodsname
+             , (CASE
+                    WHEN ta.isdeal = 'F' THEN FORMAT(ta.price, 0)
+                    ELSE ''
+            END) AS price
+             , ta.sortnum
+             , ta.reguserid
+#      , ta.ispbgoods
+#      , ta.isdeal
+#      , ta.isdisplay
+#      , (CASE
+#             WHEN ta.isdeal = 'F' THEN FORMAT(ta.marketprice, 0)
+#             ELSE ''
+#     END)                                   AS marketprice
+#
+#      , ta.goodsdivtype
+#      , ta.goodsdivtypename
+#      , ta.goodsselltype
+#      , ta.goodsselltypename
+#      , ta.istempsave
+#      , ta.stockcnt
+#      , ta.cateidx
+#
+#
+#      , ta.goodsapprtype
+#      , ta.goodsapprtypename
+#      , ta.dealerno
+       , ta.dealername
+#      , ta.mdcode
+#      , ta.mdname
+#      , ta.brandidx
+#
+#      , DATE_FORMAT(ta.regdate, '%Y-%m-%d') AS regdate
+#      , DATE_FORMAT(ta.moddate, '%Y-%m-%d') AS moddate
+        FROM (SELECT a.goodsno
+                   , a.goodscode
+                   , a.goodsname
+#            , a.istempsave
+                   , a.isdeal
+#            , a.isdisplay
+                   , a.ispbgoods
+#            , a.marketprice
+                   , a.price
+                   , a.goodsdivtype
+                   , a.goodsselltype
+                   , a.goodsapprtype
+#            , a.regdate
+#            , a.moddate
+                   , a.dealerno
+                   , a.mdcode
+                   , a.brandidx
+#            , b.commrate
+#            , c.cateidx
+                   , d.fullcategoryname
+                   , dg.reguserid
+#            , FN_GET_CODENAME('base', 'GOODSDIVTYPE', a.goodsdivtype)   AS goodsdivtypename
+#            , FN_GET_CODENAME('base', 'GOODSSELLTYPE', a.goodsselltype) AS goodsselltypename
+#            , FN_GET_CODENAME('base', 'GOODSAPPRTYPE', a.goodsapprtype) AS goodsapprtypename
+            , (CASE
+                   WHEN a.ispbgoods = 'F'
+                       THEN (SELECT name FROM t_dealer WHERE userno = a.dealerno)
+                   ELSE '' END)                                         AS dealername
+#            , (CASE
+#                   WHEN a.mdcode IS NOT NULL AND a.mdcode != ''
+#                       THEN (SELECT mdname FROM t_charge_md WHERE mdcode = a.mdcode)
+#                   ELSE '' END)                                         AS mdname
+                   , (CASE
+                          WHEN a.brandidx IS NOT NULL AND a.brandidx != 0 THEN (SELECT name FROM t_brand WHERE idx = a.brandidx)
+                          ELSE '' END)                     AS brandname
+#            , (SELECT sum(stockcnt)
+#               FROM t_goods_option_detail
+#               WHERE goodsno = a.goodsno
+#                 AND isoptdisplay = 'T' ADN istrash = 'F') AS stockcnt
+                   , CONCAT(e.host, e.imgpath, e.imgfname) AS fullpath
+                   , dg.sortnum
+              FROM t_dadaevent_goods dg
+                       LEFT JOIN t_goods a ON dg.goodsno = a.goodsno
+                       LEFT OUTER JOIN t_goods_option_detail b
+                                       ON a.goodsno = b.goodsno
+                                           AND b.ismaingoods = 'T'
+                                           AND b.isoptdisplay = 'T'
+					  				 	   AND b.istrash = 'F'
+                       LEFT OUTER JOIN t_goods_category c
+                                       ON a.goodsno = c.goodsno
+                                           AND c.isrepre = 'T'
+                       LEFT OUTER JOIN (
+                  WITH category AS (
+                      SELECT idx, name, depth, parent
+                      FROM t_category
+                      WHERE siteid = 'base'
+                        AND hidden = 0
+                  )
+                  SELECT t.cateidx,
+                         t.depth1idx,
+                         t.depth2idx,
+                         t.depth3idx,
+                         t.depth4idx,
+                         t.fullcategoryname
+                  FROM (SELECT a.idx                                            AS depth1idx
+                             , b.idx                                            AS depth2idx
+                             , c.idx                                            AS depth3idx
+                             , d.idx                                            AS depth4idx
+                             , concat_ws(' > ', a.name, b.name, c.name, d.name) AS fullcategoryname
+                             , (CASE
+                                    WHEN d.idx IS NOT NULL THEN d.idx
+                                    WHEN c.idx IS NOT NULL THEN c.idx
+                                    WHEN b.idx IS NOT NULL THEN b.idx
+                                    ELSE a.idx
+                          END)                                                  AS cateidx
+                        FROM category a
+                                 LEFT OUTER JOIN category b ON a.idx = b.parent
+                                 LEFT OUTER JOIN category c ON b.idx = c.parent
+                                 LEFT OUTER JOIN category d ON c.idx = d.parent
+                        WHERE a.depth = 1
+                       ) t
+              ) d ON c.cateidx = d.cateidx
+                       LEFT OUTER JOIN t_file e
+                                       ON a.goodsno = e.orgidx
+                                           AND e.istrash = 'F'
+                                           AND e.imgtype = 'IGT003'
+              WHERE 1 = 1
+                AND dg.eventidx = #{eventidx}
+             ) ta
+        WHERE 1 = 1
+        ORDER BY ta.sortnum
+    </select>
+
+	<select id="selectEventDtlGoodsList" parameterType="somap" resultType="somap">
+		SELECT /* DadaEventGoodsMapper.xml selectEventDtlGoodsList 프로모션 상세 상품 리스트 */
+			a.EVENTIDX
+			, b.GOODSNO
+			, c.cateidx
+			, if((select idx from t_wish where userno = #{userno} and goodsno = a.GOODSNO and CATEIDX = c.CATEIDX and istrash = 'F') is null, 'F', 'T') as iswished
+			, b.GOODSCODE
+			, b.GOODSNAME
+			, b.SUMMARY
+			, b.ISDELATTACH
+		    , fn_get_goods_marketprice(#{siteid}, b.goodsno) as marketprice  -- 정산가
+		    , fn_get_goods_price(#{siteid}, b.goodsno) as price   -- 판매가
+		    , fn_get_goods_salepromoamt(#{siteid}, b.goodsno, null, 0, #{platform}) as saleamt -- 프로모션할인적용가(할인가)
+		    , fn_get_goods_salecouponamt(#{siteid}, b.goodsno, null, 0, #{platform}) as goodscpnamt -- 즉시할인쿠폰할인가
+			, b.STOCK
+			, b.OPTIONKIND
+			, b.BRANDIDX
+			, b.PRODUCT
+			, b.ORIGIN
+			, b.DELIVERYPOLICY
+			, b.DELIVERYMETHOD
+			, b.DELIVERYFEE
+			, b.DELIVERYLIMIT
+			, b.ISDISPLAY
+			, b.MINORDCNT
+			, b.MAXORDCNT
+			, b.DAYMAXORDCNT
+			, b.ISFRSTSALE
+			, b.ISOPENREVIEW
+			, b.MUAPPCHTYPE
+			, b.MUMEMBERTYPE
+			, b.MUMEMLVTYPE
+			, b.HITS
+			, FN_GET_FILE_URL(b.goodsno, 'FLT001', #{imgtype}) as fullpath
+			, tb.enname as brandname
+		FROM
+			t_dadaevent_goods a
+		INNER JOIN t_goods b
+		ON a.GOODSNO = b.GOODSNO
+		INNER JOIN t_goods_category c
+		ON b.GOODSNO = c.GOODSNO
+		AND c.ISREPRE = 'T'
+		LEFT JOIN t_brand tb
+		ON b.brandidx = tb.idx
+		WHERE a.EVENTIDX = #{eventidx}
+		AND b.SITEID = #{siteid}
+		ORDER BY a.SORTNUM
+	</select>
+
+	<select id="selectEventDtlGoodsList_tuning_view" parameterType="somap" resultType="somap">
+		SELECT /* DadaEventGoodsMapper.xml selectEventDtlGoodsList_tuning_view 프로모션 상세 상품 리스트 -view 테이블로 튜닝*/
+			a.EVENTIDX
+			, b.GOODSNO
+			, c.cateidx
+			, if((select idx from t_wish where userno = #{userno} and goodsno = a.GOODSNO and CATEIDX = c.CATEIDX and istrash = 'F') is null, 'F', 'T') as iswished
+			, b.GOODSCODE
+			, b.GOODSNAME
+			, b.SUMMARY
+			, b.ISDELATTACH
+		    , fn_get_goods_marketprice(#{siteid}, b.goodsno) as marketprice  -- 정산가
+		    , fn_get_goods_price(#{siteid}, b.goodsno) as price   -- 판매가
+		    , IFNULL(VC.PRICE, 0) + IFNULL(VP.PRICE, 0) AS saleamt /* 프로모션할인적용가(할인가) */
+		    <!-- , IFNULL(VC.PRICE,0) AS goodscpnamt /* 즉시할인쿠폰할인가 */ -->
+		    <!-- 화면에서는 saleamt만 보고 할인 여부를 판단. 해서 프로모션 할인가와 쿠폰할인가를 구분할 필요가 없음. 두개의 합을 더한 할인금액을 saleamt로 리턴(2022-11-07, James) -->
+		    <!-- , fn_get_goods_salepromoamt(#{siteid}, b.goodsno, null, 0, #{platform}) as saleamt  프로모션할인적용가(할인가)
+		    , fn_get_goods_salecouponamt(#{siteid}, b.goodsno, null, 0, #{platform}) as goodscpnamt  즉시할인쿠폰할인가 -->
+			, b.STOCK
+			, b.OPTIONKIND
+			, b.BRANDIDX
+			, b.PRODUCT
+			, b.ORIGIN
+			, b.DELIVERYPOLICY
+			, b.DELIVERYMETHOD
+			, b.DELIVERYFEE
+			, b.DELIVERYLIMIT
+			, b.ISDISPLAY
+			, b.MINORDCNT
+			, b.MAXORDCNT
+			, b.DAYMAXORDCNT
+			, b.ISFRSTSALE
+			, b.ISOPENREVIEW
+			, b.MUAPPCHTYPE
+			, b.MUMEMBERTYPE
+			, b.MUMEMLVTYPE
+			, b.HITS
+			, FN_GET_FILE_URL(b.goodsno, 'FLT001', #{imgtype}) as fullpath
+			, tb.enname as brandname
+		FROM
+		    (SELECT @userno := 0) TUSNO,
+		    (SELECT @appchtype  := #{platform} ) TAPT,
+			t_dadaevent_goods a
+		INNER JOIN t_goods b
+		ON a.GOODSNO = b.GOODSNO
+		INNER JOIN t_goods_category c
+		ON b.GOODSNO = c.GOODSNO
+		AND c.ISREPRE = 'T'
+		LEFT JOIN t_brand tb
+		ON b.brandidx = tb.idx
+		LEFT OUTER JOIN v_goods_salepromoamt VP
+        ON a.GOODSNO = VP.GOODSNO
+        LEFT OUTER JOIN v_goods_salecouponamt VC
+        ON a.GOODSNO = VC.GOODSNO
+		WHERE a.EVENTIDX = #{eventidx}
+		AND b.SITEID = #{siteid}
+		ORDER BY a.SORTNUM
+	</select>
+
+</mapper>

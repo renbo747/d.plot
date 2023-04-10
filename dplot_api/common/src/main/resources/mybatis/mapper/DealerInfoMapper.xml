@@ -1,0 +1,85 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.dplot.mapper.DealerInfoMapper">
+
+	<insert id="insertPartnershipInfo" parameterType="somap">
+		INSERT /* DealerInfoMapper.xml - insertPartnershipInfo 파트너사 정보 등록 */ INTO t_dealer_info (dealerno, compname, tel, post, addr, email, addrdetail, bizno, bizcondition, repmobile, repci, remitbank, remitdepositor, remitaccount, reprename, bizitem, muaddauthtype, sigungucode, buildingcode, roadnamecode)
+		VALUES(#{dealerno}, #{compname}, #{tel}, #{post}, #{addr}, #{email}, #{addrdetail}, #{bizno}, #{bizcondition}, #{repmobile}, #{repci}, #{remitbank}, #{remitdepositor}, #{remitaccount}, #{reprename}, #{bizitem}, #{muaddauthtype}, #{sigungucode}, #{buildingcode}, #{roadnamecode})
+	</insert>
+
+	<update id="updatePartnershipInfo" parameterType="somap">
+		UPDATE T_DEALER_INFO SET  /* DealerInfoMapper.xml - updatePartnershipInfo 파트너사 정보 수정 */
+		     post = #{post}
+		   , addr = #{addr}
+		   , addrdetail = #{addrdetail}
+		   , sigungucode = #{sigungucode}
+		   , buildingcode = #{buildingcode}
+		   , roadnamecode = #{roadnamecode}
+		   , repmobile = #{repmobile}
+		   , tel = #{tel}
+		   , email = #{email}
+		   , bizitem = #{bizitem}
+		   , bizcondition = #{bizcondition}
+		   , muaddauthtype = #{muaddauthtype}
+			<if test="repci != null and repci != ''">
+			   , repci = #{repci}
+			</if>
+		WHERE dealerno = #{no}
+	</update>
+	
+	<!-- 파트너사주소 조회 -->
+	<select id="selectPartnerAddr" parameterType="somap" resultType="somap">
+        SELECT 	/* DealerInfoMapper.xml - selectPartnerAddr 파트너사주소 조회 */
+			tdi.post, tdi.addr, tdi.addrdetail, tdi.sigungucode, tdi.buildingcode, tdi.roadnamecode
+		FROM t_dealer_info tdi 
+		WHERE dealerno = #{dealerno}
+    </select>
+    
+    <!-- 상품상세 위탁사 AS정보 조회 -->
+    <select id="selectDealerAsInfo" parameterType="somap" resultType="somap">
+    	/* DealerInfoMapper.xml - selectDealerAsInfo 상품상세 위탁사 AS정보 조회 */
+        SELECT i.dealerno -- 판매자번호
+			, i.compname -- 상호
+			, i.reprename -- 대표자
+			, i.bizno -- 사업자등록번호
+			, (select d.comsellno from t_dealer d where d.userno = i.dealerno) as comsellno -- 통신판매신고번호
+			, i.tel -- 연락처
+			, i.fax -- 팩스
+			, i.email -- 이메일
+			, concat(i.post, i.addr, ifnull(i.addrdetail, '')) as fulladdr -- 사업장소재지
+		FROM t_dealer_info i
+		WHERE i.dealerno = #{dealerno}
+    </select>
+
+	<select id="selectDealerInfoByCI" parameterType="somap" resultType="somap">
+		SELECT  C.NO, C.SITEID, C.USERID, A.NAME
+		FROM T_DEALER A INNER JOIN T_DEALER_INFO B ON A.USERNO = B.DEALERNO
+						INNER JOIN T_USER C ON A.USERNO = C.NO
+		WHERE C.SITEID = #{siteid}
+		AND B.REPCI = #{ci}
+		<if test="id != null and id != ''">
+			AND C.USERID = #{id}
+		</if>
+	</select>
+
+	<select id="selectDealerInfoByCIList" parameterType="somap" resultType="somap">
+		SELECT  C.NO, C.SITEID, C.USERID, A.NAME
+		FROM T_DEALER A INNER JOIN T_DEALER_INFO B ON A.USERNO = B.DEALERNO
+		INNER JOIN T_USER C ON A.USERNO = C.NO
+		WHERE C.SITEID = #{siteid}
+		AND B.REPCI = #{ci}
+		<if test="id != null and id != ''">
+			AND C.USERID = #{id}
+		</if>
+	</select>
+
+	<select id="selectDealerAddAuth" parameterType="somap" resultType="Integer">
+		/* DealerInfoMapper.xml - selectDealerAddAuth 파트너사 추가수정권한 여부 조회 */
+		SELECT COUNT(*)
+		FROM T_DEALER_INFO
+		WHERE DEALERNO = #{dealerno}
+		AND MUADDAUTHTYPE LIKE CONCAT('%', #{addauth}, '%')
+	</select>
+    
+</mapper>

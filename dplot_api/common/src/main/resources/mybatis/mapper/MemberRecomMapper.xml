@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.dplot.mapper.MemberRecomMapper">
+	<insert id="insertMemberRecom" parameterType="somap">
+		INSERT INTO t_member_recom /*MemberRecomMapper.xml - insertMemberRecom :: 회원리워드 저장*/
+		(REVUSERNO, RECUSERNO, RELOGIDX)
+		VALUES(#{revuserno}, #{recuserno}, #{relogidx})
+	</insert>
+</mapper>

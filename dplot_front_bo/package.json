@@ -1,0 +1,107 @@
+{
+  "name": "dplot_front_bo",
+  "version": "0.1.0",
+  "private": true,
+  "scripts": {
+    "serve": "vue-cli-service serve --mode local --openssl-legacy-provider --port 81",
+    "build": "vue-cli-service build",
+    "test:unit": "vue-cli-service test:unit --env=jsdom",
+    "test": "mochapack --webpack-config webpack.config.js --require test/setup.js test/**/*.spec.js",
+    "lint": "eslint --ext .js,.vue src",
+    "dev": "vue-cli-service build  --mode dev",
+    "fix": "eslint --fix --ext .js,.vue src",
+    "local": "vue-cli-service build --mode local",
+    "postinstall": "patch-package",
+    "prod": "vue-cli-service build --mode prod"
+  },
+  "dependencies": {
+    "axios": "^0.24.0",
+    "babel-polyfill": "^6.26.0",
+    "bootstrap": "^4.5.3",
+    "bootstrap-vue": "^2.21.2",
+    "core-js": "^3.6.5",
+    "es6-promise": "^4.2.8",
+    "jquery": "^1.9.1",
+    "magic-check": "^1.0.3",
+    "patch-package": "^6.4.7",
+    "popper.js": "^1.16.1",
+    "supertest": "^6.2.2",
+    "swiper": "^4.4.1",
+    "v-click-outside": "^3.1.2",
+    "v-viewer": "^1.6.4",
+    "vee-validate": "^3.4.14",
+    "vue": "^2.6.11",
+    "vue-append": "^2.2.0",
+    "vue-apple-login": "^1.0.0",
+    "vue-awesome-swiper": "^3.1.3",
+    "vue-cookies": "^1.7.4",
+    "vue-daum-postcode": "^0.10.0",
+    "vue-google-charts": "^1.1.0",
+    "vue-infinite-loading": "^2.4.5",
+    "vue-js-modal": "^2.0.1",
+    "vue-jstree": "^2.1.6",
+    "vue-lazyload": "^1.3.3",
+    "vue-loading-overlay": "^3.4.2",
+    "vue-meta": "^2.4.0",
+    "vue-plugin-load-script": "^1.3.6",
+    "vue-router": "^3.2.0",
+    "vue-scrollactive": "^0.9.3",
+    "vue-slide-toggle": "^1.1.1",
+    "vue-slider-component": "^3.2.15",
+    "vue-toast-notification": "^0.6.2",
+    "vue-trumbowyg": "^3.4.0",
+    "vue-video-player": "^5.0.2",
+    "vue-video-thumbnail": "^0.1.12",
+    "vue2-datepicker": "^3.10.3",
+    "vue2-editor": "^2.10.3",
+    "vuex": "^3.4.0",
+    "xlsx": "^0.17.3"
+  },
+  "devDependencies": {
+    "@babel/preset-env": "^7.16.0",
+    "@vue/cli-plugin-babel": "~4.5.0",
+    "@vue/cli-plugin-eslint": "~4.5.0",
+    "@vue/cli-plugin-router": "~4.5.0",
+    "@vue/cli-plugin-unit-jest": "~4.5.0",
+    "@vue/cli-plugin-vuex": "~4.5.0",
+    "@vue/cli-service": "~4.5.0",
+    "@vue/eslint-config-prettier": "^6.0.0",
+    "@vue/test-utils": "^1.3.0",
+    "babel-eslint": "^10.1.0",
+    "eslint": "^6.2.0",
+    "eslint-plugin-vue": "^8.0.1",
+    "identity-obj-proxy": "^3.0.0",
+    "node-sass": "^6.0.1",
+    "prettier": "^2.2.1",
+    "sass-loader": "^10.2.1",
+    "vue-jest": "^3.0.7",
+    "vue-template-compiler": "^2.6.11"
+  },
+  "eslintConfig": {
+    "root": true,
+    "env": {
+      "node": true
+    },
+    "extends": [
+      "plugin:vue/essential",
+      "eslint:recommended"
+    ],
+    "parserOptions": {
+      "parser": "babel-eslint"
+    },
+    "rules": {
+      "no-unused-vars": "off"
+    },
+    "overrides": [
+      {
+        "files": [
+          "**/__tests__/*.{j,t}s?(x)",
+          "**/tests/unit/**/*.spec.{j,t}s?(x)"
+        ],
+        "env": {
+          "jest": true
+        }
+      }
+    ]
+  }
+}

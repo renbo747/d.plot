@@ -1,0 +1,1146 @@
+package com.dplot.util;
+
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
+import java.util.ArrayList;
+import java.util.Calendar;
+import java.util.List;
+
+import org.apache.commons.lang.StringUtils;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import javax.xml.bind.SchemaOutputResolver;
+
+/**
+ *
+ * @brief 몰에서 사용하는 시간관련 클래스
+ *
+ */
+public class DateTimeUtil {
+	private DateTimeUtil() {}
+
+	/** The Constant logger. */
+	private static final Logger logger = LoggerFactory.getLogger(DateTimeUtil.class);
+
+	// 날짜 포맷과 길이를 정의 함.
+	public final static String MALL_DATE_FORMAT_DATE 	= "yyyy-MM-dd";
+	public final static int MALL_DATE_FORMAT_DATE_LEN 	= MALL_DATE_FORMAT_DATE.length();
+	public final static String MALL_DATE_FORMAT_DATE_SHORT 	= "yyyyMMdd";
+	public final static int MALL_DATE_FORMAT_DATE_SHORT_LEN 	= MALL_DATE_FORMAT_DATE_SHORT.length();
+	public final static String MALL_DATE_FORMAT_TIME 	= "HH:mm:ss";
+	public final static String MALL_DATE_FORMAT_FULL_SHORT 	= "yyyyMMddHHmmss";
+	public final static int MALL_DATE_FORMAT_FULL_SHORT_LEN 	= MALL_DATE_FORMAT_FULL_SHORT.length();
+	public final static String MALL_DATE_FORMAT_FULL 	= "yyyy-MM-dd HH:mm:ss";
+	public final static int MALL_DATE_FORMAT_FULL_LEN 	= MALL_DATE_FORMAT_FULL.length();
+	public final static String MALL_DATE_FORMAT_VARCHAR12 	= "yyyyMMddHHmm";
+	public final static int MALL_DATE_FORMAT_VARCHAR12_LEN 	= MALL_DATE_FORMAT_VARCHAR12.length();
+	public final static String MALL_DATE_FORMAT_VARCHAR14 	= "yyyyMMddHHmmss";
+	public final static int MALL_DATE_FORMAT_VARCHAR14_LEN 	= MALL_DATE_FORMAT_VARCHAR14.length();
+	public final static String MALL_DATE_NONE 			= "";
+
+	/**
+	 *
+	* @Method Name : _formatDateShort
+	* @Method 설명 : yyyyMMdd 형태를 기본포맷으로 전환한다.
+	*
+	* @param str
+	* @return
+	 */
+	public static String _formatDateShort(String str) {
+		java.text.SimpleDateFormat fmt = new java.text.SimpleDateFormat(MALL_DATE_FORMAT_DATE_SHORT, java.util.Locale.KOREA);
+		try {
+			fmt.parse(str);
+		} catch (ParseException e) {
+			str = MALL_DATE_NONE;
+		}
+
+		return String.format("%s-%s-%s %s:%s:%s"
+				, str.substring(0, 4)
+				, str.substring(4, 6)
+				, str.substring(6, 8)
+				, "00"
+				, "00"
+				, "00"
+				);
+	}
+
+	/**
+	 *
+	* @Method Name : _formatDate
+	* @Method 설명 : yyyy-MM-dd 형태를 기본포맷으로 전환한다.
+	*
+	* @param str
+	* @return
+	 */
+	public static String _formatDate(String str) {
+		java.text.SimpleDateFormat fmt = new java.text.SimpleDateFormat(MALL_DATE_FORMAT_DATE, java.util.Locale.KOREA);
+		try {
+			fmt.parse(str);
+		} catch (ParseException e) {
+			str = MALL_DATE_NONE;
+		}
+
+		return String.format("%s %s:%s:%s"
+				, str
+				, "00"
+				, "00"
+				, "00"
+				);
+	}
+
+	/**
+	 *
+	* @Method Name : _formatFullShort
+	* @Method 설명 : yyyyMMddHHmmss 형태를 기본포맷으로 전환한다.
+	*
+	* @param str
+	* @return
+	 */
+	public static String _formatFullShort(String str) {
+		java.text.SimpleDateFormat fmt = new java.text.SimpleDateFormat(MALL_DATE_FORMAT_FULL_SHORT, java.util.Locale.KOREA);
+		try {
+			fmt.parse(str);
+		} catch (ParseException e) {
+			str = MALL_DATE_NONE;
+		}
+
+		return String.format("%s-%s-%s %s:%s:%s"
+				, str.substring(0, 4)
+				, str.substring(4, 6)
+				, str.substring(6, 8)
+				, str.substring(8, 10)
+				, str.substring(10, 12)
+				, str.substring(12, 14)
+				);
+	}
+
+	/**
+	 *
+	* @Method Name : _formatFullShort
+	* @Method 설명 : yyyyMMddHHmmss 형태를 기본포맷으로 전환한다.
+	*
+	* @param str
+	* @return
+	 */
+	public static String _formatVarchar12(String str) {
+		java.text.SimpleDateFormat fmt = new java.text.SimpleDateFormat(MALL_DATE_FORMAT_VARCHAR12, java.util.Locale.KOREA);
+		try {
+			fmt.parse(str);
+		} catch (ParseException e) {
+			str = MALL_DATE_NONE;
+		}
+
+		return String.format("%s-%s-%s %s:%s:%s"
+				, str.substring(0, 4)
+				, str.substring(4, 6)
+				, str.substring(6, 8)
+				, str.substring(8, 10)
+				, str.substring(10, 12)
+				, "00"
+				);
+	}
+	
+	/**
+	 *
+	* @Method Name : _formatFullShort
+	* @Method 설명 : yyyy-MM-dd HH:mm:ss 형태를 기본포맷으로 전환한다.
+	*
+	* @param str
+	* @return
+	 */
+	public static String _formatFull(String str) {
+		java.text.SimpleDateFormat fmt = new java.text.SimpleDateFormat(MALL_DATE_FORMAT_FULL, java.util.Locale.KOREA);
+		try {
+			fmt.parse(str);
+		} catch (ParseException e) {
+			str = MALL_DATE_NONE;
+		}
+
+		return str;
+	}
+
+	/**
+	 *
+	* @Method Name : toMallFormat
+	* @Method 설명 : 몰에서 사용하는 포맷으로 전환한다.
+	*
+	* @param org 지원가능한 날짜 포맷
+	* @return
+	 */
+	public static String toMallFormat(String org) {
+		String str = org;
+		if (str == null || Util.isEmpty(str)) return MALL_DATE_NONE;;
+
+		if (str.length() >= MALL_DATE_FORMAT_FULL_LEN) {
+			str = str.substring(0, MALL_DATE_FORMAT_FULL_LEN);
+			String str_ymd = str.substring(0, MALL_DATE_FORMAT_DATE_LEN);
+			str_ymd = str_ymd.replace("/", "-")
+					 		 .replace(":", "-")
+					 		 .replace(" ", "-");
+			String str_hms = str.substring(MALL_DATE_FORMAT_DATE_LEN + 1, MALL_DATE_FORMAT_FULL_LEN);
+			str_hms = str_hms.replace("/", ":")
+					 		 .replace("-", ":")
+					 		 .replace(" ", ":");
+			return _formatFull(String.format("%s %s", str_ymd, str_hms));
+		}
+
+		if (str.length() == MALL_DATE_FORMAT_FULL_SHORT_LEN) {
+			return _formatFullShort(str);
+		}
+		
+		if (str.length() == MALL_DATE_FORMAT_VARCHAR12_LEN) {
+			return _formatVarchar12(str);
+		}
+		
+		if (str.length() >= MALL_DATE_FORMAT_DATE_LEN) {
+			str = str.substring(0, MALL_DATE_FORMAT_DATE_LEN);
+			str = str.replace("/", "-")
+					 .replace(":", "-")
+					 .replace(" ", "-");
+			return _formatDate(str);
+		}
+
+		if (str.length() == MALL_DATE_FORMAT_DATE_SHORT_LEN) {
+			return _formatDateShort(str);
+		}
+
+		return MALL_DATE_NONE;
+	}
+
+	/**
+	 *
+	* @Method Name : isValid
+	* @Method 설명 : 날짜 포맷이 변환가능한가 판단
+	*
+	* @param org
+	* @return
+	 */
+	public static boolean isValid(String org) {
+		return toMallFormat(org) != MALL_DATE_NONE;
+	}
+
+	/**
+	 *
+	* @Method Name : getDatePartShortStr
+	* @Method 설명 : 날짜부분만 yyyyMMdd 형태로 리턴
+	*
+	* @param org
+	* @return
+	 */
+	public static String getDatePartShortStr(String org) {
+		String str = toMallFormat(org);
+		if (! isValid(str)) return MALL_DATE_NONE;
+
+		return str.substring(0, MALL_DATE_FORMAT_DATE_LEN).replace("-", "");
+	}
+
+	/**
+	 *
+	* @Method Name : getDatePartShortStr
+	* @Method 설명 : 날짜부분만 yyyy-MM-dd 형태로 리턴
+	*
+	* @param org
+	* @return
+	 */
+	public static String getDatePartStr(String org) {
+		String str = toMallFormat(org);
+		if (! isValid(str)) return MALL_DATE_NONE;
+
+		return str.substring(0, MALL_DATE_FORMAT_DATE_LEN);
+	}
+
+	/**
+	 *
+	* @Method Name : getFullStr
+	* @Method 설명 : 전체 포맷 리턴
+	*
+	* @param org
+	* @return
+	 */
+	public static String getFullStr(String org) {
+		String str = toMallFormat(org);
+		if (! isValid(str)) return MALL_DATE_NONE;
+
+		return str.substring(0, MALL_DATE_FORMAT_FULL_LEN);
+	}
+
+	/**
+	* yyyy-MM-dd HH:mm:ss 포멧 현재 시간 반환
+	*
+	* @return String
+	 */
+	public static String getNowFullStr() {
+		java.text.SimpleDateFormat fmt = new java.text.SimpleDateFormat(MALL_DATE_FORMAT_FULL, java.util.Locale.KOREA);
+		return fmt.format(new java.util.Date());
+	}
+
+	/**
+	* yyyyMMddHHmmss 포멧 현재 시간 반환
+	*
+	* @return String
+	 */
+	public static String getNowFullShortStr() {
+		java.text.SimpleDateFormat fmt = new java.text.SimpleDateFormat(MALL_DATE_FORMAT_FULL_SHORT, java.util.Locale.KOREA);
+		return fmt.format(new java.util.Date());
+	}
+
+	/**
+	* yyyyMMdd 포멧 현재 시간 반환
+	*
+	* @return String
+	 */
+	public static String getNowDatePartShortStr() {
+		java.text.SimpleDateFormat fmt = new java.text.SimpleDateFormat(MALL_DATE_FORMAT_DATE_SHORT, java.util.Locale.KOREA);
+		return fmt.format(new java.util.Date());
+	}
+
+	/**
+	* yyyy-MM-dd 포멧 현재 시간 반환
+	*
+	* @return String
+	 */
+	public static String getNowDatePartStr() {
+		java.text.SimpleDateFormat fmt = new java.text.SimpleDateFormat(MALL_DATE_FORMAT_DATE, java.util.Locale.KOREA);
+		return fmt.format(new java.util.Date());
+	}
+
+	/**
+	 *
+	* @Method Name : getThisYearFirstDateStr
+	* @Method 설명 : 올해 첫째날
+	*
+	* @return
+	 */
+	public static String getThisYearFirstDateStr() {
+		String str = getNowFullStr();
+		return String.format("%s-%s-%s %s:%s:%s"
+				, str.substring(0,4)
+				, "01"
+				, "01"
+				, "00"
+				, "00"
+				, "00"
+				);
+	}
+
+	/**
+	 *	년도 반환
+	 *
+	 * @return int
+	 */
+	public static int getNowYear() {
+		return getYear(getNowFullStr());
+	}
+
+	/**
+	 *	년도 반환
+	 *
+	 * @param org
+	 * @return int
+	 */
+	public static int getYear(String org) {
+		String str = toMallFormat(org);
+		return Converter.toInt(str.substring(0, 4));
+	}
+
+	/**
+	 *	월 반환
+	 *
+	 * @return int
+	 */
+	public static int getNowMonth() {
+		return getMonth(getNowFullStr());
+	}
+
+	/**
+	 *	월 반환
+	 *
+	 * @param org
+	 * @return int
+	 */
+	public static int getMonth(String org) {
+		String str = toMallFormat(org);
+		return Converter.toInt(str.substring(5, 7));
+	}
+
+	/**
+	 *	일 반환
+	 *
+	 * @param org
+	 * @return int
+	 */
+	public static int getDay(String org) {
+		String str = toMallFormat(org);
+		return Converter.toInt(str.substring(8, 10));
+	}
+
+	/**
+	 *	초 반환
+	 *
+	 * @param org
+	 * @return int
+	 */
+	public static int getSecond(String org) {
+		String str = toMallFormat(org);
+		return Converter.toInt(str.substring(17, 19));
+	}
+
+	/**
+	 *	주 반환
+	 *
+	 * @return int
+	 */
+	public static int getNowWeek() {
+		return getWeekDay(getNowFullStr());
+	}
+
+	/**
+	*
+	* @Method Name : getTodayIsNthDaysThisYear
+	* @Method 설명 : 오늘은 올해 몇번째 날인가
+	*
+	* @return int
+	* @throws ParseException
+	*/
+	public static int getTodayIsNthDaysThisYear() throws ParseException {
+		return getNthDaysThisYear(getNowFullStr());
+	}
+
+	/**
+	*
+	* @Method Name : getTodayIsNthDaysThisYear
+	* @Method 설명 : 오늘은 올해 몇번째 날인가
+	*
+	* @param org
+	* @return int
+	* @throws ParseException
+	 */
+	public static int getNthDaysThisYear(String org) throws ParseException {
+		java.text.SimpleDateFormat fmt = new java.text.SimpleDateFormat(MALL_DATE_FORMAT_DATE, java.util.Locale.KOREA);
+
+		String first = getThisYearFirstDateStr();
+		String current = toMallFormat(org);
+
+		java.util.Date firstDate = fmt.parse(first.substring(0, MALL_DATE_FORMAT_DATE_LEN));
+		java.util.Date currentDate = fmt.parse(current.substring(0, MALL_DATE_FORMAT_DATE_LEN));
+
+		long duration = currentDate.getTime() - firstDate.getTime();
+		int term = (int) (duration / (1000 * 60 * 60 * 24));
+		return term + 1;
+	}
+
+	/**
+	 *
+	* @Method Name : getNowIsNthSecondsThisYear
+	* @Method 설명 : 지금은 올해 몇번째 초인가
+	*
+	* @return long
+	* @throws ParseException
+	 */
+	public static long getNowIsNthSecondsThisYear() throws ParseException {
+		return getNthSecondsThisYear(getNowFullStr());
+	}
+
+	/**
+	 *
+	* @Method Name : getNowIsNthSecondsThisYear
+	* @Method 설명 : 지금은 올해 몇번째 초인가
+	*
+	* @param org
+	* @return long
+	* @throws ParseException
+	 */
+	public static long getNthSecondsThisYear(String org) throws ParseException {
+		java.text.SimpleDateFormat fmt_date = new java.text.SimpleDateFormat(MALL_DATE_FORMAT_DATE, java.util.Locale.KOREA);
+		java.text.SimpleDateFormat fmt_full = new java.text.SimpleDateFormat(MALL_DATE_FORMAT_FULL, java.util.Locale.KOREA);
+
+		String first = getThisYearFirstDateStr();
+		String current = toMallFormat(org);
+
+		java.util.Date firstDate = fmt_date.parse(first.substring(0, MALL_DATE_FORMAT_DATE_LEN));
+		java.util.Date currentDate = fmt_full.parse(current);
+
+		long duration = currentDate.getTime() - firstDate.getTime();
+		return duration / 1000 + 1;
+	}
+
+	/**
+	 *	unix current time divide 1000
+	 *
+	 * @return int
+	  */
+	public static int getNowUnixTimeStamp() {
+		java.util.Date d = new java.util.Date();
+		return (int) (d.getTime() / 1000);
+	}
+
+	/**
+	 *	format 에 맞는 현재 시간 반환
+	 *
+	 * @param String format
+	 * @return String
+	  */
+	public static String getNowFormatStr(String format) {
+		java.text.SimpleDateFormat fmt = new java.text.SimpleDateFormat(format, java.util.Locale.KOREA);
+		return fmt.format(new java.util.Date());
+	}
+
+	/**
+	 *	format 에 맞는 현재 시간 반환
+	 *
+	 * @param String org
+	 * @param String format
+	 * @return String
+	  */
+	public static String getFormatStr(String org, String format) {
+		if (org == null) return "";
+		if (org.equals("")) return "";
+
+		java.text.SimpleDateFormat fmt_full = new java.text.SimpleDateFormat(MALL_DATE_FORMAT_FULL, java.util.Locale.KOREA);
+
+		String str = toMallFormat(org);
+		try {
+			java.util.Date d = fmt_full.parse(str);
+			java.text.SimpleDateFormat fmt = new java.text.SimpleDateFormat(format, java.util.Locale.KOREA);
+			return fmt.format(d);
+		} catch (ParseException e) {
+			e.printStackTrace();
+		}
+
+		return "";
+	}
+
+	/**
+	 * format 에 맞는 시간 반환
+	 * @param String format
+	 * @return Formatted String / Empty String.
+	  */
+	public static String getFormatStr(java.util.Date d, String format) {
+		if (d == null || d.toString().equals("")) {
+			return "";
+		}
+		if (format == null || format.equals("")) {
+			return "";
+		}
+
+		String result = "";
+		try {
+			SimpleDateFormat fmt = new SimpleDateFormat(format, java.util.Locale.KOREA);
+			result = fmt.format(d);
+		} catch(Exception e) {
+			e.printStackTrace();
+		}
+		return result;
+	}
+
+	/**
+	 *	현재 월의 1일 기준 년월일 반환
+	 *
+	 * @return String
+	  */
+	public static String getNowMonthFirstDay() {
+		return getMonthFirstDay(getNowFullStr());
+	}
+
+	/**
+	 *	현재 월의 1일 기준 년월일 반환
+	 *
+	 * @param String org
+	 * @return String
+	  */
+	public static String getMonthFirstDay(String org) {
+		String str = toMallFormat(org);
+		return String.format("%s-01", str.substring(0, 7));
+	}
+
+	/**
+	 *	현재 월의 마지막일 기준 년월일 반환
+	 *
+	 * @param String org
+	 * @return String
+	  */
+	public static int getLastMonthDay(String org) throws java.text.ParseException {
+		String str = toMallFormat(org);
+		return getLastMonthDay(getYear(str), getMonth(str));
+	}
+
+	/**
+	 *	해당 월의 마지막일 반환
+	 *
+	 * @param int year
+	 * @param int month
+	 * @return int
+	 * @throws java.text.ParseException
+	  */
+	public static int getLastMonthDay(int year, int month) throws java.text.ParseException {
+		int day = 0;
+
+		switch (month) {
+			case 1:
+			case 3:
+			case 5:
+			case 7:
+			case 8:
+			case 10:
+			case 12:
+				day = 31;
+				break;
+			case 2:
+				if ((year % 4) == 0) {
+					if ((year % 100) == 0 && (year % 400) != 0) {
+						day = 28;
+					} else {
+						day = 29;
+					}
+				} else {
+					day = 28;
+				}
+				break;
+			default:
+				day = 30;
+			}
+
+		return day;
+	}
+
+	/**
+	 *	날자 차이를 반환
+	 *
+	 * @param String s
+	 * @param String e
+	 * @return int
+	 * @throws ParseException
+	  */
+	public static int getDiffDays(String s, String e) throws ParseException {
+		java.text.SimpleDateFormat fmt_date = new java.text.SimpleDateFormat(MALL_DATE_FORMAT_DATE, java.util.Locale.KOREA);
+
+		String start = toMallFormat(s);
+		String end = toMallFormat(e);
+
+    	logger.debug("start="+start+" / end="+end);
+
+		java.util.Date firstDate = fmt_date.parse(getDatePartStr(start));
+		java.util.Date endDate = fmt_date.parse(getDatePartStr(end));
+
+		long duration = endDate.getTime() - firstDate.getTime();
+		return (int) (duration / (24*60*60*1000));
+	}
+
+	/**
+	 * 나이 차 반환
+	 *
+	 * @param String from
+	 * @param String to
+	 * @return int
+	 * @throws ParseException
+	  */
+	 public static int ageBetween(String from, String to) throws ParseException {
+		 return getDiffDays(from, to) / 365;
+	 }
+
+	/**
+	 * 월 차 반환
+	 *
+	 * @param String from
+	 * @param String to
+	 * @return int
+	 * @throws ParseException
+	 */
+	public static int monthsBetween(String from, String to) throws ParseException  {
+		return monthsBetween(from, to, MALL_DATE_FORMAT_DATE);
+	}
+
+	/**
+	 * 월 차 반환
+	 *
+	 * @param String _from
+	 * @param String _to
+	 * @param String format
+	 * @return int
+	 * @throws ParseException
+	 */
+	public static int monthsBetween(String _from, String _to, String format) throws ParseException {
+		java.text.SimpleDateFormat fmt_date = new java.text.SimpleDateFormat(MALL_DATE_FORMAT_DATE, java.util.Locale.KOREA);
+		String from = toMallFormat(_from);
+		String to = toMallFormat(_to);
+
+		java.util.Date fromDate = fmt_date.parse(getDatePartStr(from));
+		java.util.Date toDate = fmt_date.parse(getDatePartStr(to));
+
+		if (fromDate.compareTo(toDate) == 0) {
+			return 0;
+		}
+
+		java.text.SimpleDateFormat yearFormat = new java.text.SimpleDateFormat("yyyy", java.util.Locale.KOREA);
+		java.text.SimpleDateFormat monthFormat = new java.text.SimpleDateFormat("MM", java.util.Locale.KOREA);
+		java.text.SimpleDateFormat dayFormat = new java.text.SimpleDateFormat("dd", java.util.Locale.KOREA);
+
+		int fromYear = Integer.parseInt(yearFormat.format(fromDate));
+		int toYear = Integer.parseInt(yearFormat.format(toDate));
+		int fromMonth = Integer.parseInt(monthFormat.format(fromDate));
+		int toMonth = Integer.parseInt(monthFormat.format(toDate));
+		int fromDay = Integer.parseInt(dayFormat.format(fromDate));
+		int toDay = Integer.parseInt(dayFormat.format(toDate));
+		int result = 0;
+
+		result += ((toYear - fromYear) * 12);
+		result += (toMonth - fromMonth);
+
+		if (((toDay - fromDay) > 0)) {
+			result += toDate.compareTo(fromDate);
+		}
+
+		return result;
+	}
+
+	/**
+	* @Method Name : WeekDayName
+	* @Method 설명 : 지정된 요일을 나타내는 문자열을 반환합니다.
+	*
+	* @param weekKey
+	* @return
+	*/
+	public static String getWeekDayName (int weekKey) {
+		switch (weekKey) {
+			case 1 : return "일";
+			case 2 : return "월";
+			case 3 : return "화";
+			case 4 : return "수";
+			case 5 : return "목";
+			case 6 : return "금";
+			case 7 : return "토";
+		}
+
+		return "요일정보가 틀립니다.";
+	}
+
+	/**
+	 * day 반환
+	 *
+	 * @param String org
+	 * @return int
+	 * @throws ParseException
+	 */
+	public static int getWeekDay(String org) {
+		java.text.SimpleDateFormat fmt_date = new java.text.SimpleDateFormat(MALL_DATE_FORMAT_DATE, java.util.Locale.KOREA);
+		String str = getDatePartStr(org);
+
+		java.util.Date date = null;
+		java.util.Calendar calendar = null;
+
+		try {
+			date = fmt_date.parse(str);
+		} catch (ParseException e) {
+			e.printStackTrace();
+		}
+
+		calendar = fmt_date.getCalendar();
+		calendar.setTime(date);
+
+		return calendar.get(java.util.Calendar.DAY_OF_WEEK);
+	}
+
+	/**
+	 * 일자 더하기
+	 *
+	 * @param String org
+	 * @param int day
+	 * @param String format
+	 * @return String
+	 * @throws ParseException
+	  */
+	public static String addDays(String org, int day, String format) throws java.text.ParseException {
+		java.text.SimpleDateFormat fmt = new java.text.SimpleDateFormat(format, java.util.Locale.KOREA);
+		java.text.SimpleDateFormat fmt_full = new java.text.SimpleDateFormat(MALL_DATE_FORMAT_FULL, java.util.Locale.KOREA);
+
+		String str = toMallFormat(org);
+		java.util.Date date = null;
+		try {
+			date = fmt_full.parse(str);
+			date.setTime(date.getTime() + ((long) day * 1000 * 60 * 60 * 24));
+		} catch (ParseException e) {
+			e.printStackTrace();
+		}
+
+		if (date != null) return fmt.format(date);
+
+		return "";
+	}
+
+	/**
+	 * 년 더하기
+	 *
+	 * @param String org
+	 * @param int diff
+	 * @return String
+	 * @throws ParseException
+	  */
+	public static String addYears(String org, int diff) throws Exception {
+		return addYears(org, diff, MALL_DATE_FORMAT_DATE);
+	}
+
+	/**
+	 * 년 더하기
+	 *
+	 * @param String org
+	 * @param int diff
+	 * @param String format
+	 * @return String
+	 * @throws ParseException
+	  */
+	public static String addYears(String org, int diff, String format) throws  Exception {
+		java.text.SimpleDateFormat fmt_full = new java.text.SimpleDateFormat(MALL_DATE_FORMAT_FULL, java.util.Locale.KOREA);
+		java.text.SimpleDateFormat fmt = new java.text.SimpleDateFormat(format, java.util.Locale.KOREA);
+
+		String str = toMallFormat(org);
+		java.util.Date date = null;
+		try {
+			date = fmt_full.parse(str);
+			date.setTime(date.getTime() + ((long) diff * 1000 * 60 * 60 * 24 * (365)));
+		} catch (ParseException e) {
+			e.printStackTrace();
+		}
+
+		if (date != null) return fmt.format(date);
+
+		return "";
+	}
+
+	/**
+	 * 달 더하기
+	 *
+	 * @param String org
+	 * @param int diff
+	 * @return String
+	 * @throws ParseException
+	  */
+	public static String addMonths(String org, int diff) throws Exception {
+		return addMonths(org, diff, MALL_DATE_FORMAT_DATE);
+	}
+
+	/**
+	 * 달 더하기
+	 *
+	 * @param String org
+	 * @param int diff
+	 * @param String format
+	 * @return String
+	 * @throws ParseException
+	  */
+	public static String addMonths(String org, int diff, String format) throws  Exception {
+		String str = toMallFormat(org);
+		if (str == MALL_DATE_NONE) return "";
+
+		String exceptday = str.substring(MALL_DATE_FORMAT_DATE_LEN);
+
+		int year = getYear(str);
+		int month = getMonth(str) + diff;
+		int day = getDay(str);
+
+		if (diff > 0) {
+			while (month > 12) {
+				month -= 12;
+				year += 1;
+			}
+		} else {
+			while (month < 1) {
+				month += 12;
+				year -= 1;
+			}
+		}
+
+		int lastday = getLastMonthDay(year, month);
+		if (day > lastday) day = lastday;
+
+		String newdaystr = String.format("%04d-%02d-%02d%s", year, month, day, exceptday);
+
+		java.text.SimpleDateFormat fmt = new java.text.SimpleDateFormat(format, java.util.Locale.KOREA);
+		java.text.SimpleDateFormat fmt_full = new java.text.SimpleDateFormat(MALL_DATE_FORMAT_FULL, java.util.Locale.KOREA);
+		java.util.Date date = null;
+		try {
+			date = fmt_full.parse(newdaystr);
+		} catch (ParseException e) {
+			e.printStackTrace();
+		}
+
+		if (date != null) return fmt.format(date);
+		else return "";
+	}
+
+	/**
+	 *	현재 월의 1일 기준 년월일 반환
+	 *
+	 * @param String org
+	 * @return String
+	  */
+	public static String firstDayOfMonth(String org) {
+		return firstDayOfMonth(org, MALL_DATE_FORMAT_DATE);
+	}
+	/**
+	 *	현재 월의 1일 기준 년월일 반환
+	 *
+	 * @param String org
+	 * @param String format
+	 * @return String
+	  */
+	public static String firstDayOfMonth(String org, String format) {
+		String str = toMallFormat(org);
+		return String.format("%s-01", str.substring(0, 7));
+	}
+
+	/**
+	*	JAVA date to SQL date
+	*
+	* @param Date date
+	* @return Date
+	 */
+	public static java.sql.Date convertJavaDateToSqlDate(java.util.Date date) {
+		return new java.sql.Date(date.getTime());
+	}
+
+	/**
+	*	String to SQL Date
+	*
+	* @param Date date
+	* @return Date
+	 */
+	public static java.sql.Date convertStringToSqlDate(String format, String value) {
+		java.sql.Date date = null;
+
+		try {
+			date = convertJavaDateToSqlDate(new SimpleDateFormat(format).parse(value));
+		} catch (ParseException e) {
+			e.printStackTrace();
+		}
+
+		return date;
+	}
+
+	/**
+	 * 포맷을 알 수 없는 날짜 문자열을 java.sql.Date로 변환한다.
+	 * @param dateStr
+	 * @return Converted java.sql.Date instance.
+	 */
+	public static java.sql.Date convertStringToSqlDate(String dateStr) {
+		java.sql.Date date = null;
+
+		int length = 0;
+		String format = null;
+
+		if (StringUtils.isNotBlank(dateStr)) {
+			length = dateStr.length();
+		}
+
+		if (length == MALL_DATE_FORMAT_DATE_LEN) {
+			format = MALL_DATE_FORMAT_DATE;
+		}
+		else if (length == MALL_DATE_FORMAT_DATE_SHORT_LEN) {
+			format = MALL_DATE_FORMAT_DATE_SHORT;
+		}
+		else if (length == MALL_DATE_FORMAT_FULL_LEN) {
+			format = MALL_DATE_FORMAT_FULL;
+		}
+		else if (length == MALL_DATE_FORMAT_FULL_SHORT_LEN) {
+			format = MALL_DATE_FORMAT_FULL_SHORT;
+		}
+		else if(length == MALL_DATE_FORMAT_VARCHAR12_LEN) {
+			format = MALL_DATE_FORMAT_VARCHAR12;
+		}
+		else {
+			format = "";
+		}
+
+		date = convertStringToSqlDate(format, dateStr);
+		return date;
+	}
+
+	/**
+	*	분 차 반환
+	*
+	* @param String begin
+	* @param String end
+	* @return long
+	 */
+	public static long diffOfMinutes(String begin, String end) {
+		SimpleDateFormat formatter = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
+
+		java.util.Date beginDate = null;
+		java.util.Date endDate = null;
+
+		try {
+			beginDate = formatter.parse(begin);
+			endDate = formatter.parse(end);
+		} catch (ParseException e) {
+			e.printStackTrace();
+		}
+
+		return (endDate.getTime() - beginDate.getTime()) / (60 * 1000);
+	}
+
+	/**
+	*	초 차 반환
+	*
+	* @param String begin
+	* @param String end
+	* @return long
+	 */
+	public static long diffOfSeconds(String begin, String end) {
+		SimpleDateFormat formatter = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
+
+		java.util.Date beginDate = null;
+		java.util.Date endDate = null;
+
+		try {
+			beginDate = formatter.parse(begin);
+			endDate = formatter.parse(end);
+		} catch (ParseException e) {
+			e.printStackTrace();
+		}
+
+		return (endDate.getTime() - beginDate.getTime()) / 1000;
+	}
+
+	/**
+	 * 날짜 리스트 가져오기
+	 *
+	 * @param startDate
+	 * @param endDate
+	 * @param format
+	 * @return
+	 */
+	public static List<String> getFromToDateList(String startDate, String endDate, String format) {
+		List<String> dateList = new ArrayList<>();
+
+		SimpleDateFormat formatter = new SimpleDateFormat(format);
+		try {
+			Calendar beginDate = Calendar.getInstance();
+			Calendar stopDate = Calendar.getInstance();
+
+			beginDate.setTime(formatter.parse(startDate));
+			stopDate.setTime(formatter.parse(endDate));
+
+			while (beginDate.compareTo(stopDate) != 1) {
+				dateList.add(formatter.format(beginDate.getTime()));
+				beginDate.add(Calendar.DATE, 1);
+			}
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
+		return dateList;
+	}
+
+	/**
+	 * 적립금/e포인트 공통 유틸
+	 * startDate 를 null or "" 을 입력하면 현재일자의 유효만료일을 리턴
+	 * startDate(yyyyMMddHHmm)를 넣으면 해당 일에 유효만료일을 리턴
+	 * @param startDate
+	 * @return
+	 * @throws Exception
+	 */
+	public static String getPointEndDate(String startDate) throws Exception {
+		if(startDate == null || "".equals(startDate)){
+			startDate = DateTimeUtil.getNowFormatStr(DateTimeUtil.MALL_DATE_FORMAT_VARCHAR12);
+			// 6개월 말일
+			String add6MonthsDate = DateTimeUtil.addMonths(String.format("%s%s", startDate, "00"), 6, DateTimeUtil.MALL_DATE_FORMAT_DATE_SHORT);
+			return String.format("%s%s%s", add6MonthsDate.substring(0, 6), String.valueOf(DateTimeUtil.getLastMonthDay(add6MonthsDate)), "2359");
+//			// 1년 말일
+//			String addYearDate = DateTimeUtil.addYears(String.format("%s%s", startDate, "00"), 1, DateTimeUtil.MALL_DATE_FORMAT_DATE_SHORT);
+//			return String.format("%s%s%s", addYearDate.substring(0, 6), String.valueOf(DateTimeUtil.getLastMonthDay(addYearDate)), "2359");
+//			// 1년
+//			return DateTimeUtil.addYears(String.format("%s%s", DateTimeUtil.getNowFormatStr(DateTimeUtil.MALL_DATE_FORMAT_DATE_SHORT), "235959"), 1, DateTimeUtil.MALL_DATE_FORMAT_VARCHAR12);
+//			return DateTimeUtil.addMonths(String.format("%s%s", DateTimeUtil.getNowFormatStr(DateTimeUtil.MALL_DATE_FORMAT_DATE_SHORT), "235959"), 1, DateTimeUtil.MALL_DATE_FORMAT_VARCHAR12);
+		} else {
+			// 6개월 말일
+			String add6MonthsDate = DateTimeUtil.addMonths(String.format("%s%s", startDate, "00"), 6, DateTimeUtil.MALL_DATE_FORMAT_DATE_SHORT);
+			return String.format("%s%s%s", add6MonthsDate.substring(0, 6), String.valueOf(DateTimeUtil.getLastMonthDay(add6MonthsDate)), "2359");
+//			// 1년 말일
+//			String addYearDate = DateTimeUtil.addYears(String.format("%s%s", startDate, "00"), 1, DateTimeUtil.MALL_DATE_FORMAT_DATE_SHORT);
+//			return String.format("%s%s%s", addYearDate.substring(0, 6), String.valueOf(DateTimeUtil.getLastMonthDay(addYearDate)), "2359");
+//			// 1년
+//			return String.format("%s%s", DateTimeUtil.addYears(String.format("%s%s", startDate, "00"), 1, DateTimeUtil.MALL_DATE_FORMAT_DATE_SHORT), "2359");
+//			return String.format("%s%s", DateTimeUtil.addMonths(String.format("%s%s", startDate, "00"), 1, DateTimeUtil.MALL_DATE_FORMAT_DATE_SHORT), "2359");
+		}
+	}
+	
+	/**
+	 * 해당일자의 마지막일 구하기
+	 * @param startDate
+	 * @return
+	 * @throws Exception
+	 */
+	public static String getMonthEndDate(String startDate) throws Exception {
+		if(startDate == null || "".equals(startDate)){
+			startDate = DateTimeUtil.getNowFormatStr(DateTimeUtil.MALL_DATE_FORMAT_VARCHAR12);
+		}
+		return String.format("%s%s%s", startDate.substring(0, 6), String.valueOf(DateTimeUtil.getLastMonthDay(startDate)), "2359");
+	}
+
+	/**
+	 * 년 월 일 형식으로 변환
+	 * @param dateStr
+	 * @return
+	 */
+	public static String getDateKrFormat(String dateStr){
+		if(dateStr == null || "".equals(dateStr)){
+			return "";
+		}
+
+		int year = getYear(dateStr);
+		int month = getMonth(dateStr);
+		int day = getDay(dateStr);
+
+		return String.format("%d년 %d월 %d일", year, month, day);
+	}
+	
+	/**
+	 * ISO8601 형태의 날짜를 원하는 날짜형식으로 변환
+	 * @param dateStr
+	 * @param format
+	 * @return
+	 * @throws Exception
+	 */
+	public static String convertIOS8601(String dateStr, String format) throws Exception {
+		if(dateStr == null || "".equals(dateStr))
+			return null;
+		
+		if(format == null) {
+			format = "yyyyMMddHHmmss";
+		}
+		SimpleDateFormat sdf1 = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ssX");
+		SimpleDateFormat sdf2 = new SimpleDateFormat(format);
+		
+		return sdf2.format(sdf1.parse(dateStr));
+	}
+	
+	/**
+	 * yyyyMMddHHmmss 형태의 날짜를 ISO8601 형태로 변환
+	 * @param dateStr
+	 * @param format
+	 * @return
+	 * @throws Exception
+	 */
+	public static String convertDateStrToIOS8601(String dateStr) throws Exception {
+		if(dateStr == null || "".equals(dateStr))
+			return null;
+		
+		String format = "yyyyMMddHHmmss";
+		
+		SimpleDateFormat sdf1 = new SimpleDateFormat(format);
+		SimpleDateFormat sdf2 = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSS");
+		
+		return sdf2.format(sdf1.parse(dateStr));
+	}
+	
+	public static void main(String[] args) {
+		//System.out.println(getYear("20220427095518"));
+		//System.out.println(getMonth("20220427095518"));
+		//System.out.println(getDay("20220427095518"));
+		try {
+			System.out.println(convertDateStrToIOS8601("20220427095518"));
+		} catch (Exception e) {
+			// TODO: handle exception
+		}
+		
+	}
+}

@@ -1,0 +1,260 @@
+package com.dplot.admin.controller.common;
+
+import java.io.File;
+import java.io.FileInputStream;
+import java.net.URLEncoder;
+import java.util.Properties;
+
+import javax.annotation.Resource;
+import javax.servlet.ServletOutputStream;
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
+
+import com.dplot.common.service.ERPService;
+import com.dplot.util.Util;
+
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestMethod;
+import org.springframework.web.bind.annotation.RestController;
+
+import com.dplot.admin.service.common.AdminCommonService;
+import com.dplot.common.Response;
+import com.dplot.common.SOMap;
+import com.dplot.common.Status;
+
+/**
+ * @discription	: 관리자 공통 Controller
+ * @fileName	: AdminCommonController.java
+ * @author		: JSK
+ * @date		: 2021.11.09
+ * =================================================================
+ * DATE			AUTHOR		NOTE
+ * -----------------------------------------------------------------
+ * 2021.11.09	JSK			최초생성
+ * -----------------------------------------------------------------
+ */
+@RestController
+@RequestMapping(value = "/admin/common")
+public class AdminCommonController {
+
+    @Autowired
+    private AdminCommonService adminCommonService;
+    @Resource(name="propertiesFactory")
+    private Properties prop;
+
+    @Autowired
+    private ERPService erpService;
+
+    /**
+     * 상단메뉴 조회
+     * @param params
+     * @return Response
+     * @throws Exception
+     */
+    @RequestMapping(value = "/top-menu", method = RequestMethod.POST)
+    public Response adminTopMenuList(@RequestBody SOMap params) throws Exception {
+        SOMap result = new SOMap();
+        result.put("topMenu", adminCommonService.selectAdminMenu(params));
+        return new Response(result);
+    }
+
+    /**
+     * 서브메뉴(2뎁스 이상) 조회
+     * @param params
+     * @return Response
+     * @throws Exception
+     */
+    @RequestMapping(value = "/side-menu", method = RequestMethod.POST)
+    public Response adminSideMenuList(@RequestBody SOMap params) throws Exception {
+        SOMap result = new SOMap();
+        result.put("sideMenu", adminCommonService.selectAdminSubMenu(params));
+        return new Response(result);
+    }
+
+    /**
+     * 네비게이터에 노출할 메뉴 조회
+     * @param params
+     * @return Response
+     * @throws Exception
+     */
+    @RequestMapping(value="/menu-nav", method = RequestMethod.POST)
+    public Response adminMenuNavigator(@RequestBody SOMap params) throws Exception {
+        params.put("ismaster", "T");
+        return new Response(adminCommonService.selectAdminMenuNav(params));
+    }
+
+    /**
+     * 관리자 페이지 읽기/쓰기권한 조회
+     * @param params
+     * @return
+     * @throws Exception
+     */
+    @RequestMapping(value="/pageAuth/check", method = RequestMethod.POST)
+    public Response adminMenuPageAuthCheck(@RequestBody SOMap params) throws Exception {
+        return new Response(adminCommonService.selectAdminPageAuth(params));
+    }
+
+    /**
+     * 다다픽 사용자 조회
+     * @param params
+     * @return Response
+     * @throws Exception
+     */
+    @RequestMapping(value="/member/list", method = RequestMethod.POST)
+    public Response memberList(@RequestBody SOMap params) throws Exception {
+        return new Response(adminCommonService.selectMemberList(params));
+    }
+
+    /**
+     * 상품목록 조회
+     * @param params
+     * @return Response
+     * @throws Exception
+     */
+    @RequestMapping(value="/goods/list", method = RequestMethod.POST)
+    public Response goodsList(@RequestBody SOMap params) throws Exception {
+        return new Response(adminCommonService.selectGoodsList(params));
+    }
+
+    /**
+     * 사은품목록 조회
+     * @param params
+     * @return Response
+     * @throws Exception
+     */
+    @RequestMapping(value="/gift/list", method = RequestMethod.POST)
+    public Response giftList(@RequestBody SOMap params) throws Exception {
+        return new Response(adminCommonService.selectGiftList(params));
+    }
+
+    /**
+     * 주문내역 조회
+     * @param params
+     * @return Response
+     * @throws Exception
+     */
+    @RequestMapping(value="/order/list", method = RequestMethod.POST)
+    public Response orderList(@RequestBody SOMap params) throws Exception {
+        return new Response(adminCommonService.selectOrderList(params));
+    }
+
+    /**
+     * 엑셀양식 다운로드
+     * @param params
+     * @return Response
+     * @throws Exception
+     */
+    @RequestMapping(value="/excel/download", method = RequestMethod.POST)
+    public Response excelDownload(@RequestBody SOMap params, HttpServletRequest request, HttpServletResponse response) throws Exception {
+    	Response result = new Response();
+    	String rootpath = request.getSession().getServletContext().getRealPath("/");
+    	String excelpath = prop.getProperty("base.excel.template.path");
+        String filename = params.getStr("filename");
+        File file = null;
+        if (Util.equal(prop.getProperty("Globals.Profile"), "local")) {
+            file = new File(rootpath + excelpath + filename);
+        } else {
+            file = new File(excelpath + filename);
+        }
+        FileInputStream fileInputStream = null;
+        ServletOutputStream servletOutputStream = null;
+
+        try {
+            String downloadname = null;
+            String browser = request.getHeader("User-Agent");
+            //파일 인코딩
+            if (browser.contains("MSIE") || browser.contains("Trident") || browser.contains("Chrome")) {
+            	downloadname = URLEncoder.encode(filename,"UTF-8").replaceAll("\\+", "%20");
+            } else {
+            	downloadname = new String(filename.getBytes("UTF-8"), "ISO-8859-1");
+            }
+            response.setHeader("Content-Disposition","attachment;filename=" + downloadname);
+            response.setContentType("application/vnd.openxmlformats-officedocument.spreadsheetml.sheet");
+            response.setHeader("Content-Transfer-Encoding", "binary;");
+
+            fileInputStream = new FileInputStream(file);
+            servletOutputStream = response.getOutputStream();
+
+            byte[] buffer = new byte[4096];
+            int readsize;
+            while ((readsize=(fileInputStream.read(buffer, 0, buffer.length))) != -1) {
+                servletOutputStream.write(buffer, 0, readsize);
+            }
+            servletOutputStream.flush();
+        } catch (Exception e) {
+            e.printStackTrace();
+            result.setStatusCode(Status.BAD_REQUEST.getKey());
+            result.setMessage("엑셀 다운로드중 오류가 발생하였습니다. 관리자에게 문의바랍니다.");
+        } finally {
+            if (servletOutputStream != null) {
+            	servletOutputStream.close();
+            }
+            if (fileInputStream != null) {
+            	fileInputStream.close();
+            }
+        }
+
+        return result;
+    }
+
+    @RequestMapping("/member/history")
+    public Response selectMemberInfoHistoryList(@RequestBody SOMap params) throws Exception {
+        return new Response(adminCommonService.selectMemberInfoHistoryList(params));
+    }
+
+    /**
+     * 사용가능한 쿠폰 목록 조회
+     *
+     * @param params
+     * @return
+     * @throws Exception
+     */
+    @RequestMapping(value = "/coupon/list", method = RequestMethod.POST)
+    public Response selectUseCouponList(@RequestBody SOMap params) throws Exception {
+        return new Response(adminCommonService.selectUseCouponList(params));
+    }
+    
+    /**
+     * 즐겨찾기 메뉴조회
+     * @param params
+     * @return Response
+     * @throws Exception
+     */
+    @RequestMapping(value = "/favorite", method = RequestMethod.POST)
+    public Response adminFavoriteMenu(@RequestBody SOMap params) throws Exception {
+        SOMap result = new SOMap();
+        result.put("sideMenu", adminCommonService.selectAdminFavoriteMenuList(params));
+        return new Response(result);
+    }
+    
+    /**
+     * 즐겨찾기용 메뉴 전체조회
+     * @param params
+     * @return Response
+     * @throws Exception
+     */
+    @RequestMapping(value = "/favorite-menu", method = RequestMethod.POST)
+    public Response adminFavoriteMenuList(@RequestBody SOMap params) throws Exception {
+        SOMap result = new SOMap();
+        result.put("favoriteMenu", adminCommonService.selectAdminFavoriteAllMenuList(params));
+        return new Response(result);
+    }
+    
+    /**
+     * 즐겨찾기용 메뉴 전체조회
+     * @param params
+     * @return Response
+     * @throws Exception
+     */
+    @RequestMapping(value = "/favorite/save", method = RequestMethod.POST)
+    public Response saveFavoriteMenu(@RequestBody SOMap params) throws Exception {
+    	return new Response(adminCommonService.saveFavoriteMenu(params));
+    }
+
+    @RequestMapping(value = "/erp/goods", method = RequestMethod.POST)
+    public Response selectERPOrgGoodsList(@RequestBody SOMap param) throws Exception {
+        return new Response(erpService.selectReceiveERPOrgGoodsList(param));
+    }
+}

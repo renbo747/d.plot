@@ -1,0 +1,98 @@
+.mypage-message {
+
+  .message-section {
+    margin-bottom: 30px;
+  }
+
+  .message-date {
+    display: inline-block;
+    color: $gray-600;
+    font-size: 16px;
+    letter-spacing: -.64px;
+    line-height: 24px;
+    margin-bottom: 20px;
+  }
+
+  .message-box {
+    width: 100%;
+    padding: 40px;
+    background-color: $gray-100;
+    border-radius: 20px 20px 0 20px;
+
+    .message-box__header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 16px;
+    }
+
+    .message-title {
+      position: relative;
+      color: #000000;
+      font-size: 18px;
+      letter-spacing: -.72px;
+      line-height: 22px;
+      font-weight: 500;
+      &.active::after {
+        content: "";
+        position: absolute;
+        top: 2px;
+        right: -2px;
+        transform: translateX(100%) ;
+        width: 6px;
+        height: 6px;
+        border-radius: 50%;
+        background-color: $primary;
+      }
+    }
+
+    .message-text {
+      color: $gray-700;
+      font-size: 16px;
+      letter-spacing: -.64px;
+      line-height: 24px;
+      word-break: break-word;
+    }
+  }
+
+  .message-box + .message-box {
+    margin-top: 16px;
+  }
+
+  .icon-close-black {
+    cursor: pointer;
+  }
+
+  // 메세지가 없는 경우
+  .message__empty {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    padding: 170px 0;
+  }
+
+  .empty__icon {
+    width: 94px;
+    height: 94px;
+    margin-bottom: 30px;
+    border-radius: 50%;
+    background-color: $gray-100;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .empty-list-icon {
+    width: 64px;
+    height: 64px;
+    background: url("~@/assets/common/icon/icon-speech-black-64px.svg") no-repeat 0;
+  }
+
+  .empty__text {
+    color: $gray-700;
+    font-size: 18px;
+    letter-spacing: -.72px;
+    line-height: 26px;
+  }
+}

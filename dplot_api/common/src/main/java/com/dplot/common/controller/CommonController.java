@@ -1,0 +1,309 @@
+package com.dplot.common.controller;
+
+import java.io.BufferedInputStream;
+import java.io.BufferedOutputStream;
+import java.io.File;
+import java.io.FileInputStream;
+import java.net.URLEncoder;
+import java.nio.charset.StandardCharsets;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.Properties;
+
+import javax.annotation.Resource;
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.core.io.ResourceLoader;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestMethod;
+import org.springframework.web.bind.annotation.RestController;
+
+import com.dplot.common.Response;
+import com.dplot.common.SOMap;
+import com.dplot.common.service.CJMessageService;
+import com.dplot.common.service.CommonOrderService;
+import com.dplot.common.service.CommonService;
+import com.dplot.common.service.DeliveryTrackingService;
+import com.dplot.exception.BizException;
+
+/**
+ * @discription	: 공통 Controller
+ * @fileName	: CommonController.java
+ * @author		: JSK
+ * @date		: 2021.11.16
+ * =================================================================
+ * DATE			AUTHOR		NOTE
+ * -----------------------------------------------------------------
+ * 2021.11.16	JSK			최초생성
+ * -----------------------------------------------------------------
+ */
+@RestController
+@RequestMapping("/common")
+public class CommonController {
+	private static final Logger logger = LoggerFactory.getLogger(CommonController.class);
+
+	@Autowired
+	CommonService commonService;
+
+	@Autowired
+	CommonOrderService commonOrderService;
+
+	@Autowired
+	DeliveryTrackingService deliveryTrackingService;
+
+	@Autowired
+	ResourceLoader resourceLoader;
+
+	@Autowired
+	CJMessageService cJMessageService;
+
+	@Resource(name="propertiesFactory")
+	private Properties prop;
+
+	/**
+	 * 코드분류로 상세 코드목록 조회
+	 * @param params
+	 * @return Response
+	 * @throws Exception
+	 */
+	@RequestMapping(value="/code/list", method=RequestMethod.POST)
+	public Response codeList(@RequestBody SOMap params) throws Exception{
+		Map<String, Object> result = new HashMap<String, Object>();
+		result.put("list", commonService.getCodeList(params));
+		return new Response(result);
+	}
+
+	/**
+	 * 코드분류로 상세 코드목록 조회
+	 * @param params
+	 * @return Response
+	 * @throws Exception
+	 */
+	@RequestMapping(value="/code/map/list", method=RequestMethod.POST)
+	public Response codeMapiList(@RequestBody SOMap params) throws Exception{
+		return new Response(commonService.getCodeMapList(params));
+	}
+
+	/**
+	 * 배송추적 URL 가져오기
+	 * @param params
+	 * @return Response
+	 * @throws Exception
+	 */
+	@RequestMapping(value="/deliv/tracking", method=RequestMethod.POST)
+	public Response delivTrackingUrl(@RequestBody SOMap params) throws Exception{
+		return new Response(deliveryTrackingService.getDelivTrackingUrl(params));
+	}
+
+
+	/**
+	 * 본인인증 암호화 요청
+	 * @param param
+	 * @return
+	 * @throws Exception
+	 */
+	@RequestMapping(value =  "/kmcRequest", method = RequestMethod.POST)
+	public Response kmcRequest (@RequestBody SOMap param) throws Exception {
+		logger.debug("kmcRequest");
+		return commonService.kmcRequest(param);
+	}
+
+	/**
+	 * 본인인증 결과페이지 리다이렉트
+	 * @param request
+	 * @param response
+	 * @throws Exception
+	 */
+	@RequestMapping(value =  "/kmcResult", method = RequestMethod.POST)
+	public void kmcResult(HttpServletRequest request, HttpServletResponse response) throws Exception {
+		String url = prop.getProperty("front.domain");
+		String userAgent = request.getHeader("user-agent");
+		boolean mobile1 = userAgent.matches( ".*(iPhone|iPod|Android|Windows CE|BlackBerry|Symbian|Windows Phone|webOS|Opera Mini|Opera Mobi|POLARIS|IEMobile|lgtelecom|nokia|SonyEricsson).*");
+		boolean mobile2 = userAgent.matches(".*(LG|SAMSUNG|Samsung).*");
+
+		if (mobile1 || mobile2) {
+			url = prop.getProperty("front.mobile.domain");
+		}
+		url = url + prop.getProperty("kmc.result.redirect.url") + "?rec_cert=" + request.getParameter("rec_cert");
+		response.sendRedirect(url);
+	}
+
+	@RequestMapping(value =  "/kmcResult/popup", method = RequestMethod.POST)
+	public void kmcResultPopup(HttpServletRequest request, HttpServletResponse response) throws Exception {
+		response.sendRedirect(prop.getProperty("kmc.result.redirect.url.popup") + "?rec_cert=" + request.getParameter("rec_cert"));
+	}
+	/**
+	 * 본인인증 복호화 요청
+	 * @param param
+	 * @return
+	 * @throws Exception
+	 */
+	@RequestMapping(value="/kmcCertDecry", method=RequestMethod.POST)
+	public Response kmcCertDecry (@RequestBody SOMap param, HttpServletRequest request, HttpServletResponse response) throws Exception {
+		return commonService.kmcCertDecry(param, request, response);
+	}
+
+	/**
+	 * 토스 가상결재 입금완료
+	 * @param request
+	 * @param response
+	 * @throws Exception
+	 */
+	@RequestMapping(value="/toss/virtualAccount", method=RequestMethod.POST)
+	public void tossVirtualAccount(@RequestBody SOMap param, HttpServletRequest request, HttpServletResponse response) throws Exception {
+		param.put("ordno", param.getDbStr("orderid"));
+
+		commonService.tossVirtualAccount(param);
+	}
+
+	/**
+	 * 스플래쉬 이미지 목록 조회
+	 * @param param
+	 * @param request
+	 * @param response
+	 * @return
+	 * @throws Exception
+	 */
+	@RequestMapping(value="/splashimg", method={RequestMethod.GET, RequestMethod.POST})
+	public Response splashimgList(HttpServletRequest request) throws Exception {
+		SOMap param = new SOMap();
+		return new Response(commonService.getsplashimgList(param));
+	}
+
+	/**********************
+	 * 구매확정 적립금조회
+	 ********************/
+	@RequestMapping(value = "/order/reserve", method = RequestMethod.POST)
+	public Response selectReserve(@RequestBody SOMap param) throws Exception {
+
+		SOMap result = commonOrderService.selectConfirmReserve(param);
+
+		return new Response(result);
+	}
+
+	/**********************
+	 * 주문/배송 구매확정처리
+	 ********************/
+	@RequestMapping(value = "/order/confirm", method = RequestMethod.POST)
+	public Response confirmOrder(@RequestBody SOMap param) throws Exception {
+		param.put("ordcfmtype", "OCT001");
+		return new Response(commonOrderService.confirmOrder(param));
+	}
+
+	/**
+	 * 배송추적
+	 * @param param
+	 * @return
+	 * @throws Exception
+	 */
+	@RequestMapping(value = "/order/tracking", method = RequestMethod.POST)
+	public Response selectDelivery(@RequestBody SOMap param) throws Exception {
+		SOMap result = commonService.selectDeliveryTracking(param);
+		return new Response(result);
+	}
+
+	/**
+	 * 배송추적
+	 * @param param
+	 * @return
+	 * @throws Exception
+	 */
+	@RequestMapping(value = "/addr/isolatetype", method = RequestMethod.POST)
+	public Response selectAddrIsolatetype(@RequestBody SOMap param) throws Exception {
+		SOMap result = commonService.selectAddrIsolatetype(param);
+		return new Response(result);
+	}
+
+	@RequestMapping(value = "/bank/account", method = RequestMethod.POST)
+	public Response niceBankAccount(@RequestBody SOMap param) throws Exception {
+		return new Response(commonService.niceBankAccountCheck(param));
+	}
+
+	@RequestMapping(value = "/naver/{filename:.+}", method = RequestMethod.GET)
+	public void naverEpFile(@PathVariable("filename") String filename, HttpServletRequest request, HttpServletResponse response) throws Exception {
+		try {
+			String epRootPath = prop.getProperty("base.upload.naver.ep.path");
+			String filePath = epRootPath + filename;
+
+			File file = new File(filePath);
+			int fileSize = (int) file.length();
+
+			if (fileSize > 0) {
+	            String downloadname = URLEncoder.encode(filename, String.valueOf(StandardCharsets.UTF_8));
+	            response.setHeader("Content-Disposition", "attachment; filename=" + downloadname);
+	            response.setContentType("application/octet-stream; charset=utf-8");
+	            response.setContentLength(fileSize);
+
+				try (	BufferedInputStream fin = new BufferedInputStream(new FileInputStream(file));
+						BufferedOutputStream fout = new BufferedOutputStream(response.getOutputStream());) {
+		            int readsize;
+					byte[] buffer = new byte[4096];
+
+		            while ((readsize=(fin.read(buffer, 0, buffer.length))) != -1) {
+		            	fout.write(buffer, 0, readsize);
+		            }
+		            fout.flush();
+				} catch (Exception e) {
+		            e.printStackTrace();
+		            throw new BizException("파일 읽기에 실패하였습니다.");
+				}
+			} else {
+	            throw new BizException("파일이 존재하지 않습니다.");
+			}
+		} catch (Exception e ) {
+            e.printStackTrace();
+            throw new BizException("네이버 EP 연동에 실패하였습니다.");
+		}
+	}
+
+	/**
+	 * 코드분류로 상세 코드목록 조회
+	 * @param params
+	 * @return Response
+	 * @throws Exception
+	 */
+	@RequestMapping(value="/kakaoCallback", method=RequestMethod.POST)
+	public void kakaoCallback(@RequestBody SOMap param) throws Exception{
+		logger.info("=============================== kakaocallback =================================");
+		logger.info("id : " + param.getStr("id"));
+		logger.info("key : " + param.getStr("key"));
+		// chat_type = MemoChat 나와의채팅방, DirectChat : 다른사용자와의 1:1채팅방, MultiChat: 다른 사용자들과의 그룹 채팅방
+		// 예 ) param : {chat_type=MemoChat, hash_chat_id=196f6dd4a4df73dec24cbdbb3a7a39de, id=testid, key=testkey}
+		logger.info("chat_type : " + param.getStr("chat_type"));
+		logger.info("=============================== kakaocallback =================================");
+
+		// commonService.kakaoCallback(param);
+	}
+
+	/**
+	 * 광고성 메일 발송 테스트
+	 * @param params
+	 * @return Response
+	 * @throws Exception
+	 */
+	@RequestMapping(value="/admailtest", method=RequestMethod.POST)
+	public Response adMailTest(@RequestBody SOMap param) throws Exception {
+		SOMap result = cJMessageService.sendADAgreeInfo(param);
+
+		return new Response(result);// commonService.kakaoCallback(param);
+	}
+
+	/**
+	 * 개인정보 활용안내 메일 발송 테스트
+	 * @param params
+	 * @return Response
+	 * @throws Exception
+	 */
+	@RequestMapping(value="/privacymailtest", method=RequestMethod.POST)
+	public Response privacyMailTest(@RequestBody SOMap param) throws Exception {
+		SOMap result = cJMessageService.sendPersonalInfo(param);
+
+		return new Response(result);// commonService.kakaoCallback(param);
+	}
+}

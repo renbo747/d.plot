@@ -1,0 +1,113 @@
+package com.dplot.mapper;
+
+import com.dplot.annontation.MapperInterface;
+import com.dplot.common.SOMap;
+
+import java.util.List;
+
+/**
+ * The Interface MemberDeleteMapper.
+ */
+@MapperInterface
+public interface MemberSleepMapper {
+
+	/**
+	 * 휴면계정여부
+	 *
+	 * @param params the params
+	 * @return the int
+	 */
+	public int selectMemberSleepCount(SOMap params);
+	
+	/**
+	 * 휴면회원정보 조회
+	 * @param param
+	 * @return
+	 */
+	public SOMap selectMemberSleep(SOMap param);
+	
+	/**
+	 * 휴면계정정보 등록
+	 *
+	 * @param params the params
+	 * @return the int
+	 */
+	public int insertMemberToSleep(SOMap params);
+
+	/**
+	 * 휴면계정정보 NULL처리
+	 * @param params
+	 * @return
+	 */
+	public int updateMemberSleep(SOMap params);
+	
+	/**
+	 * 휴면계정정보 복원
+	 * @param params
+	 * @return
+	 */
+	public int updateMemberSleepCancel(SOMap params);
+	
+	/**
+	 * 휴면계정 삭제
+	 * @param params
+	 * @return
+	 */
+	public int deleteMemberSleep(SOMap params);
+
+	/**
+	 * 관리자 - 휴면회원 리스트 조회
+	 * @param params
+	 * @return
+	 */
+	List<SOMap> selectMemberSleepList(SOMap params);
+
+	/**
+	 * 관리자 - 휴면회원 리스트 카운트
+	 * @param params
+	 * @return
+	 */
+	SOMap selectMemberSleepListCount(SOMap params);
+
+	/**
+	 * 관리자 - 휴면회원 복구
+	 * @param params
+	 * @return
+	 */
+	int memberSleepRestore(SOMap params);
+
+	/**
+	 * 관리자 - 휴면회원 삭제
+	 * @param params
+	 * @return
+	 */
+	int deleteMemberSleepArray(SOMap params);
+
+	/**
+	 * 관리자 - 휴면회원 탈퇴 처리
+	 * @param params
+	 * @return
+	 */
+	int memberSleepResign(SOMap params);
+
+	/**
+	 * 관리자 - 휴면회원 탈퇴 처리로 인한 기존 멤버테이블 상태 업데이트
+	 * @param params
+	 * @return
+	 */
+	int memberStateUpdateForResign(SOMap params);
+
+	/**
+	 * 탈퇴30일이전 이메일체크
+	 * @param param
+	 * @return
+	 */
+	int selectSleepEmailCheck(SOMap param);
+
+	/**
+	 * 기 탈퇴회원  확인
+	 * @param dbparam
+	 * @return
+	 */
+	int selectWithdrawMemberCnt(SOMap dbparam);
+}

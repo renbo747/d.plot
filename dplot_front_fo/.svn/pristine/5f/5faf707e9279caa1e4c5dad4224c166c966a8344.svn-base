@@ -1,0 +1,82 @@
+.magazine-product {
+  display: flex;
+  .product-thumbnail {
+    width: 100px;
+    margin: 0 16px 0 0;
+    @include media-breakpoint-up(xl) {
+      width: 100%;
+      margin: 0;
+    }
+    img {
+      width: 100%;
+    }
+  }
+
+  .product__detail {
+    display: flex;
+    flex-direction: column;
+    width: calc(100% - 116px);
+  }
+
+  .product__contents {
+    cursor: pointer;
+    line-height: 1;
+  }
+
+  .product__ctg {
+    font-size: 12px;
+    letter-spacing: -.36px;
+    line-height: 14px;
+    font-weight: 600;
+    margin-bottom: 4px;
+    //text-transform: uppercase;
+  }
+  .product__text {
+    font-size: 14px;
+    letter-spacing: -.56px;
+    line-height: 20px;
+    margin-bottom: 6px;
+    color: #666;
+  }
+
+  .product__tag {
+    font-size: 12px;
+    letter-spacing: -.36px;
+    line-height: 17px;
+    word-break: keep-all;
+    color: #999;
+    span {
+      margin-right: 6px;
+    }
+  }
+
+  .product__footer {
+    display: flex;
+    justify-content: space-between;
+    margin-top: auto;
+  }
+
+  .product__rating {
+    font-size: 14px;
+    letter-spacing: -.56px;
+    line-height: 18px;
+    font-weight: 600;
+    color: #333;
+    padding-left: 20px;
+    background: url('~@/assets/mobile/img/icon/icon-star-black-18px.svg') no-repeat left 0;
+    span {
+      font-weight: 400;
+      color: #999;
+    }
+  }
+
+  .product__like {
+    width: 18px;
+    height: 18px;
+    background: url('~@/assets/common/icon/icon-heart-gray-24px.svg') no-repeat center;
+    background-size: 18px !important;
+    &.like {
+      background: url('~@/assets/common/icon/icon-heart-red-24px.svg') no-repeat center;
+    }
+  }
+}

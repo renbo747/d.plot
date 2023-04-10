@@ -1,0 +1,306 @@
+.dp-icon {
+  display: inline-flex;
+  width: 20px;
+  height: 20px;
+  background-size: 20px !important;
+
+  @include media-breakpoint-up(xl) {
+    width: 16px;
+    height: 16px;
+    background-size: 16px !important;
+  }
+
+  &.sm {
+    width: 16px;
+    height: 16px;
+    background-size: 16px !important;
+  }
+
+  &.sm01 {
+    width: 18px;
+    height: 18px;
+    background-size: 18px !important;
+  }
+
+  &.sm02 {
+    width: 20px;
+    height: 20px;
+    background-size: 20px !important;
+  }
+  &.h22 {
+    width: 22px;
+    height: 22px;
+    background-size: 22px !important;
+  }
+  &.h30 {
+    width: 30px;
+    height: 30px;
+    background-size: 30px !important;
+  }
+
+  &.lg {
+    width: 32px;
+    height: 32px;
+    background-size: 32px !important;
+  }
+  &.md {
+    width: 24px;
+    height: 24px;
+    background-size: 24px !important;
+  }
+  &.h26 {
+    width: 26px;
+    height: 26px;
+    background-size: 26px !important;
+  }
+  &.h28 {
+    width: 28px;
+    height: 28px;
+    background-size: 28px !important;
+  }
+  &.h34 {
+    width: 34px;
+    height: 34px;
+    background-size: 34px !important;
+
+  }
+  // Todo:이미지 크기가 정사이즈가 아님 확인필요(pbl)
+  &.h40 {
+    width: 40px;
+    height: 40px;
+    background-size: 40px !important;
+  }
+  &.h48 {
+    width: 48px;
+    height: 48px;
+    background-size: 40px !important;
+  }
+  &.h50 {
+    width: 50px;
+    height: 57px;
+    background-size: 50px !important;
+  }
+  &.xl {
+    width: 56px;
+    height: 56px;
+    background-size: 56px !important;
+  }
+  &.xl02 {
+    width: 64px;
+    height: 64px;
+    background-size: 64px !important;
+  }
+  &.h68 {
+    width: 68px;
+    height: 68px;
+    background-size: 68px !important;
+  }
+  &.h74 {
+    width: 74px;
+    height: 74px;
+    background-size: 74px !important;
+  }
+  &.xxl {
+    width: 100px;
+    height: 100px;
+    background-size: 100px !important;
+  }
+    // Add Icon Image
+  &.icon-plus {
+    background: url('~@/assets/common/icon/icon-plus-white-24px.svg') no-repeat 0;
+    &.black {
+      background: url('~@/assets/common/icon/icon-plus-black-24px.svg') no-repeat 0;
+    }
+    &.gray {
+      background: url('~@/assets/common/icon/icon-plus-gray-24px.svg') no-repeat 0;
+    }
+  }
+
+  &.icon-input-remove {
+    background: url('~@/assets/common/icon/icon-input-remove-gray-18px.svg') no-repeat 0;
+  }
+
+  &.icon-input-success {
+    background: url('~@/assets/common/icon/icon-check-green-20px.svg') no-repeat 0;
+  }
+
+  &.icon-question {
+    background: url('~@/assets/common/icon/icon-questionmark-black-24px.svg') no-repeat 0;
+  }
+
+  &.icon-download {
+    background: url('~@/assets/common/icon/icon-download-white-18px.svg') no-repeat 0;
+  }
+
+  &.icon-share {
+    background: url('~@/assets/common/icon/share.svg') no-repeat 0;
+  }
+
+  &.icon-share-medium {
+    background: url('~@/assets/common/icon/share.svg') no-repeat 0;
+  }
+
+  &.icon-more {
+    background: url('~@/assets/common/icon/icon-more-black-16px.svg') no-repeat 0;
+  }
+
+  &.icon-heart {
+    background: url('~@/assets/common/icon/icon-heart-gray-24px.svg') no-repeat 0;
+    &.on {
+      background: url('~@/assets/common/icon/icon-heart-red-24px.svg') no-repeat 0;
+    }
+  }
+
+  &.icon-share {
+    background: url('~@/assets/common/icon/share.svg') no-repeat 0;
+    width: 16px;
+    height: 16px;
+    background-size: 16px !important;
+  }
+
+
+  &.icon-tel {
+    background: url('~@/assets/common/icon/icon-tel-black-16px.svg') no-repeat 0;
+  }
+
+  &.icon-review {
+    background: url('~@/assets/common/icon/icon-review-black-20px.svg') no-repeat 0;
+  }
+
+  &.icon-review02 {
+    background: url('~@/assets/common/icon/icon_review02-black-20px.svg') no-repeat 0;
+  }
+  &.icon-video-play {
+    background: url('~@/assets/common/icon/icon-video-play.svg') no-repeat 0;
+  }
+
+  &.icon-arrow-down {
+    background: url('~@/assets/common/icon/icon-arrow-down-black-20px.svg') no-repeat 0;
+    &.white {
+      background: url('~@/assets/common/icon/icon-arrow-down-white-20px.svg') no-repeat 0;
+    }
+  }
+
+  &.icon-arrow-up {
+    background: url('~@/assets/common/icon/icon-arrow-up-black-20px.svg') no-repeat 0;
+    &.white {
+      background: url('~@/assets/common/icon/icon-arrow-up-white-20px.svg') no-repeat 0;
+    }
+  }
+
+  &.icon-close {
+    background: url('~@/assets/common/icon/icon-close-gray-20px.svg') no-repeat 0;
+  }
+
+  &.icon-reset {
+    background: url('~@/assets/common/icon/icon-reset-black-20px.svg') no-repeat 0;
+  }
+
+  &.icon-circle-close {
+    background: url('~@/assets/common/icon/icon-circle-close-gray-18px.svg') no-repeat 0;
+  }
+
+  &.icon-close-black {
+    background: url('~@/assets/common/icon/icon-close-black-20px.svg') no-repeat 0;
+  }
+
+  &.icon-guarantee {
+    background: url('~@/assets/common/icon/icon-guarantee-black-18px.svg') no-repeat 0;
+  }
+
+  &.icon-arrow-left {
+    background: url('~@/assets/common/icon/icon-arrow-left-black-18px.svg') no-repeat 0;
+  }
+
+  &.icon-arrow-right {
+    background: url('~@/assets/common/icon/icon-arrow-right-black-20px.svg') no-repeat 0;
+    &.gray {
+      background: url('~@/assets/common/icon/icon-arrow-right-gray-16px.svg') no-repeat 0;
+    }
+  }
+
+  &.icon-pagination-prev {
+    background: url('~@/assets/common/icon/icon-pagination-prev-black-18px.svg') no-repeat 0;
+  }
+
+  &.icon-pagination-next {
+    background: url('~@/assets/common/icon/icon-pagination-next-black-18px.svg') no-repeat 0;
+  }
+
+  &.icon-download {
+    background: url('~@/assets/common/icon/icon-download-white-20px.svg') no-repeat 0;
+  }
+  &.icon-pick {
+    background: url('~@/assets/common/icon/icon-pick-black-64px.svg') no-repeat 0;
+
+    &.sm01 {
+      background: url('~@/assets/common/icon/icon-pick-black-18px.svg') no-repeat 0;
+    }
+  }
+  &.icon-search {
+    background: url("~@/assets/common/icon/icon-search-black-20px.svg") no-repeat 0;
+    .white {
+      background: url("~@/assets/common/icon/icon-search-white-20px.svg") no-repeat 0
+    }
+    @include media-breakpoint-up(xl) {
+      background: url("~@/assets/common/icon/icon-search-black-28px.svg") no-repeat 0
+    }
+  }
+  &.icon-phone {
+    background: url("~@/assets/common/icon/icon-phone-black-26px.svg") no-repeat 0;
+  }
+  &.icon-empty-apply {
+    background: url("~@/assets/common/icon/icon-empty-apply-blalck-64px.svg") no-repeat 0;
+  }
+  &.icon-empty-like {
+    background: url("~@/assets/common/icon/icon-empty-like-black-64px.svg") no-repeat 0;
+  }
+  &.icon-empty-like-product {
+    background: url("~@/assets/common/icon/icon-empty-likeProduct-black-64px.svg") no-repeat 0;
+  }
+  &.icon-empty-recent-view {
+    background: url("~@/assets/common/icon/icon-empty-recentView-black-64px.svg") no-repeat 0;
+  }
+  &.icon-info {
+    background: url("~@/assets/common/icon/icon-info-gray-20px.svg") no-repeat 0;
+  }
+  &.icon-imminent {
+    background: url("~@/assets/common/icon/icon-imminent-black-20px.svg") no-repeat 0;
+  }
+  &.icon-coupon {
+    background: url("~@/assets/common/icon/icon-coupon-black-20px.svg") no-repeat 0;
+  }
+  &.icon-coupon-lg {
+    background: url("~@/assets/common/icon/icon-coupon-black-64px.svg") no-repeat 0;
+  }
+  &.icon-money {
+    background: url("~@/assets/common/icon/icon-money-primary-40px.svg") no-repeat 0;
+  }
+  &.icon-point {
+    background: url("~@/assets/common/icon/icon-empty-point-black-64px.svg") no-repeat 0;
+  }
+  &.icon-reward {
+    background: url("~@/assets/common/icon/icon-reward-empty-black-64px.svg") no-repeat 0;
+  }
+  &.icon-btn-left {
+    background: url("~@/assets/common/icon/icon-btn-arrow-left-white.svg") no-repeat 0;
+  }
+  &.icon-btn-right {
+    background: url("~@/assets/common/icon/icon-btn-arrow-right-white.svg") no-repeat 0;
+  }
+  &.icon-kakao {
+    background: url("~@/assets/common/icon/icon-kakao2-black-18px.svg") no-repeat 0;
+  }
+  &.icon-message {
+    background: url("~@/assets/common/icon/icon-message-black-18px.svg") no-repeat 0;
+  }
+  &.icon-link {
+    background: url("~@/assets/common/icon/icon-link-black-18px.svg") no-repeat 0;
+  }
+  &.icon-my {
+    background: url("~@/assets/common/icon/icon-my-black-18px.svg") no-repeat 0;
+  }
+  &.icon-previous-order {
+    background-image: url("~@/assets/common/icon/icon-order-list-black-64px.svg");
+  }
+}

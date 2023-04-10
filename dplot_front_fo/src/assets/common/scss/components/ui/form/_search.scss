@@ -1,0 +1,97 @@
+.base-input-search {
+  position: relative;
+
+  input::-webkit-search-decoration,
+  input::-webkit-search-cancel-button,
+  input::-webkit-search-results-button,
+  input::-webkit-search-results-decoration {
+    display: none;
+  }
+
+  .input-label {
+    margin-bottom: 10px;
+    font-size: 14px;
+    letter-spacing: -.56px;
+    color: $black;
+  }
+
+  .position-relative {
+    position: relative;
+  }
+  .form-control {
+    display: flex;
+    align-items: center;
+    height: 44px;
+    padding-left: 16px;
+    padding-right: 40px;
+    border-color: $border-color;
+    color: $gray-800;
+    box-shadow: none !important;
+    outline: 0;
+    font-size: 14px;
+    letter-spacing: -.56px;
+    border-radius: 0;
+    @include media-breakpoint-up(xl) {
+      height: 48px;
+      font-size: 16px;
+      letter-spacing: -.64px;
+      color: $gray-600;
+    }
+
+    &:focus {
+      border-color: $black;
+      color: $gray-800;
+    }
+    &::placeholder {
+      color: $gray-600;
+    }
+
+    &:disabled,
+    &[readonly] {
+      border-color: $gray-400;
+      background: $gray-100;
+      color: $gray-700;
+    }
+  }
+  .icon-input-remove {
+    position: absolute;
+    top: 50%;
+    right: 50px;
+    transform: translateY(-50%);
+  }
+  .search__input__icon {
+    position: absolute;
+    top: 50%;
+    right: 20px;
+    transform: translateY(-50%);
+    @include media-breakpoint-up(xl) {
+      right: 16px;
+    }
+  }
+  .error-msg {
+    font-size: 12px;
+    letter-spacing: -.24px;
+    color: $danger;
+    margin-top: 8px;
+  }
+
+  &.is-error {
+    .form-control {
+      border-color: $danger;
+    }
+  }
+
+  &.is-success {
+    .form-control {
+      border-color: $success;
+    }
+
+    .icon-input-success {
+      position: absolute;
+      top: 50%;
+      right: 16px;
+      z-index: 2;
+      transform: translateY(-50%);
+    }
+  }
+}

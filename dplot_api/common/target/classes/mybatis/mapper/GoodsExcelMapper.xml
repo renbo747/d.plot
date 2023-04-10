@@ -1,0 +1,98 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.dplot.mapper.GoodsExcelMapper">
+	<select id="selectGoodsExcelList" parameterType="somap" resultType="somap">
+		/* GoodsExcelMapper.xml - selectGoodsExcelList 상품엑셀업로드 목록 조회 */
+		<include refid="selectGoodsExcelListSQL"/>
+		<choose>
+			<when test="psort == 'exfilename_asc'">
+				ORDER BY ge.exfilename ASC, ge.uploaddate DESC
+			</when>
+			<when test="psort == 'exfilename_desc'">
+				ORDER BY ge.exfilename DESC, ge.uploaddate DESC
+			</when>
+			<when test="psort == 'succcnt_asc'">
+				ORDER BY ge.succcnt ASC, ge.uploaddate DESC
+			</when>
+			<when test="psort == 'succcnt_desc'">
+				ORDER BY ge.succcnt DESC, ge.uploaddate DESC
+			</when>
+			<when test="psort == 'failcnt_asc'">
+				ORDER BY ge.failcnt ASC, ge.uploaddate DESC
+			</when>
+			<when test="psort == 'failcnt_desc'">
+				ORDER BY ge.failcnt DESC, ge.uploaddate DESC
+			</when>
+			<when test="psort == 'uploaddate_asc'">
+				ORDER BY ge.uploaddate ASC
+			</when>
+			<when test="psort == 'uploaddate_desc'">
+				ORDER BY ge.uploaddate DESC
+			</when>
+			<when test="psort == 'prcdate_asc'">
+				ORDER BY ge.prcdate ASC, ge.uploaddate DESC
+			</when>
+			<when test="psort == 'prcdate_desc'">
+				ORDER BY ge.prcdate DESC, ge.uploaddate DESC
+			</when>
+			<otherwise>
+				ORDER BY ge.uploaddate DESC
+			</otherwise>
+		</choose>
+		<if test='startpage != null and endpage != null'>
+			LIMIT #{startpage}, #{endpage}
+		</if>
+	</select>
+	
+	<select id="selectGoodsExcelListCount" parameterType="somap" resultType="Integer">
+		/* GoodsExcelMapper.xml - selectGoodsExcelList 상품엑셀업로드 목록 건수 조회 */
+		SELECT COUNT(*) AS totalcnt
+		FROM (<include refid="selectGoodsExcelListSQL"/>) a
+	</select>
+	
+	<sql id = "selectGoodsExcelListSQL">
+		SELECT
+			  ge.excelidx
+			, ge.exfilename
+			, ge.succcnt
+			, ge.failcnt
+			, ge.failrow
+			, DATE_FORMAT(ge.uploaddate, '%Y-%m-%d %H:%i:%s') AS uploaddate
+			, DATE_FORMAT(ge.prcdate, '%Y-%m-%d %H:%i:%s') AS prcdate
+		FROM t_goods_excel ge
+		WHERE ge.siteid = #{siteid}
+		<if test = 'authuserid != null and authuserid != ""'>
+		AND ge.reguserid = #{authuserid}
+		</if>
+	</sql>
+	
+	<insert id="insertGoodsExcel" parameterType="somap" useGeneratedKeys="true" keyProperty="excelidx">
+		/* GoodsExcelMapper.xml - insertGoodsExcel 상품엑셀업로드 저장 */
+		INSERT INTO t_goods_excel (
+			  siteid
+			, exfilename
+			, succcnt
+			, failcnt
+			, failrow
+			, uploaddate
+			, reguserid
+		) VALUES (
+			  #{siteid}
+			, #{exfilename}
+			, #{succcnt}
+			, #{failcnt}
+			, #{failrow}
+			, NOW()
+			, #{authuserid}
+		)
+	</insert>
+	
+	<update id="updateGoodsExcel" parameterType="somap">
+		/* GoodsExcelMapper.xml - updateGoodsExcel 상품엑셀업로드 갱신 */
+		UPDATE t_goods_excel SET 
+			  prcdate = NOW()
+			, moduserid = #{authuserid}
+		WHERE excelidx = #{excelidx}
+	</update>
+</mapper>

@@ -1,0 +1,20 @@
+/*
+ * Page 단위 SCSS 관리
+ * 01. Main Page
+ * 02. Shop Page
+ * 03. Service Page
+ * 04. Cart,Order Page
+
+ */
+
+@import './main/main';
+@import './magazine/magazine';
+@import './shop/shop';
+@import './service/service';
+@import './member/member';
+@import './mypage/mypage';
+@import './orderproduct/orderproduct';
+@import './cs/cs';
+@import './search/search';
+@import './etc/etc';
+@import './invitation/invitation';

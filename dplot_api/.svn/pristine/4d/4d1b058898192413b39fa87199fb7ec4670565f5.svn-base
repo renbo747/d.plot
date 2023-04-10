@@ -1,0 +1,1261 @@
+package com.dplot.common.service.impl;
+
+import java.math.BigDecimal;
+import java.util.*;
+import java.util.stream.Collectors;
+
+import com.dplot.mapper.*;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Propagation;
+import org.springframework.transaction.annotation.Transactional;
+
+import com.dplot.common.CMConst;
+import com.dplot.common.SOMap;
+import com.dplot.common.service.CJMessageService;
+import com.dplot.common.service.CommonOrderService;
+import com.dplot.common.service.CommonService;
+import com.dplot.common.service.ERPService;
+import com.dplot.common.service.util.MallBaseService;
+import com.dplot.exception.BizException;
+import com.dplot.exception.CustomException;
+import com.dplot.util.DateTimeUtil;
+import com.dplot.util.Util;
+
+import javax.annotation.Resource;
+
+@Service
+public class CommonOrderServiceImpl extends MallBaseService implements CommonOrderService{
+    private static final Logger logger = LoggerFactory.getLogger(CommonOrderServiceImpl.class);
+	
+	@Autowired
+	private ComOrderMapper comOrderMapper;
+	
+	@Autowired
+	private ComOrderCouponMapper comOrderCouponMapper;
+	
+	@Autowired
+	private ComOrderGoodsMapper comOrderGoodsMapper;
+	
+	@Autowired
+	private GoodsOptionDetailMapper goodsOptionDetailMapper;
+	
+	@Autowired
+	private ComOrderGoodsDelivMapper comOrderGoodsDelivMapper;
+	
+	@Autowired
+	private ComOrderGoodsHisMapper comOrderGoodsHisMapper;
+	
+	@Autowired
+	private ReservePayMapper reservePayMapper;
+	
+	@Autowired
+	private EpointPayMapper epointPayMapper;
+	
+	@Autowired
+	private CouponMapper couponMapper;
+	
+	@Autowired
+	private CouponMemissueMapper couponMemissueMapper;
+	
+	@Autowired
+	private PromotionMapper promotionMapper;
+	
+	@Autowired
+	private MemberMapper memberMapper;
+	
+	@Autowired
+	private ReserveConfigMapper reserveConfigMapper;
+	
+	@Autowired
+	private IFLogMapper ifLogMapper;
+
+	@Autowired
+	private ERPService erpService;
+	
+	@Autowired
+	private CommonService commonService;
+	
+	@Autowired
+	private CJMessageService cjMessageService;
+	
+	@Autowired
+	private ClaimMapper claimMapper;
+
+	@Autowired
+	private ClaimGoodsHistMapper claimGoodsHistMapper;
+	
+	@Autowired
+	private RecomRewardLogMapper recomRewardLogMapper;
+
+	@Autowired
+	private CommonService commonservice;
+	
+	@Resource(name="propertiesFactory")
+	private Properties prop;
+	
+	/**
+	 * 주문취소 처리(입금대기)
+	 * @param param
+	 * @return
+	 * @throws Exception
+	 */
+	public SOMap confirmCancel(SOMap param) throws Exception{
+		if(Util.isEmpty(param.getDbStr("siteid"))) {
+			param.put("siteid", cs.getStr("siteid"));
+		}
+		
+		//현재상태가 배송완료상태인지 체크
+		boolean isWaitingDeposit = true;
+		List<SOMap> delivList = comOrderGoodsMapper.selectComOrderGoodsLIstDeliv(param);
+		for (SOMap soMap : delivList) {
+			if(!CMConst.ORDER_WAITING_DEPOSIT.equals(soMap.getDbStr("ordstatus"))){
+				isWaitingDeposit = false;
+			}
+		}
+		
+		if(!isWaitingDeposit){
+			throw new BizException("입금대기상태가 아닙니다.");
+		}
+		
+		SOMap orderInfo = comOrderMapper.selectComOrderInfo(param);
+		if(!isAdmin() && !isDealer() && !"system".equals(param.getDbStr("userid"))) {
+			if(isMember() && orderInfo.getDbInt("userno") != getMemberNo()) {
+				throw new BizException("권한이 없습니다.");
+			} else if(!isMember() && !orderInfo.getDbStr("ordno").equals(getOrdno())) {
+				throw new BizException("권한이 없습니다.");
+			}
+		}
+		
+		SOMap result = new SOMap();
+		if(isAdmin()) {
+			param.put("userid", getAdminId());
+		} else if(isDealer()) {
+			param.put("userid", getDealerId());
+		} else if(isMember()) {
+			param.put("userid", getMemberId());
+		} else if("system".equals(param.getDbStr("userid"))) {
+			param.put("userid", "system");
+		} else if(!Util.isEmpty(getOrdno())) {
+			param.put("userid", "guest");
+		}
+		
+		/**
+		 * 주문상태변경, 파트너사 상품 재고복원
+		 */
+		param.put("ordstatus", CMConst.ORDER_CANCEL_BF_DEPOSIT);
+		comOrderGoodsDelivMapper.updateDeliveryStatusByOrderIdx(param);
+		for (SOMap deliv : delivList) {
+			//주문상태 변경이력
+			deliv.put("preval", deliv.getDbStr("ordstatus"));
+			deliv.put("aftval", CMConst.ORDER_CANCEL_BF_DEPOSIT);
+			deliv.put("userid", param.getDbStr("userid"));
+			comOrderGoodsHisMapper.insertComOrderGoodsHis(deliv);
+			
+			//파트너사 상품 재고복원
+			if(!Util.flag2Bool(deliv.getDbStr("ispbgoods"))){
+				SOMap optionDetail = goodsOptionDetailMapper.selectDetailOptionCode(deliv);
+				optionDetail.put("stockcnt", optionDetail.getDbInt("stockcnt") + deliv.getDbInt("ordcnt"));
+				goodsOptionDetailMapper.updateGoodsOptionDetailStockCnt(optionDetail);
+			}
+		}
+		
+		/**
+		 * 적립금사용취소
+		 */
+		SOMap reserveParam = new SOMap();
+		reserveParam.put("isuse", "F");
+		reserveParam.put("rtnresamt", orderInfo.getDbInt("reservetotamt"));
+		reserveParam.put("rtnepoamt", orderInfo.getDbInt("epointtotamt"));
+		reserveParam.put("rtnempresamt", orderInfo.getDbInt("empreservetotamt"));
+		reserveParam.put("usememlvtype", orderInfo.getDbInt("memlvtype"));
+		reserveParam.put("usemembertype", orderInfo.getDbInt("dadamembertype"));
+		reserveParam.put("userno", orderInfo.getDbStr("userno"));
+		reserveParam.put("userid", orderInfo.getDbStr("userid"));
+		reserveParam.put("ordercode", orderInfo.getDbStr("ordno"));
+		
+		commonService.procUseReserveEPoint(reserveParam);
+		
+		/**
+		 * 쿠폰사용취소
+		 */
+		List<SOMap> couponList = comOrderCouponMapper.selectOrderCouponList(param);
+		for (SOMap coupon : couponList) {
+			if(!Util.flag2Bool(coupon.getDbStr("isdirect"))) {
+				couponMemissueMapper.updateCouponUsedCancel(coupon);
+			}
+		}
+		
+		/**
+		 * 미입금취소 Message
+		 */
+		SOMap msgParam = new SOMap();
+		msgParam.put("number", orderInfo.get("ordtel"));
+		msgParam.put("ordno", orderInfo.get("ordno"));
+		msgParam.put("orderdate", DateTimeUtil.getDateKrFormat(orderInfo.getStr("orderdate")));
+		msgParam.put("goodsname", delivList.get(0).get("goodsname"));
+		msgParam.put("ordcnt", delivList.size()-1);
+		msgParam.put("userno", orderInfo.get("userno"));
+		if(param.containsKey("isbatch") && "T".equals(param.getStr("isbatch"))){
+			cjMessageService.sendOutstandingDepositCancel(msgParam);
+		} else {
+			cjMessageService.sendOutstandingDepositCancel2(msgParam);
+		}
+
+		return result;
+	}
+	
+	/**
+	 * 구매확정 포인트 조회
+	 * @param param
+	 * @return
+	 * @throws Exception
+	 */
+	@Override
+	public SOMap selectConfirmReserve(SOMap param) throws Exception{
+		SOMap result = new SOMap();
+		
+		SOMap reserveInfo = comOrderGoodsMapper.selectComOrderGoodsReserveAmt(param);
+		
+		int paypoint = 0;
+		if(!Util.flag2Bool(reserveInfo.getDbStr("isnonmember"))) {
+			param.put("membertype", reserveInfo.getDbStr("dadamembertype"));
+			param.put("memlvtype", reserveInfo.getDbStr("memlvtype"));
+			SOMap reserveConfigInfo = reserveConfigMapper.selectReserveConfigInfoByMemberType(param);
+			
+			paypoint = reserveInfo.getDbInt("paypoint");
+			if(Util.flag2Bool(reserveConfigInfo.getDbStr("ismulti"))) {
+				paypoint = paypoint * reserveConfigInfo.getDbInt("cfmmulti");
+			}
+		}
+		
+		result.put("isfirst", reserveInfo.getDbStr("isfirst"));
+		result.put("ordcnt", reserveInfo.getDbStr("ordcnt"));
+		result.put("clmcnt", reserveInfo.getDbStr("clmcnt"));
+		result.put("paypoint", paypoint);
+		
+		return result;
+	}
+	
+	/**
+	 * 구매확정 처리
+	 * @param param
+	 * @return
+	 * @throws Exception
+	 */
+	@Override
+	@Transactional(propagation = Propagation.REQUIRED, rollbackFor = {Exception.class})
+	public SOMap confirmOrder(SOMap param) throws Exception {
+		//현재상태가 배송완료상태인지 체크
+		boolean isDelivComplete = true;
+		List<SOMap> delivList = comOrderGoodsDelivMapper.selectOrderInvoiceList(param);
+		for (SOMap soMap : delivList) {
+			if(!CMConst.ORDER_COMPLETE_DELIV.equals(soMap.getDbStr("ordstatus"))){
+				isDelivComplete = false;
+			}
+		}
+		
+		if(!isDelivComplete){
+			throw new BizException("배송완료상태가 아닙니다.");
+		}
+		
+		if(Util.isEmpty(param.getDbStr("siteid"))) {
+			param.put("siteid", cs.getStr("siteid"));
+		}
+		
+		param.put("orderidx", delivList.get(0).getDbInt("orderidx"));
+		param.put("goodsno", delivList.get(0).getDbInt("goodsno"));
+		param.put("optioncode", delivList.get(0).getDbStr("optioncode"));
+		SOMap orderInfo = comOrderMapper.selectComOrderInfo(param);
+		if(!isAdmin() && !isDealer() && !"system".equals(param.getDbStr("userid"))) {
+			if(isMember() && orderInfo.getDbInt("userno") != getMemberNo()) {
+				throw new BizException("권한이 없습니다.");
+			} else if(!isMember() && !orderInfo.getDbStr("ordno").equals(getOrdno())) {
+				throw new BizException("권한이 없습니다.");
+			}
+		}
+		
+		SOMap result = new SOMap();
+		
+		if(isAdmin()) {
+			param.put("userid", getAdminId());
+		} else if(isDealer()) {
+			param.put("userid", getDealerId());
+		} else if(isMember()) {
+			param.put("userid", getMemberId());
+		} else if("system".equals(param.getDbStr("userid"))) {
+			param.put("userid", "system");
+		} else if(!Util.isEmpty(getOrdno())) {
+			param.put("userid", "guest");
+		}
+		
+		param.put("userno", orderInfo.getInt("userno"));
+		param.put("membertype", orderInfo.getDbStr("dadamembertype"));
+		param.put("memlvtype", orderInfo.getDbStr("memlvtype"));
+		param.put("platform", cs.getStr("platform"));
+		if(Util.isEmpty(param.getDbStr("platform"))) {
+			param.put("platform", CMConst.CM_PLATFORM_PC);
+		}
+		
+		// 구매확정 상품 및 적립금조회
+		SOMap confirmInfo = this.selectConfirmReserve(param);
+		
+		//회원일경우 적립금 및 구매확정 쿠폰지급처리
+		if(param.getDbInt("userno") > 0) {
+			//회원 구매일자 수정
+			SOMap confirmParam = new SOMap();
+			confirmParam.put("userno", param.getDbInt("userno"));
+			confirmParam.put("orderdate", orderInfo.getDbStr("orderdate"));
+			confirmParam.put("isfirst", confirmInfo.getDbStr("isfirst"));
+			memberMapper.updateMemberOrderDate(confirmParam);
+			
+			// 구매확정 적립금 저장
+			SOMap reserveTemp = new SOMap();
+			reserveTemp.put("userno", orderInfo.getDbInt("userno"));
+			reserveTemp.put("isempreserve", "F");
+			reserveTemp.put("ordercode", orderInfo.getDbStr("ordno"));
+			reserveTemp.put("paymemlvtype", orderInfo.getDbStr("memlvtype"));
+			reserveTemp.put("paymembertype", orderInfo.getDbStr("dadamembertype"));
+			reserveTemp.put("authuserid", param.get("userid"));
+			reserveTemp.put("ordgdidx", param.getDbInt("ordgdidx"));
+			
+			if(confirmInfo.getDbInt("paypoint") > 0) {
+				SOMap reservePay = new SOMap();
+				reservePay.putAll(reserveTemp);
+				
+				reservePay.put("respaytype", Util.flag2Bool(confirmInfo.getDbStr("isfirst")) ? "RPT006" : "RPT001");
+				reservePay.put("paypoint", confirmInfo.getDbInt("paypoint"));
+				String startDay = DateTimeUtil.getNowFormatStr(DateTimeUtil.MALL_DATE_FORMAT_VARCHAR12);
+				String endDay = DateTimeUtil.getPointEndDate(startDay);
+				reservePay.put("resstday", startDay);
+				reservePay.put("resedday", endDay);
+				
+				
+				reservePayMapper.insertReservePayAll(reservePay);
+				// ERP LOG INSERT
+				SOMap iFLogMap = new SOMap();
+				iFLogMap.put("siteid", cs.getStr("siteid"));
+				iFLogMap.put("type", CMConst.ERP_RESERVE_TYPE);
+				iFLogMap.put("aud", CMConst.IF_LOG_ADD);
+				iFLogMap.put("orgno", reservePay.get("respayidx"));
+				
+				ifLogMapper.insertIfLogERPData(iFLogMap);
+			}
+			
+			// 구매확정 프로모션 적립금
+			param.put("ordcnt", confirmInfo.getDbInt("ordcnt") - confirmInfo.getDbInt("clmcnt"));
+			List<SOMap> promoList = promotionMapper.selectOrderConfirmPromotion(param);
+			
+			for (SOMap promo : promoList) {
+				SOMap reservePay = new SOMap();
+				reservePay.putAll(reserveTemp);
+				reservePay.put("promoidx", promo.getDbInt("promoidx"));
+				reservePay.put("paypoint", promo.getDbInt("reservepoint"));
+				if(Util.flag2Bool(promo.getDbStr("isreserve"))) {
+					reservePay.put("respaytype", "RPT008");
+					String startDay = DateTimeUtil.getNowFormatStr(DateTimeUtil.MALL_DATE_FORMAT_VARCHAR12);
+					String endDay = DateTimeUtil.getPointEndDate(startDay);
+					reservePay.put("resstday", startDay);
+					reservePay.put("resedday", endDay);
+					
+					reservePayMapper.insertReservePayAll(reservePay);
+					
+					// ERP LOG INSERT
+					SOMap iFLogMap = new SOMap();
+					iFLogMap.put("siteid", cs.getStr("siteid"));
+					iFLogMap.put("type", CMConst.ERP_RESERVE_TYPE);
+					iFLogMap.put("aud", CMConst.IF_LOG_ADD);
+					iFLogMap.put("orgno", reservePay.get("respayidx"));
+					
+					ifLogMapper.insertIfLogERPData(iFLogMap);
+				} else {
+					reservePay.put("epopaytype", "EPT001");
+					reservePay.put("epostday", promo.getDbStr("promostday"));
+					reservePay.put("epoedday", promo.getDbStr("promoedday"));
+					reservePay.put("isepointdup", promo.getDbStr("isepointdup"));
+					
+					epointPayMapper.insertEpointPay(reservePay);
+					
+					// ERP LOG INSERT
+					SOMap iFLogMap = new SOMap();
+					iFLogMap.put("siteid", cs.getStr("siteid"));
+					iFLogMap.put("type", CMConst.ERP_EPOINT_TYPE);
+					iFLogMap.put("aud", CMConst.IF_LOG_ADD);
+					iFLogMap.put("orgno", reservePay.get("epopayidx"));
+					
+					ifLogMapper.insertIfLogERPData(iFLogMap);
+				}
+			}
+			
+			List<SOMap> couponList = couponMapper.selectOrderConfirmCoupon(param);
+			for (SOMap coupon : couponList) {
+				if(!Util.flag2Bool(confirmInfo.getDbStr("isfirst")) && Util.flag2Bool(coupon.getDbStr("isfirstord"))) {
+					//첫구매확정이 아닐경우 첫구매확정 쿠폰은 발급안함
+					continue;
+				}
+				String issuedate = DateTimeUtil.getNowFormatStr(DateTimeUtil.MALL_DATE_FORMAT_VARCHAR12);
+				coupon.put("userno", param.getDbInt("userno"));
+				coupon.put("issuemembertype", param.getDbStr("membertype"));
+				coupon.put("issuememlvtype", param.getDbStr("memlvtype"));
+				coupon.put("isdownload", coupon.getDbStr("isautopay"));
+				coupon.put("issuedate", issuedate + "00");
+				//coupon.put("ordno", param.getDbStr("ordno"));
+				coupon.put("userid", param.getDbStr("userid"));
+				
+				couponMemissueMapper.insertCouponMemissue(coupon);
+			}
+		}
+		
+		param.put("ordstatus", CMConst.ORDER_PURCH_CONFIRM);
+		//주문상태이력 저장
+		List<Integer> delivs =  delivList.stream().map(m->m.getDbInt("orgdelividx")).collect(Collectors.toList());
+		param.put("orgdelividxlist", delivs);
+		comOrderGoodsHisMapper.insertComOrderGoodsHisAll(param);
+		//구매확정상태로 변경
+		comOrderGoodsDelivMapper.updateDeliveryStatusByOrdgdIdx(param);
+		param.put("siteid", cs.getStr("siteid"));
+		erpService.insertOrderConfirmERPData(param);
+		
+		// 구매확정 카카오톡 발송
+		param.put("goodsname", orderInfo.getDbStr("goodsname"));
+		param.put("ordno", orderInfo.getDbStr("ordno"));
+		param.put("orderdate", orderInfo.getDbStr("orderdate"));
+		param.put("number", orderInfo.getDbStr("ordtel"));
+		cjMessageService.sendConfirmOrder(param);
+
+		return result;
+	}
+	
+	
+	/***************************************
+	 * 구매확정시 추천인 보상 지급
+	 * 
+	 * @param param
+	 * @throws Exception
+	 *****************************************/
+	@Override
+	@Transactional(propagation = Propagation.REQUIRED, rollbackFor = {Exception.class})
+	public void saveRewardConfirmOrder(SOMap param) throws Exception {
+		SOMap rewardInfo = recomRewardLogMapper.selectSignupRewardLog(param);
+		/*************************************
+		 * 추천인 리워드 체크.
+		 *************************************/
+		if (rewardInfo == null || rewardInfo.getDbStr("iscfmgive").equals("F")) {
+			logger.info("추천인 리워드이벤트가 업습니다.");
+			return;
+		}
+		
+		/*************************************
+		 * 첫구매확정 주문 체크
+		 *************************************/
+		param.put("stday", rewardInfo.getStr("recomstday"));
+		param.put("edday", rewardInfo.getStr("recomedday"));
+		param.put("relogidx", rewardInfo.getStr("relogidx"));
+
+		List<SOMap> confirmList = comOrderGoodsDelivMapper.selectRewardConfirmOrder(param);
+		if (confirmList == null) {
+			logger.info("첫 구매확정 추천인 리워드 대상자가 없습니다.");
+			return;
+		}
+		for (SOMap soMap : confirmList) {
+			SOMap dbParam = new SOMap();
+			String startDay = "";
+			String endDay = "";
+			dbParam.put("siteid", param.getStr("siteid"));
+			dbParam.put("userno", soMap.getStr("recuserno"));
+			
+			SOMap userInfo = memberMapper.selectMemberInfoByUserNo(dbParam);
+			if (userInfo == null) {
+				logger.info("회원정보를 가져오는데에 실패하였습니다. 실패 userno : " + soMap.getStr("recuserno"));
+				continue;
+			}
+			
+			if (userInfo.getStr("name").equals("탈퇴회원")) {
+				logger.info("Message", "탈퇴회원으로 리워드 적립대상에서 제외 userno : " + soMap.getStr("recuserno"));
+				continue;
+			}
+			
+			if (userInfo.getStr("name").equals("휴면회원")) {
+				logger.info("Message", "휴면회원 리워드 적립대상에서 제외 userno :" + soMap.getStr("recuserno"));
+				continue;
+			}
+			
+			/*************************************
+			 * 추천인 리워드 지급
+			 *************************************/
+			if (confirmList != null) {
+				/*********************
+				 * 추천리워드 보상::적립금
+				 *********************/
+				if (rewardInfo.getDbStr("recomtype").equals("RCT001")) {// 적립금
+					dbParam.clear();
+					startDay = DateTimeUtil.getNowFormatStr(DateTimeUtil.MALL_DATE_FORMAT_VARCHAR12);
+					endDay = DateTimeUtil.getPointEndDate(startDay);
+
+					// 참고(피추천인:: 회원가입하는 사람, 회원가입::회원가입을 추천한 사람)
+					// 추천인 적립금 지급
+					dbParam.put("userno", soMap.getDbInt("recuserno"));
+					dbParam.put("isempreserve", "F"); // 임직원적립금여부
+					dbParam.put("resstday", startDay); // 적립금유효시작일
+					dbParam.put("resedday", endDay); // 적립금유효종료일
+					dbParam.put("respaytype", "RPT014"); // 적립금지급구분
+					dbParam.put("paymembertype", userInfo.getDbStr("dadamembertype")); // 지급시회원유형
+					dbParam.put("paymemlvtype", userInfo.getDbStr("memlvtype")); // 지급시회원등급
+					dbParam.put("paypoint", rewardInfo.getInt("revpoint"));
+					dbParam.put("authuserid", userInfo.getStr("userid"));
+					dbParam.put("ordgdidx", soMap.getStr("ordgdidx"));
+					commonservice.paymentReserve(dbParam);
+					
+					logger.info("Message", soMap.getDbInt("userno") + "님에게 추천인구매확정 적립금 리워드가 지급되었습니다.");
+				}
+				/*********************
+				 * 추천리워드 보상::epoint
+				 *********************/
+				if (rewardInfo.getDbStr("recomtype").equals("RCT002")) {
+					startDay = DateTimeUtil.getNowFormatStr(DateTimeUtil.MALL_DATE_FORMAT_VARCHAR12);
+					endDay = String.format("%s%s", DateTimeUtil.addDays(String.format("%s%s", startDay, "00"), 30,
+							DateTimeUtil.MALL_DATE_FORMAT_DATE_SHORT), "2359");
+
+					// 추천인 epoint 지급
+					dbParam.put("userno", soMap.getDbInt("recuserno"));
+					dbParam.put("epostday", startDay);
+					dbParam.put("epoedday", endDay);
+					dbParam.put("epopaytype", "EPT004");
+					dbParam.put("epopayreason", "피추천인구매확정보상");
+					dbParam.put("paymembertype", userInfo.getDbStr("dadamembertype"));
+					dbParam.put("paymemlvtype", userInfo.getDbStr("memlvtype"));
+					dbParam.put("paypoint", rewardInfo.getInt("revpoint"));
+					dbParam.put("authuserid", userInfo.getStr("userid"));
+					dbParam.put("ordgdidx", soMap.getStr("ordgdidx"));
+					commonservice.paymentEpotint(dbParam);
+					
+					logger.info("Message", soMap.getDbInt("userno") + "님에게 추천인구매확정 E포인트 리워드가 지급되었습니다.");
+				}
+				/*********************
+				 * 추천리워드 보상::쿠폰
+				 *********************/
+				if (rewardInfo.getDbStr("recomtype").equals("RCT003")) {
+					dbParam.clear();
+					startDay = DateTimeUtil.getNowFormatStr(DateTimeUtil.MALL_DATE_FORMAT_FULL_SHORT);
+
+					// 피추천인 쿠폰지급
+					dbParam.put("siteid", param.getStr("siteid"));
+					dbParam.put("comcpnidx", rewardInfo.getStr("reccfmcpidx"));
+					SOMap couponInfo = couponMapper.selectCouponByComcpnidx(dbParam);
+
+					dbParam.put("cpninfoidx", couponInfo.getInt("cpninfoidx")); // 쿠폰발급정보idx
+					dbParam.put("userno", userInfo.getDbInt("userno")); // 회원번호
+					dbParam.put("cpnusestday", couponInfo.getStr("cpnusestday"));// 쿠폰사용시작일
+					dbParam.put("cpnuseedday", couponInfo.getStr("cpnuseedday"));// 쿠폰사용종료일
+					dbParam.put("issuemembertype", userInfo.getDbStr("dadamembertype"));// 발급시회원유형
+					dbParam.put("issuememlvtype", userInfo.getDbStr("memlvtype"));// 발급시회원등급
+					dbParam.put("isdownload", 'T');// 다운로드여부
+					dbParam.put("downloaddate", startDay);// 다운로드날짜
+					dbParam.put("issuedate", startDay);
+					dbParam.put("userid", userInfo.getStr("userid"));
+					couponMemissueMapper.insertCouponMemissue(dbParam);
+					
+					logger.info("Message", soMap.getDbInt("userno") + "님에게 추천인구매확정 쿠폰 리워드가 지급되었습니다.");
+				}
+			}
+		}
+	}
+	/**
+	 * 수취확인(배송완료) 처리
+	 * @param param
+	 * @return
+	 * @throws Exception
+	 */
+	public SOMap delivComplete(SOMap param) throws Exception{
+		SOMap result = new SOMap();
+		
+		//현재상태가 배송완료상태인지 체크
+		boolean isDeliv = true;
+		List<SOMap> delivList = comOrderGoodsDelivMapper.selectOrderInvoiceList(param);
+		for (SOMap soMap : delivList) {
+			if(!CMConst.ORDER_IN_DELIVERY.equals(soMap.getDbStr("ordstatus"))){
+				isDeliv = false;
+			}
+		}
+		
+		if(!isDeliv){
+			throw new BizException("배송중상태가 아닙니다.");
+		}
+		
+		if(!CMConst.DELIV_DIRECT.equals(param.getDbStr("delivtype"))) {
+			throw new BizException("직배송상품만 수취확인이 가능합니다.");
+		}
+		
+		if(isMember()) {
+			param.put("userid", getMemberId());
+		} else if(!Util.isEmpty(getOrdno())) {
+			param.put("userid", "guest");
+		}
+		
+		param.put("ordstatus", CMConst.ORDER_COMPLETE_DELIV);
+		param.put("ordcfmtype", "OCT001");
+		//주문상태이력 저장
+		List<Integer> delivs =  delivList.stream().map(m->m.getDbInt("orgdelividx")).collect(Collectors.toList());
+		param.put("orgdelividxlist", delivs);
+		comOrderGoodsHisMapper.insertComOrderGoodsHisAll(param);
+		//구매확정상태로 변경
+		comOrderGoodsDelivMapper.updateDeliveryStatusByOrdgdIdx(param);
+		
+		return result;
+	}
+	
+	/**
+	 * 주문/결제 계산
+	 * 
+	 * @throws Exception
+	 */
+	public SOMap calOrderAmt(SOMap param) throws Exception {
+		SOMap result = new SOMap();
+		// 사용포인트
+		SOMap usePoint = new SOMap();
+		// 주문계산
+		SOMap totAmt = new SOMap();
+		totAmt.put("ordtotprice", 0); // 주문총금액
+
+		totAmt.put("totsalepromoamt", 0); // 프로모션할인금액
+		totAmt.put("totgoodscpnamt", 0); // 장바구니쿠폰할인금액
+		totAmt.put("basketcpnamt", 0); // 장바구니쿠폰할인금액
+		totAmt.put("totdelivcpnamt", 0); // 배송비쿠폰할인금액
+
+		totAmt.put("totcpnamt", 0); // 총할인금액
+
+		totAmt.put("dadadelivamt", 0); // 자사 총배송비금액
+		totAmt.put("ptndelivamt", 0); // 파트너 총배송비금액
+
+		totAmt.put("paytotprice", 0); // 결제총금액
+		totAmt.put("rpaytotprice", 0); // 실제결제금액
+
+		// 상품목록
+		List<SOMap> items = Util.convertToListSOMap(param.getArrayList("items"));
+
+		// 배송비 계산(배송템플릿별 합계)
+		// this.calDelivAmt(items, param.getDbStr("isolatetype"));
+
+		SOMap delivCoupon = param.getSOMap("delivcoupon");
+
+		// 배송비 템플릿 임시용
+		List<Integer> tempList = new ArrayList<Integer>();
+		// 상품금액 계산
+		SOMap dbParam = new SOMap();
+		dbParam.put("siteid", cs.getStr("siteid"));
+		for (SOMap item : items) {
+			// 프로모션 할인
+			int pirce = item.getDbInt("price");
+			int promoamt = 0;
+			if (item.containsKey("salepromo")) {
+				String[] salepromo = item.getDbStr("salepromo").split("\\|");
+				if (salepromo.length > 1) {
+					item.put("salepromoidx", Integer.parseInt(salepromo[0]));
+					promoamt = Integer.parseInt(salepromo[1]);
+					if (pirce < promoamt) {
+						promoamt = pirce;
+					}
+					item.put("salepromoamt", promoamt * item.getDbInt("ordcnt"));
+				} else {
+					item.put("salepromoidx", 0);
+					item.put("salepromoamt", 0);
+				}
+			}
+
+			// 프로모션 할인금액 적용가
+			int saleamt = item.getDbInt("price") - promoamt;
+			item.put("tempsaleamt", saleamt);
+
+			// 쿠폰할인
+			item.put("goodscpnamt", 0);
+			if (item.getDbInt("goodscpnidx") > 0) {
+				dbParam.put("comcpnidx", item.getDbInt("goodscpnidx"));
+				SOMap coupon = couponMapper.selectCouponInfo(dbParam);
+				int disamount = 0;
+
+				// 정률/정액 계산
+				if (Util.flag2Bool(coupon.getDbStr("ispercent"))) {
+					BigDecimal price = new BigDecimal(saleamt);
+					BigDecimal dispercent = new BigDecimal(coupon.getDbFloat("dispercent"));
+					BigDecimal temp = new BigDecimal(100);
+					BigDecimal percent = dispercent.divide(temp);
+					disamount = price.multiply(percent).intValue();
+
+					/**
+					 * 쿠폰 최대 할인금액이 0원이거나 null인 경우는 무조건 쿠폰 조건만큼 할인되게 적용 (2022-09-15, James)
+					 */
+					if (coupon.getDbInt("maxdisamt") > 0) {
+						disamount = disamount > coupon.getDbInt("maxdisamt") ? coupon.getDbInt("maxdisamt") : disamount;
+					}
+				} else {
+					disamount = coupon.getDbInt("disprice");
+				}
+				// 쿠폰할인금액이 상품금액보다 클경우 상품가격만큼 할인
+				disamount = disamount > saleamt ? saleamt : disamount;
+
+				item.put("goodscpnamt", disamount * item.getDbInt("usecnt"));
+			}
+
+			// 실제상품 판매금액(판매금액 - 프로모션할인금액 - 쿠폰할인금액)
+			item.put("realgoodsamt", (item.getDbInt("price") * item.getDbInt("ordcnt")) - item.getDbInt("salepromoamt")
+					- item.getDbInt("goodscpnamt"));
+			// 실제상품 공급가
+			item.put("realmarketprice", item.getDbInt("marketprice") * item.getDbInt("ordcnt"));
+		}
+
+		// 배송비 상품별 합계를 위한 임시상품
+		List<SOMap> tempItems = new ArrayList<SOMap>();
+		for (SOMap item : items) {
+			if (item.getDbInt("ordcnt") > 0) {
+				tempItems.add(item);
+			}
+		}
+
+		// 배송비계산
+		for (SOMap item : items) {
+			item.put("delivamt", 0);
+			item.put("adddelivamt", 0);
+			if (!Util.flag2Bool(item.getDbStr("istrash")) && item.getDbInt("ordcnt") > 0) {
+				if (!Util.flag2Bool(item.getDbStr("iscombdeliv"))) {
+					// 개별배송일경우
+					this._calItemDelivAmt(item, param.getDbStr("isolatetype"), tempItems);
+				} else {
+					// 묵음배송일경우
+					// 동일한 배송템플릿 여부
+					int idx = this.containIdx(tempList, item.getDbInt("delividx"));
+//	                   if (idx == -1) {
+//	                       //배송템플릿이 없을경우
+//	                       this._calItemDelivAmt(item, param.getDbStr("isolatetype"), tempItems);
+//	                       tempList.add(item.getDbInt("delividx"));
+//	                   } else {
+//	                       //배송템플릿이 있을경우
+//	                      item.put("delivamt", 0);
+//	                      item.put("adddelivamt", 0);
+//	                   }
+					if ("DCT001".equals(item.getDbStr("delivfaretype"))) {
+						// 무료
+						item.put("delivamt", 0);
+						if ("J".equals(param.getDbStr("isolatetype"))) { //제주 추가배송비
+							item.put("adddelivamt", item.getDbInt("chejufare"));
+						} else if ("I".equals(param.getDbStr("isolatetype"))) { //내륙 추가배송비
+							item.put("adddelivamt", item.getDbInt("isolfare"));
+						} else {
+							item.put("adddelivamt", 0);
+						}
+					} else if ("DCT002".equals(item.getDbStr("delivfaretype"))) {
+						// 유료
+						if (idx == -1) {
+							tempList.add(item.getDbInt("delividx"));
+							item.put("delivamt", item.getDbInt("delivfare"));
+							
+							if ("J".equals(param.getDbStr("isolatetype"))) { //제주 추가배송비
+								item.put("adddelivamt", item.getDbInt("chejufare"));
+							} else if ("I".equals(param.getDbStr("isolatetype"))) { //내륙 추가배송비
+								item.put("adddelivamt", item.getDbInt("isolfare"));
+							} else {
+								item.put("adddelivamt", 0);
+							}
+						}
+					} else if ("DCT005".equals(item.getDbStr("delivfaretype"))) {
+						// 구매 수량 비례
+						int delivfare = item.getDbInt("delivfare");
+						int ordcnt = item.getDbInt("ordcnt");
+						item.put("delivamt", delivfare * ordcnt);
+						if ("J".equals(param.getDbStr("isolatetype"))) { //제주 추가배송비
+							item.put("adddelivamt", item.getDbInt("chejufare"));
+						} else if ("I".equals(param.getDbStr("isolatetype"))) { //내륙 추가배송비
+							item.put("adddelivamt", item.getDbInt("isolfare"));
+						} else {
+							item.put("adddelivamt", 0);
+						}
+					} else {
+						// 조건부 무료
+						// 동일템플릿에서 조건이 만족하면 배송비는 전부 0원
+						if (idx == -1) {
+							tempList.add(item.getDbInt("delividx"));
+							boolean isOk = false;
+							List<SOMap> test = items.stream()
+									.filter(a -> a.getDbInt("delividx") == item.getDbInt("delividx")
+											&& "T".equals(a.getDbStr("iscombdeliv")))
+									.collect(Collectors.toList());
+							long sum = 0;
+							for (int i = 0; i < test.size(); i++) {
+								Map<String, Long> temp = test.stream()
+										.collect(Collectors.toMap(a -> a.get("goodsno").toString(),
+												a -> Long.parseLong((a.get("realgoodsamt")).toString()), Long::sum));
+								sum += test.get(i).getInt("realgoodsamt");
+
+								if (sum >= item.getDbInt("delivfreefare")) {
+									isOk = true;
+								}
+							}
+							if (isOk) {
+								item.put("delivamt", 0);
+								item.put("adddelivamt", 0);
+							} else {
+								item.put("delivamt", item.getDbInt("delivfare"));
+							}
+							if ("J".equals(param.getDbStr("isolatetype"))) { //제주 추가배송비
+								item.put("adddelivamt", item.getDbInt("chejufare"));
+							} else if ("I".equals(param.getDbStr("isolatetype"))) { //내륙 추가배송비
+								item.put("adddelivamt", item.getDbInt("isolfare"));
+							} else {
+								item.put("adddelivamt", 0);
+							}
+						}
+					}
+				}
+			}
+
+			item.put("basedelivamt", item.getDbInt("delivamt"));
+			item.put("isodelivamt", item.getDbInt("adddelivamt"));
+
+			// 프로모션 할인금액 적용가
+			int saleamt = item.getDbInt("tempsaleamt");
+
+			// 배송비쿠폰
+			item.put("delivcpnamt", 0);
+			if (delivCoupon != null && delivCoupon.getDbInt("goodsno") == item.getDbInt("goodsno")
+					&& delivCoupon.getDbStr("optioncode").equals(item.get("optioncode"))) {
+				dbParam.put("comcpnidx", delivCoupon.getDbInt("comcpnidx"));
+				SOMap coupon = couponMapper.selectCouponInfo(dbParam);
+				int disamount = coupon.getDbInt("maxdisamt");
+				// 쿠폰할인금액이 배송비보다 클경우 배송비만큼 할인
+				disamount = disamount > item.getDbInt("delivamt") ? item.getDbInt("delivamt") : disamount;
+
+				// 장바구니 쿠폰할인
+				if (Util.flag2Bool(coupon.getDbStr("isorderlimit"))
+						&& (saleamt * item.getDbInt("ordcnt")) < coupon.getDbInt("orlimitamt")) {
+					disamount = 0;
+				}
+
+				item.put("delivcpnamt", disamount);
+				coupon.put("disamount", disamount);
+				result.put("delivcoupon", coupon);
+			}
+
+			// 주문총금액
+			totAmt.put("ordtotprice",
+					totAmt.getDbInt("ordtotprice") + (item.getDbInt("price") * item.getDbInt("ordcnt")));
+			// 총프로모션할인금액
+			totAmt.put("totsalepromoamt", totAmt.getDbInt("totsalepromoamt") + item.getDbInt("salepromoamt"));
+			// 총상품쿠폰할인금액
+			totAmt.put("totgoodscpnamt", totAmt.getDbInt("totgoodscpnamt") + item.getDbInt("goodscpnamt"));
+			// 총배송비할인금액
+			totAmt.put("totdelivcpnamt", totAmt.getDbInt("totdelivcpnamt") + item.getDbInt("delivcpnamt"));
+
+			// 총배송비금액
+			if (item.getDbInt("dealerno") > 0) {
+				totAmt.put("ptndelivamt",
+						totAmt.getDbInt("ptndelivamt") + item.getDbInt("delivamt") + item.getDbInt("adddelivamt")); // 파트너
+																													// 총배송비금액
+			} else {
+				totAmt.put("dadadelivamt",
+						totAmt.getDbInt("dadadelivamt") + item.getDbInt("delivamt") + item.getDbInt("adddelivamt")); // 자사
+																														// 총배송비금액
+			}
+		}
+
+		// 장바구니쿠폰
+		SOMap cartCoupon = param.getSOMap("cartcoupon");
+		if (cartCoupon != null) {
+			dbParam.put("comcpnidx", cartCoupon.getDbInt("comcpnidx"));
+			SOMap coupon = couponMapper.selectCouponInfo(dbParam);
+
+			int disamount = 0;
+
+			// 정률/정액 계산
+			if (Util.flag2Bool(coupon.getDbStr("ispercent"))) {
+				BigDecimal totprice = new BigDecimal(totAmt.getDbInt("ordtotprice")); // 주문총금액
+				BigDecimal dispercent = new BigDecimal(coupon.getDbFloat("dispercent"));
+				BigDecimal temp = new BigDecimal(100);
+				BigDecimal percent = dispercent.divide(temp);
+				disamount = totprice.multiply(percent).intValue();
+				disamount = disamount > coupon.getDbInt("maxdisamt") ? coupon.getDbInt("maxdisamt") : disamount;
+			} else {
+				disamount = coupon.getDbInt("disprice");
+			}
+
+			int paytotprice = totAmt.getDbInt("ordtotprice") + totAmt.getDbInt("dadadelivamt") + totAmt.getDbInt("ptndelivamt");	
+			// 전체 취소인 경우 할인 가격들을 제외해주어야 쿠폰을 되돌려주는 로직을 태움.
+			if(totAmt.getDbInt("ordtotprice") != 0) {
+				paytotprice = paytotprice - totAmt.getDbInt("totdelivcpnamt") - totAmt.getDbInt("totsalepromoamt") - totAmt.getDbInt("totgoodscpnamt");
+			}
+			
+			disamount = disamount > paytotprice ? paytotprice : disamount;
+
+			// 장바구니 쿠폰할인
+			if (Util.flag2Bool(coupon.getDbStr("isorderlimit")) && totAmt.getDbInt("ordtotprice")
+					- totAmt.getDbInt("totsalepromoamt") < coupon.getDbInt("orlimitamt")) {
+				disamount = 0;
+			}
+
+			totAmt.put("basketcpnamt", disamount);
+			coupon.put("disamount", disamount);
+			result.put("cartcoupon", coupon);
+		}
+
+		// 총할인금액 (프로모션할인금액 + 쿠폰할인금액 + 장바구니할인금액 + 배송비할인금액)
+		totAmt.put("totcpnamt", totAmt.getDbInt("totsalepromoamt") + totAmt.getDbInt("totgoodscpnamt")
+				+ totAmt.getDbInt("basketcpnamt") + totAmt.getDbInt("totdelivcpnamt"));
+		// 결제총금액 (주문총금액 - 총할인금액 + 배송비)
+		totAmt.put("paytotprice", totAmt.getDbInt("ordtotprice") - totAmt.getDbInt("totcpnamt")
+				+ totAmt.getDbInt("dadadelivamt") + totAmt.getDbInt("ptndelivamt"));
+		// 실제결제금액 (결제총금액 - 사용포인트)
+		totAmt.put("rpaytotprice", totAmt.getDbInt("paytotprice") - param.getDbInt("reservetotamt")
+				- param.getDbInt("epointtotamt") - param.getDbInt("empreservetotamt"));
+		// 적립금계산 (주문총금액 - 할인금액 + 배송비)
+		totAmt.put("reservecalamt", totAmt.getDbInt("ordtotprice") - (totAmt.getDbInt("totsalepromoamt") + totAmt.getDbInt("totgoodscpnamt") + totAmt.getDbInt("basketcpnamt")
+		+ totAmt.getDbInt("totdelivcpnamt"))+ totAmt.getDbInt("dadadelivamt") + totAmt.getDbInt("ptndelivamt"));
+
+		usePoint.put("reservetotamt", param.getDbInt("reservetotamt"));
+		usePoint.put("epointtotamt", param.getDbInt("epointtotamt"));
+		usePoint.put("empreservetotamt", param.getDbInt("empreservetotamt"));
+
+		result.put("totamt", totAmt);
+		result.put("items", items);
+		result.put("usepoint", usePoint);
+
+		return result;
+	}
+
+	/**
+	 * 배송비계산
+	 * @param type
+	 * @throws Exception
+	 */
+	public void calDelivAmt(List<SOMap> list, String type) throws Exception {
+		List<Integer> tempList = new ArrayList<Integer>();
+		
+		for (SOMap item : list) {
+			item.put("delivamt", 0);
+        	item.put("adddelivamt", 0);
+        	
+			if (Util.flag2Bool(item.getDbStr("istrash"))) continue;
+			if (item.getDbInt("ordcnt") == 0) continue;
+			
+            if (!Util.flag2Bool(item.getDbStr("iscombdeliv"))) {
+                //개별배송일경우
+                this._calItemDelivAmt(item, type, list);
+            } else {
+                //묵음배송일경우
+                //동일한 배송템플릿 여부
+                int idx = this.containIdx(tempList, item.getDbInt("delividx"));
+                if (idx == -1) {
+                    //배송템플릿이 없을경우
+                    this._calItemDelivAmt(item, type, list);
+                    tempList.add(item.getDbInt("delividx"));
+                } else {
+                    //배송템플릿이 있을경우
+//                	item.put("delivamt", 0);
+//                	item.put("adddelivamt", 0);
+                	this._calItemDelivAmt(item, type, list);
+                }
+            }
+            
+            item.put("basedelivamt", item.getDbInt("delivamt"));
+            item.put("isodelivamt", item.getDbInt("adddelivamt"));
+		}
+	}
+
+	@Override
+	@Transactional(propagation = Propagation.REQUIRED, rollbackFor = {Exception.class})
+	public int updateOrderStatusByERPData(List<SOMap> list) {
+		int result = 0;
+
+		List<SOMap> orderList = list.stream().filter(a-> a.containsKey("claim_type") && "O".equals(a.getStr("claim_type"))).collect(Collectors.toList());
+
+		if(orderList.size() > 0) {
+			//배송상태 안애 ORDGDIDX로 정렬
+			Map<String, Map<String, List<SOMap>>> map = orderList.stream().collect(Collectors.groupingBy(a -> a.get("order_status").toString(), Collectors.groupingBy(a -> a.get("order_gd_idx").toString())));
+
+			Map<String, List<SOMap>> delivery = map.get(CMConst.ORDER_IN_DELIVERY);
+			Map<String, List<SOMap>> deliveryComplete = map.get(CMConst.ORDER_COMPLETE_DELIV);
+
+			List<String> invoiceList = new ArrayList<>();
+			List<String> invoiceList2 = new ArrayList<>();
+
+//			List<Map<String, Object>> erpReturnList = new ArrayList<>();
+
+			for (Map.Entry<String, List<SOMap>> rowEntry : delivery.entrySet()) {
+				SOMap checkParam = new SOMap();
+				checkParam.put("ordgdidx", rowEntry.getKey());
+
+				//변경시점까지 전체취소가 되었는지 확인.
+				SOMap cancelCheckInfo = comOrderGoodsMapper.selectComOrderGoodsCancelInfo(checkParam);
+				if (!Util.isEmpty(cancelCheckInfo) && cancelCheckInfo.getInt("afordcnt") > 0) {
+					SOMap existParam = new SOMap();
+					existParam.put("ordgdidx", checkParam.getStr("ordgdidx"));
+					existParam.put("ordstatus_arr", new String[]{CMConst.ORDER_PREPARING_GOODS, CMConst.ORDER_PREPARING_DELIV, CMConst.ORDER_IN_DELIVERY});
+					//상품 준비중, 배송 준비중 데이터 확인, 배송중 데이터가 있는지 확인
+					List<SOMap> directGoodsInfo = comOrderGoodsMapper.selectComOrderGoodsExistCheck(existParam);
+					if (directGoodsInfo.size() > 0) {
+						SOMap updateParam = new SOMap();
+						updateParam.put("istrash", "T");
+						updateParam.put("ordgdidx", checkParam.getStr("ordgdidx"));
+						//이전 배송정보 삭제처리 논리삭제
+						comOrderGoodsDelivMapper.updateComOrderGoodsDelivUse(updateParam);
+
+						List<SOMap> insertList = rowEntry.getValue();
+						for (SOMap insertMap : insertList) {
+							SOMap insertParam = new SOMap();
+							insertParam.put("ordgdidx", insertMap.getStr("order_gd_idx"));
+							insertParam.put("ordstatus", CMConst.ORDER_IN_DELIVERY);
+							insertParam.put("orderidx", insertMap.getStr("order_idx"));
+							insertParam.put("invoiceno", insertMap.getStr("invoice_no"));
+							insertParam.put("logistype", insertMap.getStr("logis_type"));
+							insertParam.put("ordcnt", insertMap.getStr("qty"));
+							insertParam.put("userid", "SYSTEM");
+
+							result += comOrderGoodsDelivMapper.insertComOrderGoodsDelivByERP(insertParam);
+							insertParam.put("aftval", CMConst.ORDER_IN_DELIVERY);
+							comOrderGoodsHisMapper.insertComOrderGoodsHis(insertParam);
+
+							invoiceList.add(insertParam.getStr("invoiceno"));
+
+//							insertParam.put("erp_key", insertMap.getStr("erp_key"));
+//							erpReturnList.add(insertParam);
+						}
+					}
+				}
+			}
+
+			if(invoiceList.size() > 0) {
+				SOMap msgParam = new SOMap();
+				msgParam.put("invoice_no_arr", invoiceList);
+				sendDirectDeliveryMessage(CMConst.ORDER_IN_DELIVERY, msgParam);
+			}
+
+			for (Map.Entry<String, List<SOMap>> rowEntry : deliveryComplete.entrySet()) {
+				List<SOMap> updateList = rowEntry.getValue();
+				for(SOMap updateMap : updateList){
+					SOMap updateRow = comOrderGoodsDelivMapper.selectOrderDeliveryMatchedERPData(updateMap);
+					if(!Util.isEmpty(updateRow)){
+						updateRow.put("ordstatus", CMConst.ORDER_COMPLETE_DELIV);
+						comOrderGoodsDelivMapper.updateOrderGoodsDeliv(updateRow);
+						updateRow.put("preval", CMConst.ORDER_IN_DELIVERY);
+						updateRow.put("aftval", CMConst.ORDER_COMPLETE_DELIV);
+						updateRow.put("userid", "SYSTEM");
+						comOrderGoodsHisMapper.insertComOrderGoodsHis(updateRow);
+
+						invoiceList2.add(updateRow.getStr("invoiceno"));
+
+//						updateRow.put("erp_key", updateMap.getStr("erp_key"));
+//						erpReturnList.add(updateRow);
+					}
+				}
+			}
+
+			if(invoiceList2.size() > 0) {
+				SOMap msgParam = new SOMap();
+				msgParam.put("invoice_no_arr", invoiceList2);
+				sendDirectDeliveryMessage(CMConst.ORDER_COMPLETE_DELIV, msgParam);
+			}
+		}
+
+		return result;
+	}
+
+	@Override
+	@Transactional(propagation = Propagation.REQUIRED, rollbackFor = {Exception.class})
+	public int updateExchangeStatusByERPData(List<SOMap> list) {
+		int result = 0;
+
+		List<SOMap> exchangeList = list.stream().filter(a-> a.containsKey("claim_type") && "E".equals(a.getStr("claim_type"))).collect(Collectors.toList());
+
+		if(exchangeList.size() > 0) {
+			List<SOMap> sortList = exchangeList.stream().sorted(Comparator.comparing(o -> o.getStr("order_status"))).collect(Collectors.toList());
+			//교환배송처리
+			//EXS008(회수완료) -> EXS000(교환배송진행)
+			//EXS009(교환배송진행) -> EXS010(교환배송완료)
+			for(SOMap row : sortList){
+
+				SOMap dbParam = new SOMap();
+				dbParam.put("clmidx", row.getStr("claim_idx"));
+				dbParam.put("excdlvinvoiceno", row.getStr("invoice_no"));
+				dbParam.put("excdlvlogistype", row.getStr("logis_type"));
+				dbParam.put("type", row.getStr("claim_type"));
+
+				if(CMConst.ORDER_IN_DELIVERY.equals(row.getStr("order_status"))){
+					dbParam.put("excstatus", CMConst.EXCHANGE_IN_DELIVERY);
+					dbParam.put("bf_status", CMConst.EXCHANGE_RETURN_COMPLETE);
+					dbParam.put("af_status", CMConst.EXCHANGE_IN_DELIVERY);
+					dbParam.put("excdlvstatname", "배송진행");
+
+				} else if(CMConst.ORDER_COMPLETE_DELIV.equals(row.getStr("order_status"))){
+					dbParam.put("excstatus", CMConst.EXCHANGE_COMPLETE_DELIV);
+					dbParam.put("bf_status", CMConst.EXCHANGE_IN_DELIVERY);
+					dbParam.put("af_status", CMConst.EXCHANGE_COMPLETE_DELIV);
+					dbParam.put("excdlvstatname", "배송완료");
+				}
+
+				dbParam.put("clmidxarr", new String[]{row.getStr("claim_idx")});
+				claimGoodsHistMapper.insertClaimGoodsHist(dbParam);
+				claimMapper.updateClaimExcDeliveryERP(dbParam);
+			}
+		}
+
+		return result;
+	}
+
+	@Override
+	@Transactional(propagation = Propagation.REQUIRED, rollbackFor = {Exception.class})
+	public int updateReturnStatusByERPData(List<SOMap> list) {
+		int result = 0;
+
+		List<SOMap> sortList = list.stream().sorted(Comparator.comparing(o -> o.getStr("order_status"))).collect(Collectors.toList());
+		//회수택배사, 회수운송장, 회수완료일, 회수상태명 업데이트
+		//RECLOGISTYPE, RECINVOICENO, RECCOMDATE, RECSTATNAME
+		for(SOMap row : sortList){
+			if("RTS007".equals(row.getStr("order_status")) || "RTS008".equals(row.getStr("order_status"))) {
+				SOMap dbParam = new SOMap();
+				dbParam.put("clmidx", row.getStr("claim_idx"));
+				dbParam.put("recinvoiceno", row.getStr("invoice_no"));
+				dbParam.put("reclogistype", row.getStr("logis_type"));
+				dbParam.put("recstatname", CMConst.RETURN_IN_DELIVERY.equals(row.getStr("order_status")) ? "집하" : "배송완료");
+				dbParam.put("type", row.getStr("claim_type"));
+
+				if ("E".equals(row.getStr("claim_type"))) {
+					dbParam.put("status", CMConst.RETURN_IN_DELIVERY.equals(row.getStr("order_status")) ? CMConst.EXCHANGE_RETURN_DELIVERY : CMConst.EXCHANGE_RETURN_COMPLETE);
+					dbParam.put("bf_status", CMConst.RETURN_IN_DELIVERY.equals(row.getStr("order_status")) ? CMConst.EXCHANGE_APPROVAL_COMPLETE : CMConst.EXCHANGE_RETURN_DELIVERY);
+					dbParam.put("af_status", CMConst.RETURN_IN_DELIVERY.equals(row.getStr("order_status")) ? CMConst.EXCHANGE_RETURN_DELIVERY : CMConst.EXCHANGE_RETURN_COMPLETE);
+
+				} else {
+					dbParam.put("status", row.getStr("order_status"));
+					dbParam.put("bf_status", CMConst.RETURN_IN_DELIVERY.equals(row.getStr("order_status")) ? CMConst.RETURN_APPROVAL_COMPLETE : CMConst.RETURN_IN_DELIVERY);
+					dbParam.put("af_status", row.getStr("order_status"));
+				}
+
+				dbParam.put("clmidxarr", new String[]{row.getStr("claim_idx")});
+				claimGoodsHistMapper.insertClaimGoodsHist(dbParam);
+				claimMapper.updateClaimRecDeliveryERP(dbParam);
+			}
+		}
+
+		return result;
+	}
+
+	private void sendDirectDeliveryMessage(String type, SOMap param){
+		SOMap selectParam = new SOMap();
+		selectParam.put("target_ord_status", type);
+		selectParam.put("invoice_no_arr", param.get("invoice_no_arr"));
+		List<SOMap> sendList = comOrderMapper.selectDeliverySendTargetByInvoice(selectParam);
+
+		for(SOMap msgParams : sendList){
+			if (CMConst.ORDER_IN_DELIVERY.equals(type)) {
+				cjMessageService.sendShippingOut(msgParams);
+			} else if (CMConst.ORDER_COMPLETE_DELIV.equals(type)) {
+				cjMessageService.sendDeliveryComplete(msgParams);
+			}
+		}
+	}
+
+
+	/**
+	 * 상품별 배송비 계산 
+	 * @param item
+	 * @param type
+	 */
+    private void _calItemDelivAmt(SOMap item, String type, List<SOMap> list) {
+        if ("DCT001".equals(item.getDbStr("delivfaretype"))) {
+        	//무료
+            item.put("delivamt", 0);
+        } else if ("DCT002".equals(item.getDbStr("delivfaretype"))) {
+        	//유료
+        	item.put("delivamt", item.getDbInt("delivfare"));
+        } else if ("DCT005".equals(item.getDbStr("delivfaretype"))) {
+        	//구매 수량 비례
+        	int delivfare = item.getDbInt("delivfare");
+        	int ordcnt = item.getDbInt("ordcnt");
+        	item.put("delivamt", delivfare * ordcnt);
+        } else {
+        	//조건부 무료
+            
+        	boolean isOk = false;
+        	if (!Util.flag2Bool(item.getDbStr("iscombdeliv"))) {
+        		//동일상품에서 조건이 만족하면 배송비는 전부 0원
+        		Map<String, Long> temp = list.stream().collect(Collectors.toMap(a->a.get("goodsno").toString(), a->Long.parseLong(a.get("realgoodsamt").toString()), Long::sum));
+        		
+    			long sum = temp.get(item.getDbStr("goodsno"));
+				if(sum >= item.getDbInt("delivfreefare")) {
+	            	isOk = true;
+				}
+        	} else {
+        		//동일템플릿에서 조건이 만족하면 배송비는 전부 0원
+        		List<SOMap> tempList = list.stream().filter(a -> a.getDbInt("delividx") == item.getDbInt("delividx") && "T".equals(a.getDbStr("iscombdeliv"))).collect(Collectors.toList());
+        		
+        		if(tempList.size() > 0) {
+        			Map<String, Long> temp = tempList.stream().collect(Collectors.toMap(a->a.get("goodsno").toString(), a->Long.parseLong(a.get("realgoodsamt").toString()), Long::sum));
+            		
+        			long sum = temp.get(item.getDbStr("goodsno"));
+        			
+   					if(sum >= item.getDbInt("delivfreefare")) {
+   		            	isOk = true;
+    				}
+        		}
+        	}
+        	
+            if(isOk) {
+            	item.put("delivamt", 0);
+            } else {
+            	item.put("delivamt", item.getDbInt("delivfare"));
+            }
+        }
+        if ("J".equals(type)) { //제주 추가배송비
+            item.put("adddelivamt", item.getDbInt("chejufare"));
+        } else if ("I".equals(type)) { //내륙 추가배송비
+        	item.put("adddelivamt", item.getDbInt("isolfare"));
+        } else {
+        	item.put("adddelivamt", 0);
+        }
+    }
+	
+	/**
+	 * List에 value를 가진 index리턴 
+	 * @param list
+	 * @param value
+	 * @return
+	 */
+	private int containIdx(List<Integer> list, int value) {
+		int idx = -1;
+		for (int i = 0 ; i < list.size() ; i++) {
+			if(list.get(i) == value) {
+				idx = i;
+				break;		
+			}
+		}
+		return idx;
+	}
+	
+    /**
+     * 배송지정보 수정
+     * @param params
+     * @return int
+     * @throws Exception
+     */
+    @Override
+    @Transactional(propagation = Propagation.REQUIRED, rollbackFor = {Exception.class})
+    public int updateOrderRcvInfo(SOMap params) throws Exception {
+    	int resultCnt = 0;
+		
+        try {
+            params.put("siteid", cs.getStr("siteid"));
+			resultCnt = comOrderMapper.updateOrderRcvInfo(params);
+			
+			// ERP LOG INSERT
+			SOMap ifLogMap = new SOMap();
+			ifLogMap.put("siteid", cs.getStr("siteid"));
+			ifLogMap.put("type", CMConst.EPR_ORDER_INFO_UPDATE_TYPE);
+			ifLogMap.put("orgno", params.get("orderidx"));
+			ifLogMap.put("aud", CMConst.IF_LOG_ADD);
+			ifLogMapper.insertIfLogERPData(ifLogMap);
+        } catch(Exception e){
+            logger.error(e.getMessage());
+            throw new CustomException("주문 배송지정보 수정시 오류가 발생하였습니다. 관리자에게 문의해주세요.");
+        }
+        
+        return resultCnt;
+    }
+}

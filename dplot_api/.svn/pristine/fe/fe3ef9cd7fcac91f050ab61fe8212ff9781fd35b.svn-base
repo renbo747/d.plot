@@ -1,0 +1,161 @@
+package com.dplot.front.service;
+
+import java.util.List;
+
+import com.dplot.common.SOMap;
+import com.dplot.common.Status;
+
+public interface ShopService {
+
+	/**
+	 * SHOP 메인 목록 조회
+	 * @param param
+	 * @return
+	 * @throws Exception
+	 */
+	SOMap selectShopList(SOMap param) throws Exception;
+
+	/**
+	 * SHOP FILTER 카테고리 목록 조회
+	 * @param param
+	 * @return
+	 * @throws Exception
+	 */
+	SOMap selectFilterCateList(SOMap param) throws Exception;
+
+	/**
+	 * SHOP FILTER 항목 목록 조회
+	 * @param param
+	 * @return
+	 * @throws Exception
+	 */
+	SOMap selectFilterList(SOMap param) throws Exception;
+
+	/**
+	 * SHOP NEW상품 목록 조회
+	 * @param param
+	 * @return
+	 * @throws Exception
+	 */
+	SOMap selectShopNewList(SOMap param) throws Exception;
+
+	/**
+	 * 베스트 상품 조회
+	 * @param param
+	 * @return
+	 */
+	SOMap selectShopBestList(SOMap param) throws Exception;
+
+	/**
+	 * 베스트 상품 목록 이름 조회
+	 * @param param
+	 * @return
+	 * @throws Exception
+	 */
+	SOMap selectShopName(SOMap param) throws Exception;
+	
+	/**
+	 * 프로모션 목록 불러오기
+	 * @param param
+	 * @return
+	 * @throws Exception
+	 */
+	List<SOMap> selectEventList(SOMap param) throws Exception;
+	
+	/**
+	 * 프로모션 목록 갯수
+	 * @param param
+	 * @return
+	 * @throws Exception
+	 */
+	int selectEventListCount(SOMap param) throws Exception;
+	
+	/**
+	 * 프로모션 당첨 내용 조회
+	 * @param param
+	 * @return
+	 * @throws Exception
+	 */
+	SOMap winnerAnnouncement(SOMap param) throws Exception;
+	
+	/** 이벤트 당첨자 조회
+	 * @param param
+	 * @return
+	 * @throws Exception
+	 */
+	List<SOMap> winnerList(SOMap param) throws Exception;
+	
+	/**프로모션 상세 내용
+	 * @param param
+	 * @return
+	 * @throws Exception
+	 */
+	SOMap promotionDetail(SOMap param) throws Exception;
+	
+	/**프로모션 댓글 등록
+	 * @param param
+	 * @return
+	 * @throws Exception
+	 */
+	int insertComment(SOMap param) throws Exception;
+	
+	/**프로모션 댓글 리스트
+	 * @param param
+	 * @return
+	 * @throws Exception
+	 */
+	SOMap selectCommentList(SOMap param) throws Exception;
+	
+	/**프로모션 댓글 삭제
+	 * @param param
+	 * @return
+	 * @throws Exception
+	 */
+	int deleteComment(SOMap param) throws Exception;
+	
+	/**프로모션 댓글 수정
+	 * @param param
+	 * @return
+	 * @throws Exception
+	 */
+	int updateComment(SOMap param) throws Exception;
+	
+	/** 프로모션 댓글 신고
+	 * @param param
+	 * @return
+	 * @throws Exception
+	 */
+	int repReport(SOMap param) throws Exception;
+
+	/**
+	 * 검색 필터 목록 조회
+	 * @param param
+	 * @return
+	 * @throws Exception
+	 */
+	SOMap selectSearchFilterList(SOMap param)throws Exception;
+
+	/**
+	 *
+	 * @param param
+	 * @return
+	 * @throws Exception
+	 */
+	SOMap simpleGoodsDetail(SOMap param) throws Exception;
+
+	/**
+	 *
+	 * @param param
+	 * @return
+	 * @throws Exception
+	 */
+	SOMap simpleBrandDetail(SOMap param) throws Exception;
+
+	/**
+	 *
+	 * @param param
+	 * @return
+	 * @throws Exception
+	 */
+	SOMap simplePromotionDetail(SOMap param) throws Exception;
+}

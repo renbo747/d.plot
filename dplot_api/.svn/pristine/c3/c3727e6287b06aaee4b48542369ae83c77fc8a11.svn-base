@@ -1,0 +1,354 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.dplot.mapper.AdminMapper">
+
+	<!-- 운영자 목록 조회 -->
+	<select id="selectOperatorList" parameterType="somap" resultType="somap" >
+		SELECT /* AdminMapper.xml - selectOperatorList 운영자 목록 조회 */
+			a.*, FORMAT(@ROWNUM := @ROWNUM+1,0) AS no
+		FROM (
+			SELECT
+				tu.userid
+				, ta.userno
+				, ta.name
+				, ta.mobile
+				, tut.visitcnt
+				, date_format(tut.visitdate, '%Y-%m-%d %H:%i') as visitdate
+				, CASE ta.istrash WHEN 'F' THEN '사용' ELSE '미사용' END AS istrash
+				, IFNULL(regta.name,'') as regusername
+				, date_format(tu.regdate, '%Y-%m-%d') as regdate
+			FROM t_user tu
+			LEFT JOIN (
+				SELECT userno, count(*) as visitcnt, max(regdate) as visitdate
+				FROM t_user_log
+				GROUP BY userno
+			) tut ON tu.no = tut.userno
+			LEFT JOIN t_user regtu ON regtu.userid = tu.reguserid
+			LEFT JOIN t_admin regta ON regta.userno = regtu.no
+			JOIN t_admin ta ON tu.no = ta.userno
+			<where>
+				AND tu.siteid = #{siteid}
+			<if test="istrash != null and istrash != ''">
+				AND ta.istrash = #{istrash}
+			</if>
+			<if test="sword != null and sword != ''">
+				<choose>
+					<when test="skey == 'id'">
+						AND tu.userid like concat('%',#{sword},'%')
+					</when>
+					<when test="skey == 'name'">
+						AND ta.name like concat('%',#{sword},'%')
+					</when>
+					<when test="skey == 'regusername'">
+						AND regta.name like concat('%',#{sword},'%')
+					</when>
+					<when test="skey == 'mobile'">
+						AND ta.mobile like concat('%',#{sword},'%')
+					</when>
+					<otherwise>
+						AND (tu.userid like concat('%',#{sword},'%')
+						    OR regta.name like concat('%',#{sword},'%')
+							OR ta.name like concat('%',#{sword},'%')
+							OR ta.mobile like concat('%',#{sword},'%')
+						)
+					</otherwise>
+				</choose>
+			</if>
+			<choose>
+				<when test="stype == 'visitdate'">
+					<![CDATA[
+						AND tut.visitdate >= date_format(concat(#{startdate}, ' ', '00:00:00') , '%Y-%m-%d %H:%i:%s')
+						AND tut.visitdate <= date_format(concat(#{enddate}, ' ', '23:59:59'), '%Y-%m-%d %H:%i:%s')
+					]]>
+				</when>
+				<when test="stype == 'regdate'">
+					<![CDATA[
+						AND tu.regdate >= date_format(concat(#{startdate}, ' ', '00:00:00') , '%Y-%m-%d %H:%i:%s')
+						AND tu.regdate <= date_format(concat(#{enddate}, ' ', '23:59:59'), '%Y-%m-%d %H:%i:%s')
+					]]>
+				</when>
+				<otherwise>
+					<![CDATA[
+						AND (
+							(tut.visitdate >= date_format(concat(#{startdate}, ' ', '00:00:00') , '%Y-%m-%d %H:%i:%s')
+							AND tut.visitdate <= date_format(concat(#{enddate}, ' ', '23:59:59'), '%Y-%m-%d %H:%i:%s'))
+							OR
+							(tu.regdate >= date_format(concat(#{startdate}, ' ', '00:00:00') , '%Y-%m-%d %H:%i:%s')
+							AND tu.regdate <= date_format(concat(#{enddate}, ' ', '23:59:59'), '%Y-%m-%d %H:%i:%s'))
+						)
+					]]>
+				</otherwise>
+			</choose>
+			</where>
+			<choose>
+				<when test="psort == 'visitdate_asc'">
+					ORDER BY tut.visitdate ASC
+				</when>
+				<when test="psort == 'visitdate_desc'">
+					ORDER BY tut.visitdate DESC
+				</when>
+				<when test="psort == 'visitcnt_asc'">
+					ORDER BY tut.visitcnt ASC
+				</when>
+				<when test="psort == 'visitcnt_desc'">
+					ORDER BY tut.visitcnt DESC
+				</when>
+				<when test="psort == 'regdate_asc'">
+					ORDER BY tu.regdate ASC
+				</when>
+				<otherwise>
+					ORDER BY tu.regdate DESC
+				</otherwise>
+			</choose>
+		) a, (select @ROWNUM := #{startpage}) as b
+		limit #{startpage}, #{endpage}
+	</select>
+
+	<!-- 운영자 사용여부별 수량 조회-->
+	<select id="selectOperatorState" parameterType="somap" resultType="somap" >
+		SELECT /* AdminMapper.xml - selectOperatorState 운영자 사용여부별 수량 조회 */
+    		count(*) AS total_cnt
+			,IFNULL(SUM(CASE ta.istrash WHEN 'F' THEN 1 ELSE 0 END), 0) AS use_cnt
+			,IFNULL(SUM(CASE ta.istrash WHEN 'T' THEN 1 ELSE 0 END), 0) AS trash_cnt
+		FROM t_user tu
+		LEFT JOIN (
+			SELECT userno, count(*) as visitcnt, max(regdate) as visitdate
+			FROM t_user_log
+			GROUP BY userno
+		) tut ON tu.no = tut.userno
+		LEFT JOIN t_user regtu ON regtu.userid = tu.reguserid
+		LEFT JOIN t_admin regta ON regta.userno = regtu.no
+		JOIN t_admin ta ON tu.no = ta.userno
+		<where>
+			AND tu.siteid = #{siteid}
+		<if test="istrash != null and istrash != ''">
+			AND ta.istrash = #{istrash}
+		</if>
+		<if test="sword != null and sword != ''">
+			<choose>
+				<when test="skey == 'id'">
+					AND tu.userid like concat('%',#{sword},'%')
+				</when>
+				<when test="skey == 'name'">
+					AND ta.name like concat('%',#{sword},'%')
+				</when>
+				<when test="skey == 'regusername'">
+					AND regta.name like concat('%',#{sword},'%')
+				</when>
+				<when test="skey == 'mobile'">
+					AND ta.mobile like concat('%',#{sword},'%')
+				</when>
+				<otherwise>
+					AND (tu.userid like concat('%',#{sword},'%')
+					    OR regta.name like concat('%',#{sword},'%')
+						OR ta.name like concat('%',#{sword},'%')
+						OR ta.mobile like concat('%',#{sword},'%')
+					)
+				</otherwise>
+			</choose>
+		</if>
+		<choose>
+			<when test="stype == 'visitdate'">
+				<![CDATA[
+					AND tut.visitdate >= date_format(concat(#{startdate}, ' ', '00:00:00') , '%Y-%m-%d %H:%i:%s')
+					AND tut.visitdate <= date_format(concat(#{enddate}, ' ', '23:59:59'), '%Y-%m-%d %H:%i:%s')
+				]]>
+			</when>
+			<when test="stype == 'regdate'">
+				<![CDATA[
+					AND tu.regdate >= date_format(concat(#{startdate}, ' ', '00:00:00') , '%Y-%m-%d %H:%i:%s')
+					AND tu.regdate <= date_format(concat(#{enddate}, ' ', '23:59:59'), '%Y-%m-%d %H:%i:%s')
+				]]>
+			</when>
+			<otherwise>
+				<![CDATA[
+					AND (
+						(tut.visitdate >= date_format(concat(#{startdate}, ' ', '00:00:00') , '%Y-%m-%d %H:%i:%s')
+						AND tut.visitdate <= date_format(concat(#{enddate}, ' ', '23:59:59'), '%Y-%m-%d %H:%i:%s'))
+						OR
+						(tu.regdate >= date_format(concat(#{startdate}, ' ', '00:00:00') , '%Y-%m-%d %H:%i:%s')
+						AND tu.regdate <= date_format(concat(#{enddate}, ' ', '23:59:59'), '%Y-%m-%d %H:%i:%s'))
+					)
+				]]>
+			</otherwise>
+		</choose>
+		</where>
+	</select>
+
+	<!-- 운영자 사용여부 수정 -->
+	<update id="updateOperatorUse" parameterType="somap">
+		UPDATE t_admin /* AdminMapper.xml - updateOperatorUse  운영자 사용여부 수정 */
+		SET istrash = #{istrash}
+		WHERE userno in
+		<foreach collection="list" item="item" open="(" separator="," close=")">
+    		#{item}
+    	</foreach>
+	</update>
+
+	<!-- 운영자 엑셀 목록 조회 -->
+	<select id="selectOperatorExcelList" parameterType="somap" resultType="HashMap" >
+		SELECT /* AdminMapper.xml - selectOperatorExcelList 운영자 목록 조회 */
+			a.*, FORMAT(@ROWNUM := @ROWNUM+1,0) AS no
+		FROM (
+			SELECT
+				tu.userid
+				, ta.name
+				, ta.mobile
+				, tut.visitcnt
+				, date_format(tut.visitdate, '%Y-%m-%d %H:%i') as visitdate
+				, CASE ta.istrash WHEN 'F' THEN '사용' ELSE '미사용' END AS istrash
+				, IFNULL(regta.name,'') as regusername
+				, date_format(tu.regdate, '%Y-%m-%d') as regdate
+			FROM t_user tu
+			LEFT JOIN (
+				SELECT userno, count(*) as visitcnt, max(regdate) as visitdate
+				FROM t_user_log
+				GROUP BY userno
+			) tut ON tu.no = tut.userno
+			LEFT JOIN t_user regtu ON regtu.userid = tu.reguserid
+			LEFT JOIN t_admin regta ON regta.userno = regtu.no
+			JOIN t_admin ta ON tu.no = ta.userno
+			<where>
+				AND tu.siteid = #{siteid}
+			<if test="istrash != null and istrash != ''">
+				AND ta.istrash = #{istrash}
+			</if>
+			<if test="sword != null and sword != ''">
+				<choose>
+					<when test="skey == 'id'">
+						AND tu.userid like concat('%',#{sword},'%')
+					</when>
+					<when test="skey == 'name'">
+						AND ta.name like concat('%',#{sword},'%')
+					</when>
+					<when test="skey == 'regusername'">
+						AND regta.name like concat('%',#{sword},'%')
+					</when>
+					<when test="skey == 'mobile'">
+						AND ta.mobile like concat('%',#{sword},'%')
+					</when>
+					<otherwise>
+						AND (tu.userid like concat('%',#{sword},'%')
+						    OR regta.name like concat('%',#{sword},'%')
+							OR ta.name like concat('%',#{sword},'%')
+							OR ta.mobile like concat('%',#{sword},'%')
+						)
+					</otherwise>
+				</choose>
+			</if>
+			<choose>
+				<when test="stype == 'visitdate'">
+					<![CDATA[
+						AND tut.visitdate >= date_format(concat(#{startdate}, ' ', '00:00:00') , '%Y-%m-%d %H:%i:%s')
+						AND tut.visitdate <= date_format(concat(#{enddate}, ' ', '23:59:59'), '%Y-%m-%d %H:%i:%s')
+					]]>
+				</when>
+				<when test="stype == 'regdate'">
+					<![CDATA[
+						AND tu.regdate >= date_format(concat(#{startdate}, ' ', '00:00:00') , '%Y-%m-%d %H:%i:%s')
+						AND tu.regdate <= date_format(concat(#{enddate}, ' ', '23:59:59'), '%Y-%m-%d %H:%i:%s')
+					]]>
+				</when>
+				<otherwise>
+					<![CDATA[
+						AND (
+							(tut.visitdate >= date_format(concat(#{startdate}, ' ', '00:00:00') , '%Y-%m-%d %H:%i:%s')
+							AND tut.visitdate <= date_format(concat(#{enddate}, ' ', '23:59:59'), '%Y-%m-%d %H:%i:%s'))
+							OR
+							(tu.regdate >= date_format(concat(#{startdate}, ' ', '00:00:00') , '%Y-%m-%d %H:%i:%s')
+							AND tu.regdate <= date_format(concat(#{enddate}, ' ', '23:59:59'), '%Y-%m-%d %H:%i:%s'))
+						)
+					]]>
+				</otherwise>
+			</choose>
+			</where>
+			<choose>
+				<when test="psort == 'visitdate_asc'">
+					ORDER BY tut.visitdate ASC
+				</when>
+				<when test="psort == 'visitdate_desc'">
+					ORDER BY tut.visitdate DESC
+				</when>
+				<when test="psort == 'visitcnt_asc'">
+					ORDER BY tut.visitcnt ASC
+				</when>
+				<when test="psort == 'visitcnt_desc'">
+					ORDER BY tut.visitcnt DESC
+				</when>
+				<when test="psort == 'regdate_asc'">
+					ORDER BY tu.regdate ASC
+				</when>
+				<otherwise>
+					ORDER BY tu.regdate DESC
+				</otherwise>
+			</choose>
+		) a, (select @ROWNUM := 0) as b
+	</select>
+
+	<insert id="insertAdmin" parameterType="somap" >
+		INSERT INTO t_admin /* com.dplot.mapper.AdminMapper.xml - insertAdmin 관리자 추가 */
+		(userno, name, email, tel, mobile, memo, istrash)
+		VALUES
+		(#{userno}, #{name}, #{email}, #{tel}, #{mobile}, #{memo}, #{istrash})
+	</insert>
+
+	<!-- 운영자 상세 조회 -->
+	<select id="selectOperator" parameterType="somap" resultType="somap" >
+		SELECT /* AdminMapper.xml - selectOperator 운영자 상세 조회 */
+			tu.no
+			, ta.userno
+			, tu.userid
+			, '' as userpw
+			, '' as userpw2
+			, ta.name
+			, ta.email
+			, ta.tel
+			, ta.mobile
+			, ta.istrash
+			, tu.reguserid
+			, ta.memo
+			, DATE_FORMAT(tu.regdate, '%Y-%m-%d') as regdate
+			, DATE_FORMAT(tu.moddate, '%Y-%m-%d') as moddate
+		FROM t_user tu
+		JOIN t_admin ta ON tu.no = ta.userno
+		<where>
+			AND siteid = #{siteid}
+			AND ta.userno = #{userno}
+		</where>
+	</select>
+
+	<!-- 운영자 수정 -->
+	<update id="updateAdmin" parameterType="somap">
+		UPDATE t_admin
+		SET istrash = #{istrash}, name = #{name}, email = #{email}, tel = #{tel}, mobile = #{mobile}, memo = #{memo}
+		WHERE userno = #{userno}
+	</update>
+
+	<select id="selectAdminMemberInfo" parameterType="somap" resultType="somap">
+		SELECT /*selectAdminMemberInfo.xml - selectAdminMemberInfo admin사용자정보 조회*/
+		      tu.USERID
+		    , tm.USERNO
+		    , tm.EMAIL
+		    , tm.NAME
+		    , tm.MOBILE
+		    , DATE_FORMAT(tu.REGDATE, '%Y%m%d') AS REGDT
+		    , tm.CONNINFO AS CI
+		    , tm.DIVAL AS DI
+		FROM t_user tu
+		INNER JOIN T_ADMIN tm
+		ON tu.NO = tm.USERNO
+		WHERE tu.siteid = #{siteid}
+		AND ( (tm.CONNINFO = #{ci} OR tm.DIVAL = #{di} )
+		      OR (tm.CONNINFO IS NULL AND  tm.dival IS NULL AND tm.MOBILE= #{mobile} ) )
+		LIMIT 1
+	</select>
+
+	<update id="updateAdminMemberCiDiInfo" parameterType="somap">
+		UPDATE T_ADMIN /*updateAdminMemberCiDiInfo.xml - updateAdminMemberCiDiInfo admin ci,di정보 업데이트*/
+		SET
+		CONNINFO = #{ci},
+		DIVAL = #{di}
+		WHERE  USERNO = #{userno}
+	</update>
+</mapper>

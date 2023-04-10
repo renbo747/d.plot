@@ -1,0 +1,13 @@
+<svg data-name="그룹 23196" xmlns="http://www.w3.org/2000/svg" width="100" height="100" viewBox="0 0 100 100">
+    <path data-name="사각형 7578" style="fill:transparent" d="M0 0h100v100H0z"/>
+    <g data-name="그룹 23197">
+        <path data-name="선 916" transform="translate(37.764 41.045)" style="stroke:#111;stroke-width:2px;fill:none" d="M24.442 0H0"/>
+        <path data-name="선 917" transform="translate(37.764 53.266)" style="stroke:#111;stroke-width:2px;fill:none" d="M24.442 0H0"/>
+        <path data-name="선 918" transform="translate(37.764 65.487)" style="stroke:#111;stroke-width:2px;fill:none" d="M24.442 0H0"/>
+        <g data-name="그룹 23103">
+            <path data-name="패스 19776" d="M10.45 2.5h2.241a10.183 10.183 0 0 1 10.184 10.184v56.4" transform="translate(53.588 17.496)" style="stroke:#111;stroke-width:2px;fill:none"/>
+            <path data-name="패스 19777" d="m54.894 71.747-44.21.005A10.183 10.183 0 0 1 .5 61.568V2.5h12.221" transform="translate(23.005 15.862)" style="stroke:#111;stroke-width:2px;fill:none"/>
+            <path data-name="패스 19778" d="M13.684.5h8.147a10.183 10.183 0 0 1 10.185 10.184v2.037H3.5v-2.037A10.183 10.183 0 0 1 13.684.5z" transform="translate(32.226 11.349)" style="fill:#fff;stroke:#111;stroke-width:2px"/>
+        </g>
+    </g>
+</svg>

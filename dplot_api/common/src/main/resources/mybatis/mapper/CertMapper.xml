@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.dplot.mapper.CertMapper">
+
+    <select id="selectCert" parameterType="somap" resultType="string">
+        SELECT /* CertMapper.xml - selectCert 인증번호 조회 */
+            CERTNO
+        FROM T_CERT
+        WHERE EMAILHP = #{emailhp}
+    </select>
+
+    <insert id="insertCert" parameterType="somap">
+		INSERT /* CertMapper.xml - insertCert 인증번호 등록 */
+			INTO T_CERT(
+			  EMAILHP
+			, ISEMAIL
+			, CERTNO
+			, REGUSERID
+			, REGDATE
+		)VALUES(
+			  #{emailhp}
+			, #{isemail}
+			, #{certno}
+			, 'system'
+			, sysdate()
+		)
+		ON DUPLICATE KEY UPDATE
+			CERTNO = #{certno}
+			, MODDATE = sysdate()
+    </insert>
+</mapper>
+	

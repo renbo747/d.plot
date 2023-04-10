@@ -1,0 +1,114 @@
+package com.dplot.front.service;
+
+import java.util.ArrayList;
+import java.util.List;
+
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Service;
+
+import com.dplot.common.CMConst;
+import com.dplot.common.SOMap;
+import com.dplot.common.Status;
+import com.dplot.common.service.util.MallBaseService;
+import com.dplot.exception.BizException;
+import com.dplot.mapper.BrandMapper;
+import com.dplot.mapper.CategoryMapper;
+import com.dplot.mapper.GoodsMapper;
+import com.dplot.mapper.ShopExNameMapper;
+
+/**
+ * The Class FrontCategoryServiceImpl.
+ */
+@Service
+public class FrontCategoryServiceImpl extends MallBaseService implements FrontCategoryService{
+
+	@Autowired
+	private CategoryMapper categoryMapper;
+	
+	@Autowired
+	private ShopExNameMapper shopExNameMapper;
+	
+	/**
+	 * 카테고리 페이지 정보 조회
+	 */
+	@Override
+	public SOMap selectCategoryList(SOMap params) throws Exception {
+		SOMap resultMap = new SOMap();
+		List<SOMap> cateList = new ArrayList<SOMap>();		
+		/**************************************
+		 * 카테고리 조회
+		 **************************************/
+		params.put("siteid", cs.getStr("siteid"));
+		params.put("userno", cs.getInt("authmemberno"));
+		//params.put("isfront", "T");
+		params.put("depth", 1);
+		params.put("idx", 0);
+		
+		params.put("muappchtype", cs.getStr("platform"));
+		
+		if (params.getInt("userno")  == 0) {
+			params.put("mumembertype", "DMT001"); //일반회원
+			params.put("mumemlvtype", "MDL001");  //브론즈
+		}else {
+			params.put("mumembertype", cs.getStr("authmembertype"));
+			params.put("mumemlvtype", cs.getStr("authmemlvtype"));
+		}
+		
+		cateList = categoryMapper.selectFrontCategoryList(params);
+		resultMap.put("catelist", cateList);
+		
+		params.put("extype", "EXN001");
+		SOMap shopname =  shopExNameMapper.selectShopExName(params);
+		String shopnamestr = "NewIN";
+		if (shopname != null ) {
+			shopnamestr = shopname.getStr("exhibitname");
+		}
+		resultMap.put("shopname", shopnamestr);
+		return resultMap;
+	}
+
+	/**
+	 * 해당 카테고리 idx의 정보와 해당 idx 하위 목록 조회
+	 * @throws Exception 
+	 */
+	@Override
+	public SOMap selectCategoryInfo(SOMap param) throws Exception {
+		SOMap resultMap = new SOMap();
+		param.put("siteid", cs.getStr("siteid"));
+		param.put("muappchtype", cs.getStr("platform"));
+		param.put("userno", cs.getInt("authmemberno"));
+		
+		if (param.getInt("userno")  == 0) {
+			param.put("mumembertype", "DMT001"); //일반회원
+			param.put("mumemlvtype", "MDL001");  //브론즈
+		}else {
+			param.put("mumembertype", cs.getStr("authmembertype"));
+			param.put("mumemlvtype", cs.getStr("authmemlvtype"));
+		}
+		
+		SOMap parentInfo = categoryMapper.selectCategoryByIdx(param);
+		if (parentInfo == null) {
+			throw new BizException("카테고리 정보가 없습니다.");
+		}
+		SOMap catePram = new SOMap();
+		catePram.putAll(param);
+		if(parentInfo.getStr("ischild").equals("F")) {
+			catePram.put("idx", parentInfo.getInt("parent"));
+			catePram.put("depth", parentInfo.getInt("depth"));
+			parentInfo.put("idx", parentInfo.getInt("parent"));
+			parentInfo.put("name", parentInfo.getStr("parentname"));
+		}else {
+			catePram.put("idx", parentInfo.getInt("idx"));
+			catePram.put("depth", parentInfo.getInt("depth")+1);
+		}
+		
+		List<SOMap> cateList = categoryMapper.selectFrontCategoryList(catePram);
+		if (cateList.size() <= 0) {
+			throw new BizException("해당 카테고리 상품이 없습니다.");
+		}
+		
+		resultMap.put("parentinfo", parentInfo);
+		resultMap.put("catelist", cateList);
+		return resultMap;
+	}
+}

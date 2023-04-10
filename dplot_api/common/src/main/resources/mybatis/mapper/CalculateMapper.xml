@@ -1,0 +1,278 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.dplot.mapper.CalculateMapper">
+	<insert id="insertCalculateForBatch" parameterType="somap" useGeneratedKeys="true" keyProperty="calcidx">
+		INSERT INTO T_CALCULATE (CALCMONTH, DEALERNO, CALCEXPDAY, CALCSTATUS, ENDDATE, PAYDATE, PARTCFMDATE, REGUSERID, REGDATE)
+		VALUES(#{calcmonth}, #{userno}, #{calcexpday}, 'CAS001', NULL, NULL, NULL, 'SYSTEM', CURRENT_TIMESTAMP )
+	</insert>
+
+	<select id="selectCalculateList" parameterType="somap" resultType="somap">
+		SELECT
+			DATE_FORMAT(STR_TO_DATE(CONCAT(A.CALCMONTH, '01'), '%Y%m%d'), '%Y-%m') AS CALCMONTH
+			 , B.NAME, B.DEALERCODE, B.BIZNO, B.USERNO
+			 , DATE_FORMAT(STR_TO_DATE(A.CALCEXPDAY, '%Y%m%d'), '%Y-%m-%d') AS CALCEXPDAY
+			 , FORMAT(SALEAMT, 0) AS SALEAMT
+			 , FORMAT(SUPPLYAMT, 0) AS SUPPLYAMT
+			 , FORMAT(SUPPLYVATAMT, 0) AS SUPPLYVATAMT
+			 , FORMAT(PROMOAMT, 0) AS PROMOAMT
+			 , FORMAT(PROMOSHAREAMT, 0) AS PROMOSHAREAMT
+			 , FORMAT(CPNAMT, 0) AS CPNAMT
+			 , FORMAT(CPNSHAREAMT, 0) AS CPNSHAREAMT
+			 , FORMAT(PTNDELIVAMT, 0) AS PTNDELIVAMT
+			 , FORMAT(ADDRPAYTOTPRICE, 0) AS ADDRPAYTOTPRICE
+			 , FORMAT(CALCAMT, 0) AS CALCAMT
+			 , FN_GET_CODENAME(#{siteid}, 'CALCSTATUS', CALCSTATUS) AS CALCSTATUSNAME
+			 , CALCSTATUS, CALCIDX
+			 , DATE_FORMAT(ENDDATE, '%Y-%m-%d') AS ENDDATE
+		     , DATE_FORMAT(ENDDATE, '%H:%i:%s') AS ENDTIME
+			 , DATE_FORMAT(PAYDATE, '%Y-%m-%d') AS PAYDATE
+			 , DATE_FORMAT(PAYDATE, '%H:%i:%s') AS PAYTIME
+			 , DATE_FORMAT(PARTCFMDATE, '%Y-%m-%d') AS PARTCFMDATE
+			 , DATE_FORMAT(PARTCFMDATE, '%H:%i:%s') AS PARTCFMTIME
+			 , IF(PAYDATE IS NULL, 'F', 'T') AS ISPAYMENT
+			 , FORMAT(BASKETCPNAMT, 0) AS BASKETCPNAMT
+			 , FORMAT(BASKETCPNSHAREAMT, 0) AS BASKETCPNSHAREAMT
+		FROM (
+			SELECT
+				A.CALCIDX, B.CALCMONTH, B.DEALERNO, B.CALCEXPDAY, B.CALCSTATUS, B.ENDDATE, B.PAYDATE, B.PARTCFMDATE
+				, SALEAMT, SUPPLYAMT, SUPPLYVATAMT, PROMOAMT, PROMOSHAREAMT, CPNAMT, CPNSHAREAMT, PTNDELIVAMT, ADDRPAYTOTPRICE, CALCAMT
+				, BASKETCPNAMT, BASKETCPNSHAREAMT
+			FROM (
+					SELECT
+						CALCIDX
+						, SUM(SALEAMT * CNT) AS SALEAMT
+						, SUM(SUPPLYAMT * CNT) AS SUPPLYAMT
+					    , SUM(SUPPLYVATAMT * CNT) AS SUPPLYVATAMT
+						, SUM(PROMOAMT) AS PROMOAMT
+						, SUM(PROMOSHAREAMT) AS PROMOSHAREAMT
+						, SUM(CPNAMT) AS CPNAMT
+						, SUM(CPNSHAREAMT) AS CPNSHAREAMT
+						, SUM(PTNDELIVAMT) AS PTNDELIVAMT
+						, SUM(ADDRPAYTOTPRICE) AS ADDRPAYTOTPRICE
+						, SUM(CALCAMT) AS CALCAMT
+						, SUM(BASKETCPNAMT) AS BASKETCPNAMT
+						, SUM(BASKETCPNSHAREAMT) AS BASKETCPNSHAREAMT
+					FROM T_CALCULATE_DTL A
+					GROUP BY CALCIDX
+				)A LEFT OUTER JOIN T_CALCULATE B ON A.CALCIDX = B.CALCIDX
+			 )A LEFT OUTER JOIN (
+			SELECT TD.USERNO, TD.NAME, TU.SITEID, TDI.BIZNO, TD.DEALERCODE
+			FROM T_DEALER TD INNER JOIN T_DEALER_INFO TDI ON TD.USERNO = TDI.DEALERNO INNER JOIN T_USER TU ON TD.USERNO = TU.NO
+		)B ON A.DEALERNO = B.USERNO
+		WHERE B.SITEID = #{siteid}
+		<choose>
+			<when test='calctype != null and calctype != "" and calctype == "DICISION"'>
+				AND ENDDATE BETWEEN STR_TO_DATE(CONCAT(#{startdate}, '-01'), '%Y-%m-%d') AND DATE_FORMAT(LAST_DAY(STR_TO_DATE(CONCAT(#{enddate}, '-01'), '%Y-%m-%d')), '%Y-%m-%d %')
+			</when>
+			<otherwise>
+				AND DATE_FORMAT(STR_TO_DATE(CONCAT(A.CALCMONTH, '01'), '%Y%m%d'), '%Y-%m-%d') BETWEEN STR_TO_DATE(CONCAT(#{startdate}, '-01'), '%Y-%m-%d') AND STR_TO_DATE(CONCAT(#{enddate}, '-01'), '%Y-%m-%d')
+			</otherwise>
+		</choose>
+		<if test='calcstatus != null and calcstatus != ""'>
+			AND A.CALCSTATUS = #{calcstatus}
+		</if>
+		<if test='userno != null and userno != ""'>
+			AND A.DEALERNO = #{userno}
+		</if>
+		<if test="sword != null and sword != '' ">
+			<choose>
+				<when test="skey == 'name'">
+					AND NAME LIKE CONCAT('%', #{sword}, '%')
+				</when>
+				<when test="skey == 'userno'">
+					AND B.USERNO LIKE CONCAT('%', #{sword}, '%')
+				</when>
+				<when test="skey == 'bizno'">
+					AND REPLACE(BIZNO, '-', '') LIKE CONCAT('%', #{sword}, '%')
+				</when>
+				<otherwise>
+					AND ( NAME LIKE CONCAT('%', #{sword}, '%')
+					OR B.USERNO LIKE CONCAT('%', #{sword}, '%')
+					OR REPLACE(BIZNO, '-', '') LIKE CONCAT('%', #{sword}, '%'))
+				</otherwise>
+			</choose>
+		</if>
+		<choose>
+			<when test="psort == 'month_asc'">
+				ORDER BY A.CALCMONTH ASC
+			</when>
+			<when test="psort == 'month_desc'">
+				ORDER BY A.CALCMONTH DESC
+			</when>
+			<when test="psort == 'name_asc'">
+				ORDER BY B.NAME ASC
+			</when>
+			<when test="psort == 'name_desc'">
+				ORDER BY B.NAME DESC
+			</when>
+			<when test="psort == 'userno_asc'">
+				ORDER BY B.USERNO ASC
+			</when>
+			<when test="psort == 'userno_desc'">
+				ORDER BY B.USERNO DESC
+			</when>
+			<when test="psort == 'bizno_asc'">
+				ORDER BY B.BIZNO ASC
+			</when>
+			<when test="psort == 'bizno_desc'">
+				ORDER BY B.BIZNO DESC
+			</when>
+			<when test="psort == 'calcstatus_asc'">
+				ORDER BY A.CALCSTATUS ASC
+			</when>
+			<when test="psort == 'calcstatus_desc'">
+				ORDER BY A.CALCSTATUS DESC
+			</when>
+			<when test="psort == 'enddate_asc'">
+				ORDER BY ENDDATE ASC
+			</when>
+			<when test="psort == 'enddate_desc'">
+				ORDER BY ENDDATE DESC
+			</when>
+			<otherwise>
+				ORDER BY A.CALCMONTH, B.NAME
+			</otherwise>
+		</choose>
+		<if test='startpage != null and endpage != null'>
+			LIMIT #{startpage}, #{endpage}
+		</if>
+	</select>
+
+	<select id="selectCalculateListCount" parameterType="somap" resultType="Integer">
+		SELECT
+			COUNT(*) AS CNT
+		FROM (
+			SELECT
+				A.CALCIDX, B.CALCMONTH, B.DEALERNO, B.CALCEXPDAY, B.CALCSTATUS, B.ENDDATE, B.PAYDATE, B.PARTCFMDATE
+				, SALEAMT, COMMRATEAMT, PROMOAMT, PROMOSHAREAMT, CPNAMT, CPNSHAREAMT, PTNDELIVAMT, ADDRPAYTOTPRICE, FINADJUSTAMT, CALCAMT
+			FROM (
+					SELECT
+						CALCIDX
+						, SUM(SALEAMT * (IF(A.CLMGDIDX IS NOT NULL, (CNT * -1), CNT))) AS SALEAMT
+						, TRUNCATE(SUM((SALEAMT * IF(A.COMMRATE = 0, 1, (A.COMMRATE / 100))) * (IF(A.CLMGDIDX IS NOT NULL, (CNT * -1), CNT))), 0) AS COMMRATEAMT
+						, SUM(PROMOAMT) AS PROMOAMT
+						, SUM(PROMOSHAREAMT) AS PROMOSHAREAMT
+						, SUM(CPNAMT) AS CPNAMT
+						, SUM(CPNSHAREAMT) AS CPNSHAREAMT
+						, SUM(PTNDELIVAMT) AS PTNDELIVAMT
+						, SUM(ADDRPAYTOTPRICE) AS ADDRPAYTOTPRICE
+						, SUM(FINADJUSTAMT) AS FINADJUSTAMT
+						, SUM(CALCAMT) AS CALCAMT
+					FROM T_CALCULATE_DTL A
+					GROUP BY CALCIDX
+				)A LEFT OUTER JOIN T_CALCULATE B ON A.CALCIDX = B.CALCIDX
+			)A LEFT OUTER JOIN (
+				SELECT TD.USERNO, TD.NAME, TU.SITEID, TDI.BIZNO, TD.DEALERCODE
+				FROM T_DEALER TD INNER JOIN T_DEALER_INFO TDI ON TD.USERNO = TDI.DEALERNO INNER JOIN T_USER TU ON TD.USERNO = TU.NO
+			)B ON A.DEALERNO = B.USERNO
+		WHERE B.SITEID = #{siteid}
+		<choose>
+			<when test='calctype != null and calctype != "" and calctype == "DICISION"'>
+				AND ENDDATE BETWEEN STR_TO_DATE(CONCAT(#{startdate}, '-01'), '%Y-%m-%d') AND STR_TO_DATE(CONCAT(#{enddate}, '-01'), '%Y-%m-%d')
+			</when>
+			<otherwise>
+				AND DATE_FORMAT(STR_TO_DATE(CONCAT(A.CALCMONTH, '01'), '%Y%m%d'), '%Y-%m-%d') BETWEEN STR_TO_DATE(CONCAT(#{startdate}, '-01'), '%Y-%m-%d') AND STR_TO_DATE(CONCAT(#{enddate}, '-01'), '%Y-%m-%d')
+			</otherwise>
+		</choose>
+		<if test='calcstatus != null and calcstatus != ""'>
+			AND A.CALCSTATUS = #{calcstatus}
+		</if>
+		<if test='userno != null and userno != ""'>
+			AND A.DEALERNO = #{userno}
+		</if>
+		<if test="sword != null and sword != '' ">
+			<choose>
+				<when test="skey == 'name'">
+					AND NAME LIKE CONCAT('%', #{sword}, '%')
+				</when>
+				<when test="skey == 'userno'">
+					AND B.USERNO LIKE CONCAT('%', #{sword}, '%')
+				</when>
+				<when test="skey == 'bizno'">
+					AND REPLACE(BIZNO, '-', '') LIKE CONCAT('%', #{sword}, '%')
+				</when>
+				<otherwise>
+					AND ( NAME LIKE CONCAT('%', #{sword}, '%')
+					OR B.USERNO LIKE CONCAT('%', #{sword}, '%')
+					OR REPLACE(BIZNO, '-', '') LIKE CONCAT('%', #{sword}, '%'))
+				</otherwise>
+			</choose>
+		</if>
+	</select>
+
+	<update id="updateCalculate" parameterType="somap">
+		UPDATE T_CALCULATE SET
+	   		CALCSTATUS = #{calcstatus}
+		<if test='calcstatus != null and calcstatus != "" and calcstatus == "CAS002"'>
+			,ENDDATE = CURRENT_TIMESTAMP
+		</if>
+		WHERE CALCIDX IN
+		<foreach collection="calcidx" index="index" item="item" separator="," open="(" close=")">
+			#{item}
+		</foreach>
+	</update>
+
+	<update id="updatePaymentDate" parameterType="somap">
+		UPDATE T_CALCULATE SET PAYDATE = CURRENT_TIMESTAMP
+		WHERE CALCIDX IN
+		<foreach collection="calcidx" index="index" item="item" separator="," open="(" close=")">
+			#{item}
+		</foreach>
+	</update>
+
+	<select id="selectCalculateExcelDownList" parameterType="somap" resultType="somap">
+		SELECT
+			A.CALCIDX
+		     , A.CALCIDX
+			 , REPLACE(CALCMONTH, '-', '') AS CALCMONTH
+		     , APPLYAMT
+		     , VATAMT
+			 , DATE_FORMAT(CALCMONTH, '%d') AS CALCDATE
+			 , REPLACE(C.BIZNO, '-', '') AS BIZNO
+			 , C.COMPNAME AS NAME
+			 , (SELECT CHARGEEMAIL FROM T_DEALER_CHARGE WHERE USERNO = B.USERNO AND CHARGETYPE = 'CHA006') AS EMAIL
+			 , C.REPRENAME
+			 , CONCAT(MONTH(CALCMONTH), '월 수수료') AS PRODUCTNAME
+		FROM (
+				 SELECT
+					 A.CALCIDX, LAST_DAY(STR_TO_DATE(CONCAT(A.CALCMONTH, '01'), '%Y%m%d')) AS CALCMONTH, MAX(DEALERNO) AS DEALERNO
+					  , SUM(SUPPLYAMT * CNT) AS APPLYAMT
+					  , SUM(SUPPLYVATAMT * CNT) AS VATAMT
+				 FROM T_CALCULATE A INNER JOIN T_CALCULATE_DTL B ON A.CALCIDX = B.CALCIDX
+				 WHERE A.CALCIDX IN
+				 <foreach collection="calcidx" index="index" item="item" separator="," open="(" close=")">
+					#{item}
+				 </foreach>
+				 AND A.CALCSTATUS = 'CAS002'
+				 GROUP BY CALCIDX, CALCMONTH
+			 )A LEFT OUTER JOIN T_DEALER B ON A.DEALERNO = B.USERNO LEFT OUTER JOIN T_DEALER_INFO C ON B.USERNO = C.DEALERNO;
+	</select>
+
+	<select id="selectCalculateDashBoard" parameterType="somap" resultType="somap">
+		SELECT
+			A.CALCIDX, DATE_FORMAT(STR_TO_DATE(CONCAT(A.CALCMONTH, '01'), '%Y%m%d'), '%Y-%m') AS CALCMONTH
+			 , FORMAT(SUM(IFNULL(B.CALCAMT, 0)), 0) AS CALCAMT
+		FROM T_CALCULATE A INNER JOIN T_CALCULATE_DTL B ON A.CALCIDX = B.CALCIDX
+		WHERE DEALERNO = #{userno}
+		AND CALCSTATUS IN ('CAS002', 'CAS003')
+		GROUP BY CALCMONTH, DEALERNO
+		ORDER BY CALCMONTH DESC
+		LIMIT 5
+	</select>
+	
+	<select id="selectCalculateDashBoardPopup" parameterType="somap" resultType="somap">
+		SELECT
+			A.CALCIDX, DATE_FORMAT(STR_TO_DATE(CONCAT(A.CALCMONTH, '01'), '%Y%m%d'), '%Y년 %m월') AS CALCDATE
+		FROM T_CALCULATE A
+		WHERE DEALERNO = #{userno}
+		AND CALCSTATUS IN ('CAS003')
+		AND A.CALCMONTH = DATE_FORMAT(DATE_ADD(NOW(), INTERVAL -1 MONTH), '%Y%m')
+		AND PARTCFMDATE IS NULL
+	</select>
+
+	<update id="updatePartCfmDate" parameterType="somap">
+		UPDATE T_CALCULATE SET PARTCFMDATE = CURRENT_TIMESTAMP
+		WHERE CALCIDX = #{idx}
+	</update>
+</mapper>

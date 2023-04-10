@@ -1,0 +1,17 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 16 16">
+  <defs>
+    <style>
+      .cls-1, .cls-2 {
+        fill: none;
+      }
+
+      .cls-2 {
+        stroke: #333;
+      }
+    </style>
+  </defs>
+  <g id="그룹_19914" data-name="그룹 19914" transform="translate(0 16) rotate(-90)">
+    <rect id="사각형_6385" data-name="사각형 6385" class="cls-1" width="16" height="16"/>
+    <path id="패스_15853" data-name="패스 15853" class="cls-2" d="M0,0,4.542,4.2,0,8.443" transform="translate(11.969 5.873) rotate(90)"/>
+  </g>
+</svg>

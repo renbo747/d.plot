@@ -1,0 +1,16 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="26" height="26" viewBox="0 0 26 26">
+    <g data-name="그룹 24547">
+        <g data-name="그룹 24549">
+            <path data-name="선 730" transform="translate(10.5 10.5)" style="stroke:#111;fill:none" d="m0 5 6-5"/>
+            <g data-name="타원 861" transform="translate(9 10)" style="stroke:#111;fill:none">
+                <circle cx="1.5" cy="1.5" r="1.5" style="stroke:none"/>
+                <circle cx="1.5" cy="1.5" r="1" style="fill:none"/>
+            </g>
+            <g data-name="타원 862" transform="translate(15 13)" style="stroke:#111;fill:none">
+                <circle cx="1.5" cy="1.5" r="1.5" style="stroke:none"/>
+                <circle cx="1.5" cy="1.5" r="1" style="fill:none"/>
+            </g>
+            <path data-name="빼기 6" d="M18 13H0c.013-.7.023-1.794.029-3.267H.07a2.5 2.5 0 0 0 0-5H.03A293.104 293.104 0 0 0 0 1h18v12z" transform="translate(4 6)" style="stroke-linecap:round;stroke-linejoin:round;stroke:#111;fill:none"/>
+        </g>
+    </g>
+</svg>

@@ -1,0 +1,177 @@
+.mypage-grade {
+  padding-bottom: 130px;
+  .grade__summary {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 46px 0;
+    text-align: center;
+    background: $gray-100;
+    .summary__figure {
+      width: 64px;
+      margin-bottom: 24px;
+      img {
+        width: 100%;
+      }
+    }
+    .summary__info {
+      .info__text {
+        font-size: 16px;
+        letter-spacing: -.64px;
+        line-height: 24px;
+        margin-bottom: 6px;
+      }
+      .info__period {
+        font-size: 14px;
+        letter-spacing: -.56px;
+        line-height: 22px;
+        color: $gray-700;
+      }
+    }
+  }
+  .grade-section {
+    padding-top: 40px;
+  }
+  .grade__title {
+    font-size: 16px;
+    letter-spacing: -.64px;
+    line-height: 24px;
+    font-weight: 500;
+    margin-bottom: 16px;
+  }
+  .dp-table {
+    th {
+      font-weight: 700;
+    }
+    td b {
+      font-size: 18px;
+      letter-spacing: -.54px;
+    }
+  }
+  .necessity__p {
+    font-size: 14px;
+    letter-spacing: -.56px;
+    font-weight: 500;
+    color: $gray-700;
+    margin-bottom: 10px;
+    span {
+      color: $black;
+    }
+  }
+
+  .grade__benefit {
+    padding-top: 114px;
+  }
+
+  .benefit-box {
+    .benefit-header {
+      display: flex;
+      align-items: flex-end;
+      .header-relative {
+        position: relative;
+        flex: 1;
+        border-top: 1px solid #c96f05;
+        &:after {
+          position: absolute;
+          top: 0;
+          right: 0;
+          display: block;
+          content: '';
+          width: 1px;
+          height: 21px;
+          background: var(--border-color);
+          transform: translateY(-100%);
+        }
+      }
+      .header-relative:first-child:after {
+        height: 20px;
+      }
+      .header-relative:last-child {
+        border-right: 1px solid #c96f05;
+        &:after {
+          display: none;
+        }
+      }
+      .header-relative.active .header__grade {
+        opacity: 1;
+      }
+      .header__grade {
+        position: absolute;
+        top: -20px;
+        left: 50%;
+        transform: translate(-50%, -100%);
+        text-align: center;
+        opacity: .2;
+        .grade__p {
+          font-family: 'AttenNew', sans-serif;
+          font-size: 12px;
+          letter-spacing: -.36px;
+          line-height: 1;
+          font-weight: 600;
+          margin-bottom: 2px;
+          //text-transform: uppercase;
+        }
+        .grade__figure {
+          width: 40px;
+          margin: 0 auto;
+          img {
+            width: 100%;
+          }
+        }
+      }
+    }
+    .benefit-body {
+      border-left: 1px solid #c96f05;
+      border-right: 1px solid #c96f05;
+      border-bottom: 1px solid #c96f05;
+      padding: 30px 16px;
+      .body__title {
+        margin-bottom: 16px;
+        line-height: 1;
+        .title__span {
+          font-size: 18px;
+          letter-spacing: -.72px;
+          line-height: 28px;
+          font-weight: 700;
+          color: $black;
+        }
+        span {
+          font-size: 12px;
+          letter-spacing: -.48px;
+          font-weight: 400;
+          color: $gray-700;
+          margin-left: 4px;
+        }
+      }
+      .body__ul {
+        li {
+          display: flex;
+          align-items: center;
+          line-height: 1;
+        }
+        li + li {
+          margin-top: 12px;
+        }
+        .body__number {
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          width: 12px;
+          height: 12px;
+          border-radius: 50%;
+          font-size: 10px;
+          color: $gray-700;
+          border: 1px solid $gray-700;
+          margin-right: 4px;
+          margin-top: 1px;
+        }
+        .body__text {
+          font-size: 13px;
+          line-height: 1;
+          letter-spacing: -.32px;
+          color: $gray-700;
+        }
+      }
+    }
+  }
+}

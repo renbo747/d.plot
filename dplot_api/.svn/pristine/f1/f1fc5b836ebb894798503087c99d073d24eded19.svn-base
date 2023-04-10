@@ -1,0 +1,621 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.dplot.mapper.ShopEx12Mapper">
+	<!-- 쇼핑전시영역12 목록 조회 -->
+	<select id="selectShopExList" resultType="somap" parameterType="somap">
+        /* ShopEx12Mapper.xml - selectShopExList 쇼핑전시영역12 목록 조회  */
+        SELECT
+        	 a.*
+        	 , RANK() OVER(ORDER BY CASE WHEN a.sortnum IS NULL THEN 1 ELSE 0 END, a.sortnum asc, a.ex12idx asc) as sortno
+        FROM (
+                 SELECT 
+                 	a.sort as sortnum
+                 	, a.ex12idx as idx
+                 	, a.ex12idx
+                 	, fn_get_file_url(a.goodsno,'FLT001',#{filetype}) as fullpath
+                 	, a.isdisplay
+                 	, a.isshopmain
+                 	, c.name as regusername
+                 	, d.*
+                 	, date_format(a.regdate, '%Y-%m-%d') as regdate
+                 	, a.regdate as sortregdate
+                 FROM t_shopex12 a
+                 LEFT JOIN t_user b ON a.reguserid = b.userid
+                 LEFT JOIN t_admin c ON b.no = c.userno
+                 LEFT JOIN (
+                 	 SELECT g.goodsno
+                 	 , g.goodscode
+                 	 , tc.fullcategoryname
+                 	 , g.goodsname
+                 	 , depth1idx
+                 	 , depth2idx
+                 	 , depth3idx
+                 	 , depth4idx
+					 , (CASE WHEN g.MDIFIDX IS NOT NULL AND g.MDIFIDX != '' THEN (SELECT empname FROM t_mdinfo WHERE MDIFIDX = g.MDIFIDX) ELSE '' END) AS mdname
+					 , (CASE WHEN g.brandidx IS NOT NULL AND g.brandidx != 0 THEN (SELECT name FROM t_brand WHERE idx = g.brandidx) ELSE '' END) AS brandname
+	                 FROM t_goods g
+	                 LEFT OUTER JOIN t_goods_category tgc
+							ON g.goodsno = tgc.goodsno
+						   AND tgc.isrepre = 'T'
+					 LEFT OUTER JOIN (
+						WITH category AS (
+						    SELECT idx, name, depth, parent
+							FROM t_category
+							WHERE siteid = #{siteid}
+							AND hidden = 0 
+						)
+						SELECT 
+							  t.cateidx, t.depth1idx, t.depth2idx, t.depth3idx, t.depth4idx, t.fullcategoryname
+						FROM (	SELECT 
+									  a.idx AS depth1idx, b.idx AS depth2idx, c.idx AS depth3idx, d.idx AS depth4idx
+									, concat_ws(' > ', a.name, b.name, c.name, d.name) AS fullcategoryname
+									, (CASE WHEN d.idx IS NOT NULL THEN d.idx
+										    WHEN c.idx IS NOT NULL THEN c.idx
+										    WHEN b.idx IS NOT NULL THEN b.idx
+										    ELSE a.idx
+									   END) AS cateidx
+								FROM category a
+								LEFT OUTER JOIN category b ON a.idx = b.parent
+								LEFT OUTER JOIN category c ON b.idx = c.parent
+								LEFT OUTER JOIN category d ON c.idx = d.parent
+								WHERE a.depth = 1
+							 ) t
+					 ) tc ON tgc.cateidx = tc.cateidx
+				 ) d ON a.goodsno = d.goodsno
+                 <where>
+                 	AND a.siteid = #{siteid}
+                 	AND a.istrash = 'F'
+                 	AND a.extype = #{extype}
+                 	<if test="isdisplay != null and isdisplay != ''">
+			            AND a.isdisplay = #{isdisplay}
+					</if>
+					<if test="isshopmain != null and isshopmain != ''">
+			            AND a.isshopmain = #{isshopmain}
+					</if>
+			        <if test="sword != null and sword != ''">
+			            <choose>
+			                <when test="skey == 'brandname'">
+			                    AND d.brandname LIKE concat('%',#{sword}, '%')
+			                </when>
+			                <when test="skey == 'goodscode'">
+			                    AND d.goodscode LIKE concat('%',#{sword}, '%')
+			                </when>
+			                <when test="skey == 'goodsname'">
+			                    AND d.goodsname LIKE concat('%',#{sword}, '%')
+			                </when>
+			                <when test="skey == 'mdname'">
+			                    AND d.mdname LIKE concat('%',#{sword}, '%')
+			                </when>
+			                <when test="skey == 'regusername'">
+			                    AND c.name LIKE concat('%', #{sword}, '%')
+			                </when>
+			                <otherwise>
+			                    AND (
+			                    d.brandname LIKE concat('%',#{sword}, '%')
+			                    OR d.goodscode LIKE concat('%',#{sword}, '%')
+			                    OR d.goodsname LIKE concat('%',#{sword}, '%')
+			                    OR d.mdname LIKE concat('%',#{sword}, '%')
+			                    OR c.name LIKE concat('%', #{sword}, '%')
+			                    )
+			                </otherwise>
+			            </choose>
+			        </if>
+			        AND date_format(a.regdate, '%Y-%m-%d') BETWEEN #{startdate} AND #{enddate}
+			        <if test="depth1cateidx != null and depth1cateidx != '' ">
+					AND d.depth1idx = #{depth1cateidx}	/* 대분류카테고리 */
+					</if>
+					<if test="depth2cateidx != null and depth2cateidx != '' ">
+					AND d.depth2idx = #{depth2cateidx}	/* 중분류카테고리 */
+					</if>
+					<if test="depth3cateidx != null and depth3cateidx != '' ">
+					AND d.depth3idx = #{depth3cateidx}	/* 소분류카테고리 */
+					</if>
+					<if test="depth4cateidx != null and depth4cateidx != '' ">
+					AND d.depth4idx = #{depth4cateidx}	/* 세분류카테고리 */
+					</if>
+			        </where>
+        ) a, (SELECT @rownum := 0) temp
+        <choose>
+            <when test="psort == 'goodscode_desc'">
+                ORDER BY a.isdisplay DESC, a.isshopmain DESC, a.goodscode DESC
+            </when>
+            <when test="psort == 'goodscode_asc'">
+                ORDER BY a.isdisplay DESC, a.isshopmain DESC, a.goodscode ASC
+            </when>
+            <when test="psort == 'regdate_desc'">
+                ORDER BY a.isdisplay DESC, a.isshopmain DESC, a.sortregdate DESC
+            </when>
+            <when test="psort == 'regdate_asc'">
+                ORDER BY a.isdisplay DESC, a.isshopmain DESC, a.sortregdate ASC
+            </when>
+            <otherwise>
+                ORDER BY a.isdisplay DESC, a.isshopmain DESC, (CASE WHEN a.isdisplay = 'T' THEN a.sortnum END),(CASE WHEN a.isdisplay = 'F' THEN a.sortregdate END)
+            </otherwise>
+        </choose>
+    </select>
+
+	<!-- 쇼핑전시영역12 엑셀 목록 조회 -->
+	<select id="selectShopExExcelList" resultType="somap" parameterType="somap">
+        /* ShopEx12Mapper.xml - selectShopExExcelList 쇼핑전시영역12 엑셀 목록 조회  */
+        SELECT
+        	a.*
+            , if(a.sortnum is not null, RANK() OVER(ORDER BY CASE WHEN a.sortnum IS NULL THEN 1 ELSE 0 END, a.sortnum asc, a.ex12idx asc), '-') as sortno
+        FROM (
+                 SELECT 
+                 	a.sort as sortnum
+                 	, a.ex12idx as idx
+                 	, a.ex12idx
+                 	, fn_get_file_url(a.goodsno,'FLT001',#{filetype}) as fullpath
+                 	, if(a.isdisplay = 'T','노출','미노출') as isdisplay
+                 	, isdisplay as sortdisplay
+                 	, if(a.isshopmain = 'T', '●','-') as isshopmain
+					, isshopmain as sortshopmain
+                 	, c.name as regusername
+                 	, d.*
+                 	, date_format(a.regdate, '%Y-%m-%d') as regdate
+                 	, a.regdate as sortregdate
+                 FROM t_shopex12 a
+                 LEFT JOIN t_user b ON a.reguserid = b.userid
+                 LEFT JOIN t_admin c ON b.no = c.userno
+                 LEFT JOIN (
+                 	 SELECT g.goodsno
+                 	 , g.goodscode
+                 	 , tc.fullcategoryname
+                 	 , g.goodsname
+                 	 , depth1idx
+                 	 , depth2idx
+                 	 , depth3idx
+                 	 , depth4idx
+					 , (CASE WHEN g.MDIFIDX IS NOT NULL AND g.MDIFIDX != '' THEN (SELECT empname FROM t_mdinfo WHERE MDIFIDX = g.MDIFIDX) ELSE '' END) AS mdname
+					 , (CASE WHEN g.brandidx IS NOT NULL AND g.brandidx != 0 THEN (SELECT name FROM t_brand WHERE idx = g.brandidx) ELSE '' END) AS brandname
+	                 FROM t_goods g 
+	                 LEFT OUTER JOIN t_goods_category tgc
+							ON g.goodsno = tgc.goodsno
+						   AND tgc.isrepre = 'T'
+					 LEFT OUTER JOIN (
+						WITH category AS (
+						    SELECT idx, name, depth, parent
+							FROM t_category
+							WHERE siteid = #{siteid}
+							AND hidden = 0 
+						)
+						SELECT 
+							  t.cateidx, t.depth1idx, t.depth2idx, t.depth3idx, t.depth4idx, t.fullcategoryname
+						FROM (	SELECT 
+									  a.idx AS depth1idx, b.idx AS depth2idx, c.idx AS depth3idx, d.idx AS depth4idx
+									, concat_ws(' > ', a.name, b.name, c.name, d.name) AS fullcategoryname
+									, (CASE WHEN d.idx IS NOT NULL THEN d.idx
+										    WHEN c.idx IS NOT NULL THEN c.idx
+										    WHEN b.idx IS NOT NULL THEN b.idx
+										    ELSE a.idx
+									   END) AS cateidx
+								FROM category a
+								LEFT OUTER JOIN category b ON a.idx = b.parent
+								LEFT OUTER JOIN category c ON b.idx = c.parent
+								LEFT OUTER JOIN category d ON c.idx = d.parent
+								WHERE a.depth = 1
+							 ) t
+					 ) tc ON tgc.cateidx = tc.cateidx
+				 ) d ON a.goodsno = d.goodsno
+                 <where>
+                 	AND a.siteid = #{siteid}
+                 	AND a.istrash = 'F'
+                 	AND a.extype = #{extype}
+                 	<if test="isdisplay != null and isdisplay != ''">
+			            AND a.isdisplay = #{isdisplay}
+					</if>
+					<if test="isshopmain != null and isshopmain != ''">
+			            AND a.isshopmain = #{isshopmain}
+					</if>
+			        <if test="sword != null and sword != ''">
+			            <choose>
+			                <when test="skey == 'brandname'">
+			                    AND d.brandname LIKE concat('%',#{sword}, '%')
+			                </when>
+			                <when test="skey == 'goodscode'">
+			                    AND d.goodscode LIKE concat('%',#{sword}, '%')
+			                </when>
+			                <when test="skey == 'goodsname'">
+			                    AND d.goodsname LIKE concat('%',#{sword}, '%')
+			                </when>
+			                <when test="skey == 'mdname'">
+			                    AND d.mdname LIKE concat('%',#{sword}, '%')
+			                </when>
+			                <when test="skey == 'regusername'">
+			                    AND c.name LIKE concat('%', #{sword}, '%')
+			                </when>
+			                <otherwise>
+			                    AND (
+			                    d.brandname LIKE concat('%',#{sword}, '%')
+			                    OR d.goodscode LIKE concat('%',#{sword}, '%')
+			                    OR d.goodsname LIKE concat('%',#{sword}, '%')
+			                    OR d.mdname LIKE concat('%',#{sword}, '%')
+			                    OR c.name LIKE concat('%', #{sword}, '%')
+			                    )
+			                </otherwise>
+			            </choose>
+			        </if>
+			        AND date_format(a.regdate, '%Y-%m-%d') BETWEEN #{startdate} AND #{enddate}
+			        <if test="depth1cateidx != null and depth1cateidx != '' ">
+					AND d.depth1idx = #{depth1cateidx}	/* 대분류카테고리 */
+					</if>
+					<if test="depth2cateidx != null and depth2cateidx != '' ">
+					AND d.depth2idx = #{depth2cateidx}	/* 중분류카테고리 */
+					</if>
+					<if test="depth3cateidx != null and depth3cateidx != '' ">
+					AND d.depth3idx = #{depth3cateidx}	/* 소분류카테고리 */
+					</if>
+					<if test="depth4cateidx != null and depth4cateidx != '' ">
+					AND d.depth4idx = #{depth4cateidx}	/* 세분류카테고리 */
+					</if>
+			        </where>
+        ) a, (SELECT @rownum := 0) temp
+        <choose>
+            <when test="psort == 'goodscode_desc'">
+                ORDER BY a.sortdisplay DESC, a.sortshopmain DESC, a.goodscode DESC
+            </when>
+            <when test="psort == 'goodscode_asc'">
+                ORDER BY a.sortdisplay DESC, a.sortshopmain DESC, a.goodscode ASC
+            </when>
+            <when test="psort == 'regdate_desc'">
+                ORDER BY a.sortdisplay DESC, a.sortshopmain DESC, a.sortregdate DESC
+            </when>
+            <when test="psort == 'regdate_asc'">
+                ORDER BY a.sortdisplay DESC, a.sortshopmain DESC, a.sortregdate ASC
+            </when>
+            <otherwise>
+                ORDER BY a.sortdisplay DESC, a.sortshopmain DESC, (CASE WHEN a.sortdisplay = 'T' THEN a.sortnum END),(CASE WHEN a.sortdisplay = 'F' THEN a.sortregdate END)
+            </otherwise>
+        </choose>
+    </select>
+
+	 <!-- 쇼핑전시영역12 전시여부 별 수량 조회 -->
+	<select id="selectShopExShowCnt" resultType="somap" parameterType="somap">
+        /* ShopEx12Mapper.xml - selectShopExShowCnt 쇼핑전시영역12 전시여부 별 수량 조회  */
+        SELECT
+    		count(*) AS totalcnt
+			,IFNULL(SUM(CASE a.isdisplay WHEN 'T' THEN 1 ELSE 0 END), 0) AS showcnt
+			,IFNULL(SUM(CASE a.isdisplay WHEN 'F' THEN 1 ELSE 0 END), 0) AS hidecnt
+		FROM t_shopex12 a
+                 LEFT JOIN t_user b ON a.reguserid = b.userid
+                 LEFT JOIN t_admin c ON b.no = c.userno
+                 LEFT JOIN (
+                 	 SELECT g.goodsno
+                 	 , g.goodscode
+                 	 , tc.fullcategoryname
+                 	 , g.goodsname
+                 	 , depth1idx
+                 	 , depth2idx
+                 	 , depth3idx
+                 	 , depth4idx
+					 , (CASE WHEN g.MDIFIDX IS NOT NULL AND g.MDIFIDX != '' THEN (SELECT empname FROM t_mdinfo WHERE MDIFIDX = g.MDIFIDX) ELSE '' END) AS mdname
+					 , (CASE WHEN g.brandidx IS NOT NULL AND g.brandidx != 0 THEN (SELECT name FROM t_brand WHERE idx = g.brandidx) ELSE '' END) AS brandname
+	                 FROM t_goods g
+	                 LEFT OUTER JOIN t_goods_category tgc
+							ON g.goodsno = tgc.goodsno
+						   AND tgc.isrepre = 'T'
+					 LEFT OUTER JOIN (
+						WITH category AS (
+						    SELECT idx, name, depth, parent
+							FROM t_category
+							WHERE siteid = #{siteid}
+							AND hidden = 0 
+						)
+						SELECT 
+							  t.cateidx, t.depth1idx, t.depth2idx, t.depth3idx, t.depth4idx, t.fullcategoryname
+						FROM (	SELECT 
+									  a.idx AS depth1idx, b.idx AS depth2idx, c.idx AS depth3idx, d.idx AS depth4idx
+									, concat_ws(' > ', a.name, b.name, c.name, d.name) AS fullcategoryname
+									, (CASE WHEN d.idx IS NOT NULL THEN d.idx
+										    WHEN c.idx IS NOT NULL THEN c.idx
+										    WHEN b.idx IS NOT NULL THEN b.idx
+										    ELSE a.idx
+									   END) AS cateidx
+								FROM category a
+								LEFT OUTER JOIN category b ON a.idx = b.parent
+								LEFT OUTER JOIN category c ON b.idx = c.parent
+								LEFT OUTER JOIN category d ON c.idx = d.parent
+								WHERE a.depth = 1
+							 ) t
+					 ) tc ON tgc.cateidx = tc.cateidx
+				 ) d ON a.goodsno = d.goodsno
+                 <where>
+                 	AND a.siteid = #{siteid}
+                 	AND a.istrash = 'F'
+                 	AND a.extype = #{extype}
+                 	<if test="isdisplay != null and isdisplay != ''">
+			            AND a.isdisplay = #{isdisplay}
+					</if>
+					<if test="isshopmain != null and isshopmain != ''">
+			            AND a.isshopmain = #{isshopmain}
+					</if>
+			        <if test="sword != null and sword != ''">
+			            <choose>
+			                <when test="skey == 'brandname'">
+			                    AND d.brandname LIKE concat('%',#{sword}, '%')
+			                </when>
+			                <when test="skey == 'goodscode'">
+			                    AND d.goodscode LIKE concat('%',#{sword}, '%')
+			                </when>
+			                <when test="skey == 'goodsname'">
+			                    AND d.goodsname LIKE concat('%',#{sword}, '%')
+			                </when>
+			                <when test="skey == 'mdname'">
+			                    AND d.mdname LIKE concat('%',#{sword}, '%')
+			                </when>
+			                <when test="skey == 'regusername'">
+			                    AND c.name LIKE concat('%', #{sword}, '%')
+			                </when>
+			                <otherwise>
+			                    AND (
+			                    d.brandname LIKE concat('%',#{sword}, '%')
+			                    OR d.goodscode LIKE concat('%',#{sword}, '%')
+			                    OR d.goodsname LIKE concat('%',#{sword}, '%')
+			                    OR d.mdname LIKE concat('%',#{sword}, '%')
+			                    OR c.name LIKE concat('%', #{sword}, '%')
+			                    )
+			                </otherwise>
+			            </choose>
+			        </if>
+			        AND date_format(a.regdate, '%Y-%m-%d') BETWEEN #{startdate} AND #{enddate}
+			        <if test="depth1cateidx != null and depth1cateidx != '' ">
+					AND d.depth1idx = #{depth1cateidx}	/* 대분류카테고리 */
+					</if>
+					<if test="depth2cateidx != null and depth2cateidx != '' ">
+					AND d.depth2idx = #{depth2cateidx}	/* 중분류카테고리 */
+					</if>
+					<if test="depth3cateidx != null and depth3cateidx != '' ">
+					AND d.depth3idx = #{depth3cateidx}	/* 소분류카테고리 */
+					</if>
+					<if test="depth4cateidx != null and depth4cateidx != '' ">
+					AND d.depth4idx = #{depth4cateidx}	/* 세분류카테고리 */
+					</if>
+	        </where>
+    </select>
+    
+    <!-- 쇼핑전시영역12 저장 -->
+	<insert id="insertShopEx" parameterType="somap" useGeneratedKeys="true" keyProperty="ex12idx">
+        /* ShopEx12Mapper.xml - insertShopEx 쇼핑전시영역12 저장  */
+        INSERT INTO t_shopex12
+        (siteid, extype, sort, isdisplay, isshopmain, goodsno,reguserid, regdate)
+        VALUES
+        <foreach collection="list" item="item" open="" close="" separator=",">
+	        (#{siteid}, #{extype},
+			(
+                SELECT a.sortnum
+                FROM (
+                SELECT ifnull(max(sort) + 1, 1) AS sortnum
+                FROM t_shopex12
+                WHERE istrash = 'F'
+                AND extype = #{extype}
+                ) a
+            ), 'T', 'F', #{item.goodsno}, #{reguserid}, now())
+        </foreach>
+    </insert>
+    
+    <!-- 쇼핑전시영역12 수정 -->
+	<update id="updateShopEx" parameterType="somap">
+        /* ShopEx12Mapper.xml - updateShopEx 쇼핑전시영역12 수정  */
+        UPDATE t_shopex12 ts
+        <set >
+	      <if test="isshopmain != null" >
+	        isshopmain = #{isshopmain},
+	      </if>
+	      <if test="isdisplay != null" >
+	        isdisplay = #{isdisplay},
+	      </if>
+	      <choose>
+	      	<when test='isdisplay == "F"'>
+	      		sort = null,
+	      	</when>
+	      	<otherwise>
+	      		sort = 
+	      		CASE WHEN ifnull(ts.sort,'') = '' THEN
+	      		(
+	                SELECT a.sortnum
+	                FROM (
+	                SELECT ifnull(max(sort) + 1, 1) AS sortnum
+	                FROM t_shopex12
+	                WHERE istrash = 'F'
+	                AND extype = #{extype}
+	                ) a
+	            )
+	            ELSE ts.sort END,
+	      	</otherwise>
+	      </choose>
+	      <if test="istrash != null" >
+	        istrash = #{istrash},
+	      </if>
+	      moduserid = #{moduserid},
+	      moddate =  now(),
+	    </set>
+        <where>
+        	AND ex12idx IN 
+	     	<foreach collection="idxlist" index="index" item="item" separator="," open="(" close=")">
+	            #{item}
+	       	</foreach>
+        </where>
+    </update>
+    
+    <!-- 쇼핑전시영역12 노출조건 수정 시 최대 수량체크 -->
+    <select id="selectDisplayCheckCnt" resultType="Integer" parameterType="somap">
+        /* ShopEx12Mapper.xml - selectDisplayCheckCnt 쇼핑전시영역12 노출조건 수정 시 최대 수량체크   */
+        SELECT count(*)
+        FROM t_shopex12 a
+        <where>
+        	AND siteid = #{siteid}
+            AND a.extype = #{extype}
+        	<choose>
+        		<when test='isdisplay =="T"'>
+        			AND (ex12idx IN 
+		        	<foreach collection="idxlist" index="index" item="item" separator="," open="(" close=")">
+			            #{item}
+			        </foreach>
+			        OR isdisplay ='T'
+			        )
+			        AND istrash = 'F'
+			        AND isshopmain = 'T'
+        		</when>
+        		<when test='isshopmain =="T"'>
+        			AND (ex12idx IN 
+		        	<foreach collection="idxlist" index="index" item="item" separator="," open="(" close=")">
+			            #{item}
+			        </foreach>
+			        OR isshopmain = 'T'
+			        )
+			        AND istrash = 'F'
+			        AND isdisplay ='T'
+        		</when>
+        		<otherwise>
+        			AND ex12idx NOT IN 
+		        	<foreach collection="idxlist" index="index" item="item" separator="," open="(" close=")">
+			            #{item}
+			        </foreach>
+		        	AND isdisplay = 'T'
+		        	AND istrash = 'F'
+        		</otherwise>
+        	</choose>
+        </where>
+        
+    </select>
+    
+    <!-- 쇼핑전시영역12 순서 변경 -->
+    <update id="updateShopExSortNum" parameterType="somap">
+        /* ShopEx12Mapper.xml - updateShopExSortNum 쇼핑전시영역12 순서 변경  */
+        UPDATE t_shopex12
+        SET sort =
+            CASE ex12idx
+            <foreach collection="list" index="index" item="item">
+                WHEN #{item.idx} THEN #{item.sortnum}
+            </foreach>
+            END
+        WHERE 1 = 1
+        AND ex12idx in
+        <foreach collection="list" index="index" item="item" separator="," open="(" close=")">
+            #{item.idx}
+        </foreach>
+    </update>
+    
+    <!-- 쇼핑전시영역12 순서 전체 변경 -->
+    <update id="updateAllSortNum" parameterType="somap">
+        /* ShopEx12Mapper.xml - updateAllSortNum 쇼핑전시영역12 순서 변경  */
+    	 UPDATE t_shopex12 a inner join (SELECT ex12idx, @cnt:=@cnt+1 cnt from t_shopex12,(select @cnt:=0) b where siteid=#{siteid} AND istrash='F' AND isdisplay='T' AND extype=#{extype} ORDER BY sort) b on a.ex12idx = b.ex12idx 
+    	 SET sort = cnt
+    	 where siteid=#{siteid} AND istrash='F' AND isdisplay='T' AND extype=#{extype} 
+    </update>
+    
+    <select id="selectFrontShopExList" parameterType="somap" resultType="somap">
+       SELECT /*ShopEx12Mapper.xml - selectFrontShopExList::프론트 전시12 조회*/
+              ts.EX12IDX
+            , ts.EXTYPE
+            , ts.ISSHOPMAIN
+            , ts.GOODSNO
+            , tg.GOODSCODE
+            , tg.GOODSNAME
+            , fn_get_file_url(tg.goodsno,'FLT001',#{imgtype}) as fullpath
+            , tgc.cateidx
+            , fn_get_goods_stock(ts.siteid, ts.goodsno) as stockcnt
+            , ifnull((select 'T' from t_wish where goodsno = ts.goodsno and userno = #{userno} and istrash = 'F'), 'F') as iswished
+            , FN_GET_GOODS_MARKETPRICE(#{siteid}, ts.goodsno) as marketprice -- 대표상품공급가
+            , FN_GET_GOODS_PRICE(#{siteid}, ts.goodsno) as price -- 대표상품판매가
+            , FN_GET_GOODS_SALEPROMOAMT(#{siteid}, ts.goodsno, null, 0, #{platform}) as saleamt -- 프로모션할인적용가(할인가)
+            , FN_GET_GOODS_SALECOUPONAMT(#{siteid}, ts.goodsno, null, 0, #{platform}) as goodscpnamt -- 즉시할인쿠폰할인가
+            , ifnull(tb.enname, '') as brandname -- 브랜드명
+       FROM t_shopex12 ts
+       INNER JOIN t_goods tg ON ts.GOODSNO  = tg.GOODSNO
+       	    AND tg.SITEID  = #{siteid}
+       LEFT OUTER JOIN t_goods_category tgc ON tg.GOODSNO  = tgc.GOODSNO
+       	    AND tgc.ISREPRE  = 'T'
+       LEFT OUTER JOIN t_brand tb on tb.idx = tg.brandidx
+       WHERE 1 = 1
+       AND tg.goodsselltype != 'GST006'
+       AND ts.SITEID = #{siteid}
+       AND ts.ISTRASH  = 'F'
+       AND ts.ISDISPLAY = 'T'
+       <if test='isshopmain != null and isshopmain!=""'>
+       AND ts.ISSHOPMAIN = 'T'
+       </if>
+       AND ts.EXTYPE = #{extype}
+       ORDER BY ts.SORT ASC
+       <if test='isnopaging != "T"'>
+       LIMIT #{startpage}, #{endpage}
+       </if>
+<!--        <choose> -->
+<!--        	<when test='isnopaging != "T"'> -->
+<!--        	</when> -->
+<!--        	<otherwise> -->
+<!--        	LIMIT #{limit} -->
+<!--        	</otherwise> -->
+<!--        </choose> -->
+    </select>
+   
+    <select id="selectFrontShopExListView" parameterType="somap" resultType="somap">
+		SELECT /*ShopEx12Mapper.xml - selectFrontShopExList::프론트 전시12 조회*/
+		       ts.EX12IDX
+		     , ts.EXTYPE
+		     , ts.ISSHOPMAIN
+		     , ts.GOODSNO
+		     , tg.GOODSCODE
+		     , tg.GOODSNAME
+		     , fn_get_file_url(tg.goodsno,'FLT001',#{imgtype}) as fullpath
+		     , tgc.cateidx
+		     , fn_get_goods_stock(ts.siteid, ts.goodsno) as stockcnt
+		     , ifnull((select 'T' from t_wish where goodsno = ts.goodsno and userno = #{userno} and istrash = 'F'), 'F') as iswished
+		     , FN_GET_GOODS_MARKETPRICE(#{siteid}, ts.goodsno) as marketprice /* 대표상품공급가 */
+		     , FN_GET_GOODS_PRICE(#{siteid}, ts.goodsno) as price /* 대표상품판매가 */
+		     
+			 , IFNULL(VP.PRICE,0) AS saleamt
+			 , IFNULL(VC.PRICE,0) AS goodscpnamt
+		     
+		     , ifnull(tb.enname, '') as brandname -- 브랜드명
+		FROM 
+			t_shopex12 ts
+		INNER JOIN t_goods tg
+		ON ts.GOODSNO  = tg.GOODSNO
+		AND tg.SITEID  = #{siteid}
+		LEFT OUTER JOIN t_goods_category tgc
+		ON tg.GOODSNO  = tgc.GOODSNO
+		AND tgc.ISREPRE  = 'T'
+		LEFT OUTER JOIN t_brand tb
+		on tb.idx = tg.brandidx
+		LEFT OUTER JOIN v_goods_salecouponamt VC
+		ON TG.GOODSNO = VC.GOODSNO
+		LEFT OUTER JOIN v_goods_salepromoamt VP
+		ON TG.GOODSNO = VP.GOODSNO
+		WHERE 1 = 1
+		AND tg.goodsselltype != 'GST006'
+		AND ts.SITEID = #{siteid}
+		AND ts.ISTRASH  = 'F'
+		AND ts.ISDISPLAY = 'T'
+		<if test='isshopmain != null and isshopmain!=""'>
+		AND ts.ISSHOPMAIN = 'T'
+		</if>
+		AND ts.EXTYPE = #{extype}
+		ORDER BY ts.SORT ASC
+		<if test='isnopaging != "T"'>
+		LIMIT #{startpage}, #{endpage}
+		</if>
+    </select>
+    
+    <select id="selectFrontShopExListCnt" parameterType="somap" resultType="int">
+		SELECT /*ShopEx12Mapper.xml - selectFrontShopExListCnt::프론트 전시12 목록수 조회*/
+				count(*)
+		FROM t_shopex12 ts
+		INNER JOIN t_goods tg 
+		ON ts.GOODSNO  = tg.GOODSNO
+		AND tg.SITEID  = #{siteid}
+		LEFT OUTER JOIN t_goods_category tgc
+		ON tg.GOODSNO  = tgc.GOODSNO
+		AND tgc.ISREPRE  = 'T'
+		WHERE 1 = 1
+		AND tg.goodsselltype != 'GST006'
+		AND ts.SITEID = #{siteid}
+		AND ts.ISTRASH  = 'F'
+		AND ts.ISDISPLAY = 'T'
+		<if test='isshopmain != null and isshopmain!=""'>
+		AND ts.ISSHOPMAIN = #{isshopmain}
+		</if>
+		AND ts.EXTYPE = #{extype}
+    </select>
+</mapper>

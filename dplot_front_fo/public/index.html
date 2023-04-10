@@ -1,0 +1,85 @@
+<!DOCTYPE html>
+<html lang="">
+
+<head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width,initial-scale=1.0">
+    <meta id="og_type" name="og:type" content="website">
+    <meta name="title" content="디플롯 | 스토리 있는 브랜드 셀렉트숍" />
+    <meta name="description" content="D.PLOT에서 가치 있는 브랜드, 취향과 라이프스타일을 발견해보세요 - 가구, 조명, 키친&다이닝, 홈 데코 등" />
+    <meta name="keywords" content="디플롯,dplot,편집샵,디자인샵,인테리어샵,마켓플레이스,쇼핑플랫폼,쇼핑몰 인테리어,집꾸미기,쇼룸,오리지널디자인,아트,공예,핸드크래프트,작가브랜드,친환경,에코프렌들리,수입가구,수입소품,디자인소품,디자인가구,디자이너브랜드 " />
+    <link rel="canonical" href="https://dplot.co.kr" />
+    <meta name="viewport"
+        content="width=device-width, initial-scale=1, maximum-scale=1.0, minimum-scale=1, user-scalable=0, viewport-fit=cover">
+    <meta http-equiv="Pragma" content="no-cache">
+    <meta http-equiv="Expires" content="-1">
+    <meta http-equiv="Cache-Control" content="no-cache" />
+    <link rel="icon" href="<%= BASE_URL %>favicon.ico">
+    <!--사이트 소유권 확인-->
+    <meta name="naver-site-verification" content="9218bef6d12fb260a1fc31a140ba7aa473351a31" />
+    <meta name="google-site-verification" content="xE3Vl7XEwayQvL4BYEV2n7Pn7pbHwYh3FH4DSyFv2B0" />
+    <meta name="facebook-domain-verification" content="ao0c21u7kj95zbtxhf1lz9ioaub85g" />
+    
+    <meta name="robots" content="ALL"> 
+    <meta name="robots" content="index,follow"> 
+    <!-- Global site tag (gtag.js) - Google Analytics -->
+    <!-- Google Tag Manager -->
+    <!-- <script>(function (w, d, s, l, i) {
+            w[l] = w[l] || []; w[l].push({
+                'gtm.start':
+                    new Date().getTime(), event: 'gtm.js'
+            }); var f = d.getElementsByTagName(s)[0],
+                j = d.createElement(s), dl = l != 'dataLayer' ? '&l=' + l : ''; j.async = true; j.src =
+                    'https://www.googletagmanager.com/gtm.js?id=' + i + dl; f.parentNode.insertBefore(j, f);
+        })(window, document, 'script', 'dataLayer', 'GTM-MKQNL7F');
+    </script> -->
+    <!-- End Google Tag Manager -->
+    <title>
+        디플롯 | 스토리 있는 브랜드 셀렉트숍
+    </title>
+    <script src="https://t1.daumcdn.net/mapjsapi/bundle/postcode/prod/postcode.v2.js"></script>
+    <script src="https://static.nid.naver.com/js/naveridlogin_js_sdk_2.0.2-nopolyfill.js"></script>
+    <script src="https://developers.kakao.com/sdk/js/kakao.min.js"></script>
+    <script src="https://appleid.cdn-apple.com/appleauth/static/jsapi/appleid/1/en_US/appleid.auth.js"></script>
+    <script src="https://js.tosspayments.com/v1"></script>
+    <script src="https://nsp.pay.naver.com/sdk/js/naverpay.min.js"></script>
+    <script id="happytalkSDK" src="https://design.happytalkio.com/sdk/happytalk.chat.v2.min.js"></script>
+    <!--RecoPick 로그수집 스크립트 -->
+    <script type="text/javascript">
+        (function (w, d, n, s, e, o) {
+            w[n] = w[n] || function () { (w[n].q = w[n].q || []).push(arguments) };
+            e = d.createElement(s); e.async = 1; e.charset = 'utf-8'; e.src = '//static.recopick.com/dist/production.min.js';
+            o = d.getElementsByTagName(s)[0]; o.parentNode.insertBefore(e, o);
+        })(window, document, 'recoPick', 'script');
+        recoPick('service', '${process.env.VUE_APP_RECOPICK_DOMAIN}');
+
+    </script>
+    <script>
+        window.__ht_wc = window.__ht_wc || {};
+        window.__ht_wc.host = "design.happytalkio.com";
+        window.__ht_wc.site_id = "1000225874"; // site_id
+        window.__ht_wc.site_name = "디플롯"; // 회사 이름
+        window.__ht_wc.category_id = "144791"; // 대분류 id
+        window.__ht_wc.division_id = "144792"; // 중분류 id
+
+        var ht = document.createElement('script');
+        ht.type = 'text/javascript';
+        ht.async = true;
+        ht.src = ('https:' == document.location.protocol ? 'https://' : 'http://') + window.__ht_wc.host + '/web_chatting/tracking.js';
+        var s = document.getElementsByTagName('script')[0];
+        s.parentNode.insertBefore(ht, s);
+    </script>
+</head>
+
+<body>
+    <noscript>
+        <!-- <iframe src="https://www.googletagmanager.com/ns.html?id=GTM-MKQNL7F" height="0" width="0"
+            style="display:none;visibility:hidden"></iframe> -->
+        <strong>We're sorry but <%= htmlWebpackPlugin.options.title %> doesn't work properly without JavaScript enabled.
+                Please enable it to continue.</strong>
+    </noscript>
+    <div id="app"></div>
+</body>
+
+</html>

@@ -1,0 +1,435 @@
+<template>
+  <article class="the-app-bar">
+    <!-- Start: 뒤로 가기 버튼 -->
+    <div
+      v-if="isSubPage"
+      class="the-app-bar__utility left"
+      @click="$emit('prev')"
+      style="z-index:999"
+    >
+      <div class="circle prev" v-if=" $route.name !== 'order'  && $route.name !== 'member-login'"></div>
+    </div>
+    <!-- End: 뒤로 가기 버튼 -->
+    <!-- Start: 플로팅 버튼 -->
+    <div class="the-app-bar__utility" v-if="showTalk" style="z-index:999">
+      <div class="circle chatting" @click="connectChat"></div>
+      <div class="circle top" @click="scrollToTop"></div>
+    </div>
+    <!-- End: 플로팅 버튼 -->
+
+    <!-- Start: 하단바 Nav -->
+    <nav class="the-app-bar__nav" v-if="showAppBar">
+      <ul class="list-style-none">
+        <li>
+          <span class="nav-icon" role="button" @click="isMenuOpen = true">
+            <img
+              src="@assets.mobile/img/icon/icon-menu-black-28px.svg"
+              alt="메뉴"
+            />
+            <span class="nav-text">Menu</span>
+          </span>
+        </li>
+        <li>
+          <router-link :to="{name:'shop', params:{init:true}}" class="nav-icon">
+            <img
+              src="@assets.mobile/img/icon/icon-home-black-28px.svg"
+              alt="홈"
+            />
+            <span class="nav-text">Home</span>
+          </router-link>
+        </li>
+        <li>
+          <!-- todo: (수정) 배송조회 링크 추가 필요 -->
+          <router-link to="/magazine/brand" class="nav-icon">
+            <img
+              src="@assets.mobile/img/icon/icon-brand-black-28px.svg"
+              alt="브랜드"
+            />
+            <span class="nav-text">Brand</span>
+          </router-link>
+        </li>
+        <li>
+          <router-link to="/mypage/like" class="nav-icon">
+            <img
+              src="@assets.mobile/img/icon/icon-heart-black-28px.svg"
+              alt="찜하기"
+            />
+            <span class="nav-text">Like</span>
+          </router-link>
+        </li>
+        <!-- <li>
+          <router-link to="/shop" class="nav-icon">
+            <img
+              src="@assets.mobile/img/icon/icon-bag-black-28px.svg"
+              alt="상품"
+            />
+            <span class="nav-text">Shop</span>
+          </router-link>
+        </li> -->
+        <li>
+          <router-link to="/mypage" class="nav-icon">
+            <img
+              src="@assets.mobile/img/icon/icon-user-black-28px.svg"
+              alt="내 정보"
+            />
+            <span class="nav-text">My</span>
+          </router-link>
+        </li>
+      </ul>
+    </nav>
+    <!-- End: 하단바 Nav -->
+
+    <!-- Start: 모바일 메뉴 -->
+    <section class="the-side-bar" v-show="isMenuOpen" style="z-index:2000">
+      <header class="the-side-bar__header">
+        <div class="side-bar_title">
+          <span v-if="!$store.state.isLogin" @click="$router.push('/member/login')">로그인</span>
+          <span v-else @click="$router.push('/mypage')">{{$storage.getSessionStorage('name')}}님</span>
+          <i class="dp-icon icon-more"></i>
+        </div>
+        <div class="header-button-group">
+          <i class="button-icon" role="button" @click="$router.push('/mypage/message')">
+            <img
+              src="@assets.mobile/img/icon/icon-bell-black-20px.svg"
+              alt="알림"
+            />
+          </i>
+          <i
+            class="button-icon"
+            role="button"
+            @click="openSetting"
+            v-if="$store.state.platform == 'MAC003'"
+          >
+            <img
+              src="@assets.mobile/img/icon/icon-setting-black-20px.svg"
+              alt="설정"
+            />
+          </i>
+          <i class="button-icon" role="button" @click="isMenuOpen = false">
+            <img
+              src="@assets.mobile/img/icon/icon-close-black-20px.svg"
+              alt="닫기"
+            />
+          </i>
+        </div>
+      </header>
+
+      <div class="container">
+        <nav class="gnb">
+          <ul class="gnb__ul list-style-none no-scrollbar">
+            <!-- <li>
+              <div class="gnb__item">
+                <h1 class="item__title">
+                  <router-link :to="'/main'">magazine</router-link>
+                  <i class="item__icon" v-b-toggle="'accordion-1'"></i>
+                </h1>
+                <b-collapse :id="`accordion-1`" accordion="gnb-accordion">
+                  <ul class="gnb__sub-menu list-style-none">
+                    <li>
+                      <router-link
+                        :to="{name: 'magazine-trend', query: {catename: 'ALL'}}"
+                        :class="{ active: $route.query.catename == 'ALL' }"
+                      >
+                        All
+                      </router-link>
+                    </li>
+                    <li>
+                      <router-link
+                        :to="{name: 'magazine-trend', query: {catename: 'TrenD'}}"
+                        :class="{ active:  $route.query.catename == 'TrenD' }"
+                      >
+                        TrenD
+                      </router-link>
+                    </li>
+                    <li>
+                      <router-link
+                        :to="{name: 'magazine-trend', query: {catename: 'BranD'}}"
+                        :class="{ active: $route.query.catename == 'BranD' }"
+                      >
+                        BranD
+                      </router-link>
+                    </li>
+                    <li>
+                      <router-link
+                        :to="'/magazine/keyword'"
+                        :class="{ active: $route.path == '/magazine/keyword' }"
+                      >
+                        Topic
+                      </router-link>
+                    </li>
+                  </ul>
+                </b-collapse>
+              </div>
+            </li> -->
+            <li>
+              <div class="gnb__item">
+                <h1 class="item__title" v-b-toggle="'accordion-1'">
+                  <span>CATEGORY</span>
+                  <i class="item__icon"></i>
+                </h1>
+                <b-collapse :id="`accordion-1`" accordion="gnb-accordion">
+                  <ul class="gnb__sub-menu list-style-none">
+                    <li v-for="(subList, index) in cateList" :key="index">
+                      <a @click="goGoodList(subList)" :class="{ active: subList.cateidx == currentIdx && $route.path == '/shop/list' }">
+                        {{ subList.catename }}
+                      </a>
+                    </li>
+                  </ul>
+                </b-collapse>
+              </div>
+            </li>
+            <li>
+              <div class="gnb__item">
+                <h1 class="item__title">
+                  <router-link :to="{name:'magazine-brand', params:{init:true}}">BRAND</router-link>
+                  <!-- <i class="item__icon" v-b-toggle="'accordion-4'"></i> -->
+                </h1>
+                <!-- <b-collapse :id="`accordion-4`" accordion="gnb-accordion">
+                  <ul class="gnb__sub-menu list-style-none">
+                    <li>
+                      <router-link
+                        :to="'/magazine/brand'"
+                        :class="{ active: $route.path == '/magazine/brand'}"
+                      >
+                        브랜드 찾기
+                      </router-link>
+                    </li>
+                  </ul>
+                </b-collapse> -->
+              </div>
+            </li>
+            <!-- <li>
+              <div class="gnb__item">
+                <h1 class="item__title">
+                  <router-link :to="{ name: 'shop-newList' }">NEW ARRIVAL</router-link>
+                  <i class="item__icon" v-b-toggle="'accordion-2'"></i>
+                </h1>
+                <b-collapse :id="`accordion-2`" accordion="gnb-accordion">
+                  <ul class="gnb__sub-menu list-style-none">
+                    <li>
+                      <router-link
+                        :to="{ name: 'shop-newList' }"
+                        :class="{ active: $route.path == '/shop/newList' }"
+                      >
+                        신상품
+                      </router-link>
+                    </li>
+                  </ul>
+                </b-collapse> 
+              </div>
+            </li> -->
+            <li>
+              <div class="gnb__item">
+                <h1 class="item__title">
+                  <router-link to="/shop/promotion">PROMOTION</router-link>
+                  <!-- <i class="item__icon" v-b-toggle="'accordion-3'"></i> -->
+                </h1>
+                <!-- <b-collapse :id="`accordion-3`" accordion="gnb-accordion">
+                  <ul class="gnb__sub-menu list-style-none">
+                    <li>
+                      <router-link
+                        to="/shop/promotion"
+                        :class="{ active: $route.path == '/shop/promotion/all' }"
+                      >
+                        프로모션
+                      </router-link>
+                    </li>
+                  </ul>
+                </b-collapse> -->
+              </div>
+            </li>
+            <!-- <li>
+              <div class="gnb__item">
+                <h1 class="item__title" v-b-toggle="'accordion-5'">
+                  <span>SERVICE</span>
+                  <i class="item__icon"></i>
+                </h1>
+                <b-collapse :id="`accordion-5`" accordion="gnb-accordion">
+                  <ul class="gnb__sub-menu list-style-none">
+                    <li>
+                      <router-link to="/service" :class="{ active: $route.path == '/service'}">
+                        서비스 소개
+                      </router-link>
+                    </li>
+                    <li>
+                      <router-link
+                        :to="'/service/intro'"
+                        :class="{ active: $route.path == '/service/intro'  }"
+                      >
+                        정품보증
+                      </router-link>
+                    </li>
+                    <li>
+                      <router-link to="/service/as" :class="{ active: $route.path == '/service/as' }">
+                        AS전용 문의
+                      </router-link>
+                    </li>
+                  </ul>
+                </b-collapse>
+              </div>
+            </li> -->
+            <li v-if="false">
+              <div class="gnb__item">
+                <h1 class="item__title" v-b-toggle="'accordion-2'">
+                  <span>MAGAZINE</span>
+                  <i class="item__icon"></i>
+                </h1>
+                <b-collapse :id="`accordion-2`" accordion="gnb-accordion">
+                  <ul class="gnb__sub-menu list-style-none">
+                    <li>
+                      <a href="">전체보기</a>
+                    </li>
+                    <li>
+                      <a href="">브랜드</a>
+                    </li>
+                    <li>
+                      <a href="">트렌드</a>
+                    </li>
+                    <li>
+                      <a href="">상품</a>
+                    </li>
+                  </ul>
+                </b-collapse>
+              </div>
+            </li>
+            <li>
+              <div class="gnb__item">
+                <h1 class="item__title">
+                  <router-link to="/service">ABOUT D.PLOT</router-link>
+                </h1>
+              </div>
+            </li>
+          </ul>
+        </nav>
+      </div>
+
+      <footer class="lnb">
+        <div class="container">
+          <!-- <span
+            class="lnb__button"
+            role="button"
+            @click="goPage($store.state.isLogin?'/mypage':'/member/login')"
+          >
+            <img
+              src="@assets.mobile/img/icon/icon-user-black-28px.svg"
+              alt="아이콘"
+            />
+            <span class="lnb__text">마이페이지</span>
+          </span> -->
+          <span class="lnb__button" role="button">
+            <img
+              src="@assets.mobile/img/icon/icon-tel-black-28px.svg"
+              alt="아이콘"
+            />
+            <span class="lnb__text" @click="$router.push({name:'cs-main', params:{init:true}})"
+              >고객센터</span
+            >
+          </span>
+        </div>
+      </footer>
+    </section>
+    <!-- End: 모바일 메뉴 -->
+  </article>
+</template>
+
+<script>
+export default {
+  props: {
+    isSubPage: {
+      type: Boolean,
+      default: false,
+    },
+  },
+  data() {
+    return {
+      isMenuOpen: false,
+      cateList: [],
+      shopname: "",
+      currentIdx:"",
+      hideAppBars: ["shop-detail", "cart", "order"],
+      hideTalks : ["order", "member-login", "search", "goods", "brand", "contens", "none-member-order"]
+    };
+  },
+  methods: {
+    scrollToTop() {
+      window.scrollTo({
+        top: 0,
+        left: 0,
+        behavior: "smooth",
+      });
+    },
+    getCateList() {
+      this.$http.post("/category/list", { depth: 1 }).then((result) => {
+        if (result.statusCode == 200) {
+          this.$util.debug(result.data);
+          this.cateList = result.data.catelist;
+          this.shopname = result.data.shopname;
+          this.$util.debug(this.shopname);
+        }
+      });
+    },
+    openSetting() {
+      if (!window.ReactNativeWebView) {
+        alert("ReactNativeWebView 객체가 없습니다.");
+      }
+      this.isMenuOpen = false;
+      window.ReactNativeWebView.postMessage(
+        JSON.stringify({
+          type: "SETUP_OPEN",
+          data: {},
+        })
+      );
+    },
+    goPage(page){
+      this.$router.push(page);
+    },
+    connectChat(){
+     happytalk.open();
+    },
+    goGoodList(list){
+      this.currentIdx = list.cateidx;
+      this.$router.push({name:'shop-list',params: { idx: list.cateidx , init:true}});
+    },
+  },
+  computed : {
+    showAppBar() {
+      return !this.hideAppBars.includes(this.$route.name);
+    },
+    showTalk() {
+      let ishappytalk =false;
+      if (
+        this.$route.path.indexOf("kmcCert") > -1 ||
+        this.$route.path.indexOf("naver") > -1 ||
+        this.$route.path.indexOf("kakao") > -1 ||
+        this.$route.path.indexOf("toss") > -1 ||
+        this.hideTalks.includes(this.$route.name)
+      ) {
+        ishappytalk = false;
+      } else {
+        ishappytalk = true;
+      }
+      return ishappytalk;
+    }
+  },
+  mounted() {
+    this.scrollToTop();
+    //this.getCateList();
+  },
+  watch: {
+    $route() {
+      this.isMenuOpen = false;
+    },
+    isMenuOpen(val) {
+      if (val) {
+        document.body.style.overflow = "hidden";
+         this.getCateList();
+      } else {
+        document.body.style.overflow = "auto";
+      }
+    },
+  },
+  beforeDestroy() {
+    document.body.style.overflow = "auto";
+  }
+};
+</script>

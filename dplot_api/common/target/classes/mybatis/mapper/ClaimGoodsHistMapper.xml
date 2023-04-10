@@ -1,0 +1,166 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.dplot.mapper.ClaimGoodsHistMapper">
+
+    <insert id="insertClaimGoodsHist" parameterType="somap">
+        INSERT INTO T_CLAIM_GOODS_HIST (CLMGDIDX, CLMPRCTYPE, PREVAL, AFTVAL, REGUSERID)
+        SELECT
+            B.CLMGDIDX, 'CPR003', #{bf_status}, #{af_status}, 'SYSTEM'
+        FROM T_CLAIM A INNER JOIN T_CLAIM_GOODS B ON A.CLMIDX = B.CLMIDX AND A.ISTRASH = 'F' AND B.ISTRASH = 'F' AND B.ISCLMOPTION = 'T'
+        WHERE A.CLMIDX IN <foreach collection="clmidxarr" item="clmidx" index="index" open="(" separator="," close=")">#{clmidx}</foreach>
+        <if test='type == "EXCHANGE_DELIVERY" or type == "EXCHANGE_RETURN" or type == "E"'>
+            AND A.EXCSTATUS = #{bf_status}
+        </if>
+        <if test='type == "RETURN_RETURN" or type == "R"'>
+            AND A.RTNSTATUS = #{bf_status}
+        </if>
+    </insert>
+	
+	<insert id="insertClaimGoodsHistForApply" parameterType="somap" useGeneratedKeys="true" keyProperty="clmcpnidx">
+		INSERT   /* ClaimGoodsHistMapper.xml - insertClaimGoodsHistForApply 클레임신청 이력저장 */
+			INTO T_CLAIM_GOODS_HIST (
+				CLMGDIDX
+				, CLMPRCTYPE
+				, PREVAL
+				, AFTVAL
+				, REGUSERID
+				, REGDATE)
+			VALUES (
+				#{clmgdidx}
+				, #{clmprctype}
+				, #{preval}
+				, #{aftval}
+				, #{userid}
+				, sysdate()
+			)
+	</insert>
+	
+	<select id="selectClaimStatusHistList" parameterType="somap" resultType="somap">
+		SELECT  /* ClaimGoodsHistMapper.xml - selectClaimStatusHistList 클레임상태이력 목록조회 */
+			  ROW_NUMBER() OVER(PARTITION BY b.GOODSNO, b.OPTIONCODE) AS ROWNUM
+			, COUNT(*) OVER(PARTITION BY b.GOODSNO, b.OPTIONCODE) AS ROWCNT 
+			, d.GOODSNAME	/* 상품명 */
+			, FN_GET_OPTION_DETAIL(b.GOODSNO, b.OPTIONCODE, ', ') AS OPTIONCONTS	/* 옵션내용 */
+		    , a.CLMSTIDX    /* 클레임상태이력IDX */
+		    , a.CLMGDIDX    /* 클레임상품IDX */
+		    , a.PREVAL      /* 클레임상태이전값 */
+		    , (CASE WHEN c.CLMTYPE = 'CLM001' THEN FN_GET_CODENAME(NULL, 'CNCSTATUS', a.PREVAL)
+		            WHEN c.CLMTYPE = 'CLM002' THEN FN_GET_CODENAME(NULL, 'RTNSTATUS', a.PREVAL)
+		            WHEN c.CLMTYPE = 'CLM003' THEN FN_GET_CODENAME(NULL, 'EXCSTATUS', a.PREVAL)
+		            ELSE ''
+		       END) AS CLMPRCPRESTATUS	/* 클레임상태이전명 */
+		    , a.AFTVAL      /* 클레임상태이후값 */
+		    , (CASE WHEN c.CLMTYPE = 'CLM001' THEN FN_GET_CODENAME(NULL, 'CNCSTATUS', a.AFTVAL)
+		            WHEN c.CLMTYPE = 'CLM002' THEN FN_GET_CODENAME(NULL, 'RTNSTATUS', a.AFTVAL)
+		            WHEN c.CLMTYPE = 'CLM003' THEN FN_GET_CODENAME(NULL, 'EXCSTATUS', a.AFTVAL)
+		            ELSE ''
+		       END) AS CLMPRCAFTSTATUS  /* 클레임상태이후명 */
+		    , a.REGUSERID   /* 등록자ID */
+		    , a.CLMPRCTYPE  /* 클레임처리구분 */
+		    , FN_GET_CODENAME(NULL, 'CLMPRCTYPE', a.CLMPRCTYPE) AS CLMPRCTYPENAME   /* 클레임처리구분명 */
+		    , (CASE WHEN a.CLMPRCTYPE = 'CPR001' THEN a.REGUSERID
+		            WHEN a.CLMPRCTYPE = 'CPR002' THEN CONCAT(e.NAME, '(', e.USERID, ')')
+		            WHEN a.CLMPRCTYPE = 'CPR003' THEN '시스템'
+		            WHEN a.CLMPRCTYPE = 'CPR004' THEN f.NAME
+		            ELSE ''
+		       END) AS CLMPRCMANAGER
+		    , DATE_FORMAT(a.REGDATE, '%Y-%m-%d %H:%i:%s') AS CLMPRCDATE /* 처리일시 */
+		FROM t_claim_goods_hist a 
+		INNER JOIN t_claim_goods b 
+		    ON a.CLMGDIDX = b.CLMGDIDX 
+		   AND b.ISCLMOPTION = 'T'
+		INNER JOIN t_claim c
+		    ON b.CLMIDX = c.CLMIDX
+		INNER JOIN t_goods d
+			ON b.GOODSNO = d.GOODSNO
+		LEFT OUTER JOIN (
+		    SELECT m.NAME, u.USERID
+		    FROM t_user u
+		    INNER JOIN t_member m
+		        ON u.NO = m.USERNO
+		) e ON a.REGUSERID = e.USERID
+		LEFT OUTER JOIN (
+		    SELECT d.NAME, u.USERID
+		    FROM t_user u
+		    INNER JOIN t_dealer d
+		        ON u.NO = d.USERNO
+		) f ON a.REGUSERID = f.USERID
+		WHERE c.ISTRASH = 'F'
+		<if test="clmidx != null and clmidx != ''">
+		AND c.CLMIDX = #{clmidx}
+		</if>
+		<if test="clmgdidx != null and clmgdidx != ''">
+		AND a.CLMGDIDX = #{clmgdidx}
+		</if>
+		<if test="ordgdidx != null and ordgdidx != ''">
+		AND b.ORDGDIDX = #{ordgdidx}
+		</if>
+		ORDER BY b.GOODSNO, b.OPTIONCODE, a.CLMGDIDX DESC, a.REGDATE DESC, a.AFTVAL DESC
+	</select>
+
+	<insert id="insertClaimGoodsHisForDelivery" parameterType="somap">
+		INSERT INTO T_CLAIM_GOODS_HIST (CLMGDIDX, CLMPRCTYPE, PREVAL, AFTVAL, REGUSERID, REGDATE)
+		SELECT
+			B.CLMGDIDX, 'CPR003'
+			 , (CASE WHEN A.CLMTYPE = 'CLM002' THEN #{rtnstatus}
+					 WHEN A.CLMTYPE = 'CLM003' THEN #{excstatus} END) AS PREVAL
+			 , (CASE WHEN A.CLMTYPE = 'CLM002' THEN #{after_rtnstatus}
+					 WHEN A.CLMTYPE = 'CLM003' THEN #{after_excstatus} END) AS AFTVAL
+			 , 'SYSTEM'
+			 , CURRENT_TIMESTAMP
+		FROM T_CLAIM A INNER JOIN T_CLAIM_GOODS B ON A.CLMIDX = B.CLMIDX
+		WHERE A.SITEID = #{siteid}
+		AND B.CLMGDIDX IN <foreach collection="clmgd_idx_arr" item="clmgdidx" index="index" open="(" separator="," close=")">#{clmgdidx}</foreach>
+	</insert>
+	
+	<insert id="insertClaimGoodsHistAll" parameterType="somap" useGeneratedKeys="true" keyProperty="clmstidx">
+		/* ClaimGoodsHistMapper.xml - insertClaimGoodsHistAll 클레임 상태이력 저장 (클레임신청 이후) */
+		INSERT INTO T_CLAIM_GOODS_HIST (CLMGDIDX, CLMPRCTYPE, PREVAL, AFTVAL, REGUSERID, REGDATE)
+		<choose>
+			<when test='clmtype != null and clmtype == "CLM001"'>
+				SELECT
+					  CLMGDIDX
+					, #{clmprctype}
+					, CNCSTATUS
+					, #{aftval}
+					, #{userid}
+					, sysdate()
+				FROM t_claim_goods
+				WHERE 1 = 1
+				<choose>
+					<when test="clmgdidx != null and clmgdidx != ''">
+					AND CLMGDIDX = #{clmgdidx}
+					</when>
+					<otherwise>
+					AND CLMIDX = #{clmidx}
+					AND (CNCSTATUS IS NULL OR CNCSTATUS IN ('CNS001', 'CNS002', 'CNS005', 'CNS007'))	/* 승인대기, 결제대기, 승인완료 */
+					</otherwise>
+				</choose>
+			</when>
+			<otherwise>
+				SELECT
+					  b.CLMGDIDX
+					, #{clmprctype}
+					, (CASE WHEN a.CLMTYPE = 'CLM002' THEN a.RTNSTATUS
+							WHEN a.CLMTYPE = 'CLM003' THEN a.EXCSTATUS
+					   END) AS PREVAL
+					, #{aftval}
+					, #{userid}
+					, sysdate()
+				FROM t_claim a
+				INNER JOIN t_claim_goods b
+				ON a.CLMIDX = b.CLMIDX
+				WHERE 1 = 1
+				<choose>
+					<when test="clmgdidx != null and clmgdidx != ''">
+					AND b.CLMGDIDX = #{clmgdidx}
+					</when>
+					<otherwise>
+					AND a.CLMIDX = #{clmidx}
+					</otherwise>
+				</choose>
+			</otherwise>
+		</choose>
+	</insert>
+</mapper>
+	

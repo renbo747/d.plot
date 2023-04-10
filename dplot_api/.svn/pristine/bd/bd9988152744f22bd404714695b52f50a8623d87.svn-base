@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.dplot.mapper.BrandLikeMapper">
+	<delete id="deleteBrandLike" parameterType="somap">
+		DELETE /*BrandLikeMapper.xml - deleteBrandLike:: 브랜드좋아요 삭제*/
+		FROM t_brand_like
+		WHERE USERNO = #{userno}
+		<if test='bridx != null and bridx != ""'>
+		AND BRIDX = #{bridx}
+		</if>
+	</delete>
+	
+	<insert id="insertBrandLike" parameterType="somap">
+		INSERT INTO t_brand_like  /*BrandLikeMapper.xml - insertBrandLike:: 브랜드좋아요 추가*/
+		(userno, bridx, regdate) 
+		VALUES(#{userno}, #{bridx}, now())
+	</insert>
+	
+	<select id="selectLikeCnt" parameterType="somap" resultType="Integer">
+		SELECT
+			count(*)
+		FROM t_brand_like
+		<where>
+		AND BRIDX = #{bridx}
+		</where>
+	</select>
+</mapper>

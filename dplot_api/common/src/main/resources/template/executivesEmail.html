@@ -1,0 +1,105 @@
+<!doctype html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport"
+        content="width=device-width, user-scalable=no, initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0">
+  <meta http-equiv="X-UA-Compatible" content="ie=edge">
+  <title>인증번호 안내</title>
+
+  <!--font-->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@100;300;400;500;700;900&display=swap" rel="stylesheet">
+
+  <link th:each="font : ${fontList}" th:href="${font}" rel="stylesheet">
+</head>
+<body style="margin: 0;">
+  <div id="email-executive" style="width: 800px; padding: 0 40px; margin: 0 auto; font-family: 'Noto Sans KR', sans-serif;">
+    <!-- 헤더 -->
+    <table style="width: 100%; padding: 30px 0 70px 0">
+      <tr>
+        <td>
+          <div>
+            <img th:src="${topLogo}" alt="로고">
+          </div>
+        </td>
+      </tr>
+    </table>
+    <table style="width: 100%;">
+      <tr>
+        <td style="text-align: center">
+          <span style="font-size: 26px; letter-spacing: -1.04px; font-weight: 500; color: #111111;"><span th:text="${title}"></span> 인증번호 안내</span>
+        </td>
+      </tr>
+    </table>
+    <table style="width: 100%; padding: 80px 0 60px 0">
+      <tr>
+        <td>
+          <span style="font-size: 16px; letter-spacing: -.64px; line-height: 26px; font-weight: 400; color:#111111;">
+            안녕하세요. 주식회사 다다앰엔씨입니다.<br />
+            고객님의 <span th:text="${title}"></span> 여부 확인을 위해 이메일을 통한 인증이 필요합니다. 회원가입 페이지에 표시되는 유효시간 내에
+            인증번호를 입력하여 주십시오.
+          </span>
+        </td>
+      </tr>
+    </table>
+    <table style="width: 600px; margin: 0 auto;">
+      <tr>
+        <td>
+          <div style="width: 100%; padding: 50px 0; border: solid 1px #dddddd;">
+              <div style="vertical-align: middle; text-align: center;">
+                <div style="padding: 30px 0; background-color: #f8f8f8; width: 360px; margin: 0 auto;">
+                  <span style="margin-right: 10px; font-size: 14px; letter-spacing: -.56px; color: #333333; ">인증번호</span>
+                  <span style=" font-family: 'AttenNew', sans-serif; font-size: 22px;letter-spacing: -.66px; font-weight: 600; color:#2c2c2c;" th:text="${authNumber}"></span>
+                </div>
+                <div style="padding: 40px 20px 0 40px; text-align: left;">
+                  <span style="font-size: 14px; letter-spacing: -.56px; color:#666666; margin-bottom: 6px;">ㆍ유효시간이 지난 후에는 인증이 되지 않으니, 새로운 인증번호를 발행 받으시기 바랍니다. </span>
+                  <span style="display:block; font-size: 14px; letter-spacing: -.56px; color:#666666;">ㆍ이메일 인증 관련 문의가 있으면 D.PLOT 고객센터 1666-3642로 연락주시기 바랍니다.</span>
+                </div>
+              </div>
+          </div>
+        </td>
+      </tr>
+    </table>
+    <!-- 메일 푸터 -->
+    <table class="mail-footer" style="width: 100%; margin-top: 80px; background-color: #f8f8f8; padding: 40px 40px;">
+      <colgroup>
+        <col width="20%">
+        <col width="80%">
+      </colgroup>
+      <tr style="vertical-align: top; width: 100%;">
+        <td>
+          <div style="text-align: left; width: 100%;">
+            <img th:src="${footerLogo}" alt="footer logo">
+          </div>
+        </td>
+        <td>
+          <div style="margin-bottom: 10px; line-height: 1;">
+            <span style="color: #666666; font-size: 14px; letter-spacing: -.42px;">
+              본 메일은 발신 전용으로 회신이 되지 않습니다.<br />
+              문의사항은 [<a th:href="${mainUrl}" style="color:#666666;">D.PLOT 홈페이지</a>]를 이용해주시기 바랍니다.
+            </span>
+          </div>
+          <div style="margin-bottom: 4px;">
+            <span style="font-size: 14px; letter-spacing: -.42px; color: #666666;">주식회사 다다엠엔씨</span>
+            <span style="display:inline-block; margin: 0 10px; width: 1px; height: 10px; background-color: #dddddd;"></span>
+            <span style="font-size: 14px; letter-spacing: -.42px; color: #666666;">고객센터 1666-3642</span>
+<!--            <span style="display:inline-block; margin: 0 10px; width: 1px; height: 10px; background-color: #dddddd;"></span>-->
+<!--            <span style="font-size: 14px; letter-spacing: -.42px; color: #666666;">1:1 문의</span>-->
+          </div>
+          <div style="margin-bottom: 4px;">
+            <span style="font-size: 14px; letter-spacing: -.42px; color: #666666;">04377 서울특별시 용산구 한강대로23길 55 (한강로3가) 아이파크몰 6층</span>
+          </div>
+
+          <div>
+            <span style="font-size: 14px; letter-spacing: -.42px; color: #666666;">COPYRIGHT © D.PLOT. ALL RIGHTS RESERVED.</span>
+          </div>
+        </td>
+      </tr>
+    </table>
+
+  </div>
+
+</body>
+</html>

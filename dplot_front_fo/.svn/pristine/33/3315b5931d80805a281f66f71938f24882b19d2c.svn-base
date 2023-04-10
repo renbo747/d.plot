@@ -1,0 +1,139 @@
+.dp-brand-detail-pc {
+  padding-top: 100px;
+  .container {
+    max-width: 1240px;
+  }
+  .brand-detail__utility {
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+    margin-left: auto;
+  }
+  // section 브랜드 이름
+  .brand-detail__header {
+    padding-bottom: 40px;
+    .brand-detail__title {
+      width: 100%;
+      display: flex;
+      align-items: center;
+      h1 {
+        display: flex;
+        align-items: center;
+        .title-kor {
+          font-size: 18px;
+          letter-spacing: -.58px;
+          margin-left: 12px;
+          color: $gray-700;
+          font-weight: 400;
+        }
+      }
+    }
+    .brand-detail__icon {
+      margin-left: auto;
+    }
+    h1 {
+      font-size: 26px;
+      letter-spacing: -1.04px;
+      line-height: 22px;
+      font-weight: 700;
+      word-break: keep-all;
+    }
+    .icon-heart__area {
+      display: flex;
+      align-items: center;
+    }
+    .wish-count {
+      font-size: 16px;
+      letter-spacing: -.64px;
+    }
+    .icon-share {
+      margin-left: 20px;
+    }
+  }
+
+  // section 브랜드 설명
+  .detail-contents__wrap {
+    .contents__box {
+      padding-bottom: 100px;
+      img {
+        width: 100%;
+
+      }
+      .brand-detail__description {
+        font-size: 18px;
+        letter-spacing: -.72px;
+        line-height: 28px;
+        color: $gray-700;
+        word-break: keep-all;
+        padding-top: 24px;
+      }
+    }
+  }
+
+  .detail-contents__related {
+    display: flex;
+    padding-top: 50px;
+    margin-bottom: 100px;
+    border-top: 1px solid $border-color;
+    .related-title {
+      font-size: 20px;
+      letter-spacing: -.8px;
+      font-weight: 500;
+      margin-right: 46px;
+    }
+  }
+
+  // section 이벤트 배너
+  .event__banner__section {
+    padding-bottom: 100px;
+    .swiper-slide {
+      width: 100% !important;
+    }
+    .swiper-pagination {
+      position: initial;
+      padding-top: 80px;
+    }
+    .swiper-pagination-bullet-active {
+      background: $black;
+    }
+  }
+  // section 브랜드 상품
+  .brand__product__section {
+    .header__top {
+      .product-count__p {
+        font-size: 16px;
+        letter-spacing: -.64px;
+        font-weight: 500;
+      }
+      // TODO : 7/13 PC 브랜드 상세 정렬버튼 디자인 변경
+      .list-select-box {
+        li {
+          .list__span {
+            color: $gray-600;
+            font-size: 16px;
+            letter-spacing: -.64px;
+            font-weight: 500;
+            cursor: pointer;
+          }
+          .dp-bar {
+            margin-right: 10px;
+            margin-left: 10px;
+          }
+          &:last-child {
+            .dp-bar {
+              display: none;
+            }
+          }
+        }
+      }
+    }
+    // 상품
+    .brand__product-area {
+      padding-top: 30px;
+      li {
+        display: flex;
+        margin-bottom: 60px;
+      }
+    }
+  }
+}

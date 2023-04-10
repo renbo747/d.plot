@@ -1,0 +1,24 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="30" height="30" viewBox="0 0 30 30">
+    <defs>
+        <clipPath id="05kgguelza">
+            <path data-name="사각형 7490" transform="translate(.059 .058)" style="stroke:#ddd;fill:#c9c9c9" d="M0 0h22v22H0z"/>
+        </clipPath>
+    </defs>
+    <g data-name="그룹 23376">
+        <path data-name="사각형 7591" style="fill:transparent" d="M0 0h30v30H0z"/>
+        <g data-name="마스크 그룹 286" transform="translate(3.941 3.942)" style="clip-path:url(#05kgguelza)">
+            <g data-name="2639811_face_id_icon">
+                <path data-name="패스 17922" d="M10.052 16.667a4.223 4.223 0 0 0 5.153 0" transform="translate(-1.822 -1.476)" style="fill:none;stroke-linecap:round;stroke-linejoin:round;stroke-miterlimit:10;stroke:#ddd"/>
+                <path data-name="선 774" transform="translate(16.319 7.711)" style="fill:none;stroke-linecap:round;stroke-linejoin:round;stroke-miterlimit:10;stroke:#ddd" d="M0 0v1.913"/>
+                <path data-name="선 775" transform="translate(5.797 7.711)" style="fill:none;stroke-linecap:round;stroke-linejoin:round;stroke-miterlimit:10;stroke:#ddd" d="M0 0v1.913"/>
+                <path data-name="패스 17923" d="M12.544 10v3.508a.877.877 0 0 1-.877.877" transform="translate(-1.737 -1.825)" style="fill:none;stroke-linecap:round;stroke-linejoin:round;stroke-miterlimit:10;stroke:#ddd"/>
+                <g data-name="그룹 22457">
+                    <path data-name="패스 17924" d="M21.885 7.718V5.087a1.753 1.753 0 0 0-1.754-1.754H17.5" transform="translate(-1.432 -2.173)" style="fill:none;stroke-linecap:round;stroke-linejoin:round;stroke-miterlimit:10;stroke:#ddd"/>
+                    <path data-name="패스 17925" d="M7.718 3.333H5.087a1.753 1.753 0 0 0-1.754 1.754v2.631" transform="translate(-2.173 -2.173)" style="fill:none;stroke-linecap:round;stroke-linejoin:round;stroke-miterlimit:10;stroke:#ddd"/>
+                    <path data-name="패스 17926" d="M17.5 21.885h2.631a1.753 1.753 0 0 0 1.754-1.754V17.5" transform="translate(-1.432 -1.432)" style="fill:none;stroke-linecap:round;stroke-linejoin:round;stroke-miterlimit:10;stroke:#ddd"/>
+                    <path data-name="패스 17927" d="M3.333 17.5v2.631a1.753 1.753 0 0 0 1.754 1.754h2.631" transform="translate(-2.173 -1.432)" style="fill:none;stroke-linecap:round;stroke-linejoin:round;stroke-miterlimit:10;stroke:#ddd"/>
+                </g>
+            </g>
+        </g>
+    </g>
+</svg>

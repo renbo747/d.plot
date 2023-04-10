@@ -1,0 +1,137 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.dplot.mapper.BlinkSpcPriceMapper">
+	<!-- ADMIN 쿼리 시작 -->
+
+	<!-- 반짝특가 목록 조회 -->
+	<select id="selectBlinkSpcPriceList" parameterType="somap" resultType="somap">
+		SELECT  /* BlinkSpcPriceMapper.xml - selectBlinkSpcPriceList 반짝특가 목록 조회 */
+			a.*, FORMAT(@ROWNUM := @ROWNUM+1,0) AS no
+		FROM (
+		SELECT
+			tbs.bspcidx
+			-- , tbs.subject
+			, <![CDATA[
+			(CASE WHEN (tts.bpsttime > date_format(now(), '%Y%m%d%H%i')) THEN '진행전' 
+				  WHEN ((tts.bpsttime <= date_format(now(), '%Y%m%d%H%i'))
+						AND (tts.bpedtime > date_format(now(), '%Y%m%d%H%i'))) THEN '진행중'
+				  WHEN (tts.bpedtime < date_format(now(), '%Y%m%d%H%i')) THEN '종료' END
+			) as bptype
+			]]>
+			, tbs.bpsttime
+			, tbs.bpedtime
+			, CASE istrash WHEN 'T' THEN '미사용' ELSE '사용' END AS istrash
+			, c.name
+			, (SELECT count(*) from t_blink_goods WHERE bspcidx = tbs.bspcidx) as goodscnt
+			, DATE_FORMAT(tbs.regdate, '%Y%m%d') as regdate
+		FROM t_blink_spcprice tbs
+		LEFT JOIN (SELECT userid, name FROM t_user a LEFT JOIN t_admin b ON a.no = b.userno) c ON c.userid = tts.reguserid
+		<where>
+			AND tbs.siteid = #{siteid}
+			<if test="sword != null and sword != ''">
+				<choose>
+					<when test="skey == 'subject'">
+						AND tbs.subject like concat('%',#{sword},'%')
+					</when>
+					<when test="skey == 'regusername'">
+						AND c.name like concat('%',#{sword},'%')
+					</when>
+					<otherwise>
+						AND (
+							tbs.subject like concat('%',#{sword},'%')
+							OR c.name like concat('%',#{sword},'%')
+						)
+					</otherwise>
+				</choose>
+			</if>
+			<choose>
+				<when test="stype == 'bpsttime'">
+				<![CDATA[
+					AND date_format(STR_TO_DATE(tbs.bpsttime, '%Y%m%d%H%i'), '%Y-%m-%d %H:%i') >= date_format(concat(#{startdate}, ' ', '00:00') , '%Y-%m-%d %H:%i')
+					AND date_format(STR_TO_DATE(tbs.bpsttime, '%Y%m%d%H%i'), '%Y-%m-%d %H:%i')  <= date_format(concat(#{enddate}, ' ', '23:59'), '%Y-%m-%d %H:%i')
+				]]>
+				</when>
+				<when test="stype == 'bpedtime'">
+				<![CDATA[
+					AND date_format(STR_TO_DATE(tbs.bpedtime, '%Y%m%d%H%i'), '%Y-%m-%d %H:%i') >= date_format(concat(#{startdate}, ' ', '00:00') , '%Y-%m-%d %H:%i')
+					AND date_format(STR_TO_DATE(tbs.bpedtime, '%Y%m%d%H%i'), '%Y-%m-%d %H:%i')  <= date_format(concat(#{enddate}, ' ', '23:59'), '%Y-%m-%d %H:%i')
+				]]>
+				<!-- 2021-12-12yiy 서버에러로 수정함 -->
+				</when>
+				<when test="stype == 'regdate'">
+				<![CDATA[
+					AND tbs.regdate >= date_format(concat(#{startdate}, ' ', '00:00:00') , '%Y-%m-%d %H:%i:%s')
+					AND tbs.regdate <= date_format(concat(#{enddate}, ' ', '23:59:59'), '%Y-%m-%d %H:%i:%s')
+				]]>
+				</when>
+				<otherwise>
+				<![CDATA[
+				AND (
+				    (date_format(STR_TO_DATE(tbs.bpsttime, '%Y%m%d%H%i'), '%Y-%m-%d %H:%i') >= date_format(concat(#{startdate}, ' ', '00:00') , '%Y-%m-%d %H:%i')
+					AND date_format(STR_TO_DATE(tbs.bpsttime, '%Y%m%d%H%i'), '%Y-%m-%d %H:%i')  <= date_format(concat(#{enddate}, ' ', '23:59'), '%Y-%m-%d %H:%i'))
+				OR (date_format(STR_TO_DATE(tbs.bpedtime, '%Y%m%d%H%i'), '%Y-%m-%d %H:%i') >= date_format(concat(#{startdate}, ' ', '00:00') , '%Y-%m-%d %H:%i')
+					AND date_format(STR_TO_DATE(tbs.bpedtime, '%Y%m%d%H%i'), '%Y-%m-%d %H:%i')  <= date_format(concat(#{enddate}, ' ', '23:59'), '%Y-%m-%d %H:%i'))
+				OR (tts.regdate >= date_format(concat(#{startdate}, ' ', '00:00:00') , '%Y-%m-%d %H:%i:%s')
+					AND tts.regdate <= date_format(concat(#{enddate}, ' ', '23:59:59'), '%Y-%m-%d %H:%i:%s'))
+				)
+				]]>
+				</otherwise>
+			</choose>	
+			<if test="istrash != null and istrash != '' ">
+				AND tbs.istrash = #{istrash}
+			</if>
+			<choose>
+			<when test='isallbp == "T"'>
+			</when>
+			<when test="bptype != null and bptype != ''">
+				AND
+				<foreach collection="bptypearr" item="item" index="index" open="(" separator="OR" close=")">
+					<if test="item == 'BP001'">
+						<![CDATA[
+						tbs.bpsttime > date_format(now(), '%Y%m%d%H%i')
+						]]>
+					</if>
+					<if test="item == 'BP002'">
+						<![CDATA[
+						(tbs.bpsttime <= date_format(now(), '%Y%m%d%H%i')
+						AND tbs.bpedtime >= date_format(now(), '%Y%m%d%H%i'))
+						]]>
+					</if>
+					<if test="item == 'BP003'">
+						<![CDATA[
+						tbs.bpedtime < date_format(now(), '%Y%m%d%H%i')
+						]]>
+					</if>
+				</foreach>
+			</when>
+		</choose>
+		</where>
+		<choose>
+			<when test="psort == 'goodscnt_asc'">
+				ORDER BY goodscnt ASC
+			</when>
+			<when test="psort == 'goodscnt_desc'">
+				ORDER BY goodscnt DESC
+			</when>
+			<when test="psort == 'regdate_asc'">
+				ORDER BY tbs.regdate ASC
+			</when>
+			<when test="psort == 'regdate_desc'">
+				ORDER BY tbs.regdate DESC
+			</when>
+			<otherwise>
+				ORDER BY tbs.istrash, tbs.bpsttime DESC
+			</otherwise>
+		</choose>
+		) a, (select @ROWNUM := 0) as b
+	</select>
+
+	<!-- 2021-12-12yiy 서버에러로 수정함 -->
+	<!-- 반짝특가 사용여부별 수량 조회 -->
+	<select id="selectBlinkSpcPriceUseCnt" parameterType="somap" resultType="somap">
+		/* BlinkSpcPriceMapper.xml - selectBlinkSpcPriceUseCnt 반짝특가 사용여부별 수량 조회*/
+	</select>
+	
+	<!-- ADMIN 쿼리 끝 -->
+</mapper>

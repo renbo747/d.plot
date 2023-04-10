@@ -1,0 +1,67 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.dplot.mapper.UserTotalMapper">
+
+<select id="selectUserCountByUserNoandVisitIp" parameterType="somap" resultType="Integer">
+	SELECT  /* UserTotalMapper.xml - selectUserCountByUserNoandVisitIp 사용자종합여부 조회(By IP) */
+		COUNT(*) cnt
+	FROM T_USER_TOTAL 
+	<where>
+	AND USERNO = #{userno}
+	AND VISITIP = #{visitip}
+	</where>
+</select>
+
+<select id="selectUserCountByUserNoandSecureCode" parameterType="somap" resultType="Integer">
+	SELECT  /* UserTotalMapper.xml - selectUserCountByUserNoandSecureCode 사용자종합여부 조회(By SecureCode) */
+		COUNT(*) cnt
+	FROM T_USER_TOTAL 
+	<where>
+	AND USERNO = #{userno}
+	AND SECURECODE = #{secureCode}
+	</where>
+</select>
+
+<update id="updateUserTotal" parameterType="somap" >
+	UPDATE  /* UserTotalMapper.xml - updateUserTotal 사용자종합 수정 */
+		T_USER_TOTAL
+	<set>
+		<choose>
+			<when test="securecode != null and securecode != ''">
+				SecureCode=#{securecode},
+				VisitCnt=VisitCnt+1,
+				VisitIp=#{visitip},
+				VisitDate=NOW()		
+			</when>
+			<otherwise>
+				SecureCode = null
+			</otherwise>			
+		</choose>
+	</set>
+	<where>
+		AND UserNo= #{userno}
+	</where>		 
+</update>
+
+<insert id="insertUserTotal" parameterType="somap" >
+	INSERT INTO T_USER_TOTAL  /* UserTotalMapper.xml - insertUserTotal 사용자종합 저장 */ 
+		(UserNo)
+	VALUES
+		(#{userno})
+</insert>
+
+<delete id="deleteUserTotalByUserNo" parameterType="somap">
+	DELETE  /* UserTotalMapper.xml - deleteUserTotalByUserNo 사용자종합 삭제 */ 
+		FROM T_USER_TOTAL
+	WHERE UserNo = #{no}
+</delete>
+
+<update id="updateUserTotalCmoney" parameterType="somap" >
+	UPDATE  /* UserTotalMapper.xml - updateUserTotalCmoney 사용자종합 적립금 수정 */ 
+		T_USER_TOTAL
+	SET Cmoney = #{cmoney}
+	WHERE UserNo = #{userno}
+</update>
+
+</mapper>

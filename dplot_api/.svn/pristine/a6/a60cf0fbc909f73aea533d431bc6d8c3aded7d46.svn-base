@@ -1,0 +1,111 @@
+package com.dplot.mapper;
+
+import com.dplot.annontation.MapperInterface;
+import com.dplot.common.SOMap;
+
+import java.util.List;
+
+/**
+ * @discription	: 클레임쿠폰 Mapper (T_CLAIM_COUPON
+ * @fileName	: ClaimCouponMapper.java
+ * @author		: JSK
+ * @date		: 2022.03.02
+ * =================================================================
+ * DATE			AUTHOR		NOTE
+ * -----------------------------------------------------------------
+ * 2022.03.02	JSK			최초생성
+ * -----------------------------------------------------------------
+ */
+@MapperInterface
+public interface ClaimGoodsMapper {
+	/**
+     * 클레임 상품목록 조회
+     * @param param
+     * @return List<SOMap>
+     */
+    List<SOMap> selectClaimGoodsList(SOMap param);
+    
+	/**
+     * 클레임 상품목록 조회
+     * @param param
+     * @return List<SOMap>
+     */
+    List<SOMap> selectOrderClaimGoodsList(SOMap param);
+    
+    
+    /**
+     * 마이페이지 클레임 상품목록 조회
+     * @param param
+     * @return List<SOMap>
+     */
+    List<SOMap> selectMyClaimGoodsList(SOMap param);
+    
+    /**
+     * 클레임신청 상품목록 조회
+     * @param param
+     * @return List<SOMap>
+     */
+    List<SOMap> selectOrderClaimGoodsApplyList(SOMap param);
+    
+    /**
+     * 클레엠별 갯수 조회
+     * @param param
+     * @return
+     */
+    SOMap selectClaimGoodsCnt(SOMap param);
+    
+    /**
+     * 클레임상품 저장
+     * @param param
+     * @return
+     */
+    int insertClaimGoods(SOMap param);
+    
+    /**
+     * 클레임상품 취소상태 변경
+     * @param param
+     * @return int
+     */
+    int updateGoodsCncStatus(SOMap param);
+    
+    /**
+     * 클레임상품 수정
+     * @param param
+     * @return
+     */
+    int updateClaimGoods(SOMap param);
+    
+    /**
+     * 회수 이후 교환목록 조회
+     * @param param
+     * @return List<SOMap>
+     */
+    List<SOMap> selectExcAfterRecList(SOMap param);
+
+    /**
+     * 통계 클레임 순위
+     */
+    List<SOMap> selectStatsClaimRankByGoodsList(SOMap param);
+
+    /**
+     * 통계 클레임 순위 카운트
+     */
+    SOMap selectStatsClaimRankByGoodsListCountInfo(SOMap param);
+
+    /**
+     * 클레임 ERP 전송용 데이터
+     */
+    List<SOMap> selectOrderCancelGoodsERPData(SOMap param);
+    
+    /**
+     * 주문 클레임제외 상품목록 조회 
+     * @param param
+     * @return List<SOMap>
+     */
+    List<SOMap> selectOrderGoodsWithoutClaimList(SOMap param);
+
+    /**
+     *
+     */
+    List<SOMap> selectReturnGoodsERPData(SOMap param);
+}

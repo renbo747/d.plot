@@ -1,0 +1,84 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.dplot.mapper.ChargemdMapper">
+	
+	<!-- 담당MD 목록 조회 -->
+	<select id="selectChargemdList" parameterType="somap" resultType="somap" >
+		/* ChargemdMapper.xml::selectChargemdList 담당MD 목록 조회 */
+		<include refid="selectChargemdListSQL"/>
+	</select>
+	
+	<!-- 상품 일괄업로드 담당MD 목록 조회 -->
+	<select id="selectChargemdListForExcel" parameterType="somap" resultType="HashMap" >
+		/* ChargemdMapper.xml::selectChargemdListForExcel 상품 일괄업로드 담당MD 목록 조회 */
+		<include refid="selectChargemdListSQL"/>
+	</select>
+
+	<sql id="selectChargemdListSQL">
+		SELECT
+			tm.mdifidx, tm.mdsabun, tm.empname, tm.mdcode, tm.mdname, tm.mdemail, tm.isdp
+		FROM t_mdinfo tm
+		WHERE 1 = 1
+		<if test='mdifidx != null and mdifidx != ""'>
+		AND tm.mdifidx = #{mdifidx}
+		</if>
+		<if test='isdp != null and isdp != ""'>
+		AND tm.isdp = #{isdp}
+		</if>
+		<if test='mdsword != null and mdsword != ""'>
+		AND (tm.mdemail like CONCAT('%', #{mdsword}, '%') OR tm.empname like CONCAT('%', #{mdsword}, '%'))
+		</if>
+		<choose>
+			<when test="psort == 'mdsabun_asc'">
+				ORDER BY tm.mdsabun ASC, tm.mdifidx ASC
+			</when>
+			<when test="psort == 'mdsabun_desc'">
+				ORDER BY tm.mdsabun DESC, tm.mdifidx ASC
+			</when>
+			<when test="psort == 'empname_asc'">
+				ORDER BY tm.empname ASC, tm.mdifidx ASC
+			</when>
+			<when test="psort == 'empname_desc'">
+				ORDER BY tm.empname DESC, tm.mdifidx ASC
+			</when>
+			<when test="psort == 'mdcode_asc'">
+				ORDER BY tm.mdcode ASC, tm.mdifidx ASC
+			</when>
+			<when test="psort == 'mdcode_desc'">
+				ORDER BY tm.mdcode DESC, tm.mdifidx ASC
+			</when>
+			<when test="psort == 'mdname_asc'">
+				ORDER BY tm.mdname ASC, tm.mdifidx ASC
+			</when>
+			<when test="psort == 'mdname_desc'">
+				ORDER BY tm.mdname DESC, tm.mdifidx ASC
+			</when>
+			<otherwise>
+				ORDER BY tm.mdifidx ASC
+			</otherwise>
+		</choose>
+	</sql>
+
+	<select id="selectMdCount" parameterType="somap" resultType="Integer">
+		SELECT COUNT(*) FROM T_MDINFO
+		WHERE MDCODE = #{md_code}
+	    AND MDSABUN = #{md_sabun}
+	</select>
+
+	<insert id="insertMdInfo" parameterType="somap">
+		INSERT INTO T_MDINFO (MDSABUN, EMPNAME, MDCODE, MDNAME, MDTEL, MDEMAIL, ISDP, REGUSERID, REGDATE)
+		VALUES (#{md_sabun}, #{emp_name}, #{md_code}, #{md_name}, #{mobile_no}, #{email}, IF(#{dp_yn} = '1', 'T', 'F'), 'SYSTEM', CURRENT_TIMESTAMP)
+	</insert>
+
+	<update id="updateMdInfo" parameterType="somap">
+		UPDATE T_MDINFO SET
+			MDTEL = #{mobile_no}
+			, MDEMAIL = #{email}
+			, ISDP = IF(#{dp_yn} = '1', 'T', 'F')
+			, MODUSERID = 'SYSTEM'
+			, MODDATE = CURRENT_TIMESTAMP
+		WHERE MDSABUN = #{md_sabun}
+		AND MDCODE = #{md_code}
+	</update>
+</mapper>

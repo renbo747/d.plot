@@ -1,0 +1,24 @@
+#로컬환경변수 설정(변수선언시 VUE_APP으로 시작 ex. VUE_APP_PORT = 4000 )
+
+NODE_ENV = "local"
+BASE_URL = "/"
+
+# 서버설정
+#VUE_APP_SERVER_URL = "http://localhost:8080"
+#VUE_APP_SERVER_URL = "http://dplot.co.kr:8080"
+VUE_APP_SERVER_URL = "http://local-admin.dplot.co.kr:8080"
+VUE_APP_LOG_LEVEL = "DEBUG"
+
+# KMC 본인인증
+VUE_APP_KMC_CERT_CPID = "DNCM1001"
+VUE_APP_KMC_CERT_REDIRECT_URI = "http://local-www.dplot.co.kr:8080/api/common/kmcResult"
+VUE_APP_KMC_CERT_REDIRECT_URI_POPUP_ADMIN = "http://local-www.dplot.co.kr:8080/api/common/kmcResult/popup"
+VUE_APP_KMC_CERT_REDIRECT_URI_POPUP_PARTNER = "http://local-www.dplot.co.kr:8080/api/common/kmcResult/popup"
+VUE_APP_KMC_CERT_PARTNERS = "004002"
+VUE_APP_KMC_CERT_ADMIN = "004002"
+
+# PC 상품상세 URL
+VUE_APP_PC_GOODS_DETAIL_URL = "http://local-www.dplot.co.kr/shop/detail/"
+
+# FRONT 도메인
+VUE_APP_PC_DOMAIN = "http://local-www.dplot.co.kr"

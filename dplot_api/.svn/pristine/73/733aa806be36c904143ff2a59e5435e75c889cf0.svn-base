@@ -1,0 +1,207 @@
+package com.dplot.admin.controller.promotion;
+
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.core.io.ByteArrayResource;
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestMethod;
+import org.springframework.web.bind.annotation.RestController;
+
+import com.dplot.admin.service.promotion.AdminCouponService;
+import com.dplot.common.Response;
+import com.dplot.common.SOMap;
+import com.dplot.common.controller.ExcelDownController;
+/**
+ * @author : ywm2004
+ * @discription : 프로모션 쿠폰 Controller
+ * @fileName : AdminCouponController.java
+ * @date : 2021-12-02
+ * =================================================================
+ * DATE			AUTHOR		NOTE
+ * -----------------------------------------------------------------
+ * 2021-12-15	LCK		최초생성
+ * -----------------------------------------------------------------
+ */
+@RestController
+@RequestMapping("/admin/promotion/coupon")
+public class AdminCouponController extends ExcelDownController{
+
+    @Autowired
+    AdminCouponService adminCouponService;
+
+    /**
+     * 쿠폰목록 조회
+     *
+     * @param params
+     * @return Response
+     * @throws Exception
+     */
+    @RequestMapping(value = "/list", method = RequestMethod.POST)
+    public Response couponList(@RequestBody SOMap params) throws Exception {
+        return new Response(adminCouponService.selectCouponList(params));
+    }
+
+    /**
+     * 쿠폰 삭제
+     * @param params
+     * @return
+     * @throws Exception
+     */
+    @RequestMapping(value = "/remove", method = RequestMethod.POST)
+    public Response removeCoupon(@RequestBody SOMap params) throws Exception {
+        SOMap result = new SOMap();
+    	result.put("resultCnt", adminCouponService.removeCoupon(params));
+        return new Response(result);
+    }
+
+    /**
+     * 쿠폰목록 조회(엑셀용)
+     * @param params
+     * @return ResponseEntity<ByteArrayResource>
+     * @throws Exception
+     */
+    @RequestMapping(value="/exceldown", method = RequestMethod.POST)
+    public ResponseEntity<ByteArrayResource> couponListForExcel(@RequestBody HashMap<String,Object> params) throws Exception {
+
+    	List<Map<String, Object>> list = adminCouponService.selectCouponListForExcel(params);
+
+    	// 헤더 이름
+    	String[] header = {"쿠폰번호","쿠폰명","쿠폰종류","발급종류","파트너사분담비율","발급/사용","등록일자","사용시간"
+    					  ,"사용채널","할인", "발급상태","사용여부","발급방법"};
+    	String[] column = {"comcpnno", "cpnname", "comcpntypename", "cpnissuetypename", "partratio", "issueusecnt", "regdate", "cpnusetypeconts"
+    					  ,"muappchtypename", "discountconts", "cpnissuestname", "istrashname", "isautopayname"};
+    	// 컬럼 너비 지정
+    	int[] columnSize = {15*256, 25*256, 15*256, 15*256, 17*256, 12*256, 15*256, 25*256, 20*256, 15*256, 10*256, 10*256, 10*256};
+
+    	return makeExcelFile(header, column, columnSize, list, "쿠폰목록.xlsx");
+    }
+
+    /**
+     * 쿠폰 상세정보 조회
+     * @param params
+     * @return Response
+     * @throws Exception
+     */
+    @RequestMapping(value = "/detail", method = RequestMethod.POST)
+    public Response couponDetail(@RequestBody SOMap params) throws Exception {
+        return new Response(adminCouponService.selectCouponInfo(params));
+    }
+    
+    /**
+     * 쿠폰발급/사용이력 목록 조회
+     *
+     * @param params
+     * @return Response
+     * @throws Exception
+     */
+    @RequestMapping(value = "/detail/memissue/list", method = RequestMethod.POST)
+    public Response couponMemissueList(@RequestBody SOMap params) throws Exception {
+        return new Response(adminCouponService.selectMemissueList(params));
+    }
+
+    /**
+     * 쿠폰 저장
+     *
+     * @param params
+     * @return Response
+     * @throws Exception
+     */
+    @RequestMapping(value = "/save", method = RequestMethod.POST)
+    public Response saveCoupon(@RequestBody SOMap params) throws Exception {
+        SOMap result = new SOMap();
+    	result.put("resultCnt", adminCouponService.saveCoupon(params));
+        return new Response(result);
+    }
+
+    /**
+     * 쿠폰 수정
+     *
+     * @param params
+     * @return Response
+     * @throws Exception
+     */
+    @RequestMapping(value = "/update", method = RequestMethod.POST)
+    public Response updateCoupon(@RequestBody SOMap params) throws Exception {
+        SOMap result = new SOMap();
+    	result.put("resultCnt", adminCouponService.updateCoupon(params));
+        return new Response(result);
+    }
+
+    /**
+     * 쿠폰 발급중지/재개 내역 조회
+     *
+     * @param params
+     * @return Response
+     * @throws Exception
+     */
+    @RequestMapping(value = "/issue/detail", method = RequestMethod.POST)
+    public Response issueDetail(@RequestBody SOMap params) throws Exception {
+        return new Response(adminCouponService.selectCouponIssueInfo(params));
+    }
+
+    /**
+     * 쿠폰 발급중지/재개
+     *
+     * @param params
+     * @return Response
+     * @throws Exception
+     */
+    @RequestMapping(value = "/issue/save", method = RequestMethod.POST)
+    public Response controllIssue(@RequestBody SOMap params) throws Exception {
+        SOMap result = new SOMap();
+    	result.put("resultCnt", adminCouponService.controllIssue(params));
+        return new Response(result);
+    }
+
+    /**
+     * 발급/사용내역 조회(엑셀용)
+     * @param params
+     * @return ResponseEntity<ByteArrayResource>
+     * @throws Exception
+     */
+    @RequestMapping(value="/memissue/exceldown", method = RequestMethod.POST)
+    public ResponseEntity<ByteArrayResource> memissueListForExcel(@RequestBody HashMap<String,Object> params) throws Exception {
+
+    	List<Map<String, Object>> list = adminCouponService.selectMemissueListForExcel(params);
+
+    	// 헤더 이름
+    	String[] header = {"아이디","이름","유형","등급","발급일시","주문번호","사용일시"};
+    	String[] column = {"userid", "username", "membertypename", "memlvtypename", "issueday", "ordno", "useday"};
+    	// 컬럼 너비 지정
+    	int[] columnSize = {20*256, 20*256, 20*256, 20*256, 20*256, 15*256, 20*256};
+
+    	return makeExcelFile(header, column, columnSize, list, "쿠폰발급사용내역.xlsx");
+    }
+    
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

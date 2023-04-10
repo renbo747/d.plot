@@ -1,0 +1,110 @@
+.dp-modal.page-layer.terms-modal {
+  .modal-body {
+    padding: 20px 0 0 0;
+  }
+  .dp-sort__ul {
+    padding-bottom: 24px;
+    li + li {
+      margin-left: 12px;
+    }
+    li:first-child {
+      margin-left: 20px;
+      @include media-breakpoint-up(xl) {
+        margin-left: 0;
+      }
+    }
+    li:last-child {
+      margin-right: 20px;
+    }
+  }
+  /* 개인정보 처리방침 scss */
+  .policy-header__title {
+    font-size: 22px;
+    letter-spacing: -.72px;
+    font-weight: 700;
+    margin-bottom: 20px;
+  }
+  .policy-header__text {
+    font-size: 16px;
+  }
+  .policy-section {
+    padding-top: 40px;
+  }
+  .policy-section-title {
+    font-size: 18px;
+    letter-spacing: -.72px;
+    font-weight: 500;
+    color:$black;
+    margin-bottom: 0;
+  }
+  .policy-section__text {
+    font-size: 16px;
+    letter-spacing: -.64px;
+    font-weight: 400;
+    color: #666;
+    margin-bottom: 0;
+  }
+  .policy-section__body {
+    padding-top: 16px;
+  }
+  .policy-section__sequence + .policy-section__sequence {
+    padding-top: 10px;
+  }
+  .pt10 {
+    padding-top: 10px;
+  }
+  .policy-text-center {
+    font-size: 16px;
+    letter-spacing: -.64px;
+    font-weight: 400;
+    color: #666;
+    margin-bottom: 0;
+    text-align: center;
+  }
+  .policy__table {
+    padding-top: 20px;
+    table {
+      table-layout: fixed;
+      th, td {
+        word-break: break-all;
+      }
+    }
+  }
+  .policy__ul {
+    padding-top: 10px;
+    padding-left: 10px;
+    .denial {
+      padding-top: 0;
+    }
+  }
+  .policy__li + .policy__li {
+    padding-top: 10px;
+  }
+  .policy-denial__text {
+    color: #666666;
+    margin-bottom: 0;
+  }
+  .denial__li + .denial__li{
+    padding-top: 8px;
+  }
+}
+
+.sale-list-modal {
+  .sale-list__ul {
+    display: flex;
+    flex-wrap: wrap;
+    border-top: 1px solid $border-color;
+    border-left: 1px solid $border-color;
+    li {
+      display: flex;
+      align-items: center;
+      flex: 0 0 50%;
+      padding: 8px 4px;
+      font-size: 14px;
+      letter-spacing: -.48px;
+      border-bottom: 1px solid $border-color;
+      word-break: break-all;
+      border-right: 1px solid $border-color;
+    }
+  }
+}

@@ -1,0 +1,221 @@
+package com.dplot.admin.controller.common;
+
+import com.dplot.admin.service.adjust.AdminPartnersAdjustService;
+import com.dplot.admin.service.common.ExternalService;
+import com.dplot.common.Response;
+import com.dplot.common.SOMap;
+import com.dplot.common.service.*;
+import com.dplot.mapper.BatchMapper;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestMethod;
+import org.springframework.web.bind.annotation.RestController;
+
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
+import java.io.PrintWriter;
+
+@RestController
+@RequestMapping(value="/external")
+public class ExternalController {
+
+    private static final Logger logger = LoggerFactory.getLogger(ExternalController.class);
+
+    @Autowired
+    private ExternalService externalService;
+
+    @Autowired
+    private ERPService erpService;
+
+    @Autowired
+    private AdminPartnersAdjustService adminPartnersAdjustService;
+
+    @Autowired
+    private BatchMapper batchMapper;
+
+    @Autowired
+    private CJMessageService cjMessageService;
+
+    @Autowired
+    private DeliveryTrackingService deliveryTrackingService;
+
+    @Autowired
+    private CommonOrderService commonOrderService;
+
+    @Autowired
+    private CommonService commonService;
+
+    @RequestMapping(value = "/partners/sign/process", method = RequestMethod.POST)
+    public Response partnersSignProcess(@RequestBody SOMap param) throws Exception {
+        int resultCnt = 0;
+        try {
+            resultCnt = externalService.partnersSignStateUpdate(param);
+        } catch(Exception e){
+            logger.debug(e.getMessage());
+            e.printStackTrace();
+        }
+        System.out.println(resultCnt);
+        return new Response();
+
+
+    }
+
+    @RequestMapping(value="/instagram/code", method = RequestMethod.GET)
+    public void getInstagramCode(HttpServletRequest request, HttpServletResponse response) throws Exception{
+        String code = request.getParameter("code");
+        int result = externalService.updateConfigInstaToken(code, request.getServerName());
+        if(result > 0){
+            response.setContentType("text/html; charset=UTF-8");
+            PrintWriter out = response.getWriter();
+            out.println("<script>alert('정상적으로 토큰이 갱신 되었습니다.'); window.close(); </script>");
+            out.flush();
+            out.close();
+        }
+    }
+
+    @RequestMapping(value="/message/hook", method = RequestMethod.POST)
+    public Response getCJMessageHook(@RequestBody SOMap param, HttpServletRequest request, HttpServletResponse response) throws Exception {
+        System.out.println(param);
+        System.out.println(request);
+        System.out.println(response);
+        return new Response();
+    }
+
+    @RequestMapping(value="/toss/result", method = RequestMethod.GET)
+    public Response tossResult(HttpServletRequest request, HttpServletResponse response) throws Exception {
+        System.out.println(request.getParameter("orderId"));
+        System.out.println(request.getParameter("paymentKey"));
+        System.out.println(request.getParameter("amount"));
+        return new Response();
+    }
+
+    @RequestMapping(value="/calc", method = RequestMethod.POST)
+    public Response partnersCalc(@RequestBody SOMap param) throws Exception {
+        adminPartnersAdjustService.partnersCalculateProcess(param);
+        return new Response();
+    }
+
+    @RequestMapping(value="/erp/data", method = RequestMethod.POST)
+    public Response sendERPData(@RequestBody SOMap param) throws Exception {
+
+        if("DDMC_SHOP_BASIC_VENDOR".equals(param.getStr("type"))){
+            //협력사 전송
+            erpService.sendPartnersERPData(param);
+        } else if("DDMC_SHOP_ITEM_MANAGE".equals(param.getStr("type"))){
+            //상품 전송
+            erpService.sendGoodsERPData(param);
+        } else if("DDMC_SHOP_BASIC_DISPLAYCATEGORY".equals(param.getStr("type"))){
+            //전시 카테고리 전송
+            erpService.sendCategoryERPData(param);
+        } else if("DDMC_SHOP_BASIC_BRAND".equals(param.getStr("type"))){
+            //브랜드 가져오기
+            erpService.receiveBrandERPData(param);
+        } else if("DDMC_SHOP_BASIC_MANUFACTURER".equals(param.getStr("type"))){
+            //제조사 가져오기
+            erpService.receiveManufacturerERPData(param);
+        } else if("DDMC_SHOP_BASIC_MD".equals(param.getStr("type"))){
+            //MD 가져오기
+            erpService.receiveMDCodeERPData(param);
+        } else if("DDMC_SHOP_MEMBER_MANAGE".equals(param.getStr("type"))){
+            //회원등록/수정/휴면 전달
+            erpService.sendMemberERPData(param);
+        } else if("DDMC_SHOP_MEMBER_WITHDRAWAL".equals(param.getStr("type"))){
+            //회원탈퇴 전달
+            erpService.sendResignMemberERPData(param);
+        } else if("DDMC_SHOP_BENEFIT_COUPON".equals(param.getStr("type"))){
+            //쿠폰정보 전달
+            erpService.sendCouponERPData(param);
+        } else if("DDMC_SHOP_BENEFIT_PROMOTION".equals(param.getStr("type"))){
+            //프로모션 정보 전달
+            erpService.sendPromotionERPData(param);
+        } else if("DDMC_SHOP_MILEAGE_MANAGE".equals(param.getStr("type"))){
+            //적립금 정보 전달
+            erpService.sendReserveERPData(param);
+        } else if("DDMC_SHOP_ORDER_CREATE".equals(param.getStr("type"))){
+            //주문 정보 전달
+            erpService.sendOrderERPData(param);
+        } else if("DDMC_SHOP_ORDER_UPDATE".equals(param.getStr("type"))){
+            //주문 배송정보 수정 전달
+            erpService.sendOrderDeliveryInfoERPData(param);
+        } else  if("DDMC_SHOP_SHIPMENT_UPDATE".equals(param.getStr("type"))){
+            //주문 배송중/배송완료 변경시 데이터 전달
+            erpService.sendOrderGoodsDeliveryData(param);
+        } else if("DDMC_SHOP_ORDER_UPDATESTATUS".equals(param.getStr("type"))){
+            //구매확정 데이터 전달
+            erpService.sendOrderConfirmERPData(param);
+        } else if("DDMC_SHOP_CANCELLATION_CREATE".equals(param.getStr("type"))){
+            //구매취소 데이터 전달
+            erpService.sendOrderCancelERPData(param);
+        } else if("DDMC_SHOP_ITEM_ORGITEM".equals(param.getStr("type"))){
+            //ERP 로 부터 전달 받는 것 오리지널 상품 코드
+            return new Response(erpService.selectReceiveERPOrgGoodsList(param));
+        } else if("DDMC_SHOP_ITEM_GIFTITEM".equals(param.getStr("type"))){
+            //사은품 데이터 전달
+            erpService.sendGiftGoodsERPData(param);
+        } else if("DDMC_SHOP_STOCK_AVAIL".equals(param.getStr("type"))){
+            //재고 수량
+            erpService.erpGetGoodsAndGiftStock(param);
+        } else if("DDMC_SHOP_RETURN_CREATE".equals(param.getStr("type"))){
+            //반품신청
+            erpService.sendReturnApplyERPData(param);
+        } else if("DDMC_SHOP_EXCHANGE_CREATE".equals(param.getStr("type"))){
+            //교환신청
+            erpService.sendExchangeApplyERPData(param);
+        } else if("DDMC_SHOP_RETURN_UPDATE".equals(param.getStr("type"))){
+            //반품완료
+            erpService.sendReturnCompleteERPData(param);
+        } else if("DDMC_SHOP_EXCHANGE_UPDATE".equals(param.getStr("type"))){
+            //교환완료
+            erpService.sendExchangeCompleteERPData(param);
+        } else if("DDMC_SHOP_SHIPMENT_UPDATE2".equals(param.getStr("type"))){
+            //직매입 배송상태변경
+            erpService.receiveOrderDeliveryInfoERPData(param);
+        } else if("DDMC_SHOP_RETURN_UPDATE2".equals(param.getStr("type"))){
+            //직매입 반품상태수정(교환/반품)
+            erpService.receiveReturnDeliveryInfoERPData(param);
+        }
+
+        return new Response();
+    }
+
+    @RequestMapping(value="/batch/send", method = RequestMethod.POST)
+    public Response sendExternalBatch(@RequestBody SOMap param) throws Exception {
+        if("GOODS_DISPLAY".equals(param.getStr("type"))){
+            //상품 노출 상태 변경
+            batchMapper.spUpdateGoodsStateByDisplay(param);
+        } else if("MEMBER_BIRTHDAY".equals(param.getStr("type"))){
+            //회원 생일 적립금 및 쿠폰 발급
+            batchMapper.spMemberBirthdayPayPoint(param);
+        } else if("PARTNER_STATE".equals(param.getStr("type"))){
+            //파트너사 휴점처리
+            batchMapper.spUpdatePartnersStateByLastlogin(param);
+        } else if("MEMBER_H_MAIL".equals(param.getStr("type"))){
+            //회원 11개월 휴면 메일처리
+            cjMessageService.sendDormantAccount(param);
+        } else if("MEMBER_H_PROC".equals(param.getStr("type"))){
+            //회원 1년 미접속 휴면처리
+            batchMapper.spUpdateMemberStateByLastLogin(param);
+        } else if("MEMBER_H_RESIGN".equals(param.getStr("type"))){
+            //휴면처리는 구매기록이 있는 사용자만 되기 때문에 5년뒤 삭제
+            batchMapper.spDeleteMemberThatDormancy(param);
+        } else if("G_FLOW_APPLY".equals(param.getStr("type"))){
+            //굿스플로 파트너사 입정신청
+            deliveryTrackingService.requestApplyServiceUsageResult(param);
+        } else if("ORDER_UPDATE".equals(param.getStr("type"))){
+            //주문상태 변경
+            batchMapper.spOrderStatusUpdate(param);
+            commonService.batchOrderCompleteAndCancel(param);
+        } else if("META_EP".equals(param.getStr("type"))){
+			commonService.createMetaEp(param);
+        } else if("GOOGLE_EP".equals(param.getStr("type"))){
+        	commonService.createGoogleEp(param);
+        } else if("Reward".equals(param.getStr("type"))){
+        	commonOrderService.saveRewardConfirmOrder(param);
+        }
+
+        return new Response();
+    }
+}

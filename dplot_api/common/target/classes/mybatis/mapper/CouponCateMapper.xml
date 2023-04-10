@@ -1,0 +1,63 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.dplot.mapper.CouponCateMapper">
+
+	<!-- 쿠폰 카테고리목록 조회 -->
+	<select id="selectCouponCateList" parameterType="somap" resultType="somap">
+		SELECT	/* CouponCateMapper.xml - selectCouponCateList 쿠폰 카테고리목록 조회 */
+		      A.COMCPNIDX
+		    , A.CATEIDX
+		    , A.ISADD
+		    , B.FULLCATEGORYNAME
+		FROM T_COMCOUPON_CATE A
+		LEFT OUTER JOIN (
+		        WITH RECURSIVE CATEGORY AS (
+		            SELECT TA.IDX AS CATEIDX, TA.NAME, TA.DEPTH, TA.PARENT, TA.NAME AS PATH
+		            FROM T_CATEGORY TA
+		            WHERE DEPTH = 1
+		            UNION ALL
+		            SELECT TA.IDX AS CATEIDX, TA.NAME, TA.DEPTH, TA.PARENT, CONCAT_WS(' > ', TB.PATH, TA.NAME) AS PATH
+		            FROM T_CATEGORY TA
+		            INNER JOIN CATEGORY TB ON TA.PARENT = TB.CATEIDX
+		        )
+		        SELECT CATEIDX, NAME, DEPTH, PARENT, PATH AS FULLCATEGORYNAME
+		        FROM CATEGORY
+		    ) B ON A.CATEIDX = B.CATEIDX
+		WHERE A.COMCPNIDX = #{comcpnidx}
+	</select>
+	
+	<!-- 쿠폰 카테고리 저장 -->
+	<insert id="insertCouponCate" parameterType="somap">
+		/* CouponCateMapper.xml - insertCouponCate 쿠폰 카테고리 저장 */
+		INSERT INTO T_COMCOUPON_CATE (
+			  COMCPNIDX /* 공통쿠폰IDX */
+			, CATEIDX  	/* 카테고리IDX */
+			, ISADD		/* 추가여부 */
+			, REGUSERID /* 등록자ID */
+			, REGDATE  	/* 등록일시 */
+		) VALUES
+		<foreach collection="cpncatelist" item="data" open="" separator="," close="">
+	    (	  #{comcpnidx}
+	    	, #{data.cateidx}
+	    	, #{data.isadd}
+			, #{authuserid}
+	    	, NOW()
+	    )
+	    </foreach>
+	</insert>
+	
+	<!-- 쿠폰 카테고리 삭제 -->
+	<delete id="deleteCouponCate" parameterType="somap">
+		/* CouponCateMapper.xml - deleteCouponCate 쿠폰 카테고리 삭제 */
+		DELETE FROM T_COMCOUPON_CATE
+		WHERE COMCPNIDX = #{comcpnidx}
+	</delete>
+
+	<select id="selectCouponCateERPData" parameterType="somap" resultType="somap">
+		SELECT
+			COMCPNIDX, CATEIDX, ISADD
+		FROM T_COMCOUPON_CATE
+		WHERE COMCPNIDX = #{comcpnidx}
+	</select>
+</mapper>

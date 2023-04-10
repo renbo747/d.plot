@@ -1,0 +1,99 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.dplot.mapper.ComOrderGoodsGiftMapper">
+	<select id="selectComOrderGoodsGiftList" parameterType="somap" resultType="somap">
+		SELECT /*ComOrderGoodsGiftMapper.xml - selectComOrderGoodsGiftList:: 주문 사은품 목록*/
+		       b.PROMONAME       -- 프로모션명
+		     , b.GIFTTERMTYPE    -- 사은품 지급조건
+		     , c.GIFTNAME        -- 사은품명
+		     , c.GIFTCODE        -- 사은품코드
+		     , a.ORDGIFTIDX    -- 주문사은품idx
+		     , a.ORDERIDX      -- 주문idx
+		     , a.GIFTIDX       -- 사은품idx
+		     , a.GIFTPROMOIDX  -- 사은품프로모션idx
+		     , a.RCVAMT        -- 수량
+		     , FN_GET_FILE_URL(a.giftidx, 'FLT001', #{imgtype}) AS fullpath -- 이미지경로
+		FROM t_comorder_goods_gift a
+		INNER JOIN t_promotion b 
+		ON a.GIFTPROMOIDX = b.PROMOIDX
+		INNER JOIN t_gift c 
+		ON a.GIFTIDX = c.GIFTIDX
+		WHERE orderidx = #{orderidx}
+	</select>
+	
+	<insert id="insertComOrderGoodsGift" parameterType="somap" useGeneratedKeys="true" keyProperty="ordgiftidx">
+		INSERT   /* ComOrderGoodsGiftMapper - insertComOrderGoodsGift 주문 사은품 저장*/
+			INTO t_comorder_goods_gift (
+			  orderidx
+			, giftidx
+			, giftpromoidx
+			, rcvamt
+			, istrash
+			, reguserid
+			, regdate
+
+		) VALUES (
+			  #{orderidx}
+			, #{giftidx}
+			, #{giftpromoidx}
+			, #{rcvamt}
+			, 'F'
+			, #{userid}
+			, sysdate()
+		)
+	</insert>
+	
+	<select id="selectOrderClaimGoodsGiftList" parameterType="somap" resultType="somap">
+		SELECT /*ComOrderGoodsGiftMapper.xml - selectOrderClaimGoodsGiftList:: 주문/클레임 사은품 목록*/
+			  a.GIFTIDX  		/* 사은품IDX */
+			, a.GIFTPROMOIDX  	/* 사은품프로모션IDX */
+			, a.RCVAMT  		/* 수량 */
+			, b.GIFTCODE 		/* 사은품코드 */
+			, b.GIFTNAME 		/* 사은품명 */
+			, FN_GET_FILE_URL(a.GIFTIDX , 'FLT001', 'IGT013') AS fullpath	/* 사은품이미지 */
+			, c.PROMONAME 		/* 프로모션명 */
+			, a.TYPENAME		/* 구분명 */
+			, date_format(a.regdate, '%Y-%m-%d') AS regdate /* 일자 */
+		FROM (
+				SELECT
+					  ogg.ORDERIDX		/* 주문IDX */
+					, ogg.GIFTIDX  		/* 사은품IDX */
+					, ogg.GIFTPROMOIDX  /* 사은품프로모션IDX */
+					, ogg.RCVAMT  		/* 수량 */
+					, '주문' AS typename	/* 구분명(주문, 반품, 취소, 교환) */
+					, ogg.regdate		/* 등록일시 */
+				FROM t_comorder_goods_gift ogg
+				WHERE ogg.ISTRASH = 'F'
+				UNION ALL 
+				SELECT
+					  c.ORDERIDX		/* 주문IDX */
+					, cgg.GIFTIDX  		/* 사은품IDX */
+					, cgg.GIFTPROMOIDX  /* 사은품프로모션IDX */
+					, cgg.RCVAMT  		/* 수량 */
+					, FN_GET_CODENAME(NULL, 'CLMTYPE', c.CLMTYPE) AS typename	/* 구분명(주문, 반품, 취소, 교환) */
+					, cgg.regdate		/* 등록일시 */
+				FROM t_claim_goods_gift cgg
+				INNER JOIN t_claim c
+					ON cgg.CLMIDX = c.CLMIDX
+				WHERE cgg.ISTRASH = 'F'
+		) a
+		INNER JOIN t_gift b 
+			ON a.GIFTIDX = b.giftidx
+		INNER JOIN t_promotion c
+			ON a.GIFTPROMOIDX = c.PROMOIDX
+		WHERE a.ORDERIDX = #{orderidx}
+	</select>
+
+	<select id="selectOrderGiftERPData" parameterType="somap" resultType="somap">
+		SELECT
+			ORDGIFTIDX,
+			ORDERIDX,
+			GIFTIDX,
+			GIFTPROMOIDX,
+			RCVAMT
+		FROM T_COMORDER_GOODS_GIFT
+		WHERE ORDERIDX = #{orgno}
+	    AND ISTRASH = 'F'
+	</select>
+</mapper>

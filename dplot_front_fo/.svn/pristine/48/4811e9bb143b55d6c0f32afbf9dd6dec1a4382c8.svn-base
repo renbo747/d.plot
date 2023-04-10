@@ -1,0 +1,210 @@
+/*
+ * 폰트 선언
+ * google font 에서 가져올 수 있는 것은 import 선언
+ * 가져올 수 없는 폰트는 fonts 폴더에 woff, woff2 로 관리한다.
+**/
+
+@import url('https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@100;300;400;500;700;900&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Vollkorn:wght@400;500;600&display=swap');
+/*@import url('https://fonts.cdnfonts.com/css/mont');
+net::ERR_BLOCKED_BY_RESPONSE.NotSameOrigin 503 이슈로 인하여 해당 font를 강제로 아래에 넣음 ('Mont', James, 2022-10-20)
+*/
+
+@font-face {
+    font-family: 'Mont';
+    font-style: normal;
+    font-weight: 300;
+    src: local('Mont'), url('https://fonts.cdnfonts.com/s/16467/Mont-ExtraLightDEMO.woff') format('woff');
+}
+@font-face {
+    font-family: 'Mont';
+    font-style: normal;
+    font-weight: 900;
+    src: local('Mont'), url('https://fonts.cdnfonts.com/s/16467/Mont-HeavyDEMO.woff') format('woff');
+}
+
+@font-face {
+  font-family: 'AttenNew';
+  font-weight: 300;
+  src: url(../fonts/AttenNew-Book.woff) format('woff'),
+  url(../fonts/AttenNew-Book.woff2) format('woff2');
+}
+
+@font-face {
+  font-family: 'AttenNew';
+  font-weight: 400;
+  src: url(../fonts/AttenNew-Regular.woff) format('woff'),
+  url(../fonts/AttenNew-Regular.woff2) format('woff2');
+}
+
+@font-face {
+  font-family: 'AttenNew';
+  font-weight: 500;
+  src: url(../fonts/AttenNew-Medium.woff) format('woff'),
+  url(../fonts/AttenNew-Medium.woff2) format('woff2');
+}
+
+@font-face {
+  font-family: 'AttenNew';
+  font-weight: 600;
+  src: url(../fonts/AttenNew-Bold.woff) format('woff'),
+  url(../fonts/AttenNew-Bold.woff2) format('woff2');
+}
+
+@font-face {
+  font-family: 'AttenNew';
+  font-weight: 700;
+  src: url(../fonts/AttenNew-ExtraBold.woff) format('woff'),
+  url(../fonts/AttenNew-ExtraBold.woff2) format('woff2');
+}
+
+@font-face {
+  font-family: 'AppleSDGothicNeo';
+  font-weight: 100;
+  src: url(../fonts/AppleSDGothicNeoUL.woff) format('woff'),
+  url(../fonts/AppleSDGothicNeoUL.woff2) format('woff2');
+}
+@font-face {
+  font-family: 'AppleSDGothicNeo';
+  font-weight: 200;
+  src: url(../fonts/AppleSDGothicNeoL.woff) format('woff'),
+  url(../fonts/AppleSDGothicNeoL.woff2) format('woff2');
+}
+@font-face {
+  font-family: 'AppleSDGothicNeo';
+  font-weight: 300;
+  src: url(../fonts/AppleSDGothicNeoT.woff) format('woff'),
+  url(../fonts/AppleSDGothicNeoT.woff2) format('woff2');
+}
+@font-face {
+  font-family: 'AppleSDGothicNeo';
+  font-weight: 400;
+  src: url(../fonts/AppleSDGothicNeoR.woff) format('woff'),
+  url(../fonts/AppleSDGothicNeoR.woff2) format('woff2');
+}
+@font-face {
+  font-family: 'AppleSDGothicNeo';
+  font-weight: 500;
+  src: url(../fonts/AppleSDGothicNeoM.woff) format('woff'),
+  url(../fonts/AppleSDGothicNeoM.woff2) format('woff2');
+}
+@font-face {
+  font-family: 'AppleSDGothicNeo';
+  font-weight: 600;
+  src: url(../fonts/AppleSDGothicNeoSB.woff) format('woff'),
+  url(../fonts/AppleSDGothicNeoSB.woff2) format('woff2');
+}
+@font-face {
+  font-family: 'AppleSDGothicNeo';
+  font-weight: 700;
+  src: url(../fonts/AppleSDGothicNeoB.woff) format('woff'),
+  url(../fonts/AppleSDGothicNeoB.woff2) format('woff2');
+}
+@font-face {
+  font-family: 'AppleSDGothicNeo';
+  font-weight: 900;
+  src: url(../fonts/AppleSDGothicNeoEB.woff) format('woff'),
+  url(../fonts/AppleSDGothicNeoEB.woff2) format('woff2');
+}
+/* 특정 폰트 사용을 위한 utility class 선언 */
+.vollkorn {
+  font-family: 'Vollkorn', sans-serif;
+  font-size: 16px;
+  letter-spacing: -.48px;
+}
+
+.atten-new {
+  font-family: 'AttenNew', sans-serif;
+  &.dp-visual-copy {
+    font-size: 40px;
+    letter-spacing: -2px;
+    line-height: 42px;
+    font-weight: 700;
+  }
+  &.dp-shop-title {
+    font-size: 36px;
+    letter-spacing: -1.08px;
+    line-height: 40px;
+    font-weight: 700;
+  }
+  &.dp-title {
+    font-size: 18px;
+    letter-spacing: -.54px;
+    line-height: 24px;
+    font-weight: 600;
+  }
+  &.dp-price01 {
+    font-size: 16px;
+    letter-spacing: -.48px;
+    line-height: 22px;
+    font-weight: 500;
+  }
+  &.dp-price02 {
+    font-size: 14px;
+    letter-spacing: -.42px;
+    line-height: 20px;
+    font-weight: 500;
+  }
+  &.dp-caption {
+    font-size: 18px;
+    letter-spacing: -.36px;
+    line-height: 20px;
+    font-weight: 600;
+  }
+}
+
+/* font-weight 100 ~ 900 Class 선언 */
+@for $i from 1 to 10 {
+  .font-weight-#{$i}00 {
+    font-weight: $i * 100 !important;
+  }
+}
+
+.dp-visual-copy {
+  font-size: 32px;
+  letter-spacing: -1.6px;
+  line-height: 42px;
+  font-weight: 700;
+}
+
+.dp-shop-title {
+  font-size: 28px;
+  letter-spacing: -1.12px;
+  line-height: 38px;
+  font-weight: 900;
+}
+
+.dp-title01 {
+  font-size: 22px;
+  letter-spacing: -.8px;
+  line-height: 30px;
+  font-weight: 700;
+}
+
+.dp-title02 {
+  font-size: 18px;
+  letter-spacing: -.72px;
+  line-height: 26px;
+  font-weight: 700;
+}
+
+.dp-p {
+  font-size: 16px;
+  letter-spacing: -.64px;
+  line-height: 24px;
+  font-weight: 400;
+}
+
+.dp-p-sm {
+  font-size: 14px;
+  letter-spacing: -.56px;
+  line-height: 20px;
+  font-weight: 400;
+}
+
+.dp-caption {
+  font-size: 12px;
+  letter-spacing: -.6px;
+  line-height: 18px;
+  font-weight: 400;
+}

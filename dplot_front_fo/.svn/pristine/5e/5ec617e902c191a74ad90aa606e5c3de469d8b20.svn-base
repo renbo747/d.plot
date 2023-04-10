@@ -1,0 +1,350 @@
+.my-review {
+  position: relative;
+  .review-point__guide__area {
+    display: flex;
+    justify-content: flex-end;
+    margin-top: 10px;
+    margin-right: 10px;
+    .review-point__guide__title {
+      font-size: 14px;
+      letter-spacing: -.56px;
+      line-height: 20px;
+      margin-left: 4px;
+      color: $gray-700;
+    }
+  }
+
+  // vue bootstrap 탭 관련 css
+  .nav {
+    align-items: center;
+  }
+
+  .nav-tabs {
+    border-bottom: 0;
+  }
+
+  .nav-item {
+    width: 50%;
+    height: 50px;
+  }
+
+  .nav-link {
+    width: 100%;
+    height: 100%;
+    padding: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: $gray-700;
+    border-bottom: solid 2px $gray-400;
+
+    &.active {
+      color: $black;
+      border: 0;
+      border-bottom: solid 2px $black;
+      font-weight: 700;
+    }
+  }
+
+  // 탭 안에 컨텐츠
+  .review__items {
+    min-height: calc(100vh - 160px);
+    padding: 30px 20px 60px;
+
+    .last {
+      hr {display: none}
+    }
+  }
+
+  .item-content + .item-content {
+    border-top: 1px solid $gray-400;
+    padding-top: 20px;
+  }
+
+  .review-item {
+    display: flex;
+    &.complete-review {
+      border-bottom: 1px solid $gray-400;
+      padding-bottom: 20px;
+    }
+  }
+
+  .product-thumbnail {
+    margin-right: 16px;
+  }
+
+  .thumbnail__img {
+    width: 100px;
+    background:#f9f9f9;
+  }
+
+  .item-text {
+    width: calc(100% - 116px);
+    color: $gray-700;
+    font-size: 12px;
+    letter-spacing: -.48px;
+    line-height: 17px;
+    p {
+      @include text-truncate;
+    }
+    p + p {
+      margin-top: 4px;
+    }
+    .dp-bar {
+      margin-right: 6px;
+      margin-left: 6px;
+    }
+  }
+
+  // 작성 가능한 리뷰가 없거나 작성한 리뷰가 없을 때
+  .review__no-items {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    height: calc(100vh - 160px);
+    padding: 30px 20px 0;
+  }
+  .review__icon {
+    width: 94px;
+    height: 94px;
+    margin-bottom: 30px;
+    border-radius: 50%;
+    background-color: $gray-100;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+  .review-list-icon {
+    width: 64px;
+    height: 64px;
+    background: url("~@/assets/common/icon/icon-review-list-black-64px.svg") no-repeat 0;
+  }
+  .no-review__text {
+    color: $gray-700;
+    font-size: 14px;
+    letter-spacing: -.56px;
+    line-height: 20px;
+  }
+
+  // 작성 완료탭 안에 리뷰 관련 css
+  .review-info {
+    .review-header {
+      .dp-caption {
+        letter-spacing: -0.48px;
+        line-height: 17px;
+        margin-bottom: 6px;
+      }
+      .dp-ml-10 {
+        margin-left: 10px;
+      }
+      .review-edit {
+        display: flex;
+        align-items: center;
+        font-size: 12px;
+        letter-spacing: -.48px;
+        color: $gray-800;
+      }
+      .dp-bar {
+        margin-left: 10px;
+        margin-right: 10px;
+      }
+      .badge-icon {
+        background: url("~@/assets/common/icon/icon-badge-red-20px.svg")
+        no-repeat;
+      }
+      .grade {
+        margin-top: 6px;
+        margin-bottom: 12px;
+      }
+      .star-icon {
+        width: 18px;
+        height: 18px;
+        margin-right: 2px;
+        margin-left: 6px;
+        background: url("~@/assets/common/icon/icon-star-black-18px.svg")
+        no-repeat;
+        background-size: 18px !important;
+      }
+      .atten-new {
+        line-height: 17px;
+      }
+    }
+    .review-body {
+      display: flex;
+      .review-content {
+        font-size: 14px;
+        letter-spacing: -0.56px;
+        // line-height: 22px;
+        // overflow: hidden;
+        // text-overflow: ellipsis;
+        // display: -webkit-box;
+        display: block;
+        // -webkit-line-clamp: 3; /* 라인수 */
+        // -webkit-box-orient: vertical;
+        word-wrap:break-word;
+      }
+    }
+    .review-footer {
+      .image-list {
+        .swiper-container {
+          padding: 0 20px;
+        }
+        .swiper-slide {
+          width: 100px;
+        }
+      }
+      .img__item {
+        width: 100px;
+        height: 100px;
+
+        figure {
+          margin-bottom: 0;
+        }
+
+        img {
+          width: 100%;
+        }
+      }
+    }
+  }
+
+  // 나의리뷰 안 공통 css
+  hr {
+    margin-top: 30px;
+    margin-bottom: 30px;
+  }
+
+  .review-info {
+    padding-top: 20px;
+  }
+
+  .dp-btn {
+    width: auto;
+    height: 32px;
+    padding: 6px 25px;
+    color: $gray-800;
+    font-size: 14px;
+    letter-spacing: -.56px;
+    line-height: 20px;
+    margin-left: auto;
+    margin-bottom: 20px;
+  }
+
+  .text-left {
+    display: flex;
+    align-items: center;
+  }
+
+  // 이미지 모달
+  .img-modal {
+    position: fixed;
+    top: 0;
+    left: 0;
+    z-index: 4000;
+    width: 100%;
+    height: 100%;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    background-color: rgba(0,0,0,.5);
+
+    .swiper-container {
+      width: 100%;
+      height: 100%;
+    }
+
+    .image-content {
+      position: relative;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      width: 320px;
+      height: 320px;
+      background: #000000;
+    }
+
+    figure {
+      width: 100%;
+      height: 100%;
+      margin-bottom: 0;
+      img {
+        width: 100%;
+      }
+    }
+
+    .video-area {
+      position: relative;
+      width: 100%;
+      padding-bottom: 56.25%;
+      iframe {
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+      }
+    }
+
+    .dp-icon {
+      position: absolute;
+      top: -20px;
+      right: 0;
+      transform: translateY(-100%);
+      background: url("~@/assets/common/icon/icon-close-circle-white-32px.svg") no-repeat 0;
+    }
+
+    .swiper-button-next,
+    .swiper-button-prev {
+      top: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      width: 56px;
+      height: 56px;
+      background-color: rgba(0, 0, 0, .2);
+      background-image: none;
+    }
+
+    .swiper-button-next {
+      right: -20px !important;
+    }
+    .swiper-button-prev {
+      left: -20px !important;
+    }
+
+  }
+}
+// 리뷰 적립금 모달
+.review-point-modal {
+  section + section {
+    padding-top: 20px;
+  }
+
+  .review-point__guide__header {
+    padding-bottom: 10px;
+
+    p {
+      font-size: 16px;
+      letter-spacing: -.64px;
+      font-weight: 500;
+    }
+  }
+
+  .review-point__guide__body {
+
+    li {
+      width: 100%;
+      font-size: 14px;
+      letter-spacing: -.56px;
+      line-height: 22px;
+      word-break: normal;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+      overflow: hidden;
+
+    }
+  }
+}
+
+

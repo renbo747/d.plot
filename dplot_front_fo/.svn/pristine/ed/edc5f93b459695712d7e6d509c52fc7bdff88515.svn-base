@@ -1,0 +1,55 @@
+.service-as {
+  .as-header {
+    margin-bottom: 60px;
+  }
+
+  .as-title {
+    font-size: 42px;
+    line-height: 40px;
+    letter-spacing: -1.26px;
+    font-weight: 700;
+    margin-bottom: 0;
+  }
+
+  .as-body {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+  }
+
+  .as-contents {
+    max-width: 574px;
+  }
+
+  .as-sub-title {
+    font-size: 20px;
+    letter-spacing: -1px;
+    font-weight: 700;
+    margin-bottom: 24px;
+  }
+
+  .as-text {
+    font-size: 18px;
+    letter-spacing: -.72px;
+    line-height: 28px;
+    color: $gray-700;
+    margin-bottom: 40px;
+    span {
+      font-size: 16px;
+    }
+  }
+
+  .dp-btn {
+    max-width: 360px;
+    font-size: 16px;
+    letter-spacing: -.64px;
+  }
+
+  .as-figure {
+    width: 620px;
+    margin-bottom: 0;
+    img {
+      width: 100%;
+    }
+  }
+}

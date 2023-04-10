@@ -1,0 +1,46 @@
+.dp-inquiry {
+  width: 100%;
+
+  .header-title {
+    color: $black;
+    font-size: 26px;
+    letter-spacing: -1.04px;
+    line-height: 28px;
+    font-weight: 700;
+    padding-bottom: 30px;
+  }
+  .inquiry-top {
+    width: 100%;
+    justify-content: space-between;
+  }
+  .inquiry__ul {
+    padding-bottom: 30px;
+  }
+
+  .inquiry__label {
+    margin-bottom: 0;
+  }
+
+  .inquiry__badge {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    padding: 0 16px;
+    height: 40px;
+    border: 1px solid $gray-400;
+    border-radius: 20px;
+    color: $gray-700;
+  }
+
+  input:checked + .inquiry__badge {
+    border: 1px solid $black;
+    color: $black;
+  }
+
+  .question-btn {
+    width: 320px;
+    height: 48px;
+    font-size: 16px;
+    color: $black;
+  }
+}

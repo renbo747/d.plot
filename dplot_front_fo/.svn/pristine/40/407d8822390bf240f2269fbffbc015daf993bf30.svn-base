@@ -1,0 +1,19 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="28" height="28" viewBox="0 0 28 28">
+    <g data-name="그룹 21765">
+        <path data-name="사각형 6330" style="fill:none" d="M0 0h28v28H0z"/>
+        <g data-name="그룹 21770">
+            <g data-name="사각형 6831" transform="translate(5.44 6.81)" style="fill:#111;stroke:#111;stroke-miterlimit:10">
+                <rect width="17.032" height="1.207" rx=".5" style="stroke:none"/>
+                <path style="fill:none" d="M.5.5h16.032v.207H.5z"/>
+            </g>
+            <g data-name="사각형 6832" transform="translate(5.44 13.579)" style="fill:#111;stroke:#111;stroke-miterlimit:10">
+                <rect width="17.032" height="1.207" rx=".5" style="stroke:none"/>
+                <path style="fill:none" d="M.5.5h16.032v.207H.5z"/>
+            </g>
+            <g data-name="사각형 6833" transform="translate(5.44 20.347)" style="fill:#111;stroke:#111;stroke-miterlimit:10">
+                <rect width="17.032" height="1.207" rx=".5" style="stroke:none"/>
+                <path style="fill:none" d="M.5.5h16.032v.207H.5z"/>
+            </g>
+        </g>
+    </g>
+</svg>

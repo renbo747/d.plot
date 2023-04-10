@@ -1,0 +1,688 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.dplot.mapper.NewGoodsMapper">
+
+	<!-- Front 메인전시 신상품목록조회 -->
+	<select id="selectFrontNewGoodsList" parameterType="somap" resultType="somap">
+		SELECT /* NewGoodsMapper.xml - selectFrontNewGoodsList  Front 메인전시 신상품목록조회 */
+		        tn.newgoodsidx   -- 신상품번호
+		      , tn.goodsno       -- 상품번호
+		      , tg.goodsname     -- 상품명
+		      , tg.marketprice   -- 시중가
+		      , fn_get_goods_price(tg.siteid, tg.goodsno) as dicount -- 할인가
+			  , (1 - (fn_get_goods_price(tg.siteid, tg.goodsno)/tg.marketprice)) *100 AS discountrate -- 할인율
+		      , tgc.cateidx          -- 카테고리 번호 
+		      , IF((SELECT count(*)FROM t_wish tw WHERE userno = #{authmemberno} AND goodsno = tg.goodsno AND istrash = 'F') > 0 , 'T','F') AS iswished  -- 찜여부
+		      , tdt.delivtype        -- 배송방법(DLT001:택배배송,DLT002:직배송,DLT003:우편배송)
+			  , tdt.delivschtype     -- 배송일정(DSC001:당일배송, DSC002:익일배송, DSC003:주문제작, DSC004:(가구)설치/화물배송)
+			  , tdt.delivfaretype    -- 배송비종류(DCT001:무료,DCT002:유료,DCT003:조건부무료,DCT004:착불)
+		      , tf.IMGPATH       -- 이미지
+		FROM t_newgoods tn
+		INNER JOIN t_goods tg ON tn.goodsno  = tg.goodsno
+			AND tg.siteid = #{siteid}
+			-- AND tg.isdisplay = 'T'
+			AND tg.goodsapprtype = 'GAT004' -- 승인완료
+			AND tg.goodsselltype IN ('GST002', 'GST004', 'GST005') 
+		LEFT OUTER JOIN t_deliv_template tdt ON tg.delividx  = tdt.idx
+			AND tdt.ISTRASH = 'F'
+		LEFT OUTER JOIN t_goods_category tgc ON tg.goodsno = tgc.goodsno
+			AND tgc.ISREPRE = 'T'
+		LEFT OUTER JOIN t_file tf ON tn.goodsno = tf.orgidx
+			AND tf.imgtype = 'IGT006'
+			AND tf.filetype = 'FLT001'
+			AND tf.istrash = 'F'
+		<where>
+		AND tn.siteid = #{siteid}
+		AND tn.istrash = 'F'
+		</where>
+		ORDER BY tn.sort ASC
+	</select>
+	
+	
+	<!-- ADMIN 쿼리 시작 -->
+	
+	<!-- 신상품 목록 조회 -->
+	<select id="selectNewGoodsList" parameterType="somap" resultType="somap">
+		SELECT 	/* NewGoodsMapper.xml - selectNewGoodsList 신상품 목록 조회 */
+			a.* 
+			, FORMAT(@ROWNUM := @ROWNUM+1,0) AS no
+		FROM (
+		SELECT 
+			newgoodsidx
+			, newgoodsidx as idx
+			, tn.sort as sortnum
+			<![CDATA[
+			, CASE WHEN tn.sort < 5 THEN 'T' ELSE 'F' END AS ismaindisp
+			]]>
+			, tb.name as brandname
+			, tn.istrash
+			, tg.goodscode
+			, tg.goodsname
+			, CONCAT(tf.host, tf.imgpath, tf.imgfname) AS fullpath
+			, d.fullcategoryname
+			, tcm.mdname
+			,CASE WHEN (LENGTH(tg.muappchtype) - LENGTH(REPLACE(tg.muappchtype, ',','')) + 1 - (SELECT count(*) FROM t_common_code WHERE cmclass= 'MUAPPCHTYPE' AND istrash = 'F')) = 0 then '전체' 
+			ELSE (SELECT group_concat(codename SEPARATOR ', ') FROM t_common_code WHERE ifnull(tg.muappchtype,'') like concat('%',cmcode,'%') AND cmclass = 'MUAPPCHTYPE') END AS muappchtype
+			,CASE WHEN (LENGTH(tg.mumembertype) - LENGTH(REPLACE(tg.mumembertype, ',','')) + 1 - (SELECT count(*) FROM t_common_code WHERE cmclass= 'MUMEMBERTYPE' AND istrash = 'F')) = 0 then '전체' 
+			ELSE (SELECT group_concat(codename SEPARATOR ', ') FROM t_common_code WHERE ifnull(tg.mumembertype,'') like concat('%',cmcode,'%') AND cmclass = 'MUMEMBERTYPE') END AS mumembertype
+			,CASE WHEN (LENGTH(tg.mumemlvtype) - LENGTH(REPLACE(tg.mumemlvtype, ',','')) + 1 - (SELECT count(*) FROM t_common_code WHERE cmclass= 'MUMEMLVTYPE' AND istrash = 'F')) = 0 then '전체' 
+			ELSE (SELECT group_concat(codename SEPARATOR ', ') FROM t_common_code WHERE ifnull(tg.mumemlvtype,'') like concat('%',cmcode,'%') AND cmclass = 'MUMEMLVTYPE') END AS mumemlvtype
+			, ifnull(tg.dealerno, 0) as dealerno
+			, CASE tg.ispbgoods WHEN 'T' THEN '직매입' WHEN 'F' THEN '위탁' ELSE '' END AS ispbgoodsname
+			, IFNULL(td.name, '') AS dealername
+			, c.name as regusername
+			, DATE_FORMAT(tn.regdate, '%Y-%m-%d') as regdate
+		FROM t_newgoods tn
+		LEFT JOIN t_goods tg ON tn.goodsno = tg.goodsno
+		LEFT JOIN (SELECT userid, name FROM t_user a LEFT JOIN t_admin b ON a.no = b.userno) c ON c.userid = tn.reguserid 
+		LEFT OUTER JOIN t_dealer td ON tg.dealerno = td.userno 
+		LEFT OUTER JOIN t_charge_md tcm ON tg.mdcode = tcm.mdcode 
+		LEFT OUTER JOIN t_goods_category tgc
+			ON tn.goodsno = tgc.goodsno
+			AND isrepre = 'T'
+		LEFT OUTER JOIN t_brand tb ON tg.brandidx = tb.idx AND tb.istrash = 'F' 
+		LEFT OUTER JOIN (
+			WITH category AS (
+			    SELECT idx, name, depth, parent
+				FROM t_category
+				WHERE siteid = #{siteid}
+				AND hidden = 0 
+			)
+			SELECT 
+				  t.cateidx, t.depth1idx, t.depth2idx, t.depth3idx, t.depth4idx, t.fullcategoryname
+			FROM (	SELECT 
+						  a.idx AS depth1idx, b.idx AS depth2idx, c.idx AS depth3idx, d.idx AS depth4idx
+						, concat_ws(' > ', a.name, b.name, c.name, d.name) AS fullcategoryname
+						, (CASE WHEN d.idx IS NOT NULL THEN d.idx
+							    WHEN c.idx IS NOT NULL THEN c.idx
+							    WHEN b.idx IS NOT NULL THEN b.idx
+							    ELSE a.idx
+						   END) AS cateidx
+					FROM category a
+					LEFT OUTER JOIN category b ON a.idx = b.parent
+					LEFT OUTER JOIN category c ON b.idx = c.parent
+					LEFT OUTER JOIN category d ON c.idx = d.parent
+					WHERE a.depth = 1
+				 ) t
+			) d ON tgc.cateidx = d.cateidx
+		LEFT JOIN t_file tf on tn.goodsno = tf.orgidx
+			and tf.imgtype = 'IGT003'
+			and tf.filetype = 'FLT001'
+			and tf.istrash = 'F'
+		<where>
+		AND tn.siteid = #{siteid}
+		<if test="sword != null and sword != ''">
+			<choose>
+				<when test="skey == 'dealername'">
+					AND td.name like concat('%',#{sword},'%')
+				</when>
+				<when test="skey == 'brandname'">
+					AND tb.name like concat('%',#{sword},'%')
+				</when>
+				<when test="skey == 'goodscode'">
+					AND tg.goodscode like concat('%',#{sword},'%')
+				</when>
+				<when test="skey == 'goodsname'">
+					AND tg.goodsname like concat('%',#{sword},'%')
+				</when>
+				<when test="skey == 'mdname'">
+					AND tcm.mdname like concat('%',#{sword},'%')
+				</when>
+				<when test="skey == 'regusername'">
+					AND c.name like concat('%',#{sword},'%')
+				</when>
+				<otherwise>
+					AND (
+						td.name like concat('%',#{sword},'%')
+						OR tb.name like concat('%',#{sword},'%')
+						OR tg.goodscode like concat('%',#{sword},'%')
+						OR tg.goodsname like concat('%',#{sword},'%')
+						OR tcm.mdname like concat('%',#{sword},'%')
+						OR c.name like concat('%',#{sword},'%')
+					)
+				</otherwise>
+			</choose>
+		</if>
+		<![CDATA[
+			AND tn.regdate >= date_format(concat(#{startdate}, ' ', '00:00:00') , '%Y-%m-%d %H:%i:%s')
+			AND tn.regdate < date_format(concat(#{enddate}, ' ', '23:59:59'), '%Y-%m-%d %H:%i:%s')
+		]]>
+		<if test="depth1cateidx != null and depth1cateidx != '' ">
+		AND d.depth1idx = #{depth1cateidx}
+		</if>
+		<if test="depth2cateidx != null and depth2cateidx != '' ">
+		AND d.depth2idx = #{depth2cateidx}
+		</if>
+		<if test="depth3cateidx != null and depth3cateidx != '' ">
+		AND d.depth3idx = #{depth3cateidx}
+		</if>
+		<if test="depth4cateidx != null and depth4cateidx != '' ">
+		AND d.depth4idx = #{depth4cateidx}
+		</if>
+		<if test="istrash != null and istrash != '' ">
+		AND tn.istrash = #{istrash}
+		</if>
+		<choose>
+			<when test='isdealer == "T"'>
+				AND (tg.dealerno IS NOT NULL AND tg.dealerno != 0)
+				<if test="dealerno != null and dealerno != ''">
+					AND td.userno = #{dealerno}
+				</if>
+			</when>
+			<when test='isdealer == "F"'>
+				AND (tg.dealerno IS NULL OR tg.dealerno = 0)
+			</when>			
+		</choose>
+		<if test='ismaindisp == "T"'>
+		<![CDATA[
+		AND tn.sort < 5
+		]]>
+		</if>
+		<choose>
+			<when test='isallmuappch == "T"'>
+			</when>
+			<when test="muappchtype != null and muappchtype != ''">
+				AND (
+				<foreach collection="muappchtypearr" item="muappch" index="index" separator="OR" >
+					tg.muappchtype like concat('%',#{muappch},'%')  
+				</foreach>
+				<if test='isallmuappch == "T"'>
+					OR tg.muappchtype is null
+					OR tg.muappchtype = ''
+				</if>
+				)
+			</when>
+			<when test='isallmuappch != "T"'>
+				AND ( tg.muappchtype is null
+				OR tg.muappchtype = '')
+			</when>
+		</choose>
+		<choose>
+			<when test='isallmumember == "T"'>
+			</when>
+			<when test="mumembertype != null and mumembertype != ''">
+				AND (
+				<foreach collection="mumembertypearr" item="mumember" index="index" separator="OR">
+					tg.mumembertype like concat('%',#{mumember},'%')
+				</foreach>
+				<if test='isallmumember == "T"'>
+					OR tg.mumembertype is null
+					OR tg.mumembertype = ''
+				</if>
+				)
+			</when>
+			<when test='isallmumember != "T"'>
+				AND ( tg.mumembertype is null
+				OR tg.mumembertype = '')
+			</when>
+		</choose>
+		<choose>
+			<when test='isallmumemlv == "T"'>
+			</when>
+			<when test="mumemlvtype != null and mumemlvtype != ''">
+				AND (
+				<foreach collection="mumemlvtypearr" item="mumemlv" index="index" separator="OR">
+					 tg.mumemlvtype like concat('%',#{mumemlv},'%')
+				</foreach>
+				<if test='isallmumemlv == "T"'>
+					OR tg.mumemlvtype is null
+					OR tg.mumemlvtype = ''
+				</if>
+				)
+			</when>
+			<when test='isallmumemlv != "T"'>
+				AND ( tg.mumemlvtype is null
+				OR tg.mumemlvtype = '')
+			</when>
+		</choose>
+		</where>
+		<choose>
+			<when test="psort == 'goodscode_asc'">
+				ORDER BY tg.goodscode ASC
+			</when>
+			<when test="psort == 'goodscode_desc'">
+				ORDER BY tg.goodscode DESC
+			</when>
+			<when test="psort == 'regdate_asc'">
+				ORDER BY tg.regdate ASC
+			</when>
+			<when test="psort == 'regdate_desc'">
+				ORDER BY tg.regdate DESC
+			</when>
+			<otherwise>
+				ORDER BY ismaindisp desc, (CASE ismaindisp WHEN 'T' THEN tn.sort END) ASC, (CASE ismaindisp WHEN 'F' THEN tn.regdate END) DESC
+			</otherwise>
+		</choose>
+		) a , (select @ROWNUM := 0) as b
+	</select>
+	
+	<!-- 신상품 사용여부별 수량 조회 -->
+	<select id="selectNewGoodsUseCount" parameterType="somap" resultType="somap">
+		SELECT /* NewGoodsMapper.xml - selectNewGoodsUseCount 신상품 사용여부별 수량 조회 */
+			count(*) as total_cnt,
+			IFNULL(SUM(CASE tn.istrash WHEN 'F' THEN 1 ELSE 0 END), 0) AS use_cnt,
+			IFNULL(SUM(CASE tn.istrash WHEN 'T' THEN 1 ELSE 0 END), 0) AS trash_cnt
+		FROM t_newgoods tn
+		LEFT JOIN t_goods tg ON tn.goodsno = tg.goodsno
+		LEFT JOIN (SELECT userid, name FROM t_user a LEFT JOIN t_admin b ON a.no = b.userno) c ON c.userid = tn.reguserid 
+		LEFT OUTER JOIN t_dealer td ON tg.dealerno = td.userno 
+		LEFT OUTER JOIN t_charge_md tcm ON tg.mdcode = tcm.mdcode 
+		LEFT OUTER JOIN t_goods_category tgc
+			ON tn.goodsno = tgc.goodsno
+			AND isrepre = 'T'
+		LEFT OUTER JOIN t_brand tb ON tg.brandidx = tb.idx AND tb.istrash = 'F' 
+		LEFT OUTER JOIN (
+			WITH category AS (
+			    SELECT idx, name, depth, parent
+				FROM t_category
+				WHERE siteid = #{siteid}
+				AND hidden = 0 
+			)
+			SELECT 
+				  t.cateidx, t.depth1idx, t.depth2idx, t.depth3idx, t.depth4idx, t.fullcategoryname
+			FROM (	SELECT 
+						  a.idx AS depth1idx, b.idx AS depth2idx, c.idx AS depth3idx, d.idx AS depth4idx
+						, concat_ws(' > ', a.name, b.name, c.name, d.name) AS fullcategoryname
+						, (CASE WHEN d.idx IS NOT NULL THEN d.idx
+							    WHEN c.idx IS NOT NULL THEN c.idx
+							    WHEN b.idx IS NOT NULL THEN b.idx
+							    ELSE a.idx
+						   END) AS cateidx
+					FROM category a
+					LEFT OUTER JOIN category b ON a.idx = b.parent
+					LEFT OUTER JOIN category c ON b.idx = c.parent
+					LEFT OUTER JOIN category d ON c.idx = d.parent
+					WHERE a.depth = 1
+				 ) t
+			) d ON tgc.cateidx = d.cateidx
+		LEFT JOIN t_file tf on tn.goodsno = tf.orgidx
+			and tf.imgtype = 'IGT003'
+			and tf.filetype = 'FLT001'
+			and tf.istrash = 'F'
+		<where>
+		AND tn.siteid = #{siteid}
+		<if test="sword != null and sword != ''">
+			<choose>
+				<when test="skey == 'dealername'">
+					AND td.name like concat('%',#{sword},'%')
+				</when>
+				<when test="skey == 'brandname'">
+					AND tb.name like concat('%',#{sword},'%')
+				</when>
+				<when test="skey == 'goodscode'">
+					AND tg.goodscode like concat('%',#{sword},'%')
+				</when>
+				<when test="skey == 'goodsname'">
+					AND tg.goodsname like concat('%',#{sword},'%')
+				</when>
+				<when test="skey == 'mdname'">
+					AND tcm.mdname like concat('%',#{sword},'%')
+				</when>
+				<when test="skey == 'regusername'">
+					AND c.name like concat('%',#{sword},'%')
+				</when>
+				<otherwise>
+					AND (
+						td.name like concat('%',#{sword},'%')
+						OR tb.name like concat('%',#{sword},'%')
+						OR tg.goodscode like concat('%',#{sword},'%')
+						OR tg.goodsname like concat('%',#{sword},'%')
+						OR tcm.mdname like concat('%',#{sword},'%')
+						OR c.name like concat('%',#{sword},'%')
+					)
+				</otherwise>
+			</choose>
+		</if>
+		<![CDATA[
+			AND tn.regdate >= date_format(concat(#{startdate}, ' ', '00:00:00') , '%Y-%m-%d %H:%i:%s')
+			AND tn.regdate < date_format(concat(#{enddate}, ' ', '23:59:59'), '%Y-%m-%d %H:%i:%s')
+		]]>
+		<if test="depth1cateidx != null and depth1cateidx != '' ">
+		AND d.depth1idx = #{depth1cateidx}
+		</if>
+		<if test="depth2cateidx != null and depth2cateidx != '' ">
+		AND d.depth2idx = #{depth2cateidx}
+		</if>
+		<if test="depth3cateidx != null and depth3cateidx != '' ">
+		AND d.depth3idx = #{depth3cateidx}
+		</if>
+		<if test="depth4cateidx != null and depth4cateidx != '' ">
+		AND d.depth4idx = #{depth4cateidx}
+		</if>
+		<if test="istrash != null and istrash != '' ">
+		AND tn.istrash = #{istrash}
+		</if>
+		<choose>
+			<when test='isdealer == "T"'>
+				AND (tg.dealerno IS NOT NULL AND tg.dealerno != 0)
+				<if test="dealerno != null and dealerno != ''">
+					AND td.userno = #{dealerno}
+				</if>
+			</when>
+			<when test='isdealer == "F"'>
+				AND (tg.dealerno IS NULL OR tg.dealerno = 0)
+			</when>			
+		</choose>
+		<if test='ismaindisp == "T"'>
+		<![CDATA[
+		AND tn.sort < 5
+		]]>
+		</if>
+		<choose>
+			<when test='isallmuappch == "T"'>
+			</when>
+			<when test="muappchtype != null and muappchtype != ''">
+				AND (
+				<foreach collection="muappchtypearr" item="muappch" index="index" separator="OR" >
+					tg.muappchtype like concat('%',#{muappch},'%')  
+				</foreach>
+				<if test='isallmuappch == "T"'>
+					OR tg.muappchtype is null
+					OR tg.muappchtype = ''
+				</if>
+				)
+			</when>
+			<when test='isallmuappch != "T"'>
+				AND ( tg.muappchtype is null
+				OR tg.muappchtype = '')
+			</when>
+		</choose>
+		<choose>
+			<when test='isallmumember == "T"'>
+			</when>
+			<when test="mumembertype != null and mumembertype != ''">
+				AND (
+				<foreach collection="mumembertypearr" item="mumember" index="index" separator="OR">
+					tg.mumembertype like concat('%',#{mumember},'%')
+				</foreach>
+				<if test='isallmumember == "T"'>
+					OR tg.mumembertype is null
+					OR tg.mumembertype = ''
+				</if>
+				)
+			</when>
+			<when test='isallmumember != "T"'>
+				AND ( tg.mumembertype is null
+				OR tg.mumembertype = '')
+			</when>
+		</choose>
+		<choose>
+			<when test='isallmumemlv == "T"'>
+			</when>
+			<when test="mumemlvtype != null and mumemlvtype != ''">
+				AND (
+				<foreach collection="mumemlvtypearr" item="mumemlv" index="index" separator="OR">
+					 tg.mumemlvtype like concat('%',#{mumemlv},'%')
+				</foreach>
+				<if test='isallmumemlv == "T"'>
+					OR tg.mumemlvtype is null
+					OR tg.mumemlvtype = ''
+				</if>
+				)
+			</when>
+			<when test='isallmumemlv != "T"'>
+				AND ( tg.mumemlvtype is null
+				OR tg.mumemlvtype = '')
+			</when>
+		</choose>
+		</where>
+	</select>
+	
+	<!-- 신상품 상태 수정 -->
+	<update id="updateNewGoodsUse" parameterType="somap">
+		UPDATE t_newgoods /* NewGoodsMapper.xml - updateNewGoodsUse 신상품 상태수정 */
+		SET istrash = #{istrash}
+		WHERE newgoodsidx in 
+		<foreach collection="list" item="item" open="(" separator="," close=")">
+			#{item}
+		</foreach>
+	</update>
+	
+	<!-- 신상품 추가(중복상품 제외) -->
+	<insert id="insertNewGoods" parameterType="somap">
+		INSERT INTO  /* NewGoodsMapper.xml - insertNewGoods 신상품 추가(중복상품 제외) */
+		t_newgoods(siteid, goodsno, istrash, sort, reguserid, regdate)
+		VALUES
+		<foreach collection="data" item="item" separator=",">
+		(#{siteid},#{item.goodsno},'F',(SELECT IFNULL(MAX(sort) + 1, 1) FROM t_newgoods tg),#{reguserid},now())		
+		</foreach>
+	</insert>
+	
+	<!-- 중복 신상품 조회 -->
+	<select id="selectDulpNewGoods" parameterType="somap" resultType="somap">
+		SELECT goodsno
+		FROM t_newgoods
+		WHERE goodsno in
+		<foreach collection="data" item="item" open="(" separator="," close=")">
+		#{item.goodsno}		
+		</foreach>
+	</select>
+	
+	<!-- 신상품 순서변경 -->
+	<update id="updateNewGoodsSort" parameterType="somap">
+		UPDATE t_newgoods
+        SET sort =
+            CASE newgoodsidx
+            <foreach collection="list" index="index" item="item">
+                WHEN #{item.idx} THEN #{item.sortnum}
+            </foreach>
+            END
+        WHERE 1 = 1
+        AND newgoodsidx in
+        <foreach collection="list" index="index" item="item" separator="," open="(" close=")">
+            #{item.idx}
+        </foreach>
+	</update>
+	
+	<!-- 신상품 엑셀 다운로드 목록 조회 -->
+	<select id="selectNewGoodsExcelList" parameterType="somap" resultType="HashMap">
+		SELECT 	/* NewGoodsMapper.xml - selectNewGoodsExcelList 신상품 엑셀 다운로드 목록 조회 */
+			a.* 
+			, FORMAT(@ROWNUM := @ROWNUM+1,0) AS No
+		FROM (
+		SELECT 
+			newgoodsidx
+			<![CDATA[
+			, CASE WHEN tn.sort < 5 THEN '●' ELSE '' END AS '메인노출'
+			, CASE WHEN tn.sort < 5 THEN 'T' ELSE 'F' END AS ismaindisp
+			]]>
+			, tb.name AS '브랜드명'
+			, CASE tn.istrash WHEN 'T' THEN '미사용' ELSE '사용' END AS '사용여부'
+			, tg.goodscode AS '상품코드'
+			, CASE WHEN d.fullcategoryname IS NULL THEN tg.goodsname ELSE CONCAT(' ( ',d.fullcategoryname,' ) ',tg.goodsname) END AS '상품명' 
+			, tcm.mdname AS '담당MD'
+			,CASE WHEN (LENGTH(tg.muappchtype) - LENGTH(REPLACE(tg.muappchtype, ',','')) + 1 - (SELECT count(*) FROM t_common_code WHERE cmclass= 'MUAPPCHTYPE' AND istrash = 'F')) = 0 then '전체' 
+			ELSE (SELECT group_concat(codename SEPARATOR ', ') FROM t_common_code WHERE ifnull(tg.muappchtype,'') like concat('%',cmcode,'%') AND cmclass = 'MUAPPCHTYPE') END AS '적용채널'
+			,CASE WHEN (LENGTH(tg.mumembertype) - LENGTH(REPLACE(tg.mumembertype, ',','')) + 1 - (SELECT count(*) FROM t_common_code WHERE cmclass= 'MUMEMBERTYPE' AND istrash = 'F')) = 0 then '전체' 
+			ELSE (SELECT group_concat(codename SEPARATOR ', ') FROM t_common_code WHERE ifnull(tg.mumembertype,'') like concat('%',cmcode,'%') AND cmclass = 'MUMEMBERTYPE') END AS '유형'
+			,CASE WHEN (LENGTH(tg.mumemlvtype) - LENGTH(REPLACE(tg.mumemlvtype, ',','')) + 1 - (SELECT count(*) FROM t_common_code WHERE cmclass= 'MUMEMLVTYPE' AND istrash = 'F')) = 0 then '전체' 
+			ELSE (SELECT group_concat(codename SEPARATOR ', ') FROM t_common_code WHERE ifnull(tg.mumemlvtype,'') like concat('%',cmcode,'%') AND cmclass = 'MUMEMLVTYPE') END AS '등급'
+			, CASE tg.ispbgoods WHEN 'T' THEN '직매입' WHEN 'F' THEN '위탁' ELSE '' END AS '판매구분'
+			, IFNULL(td.name, '') AS '파트너사명'
+			, c.name as '등록(지정)자'
+			, DATE_FORMAT(tn.regdate, '%Y-%m-%d') as '등록(지정)일자'
+		FROM t_newgoods tn
+		LEFT JOIN t_goods tg ON tn.goodsno = tg.goodsno
+		LEFT JOIN (SELECT userid, name FROM t_user a LEFT JOIN t_admin b ON a.no = b.userno) c ON c.userid = tn.reguserid 
+		LEFT OUTER JOIN t_dealer td ON tg.dealerno = td.userno 
+		LEFT OUTER JOIN t_charge_md tcm ON tg.mdcode = tcm.mdcode 
+		LEFT OUTER JOIN t_goods_category tgc
+			ON tn.goodsno = tgc.goodsno
+			AND isrepre = 'T'
+		LEFT OUTER JOIN t_brand tb ON tg.brandidx = tb.idx AND tb.istrash = 'F' 
+		LEFT OUTER JOIN (
+			WITH category AS (
+			    SELECT idx, name, depth, parent
+				FROM t_category
+				WHERE siteid = #{siteid}
+				AND hidden = 0 
+			)
+			SELECT 
+				  t.cateidx, t.depth1idx, t.depth2idx, t.depth3idx, t.depth4idx, t.fullcategoryname
+			FROM (	SELECT 
+						  a.idx AS depth1idx, b.idx AS depth2idx, c.idx AS depth3idx, d.idx AS depth4idx
+						, concat_ws(' > ', a.name, b.name, c.name, d.name) AS fullcategoryname
+						, (CASE WHEN d.idx IS NOT NULL THEN d.idx
+							    WHEN c.idx IS NOT NULL THEN c.idx
+							    WHEN b.idx IS NOT NULL THEN b.idx
+							    ELSE a.idx
+						   END) AS cateidx
+					FROM category a
+					LEFT OUTER JOIN category b ON a.idx = b.parent
+					LEFT OUTER JOIN category c ON b.idx = c.parent
+					LEFT OUTER JOIN category d ON c.idx = d.parent
+					WHERE a.depth = 1
+				 ) t
+			) d ON tgc.cateidx = d.cateidx
+		LEFT JOIN t_file tf on tn.goodsno = tf.orgidx
+			and tf.imgtype = 'IGT003'
+			and tf.filetype = 'FLT001'
+			and tf.istrash = 'F'
+		<where>
+		AND tn.siteid = #{siteid}
+		<if test="sword != null and sword != ''">
+			<choose>
+				<when test="skey == 'dealername'">
+					AND td.name like concat('%',#{sword},'%')
+				</when>
+				<when test="skey == 'brandname'">
+					AND tb.name like concat('%',#{sword},'%')
+				</when>
+				<when test="skey == 'goodscode'">
+					AND tg.goodscode like concat('%',#{sword},'%')
+				</when>
+				<when test="skey == 'goodsname'">
+					AND tg.goodsname like concat('%',#{sword},'%')
+				</when>
+				<when test="skey == 'mdname'">
+					AND tcm.mdname like concat('%',#{sword},'%')
+				</when>
+				<when test="skey == 'regusername'">
+					AND c.name like concat('%',#{sword},'%')
+				</when>
+				<otherwise>
+					AND (
+						td.name like concat('%',#{sword},'%')
+						OR tb.name like concat('%',#{sword},'%')
+						OR tg.goodscode like concat('%',#{sword},'%')
+						OR tg.goodsname like concat('%',#{sword},'%')
+						OR tcm.mdname like concat('%',#{sword},'%')
+						OR c.name like concat('%',#{sword},'%')
+					)
+				</otherwise>
+			</choose>
+		</if>
+		<![CDATA[
+			AND tn.regdate >= date_format(concat(#{startdate}, ' ', '00:00:00') , '%Y-%m-%d %H:%i:%s')
+			AND tn.regdate < date_format(concat(#{enddate}, ' ', '23:59:59'), '%Y-%m-%d %H:%i:%s')
+		]]>
+		<if test="depth1cateidx != null and depth1cateidx != '' ">
+		AND d.depth1idx = #{depth1cateidx}
+		</if>
+		<if test="depth2cateidx != null and depth2cateidx != '' ">
+		AND d.depth2idx = #{depth2cateidx}
+		</if>
+		<if test="depth3cateidx != null and depth3cateidx != '' ">
+		AND d.depth3idx = #{depth3cateidx}
+		</if>
+		<if test="depth4cateidx != null and depth4cateidx != '' ">
+		AND d.depth4idx = #{depth4cateidx}
+		</if>
+		<if test="istrash != null and istrash != '' ">
+		AND tn.istrash = #{istrash}
+		</if>
+		<choose>
+			<when test='isdealer == "T"'>
+				AND (tg.dealerno IS NOT NULL AND tg.dealerno != 0)
+				<if test="dealerno != null and dealerno != ''">
+					AND td.userno = #{dealerno}
+				</if>
+			</when>
+			<when test='isdealer == "F"'>
+				AND (tg.dealerno IS NULL OR tg.dealerno = 0)
+			</when>			
+		</choose>
+		<if test='ismaindisp == "T"'>
+		<![CDATA[
+		AND tn.sort < 5
+		]]>
+		</if>
+		<choose>
+			<when test='isallmuappch == "T"'>
+			</when>
+			<when test="muappchtype != null and muappchtype != ''">
+				AND (
+				<foreach collection="muappchtypearr" item="muappch" index="index" separator="OR" >
+					tg.muappchtype like concat('%',#{muappch},'%')  
+				</foreach>
+				<if test='isallmuappch == "T"'>
+					OR tg.muappchtype is null
+					OR tg.muappchtype = ''
+				</if>
+				)
+			</when>
+			<when test='isallmuappch != "T"'>
+				AND ( tg.muappchtype is null
+				OR tg.muappchtype = '')
+			</when>
+		</choose>
+		<choose>
+			<when test='isallmumember == "T"'>
+			</when>
+			<when test="mumembertype != null and mumembertype != ''">
+				AND (
+				<foreach collection="mumembertypearr" item="mumember" index="index" separator="OR">
+					tg.mumembertype like concat('%',#{mumember},'%')
+				</foreach>
+				<if test='isallmumember == "T"'>
+					OR tg.mumembertype is null
+					OR tg.mumembertype = ''
+				</if>
+				)
+			</when>
+			<when test='isallmumember != "T"'>
+				AND ( tg.mumembertype is null
+				OR tg.mumembertype = '')
+			</when>
+		</choose>
+		<choose>
+			<when test='isallmumemlv == "T"'>
+			</when>
+			<when test="mumemlvtype != null and mumemlvtype != ''">
+				AND (
+				<foreach collection="mumemlvtypearr" item="mumemlv" index="index" separator="OR">
+					 tg.mumemlvtype like concat('%',#{mumemlv},'%')
+				</foreach>
+				<if test='isallmumemlv == "T"'>
+					OR tg.mumemlvtype is null
+					OR tg.mumemlvtype = ''
+				</if>
+				)
+			</when>
+			<when test='isallmumemlv != "T"'>
+				AND ( tg.mumemlvtype is null
+				OR tg.mumemlvtype = '')
+			</when>
+		</choose>
+		</where>
+		<choose>
+			<when test="psort == 'goodscode_asc'">
+				ORDER BY tg.goodscode ASC
+			</when>
+			<when test="psort == 'goodscode_desc'">
+				ORDER BY tg.goodscode DESC
+			</when>
+			<when test="psort == 'regdate_asc'">
+				ORDER BY tg.regdate ASC
+			</when>
+			<when test="psort == 'regdate_desc'">
+				ORDER BY tg.regdate DESC
+			</when>
+			<otherwise>
+				ORDER BY ismaindisp desc, (CASE ismaindisp WHEN 'T' THEN tn.sort END) ASC, (CASE ismaindisp WHEN 'F' THEN tn.regdate END) DESC
+			</otherwise>
+		</choose>
+		) a , (select @ROWNUM := 0) as b
+	</select>
+</mapper>

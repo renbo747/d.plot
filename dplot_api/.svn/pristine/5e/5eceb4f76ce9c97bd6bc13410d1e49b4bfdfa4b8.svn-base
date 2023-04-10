@@ -1,0 +1,672 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.dplot.mapper.CouponMemissueMapper">
+
+	<!-- 쿠폰회원발급사용이력 목록조회 -->
+	<select id="selectCouponMemissueList" parameterType="somap" resultType="somap">
+		/* CouponMemissueMapper.xml - selectCouponMemissueList */
+		<include refid="selectMemissueListSQL"/>
+		<if test="startpage != null and !startpage.equals('') and endpage != null and !endpage.equals('')">
+		LIMIT #{startpage}, #{endpage}
+		</if>
+	</select>
+	
+	<!-- 쿠폰회원발급사용이력 건수 조회 -->
+	<select id="selectCouponMemissueListCount" parameterType="somap" resultType="Integer">
+		/* CouponMemissueMapper.xml - selectCouponMemissueListCount */
+		SELECT COUNT(*) AS totalcnt
+		FROM (<include refid="selectMemissueListSQL"/>) a
+	</select>
+	
+	<!-- 쿠폰회원발급사용이력 조회(엑셀용) -->
+	<select id="selectMemissueListForExcel" parameterType="somap" resultType="somap">
+		/* CouponMemissueMapper.xml - selectMemissueListForExcel */
+		<include refid="selectMemissueListSQL"/>
+		<if test="startpage != null and !startpage.equals('') and endpage != null and !endpage.equals('')">
+		LIMIT #{startpage}, #{endpage}
+		</if>
+	</select>
+	
+	<sql id="selectMemissueListSQL">
+		SELECT
+		      A.USERNO
+		    , E.USERID
+		    , D.NAME AS USERNAME
+		    , FN_GET_CODENAME(NULL, 'DADAMEMBERTYPE', A.ISSUEMEMBERTYPE) AS MEMBERTYPENAME
+		    , FN_GET_CODENAME(NULL, 'MEMLVTYPE', A.ISSUEMEMLVTYPE) AS MEMLVTYPENAME
+		    , DATE_FORMAT(A.ISSUEDATE, '%Y-%m-%d %H:%i') AS ISSUEDAY
+		    , A.ORDNO
+		    , DATE_FORMAT(A.USEDATE, '%Y-%m-%d %H:%i') AS USEDAY
+		FROM T_COMCOUPON_MEMISSUE A
+		INNER JOIN T_COMCOUPON_INFO B ON A.CPNINFOIDX = B.CPNINFOIDX
+		INNER JOIN T_COMCOUPON C ON B.COMCPNIDX = C.COMCPNIDX
+		LEFT OUTER JOIN T_MEMBER D ON A.USERNO = D.USERNO
+		LEFT OUTER JOIN T_USER E   ON D.USERNO = E.NO
+		WHERE C.SITEID = #{siteid}
+		AND A.CPNINFOIDX = #{cpninfoidx}
+		AND (C.ISAUTOPAY = 'T' OR (C.ISAUTOPAY = 'F' AND A.ISDOWNLOAD = 'T'))
+		ORDER BY A.ISSUEDATE DESC, A.USEDATE DESC
+	</sql>
+	
+	<!-- 쿠폰회원발급사용이력 삭제처리(삭제여부 T) -->
+	<update id="updateCouponMemissueUse" parameterType="somap">
+		UPDATE T_COMCOUPON_MEMISSUE SET	/* CouponMemissueMapper.xml - updateCouponMemissueUse 쿠폰회원발급사용이력 삭제처리(삭제여부 T) */
+			  ISTRASH = 'T'
+		WHERE USEDATE IS NULL
+		<if test="targetlist != null and targetlist.size > 0">
+			AND CPNINFOIDX IN
+			<foreach collection="targetlist" item="item" index="index" open="(" separator="," close=")">
+				#{item.cpninfoidx}
+			</foreach>
+		</if>
+	</update>
+
+	<select id="selectCouponListForAdmin" parameterType="somap" resultType="somap">
+		SELECT 	/* CouponMemissueMapper.xml - selectCouponListForAdmin 쿠폰목록 관리자용*/
+		  USERNO
+		, (SELECT USERID FROM T_USER WHERE NO = A.USERNO) AS USERID
+		, B.COMCPNIDX
+		, B.CPNINFOIDX
+		, COMCPNNO
+		, CPNNAME
+		, FN_GET_CODENAME(#{siteid}, 'COMCPNTYPE', COMCPNTYPE) AS COMCPNTYPENAME
+		, CPNISSUETYPE
+		, FN_GET_CODENAME(#{siteid}, 'CPNISSUETYPE', CPNISSUETYPE) AS CPNISSUETYPENAME
+		, FN_GET_CODENAME_STR(MUAPPCHTYPE, 'MUAPPCHTYPE') AS MUAPPCHTYPENAME
+		, (CASE WHEN ISPERCENT = 'T' THEN CONCAT('정률(', FORMAT(DISPERCENT,0), '%)')
+				WHEN ISPERCENT = 'F' THEN CONCAT('정액(', FORMAT(DISPRICE, 0), '원)') ELSE '' END) AS DISCOUNTCONTS
+		, (CASE WHEN ISAUTOPAY = 'T' THEN '자동지급'
+				WHEN ISAUTOPAY = 'F' THEN '다운로드' ELSE '' END) AS ISAUTOPAYNAME
+		, DATE_FORMAT(STR_TO_DATE(CPNUSESTDAY, '%Y%m%d%H%i'), '%Y-%m-%d %H:%i') AS CPNUSESTDAY
+		, DATE_FORMAT(STR_TO_DATE(CPNUSEEDDAY, '%Y%m%d%H%i'), '%Y-%m-%d %H:%i') AS CPNUSEEDDAY
+		, ORDNO
+		, DATE_FORMAT(ISSUEDATE, '%Y-%m-%d %H:%i:%s') AS ISSUEDATE
+		, DATE_FORMAT(USEDATE, '%Y-%m-%d %H:%i:%s') AS USEDATE
+		FROM T_COMCOUPON_MEMISSUE A LEFT OUTER JOIN (
+			SELECT SA.COMCPNIDX, SB.CPNINFOIDX, SA.COMCPNNO, SB.CPNNAME, SA.COMCPNTYPE, CPNISSUETYPE, MUAPPCHTYPE, ISPERCENT, DISPERCENT, DISPRICE, ISAUTOPAY FROM T_COMCOUPON SA INNER JOIN T_COMCOUPON_INFO SB ON SA.COMCPNIDX = SB.COMCPNIDX
+		) B ON A.CPNINFOIDX = B.CPNINFOIDX
+		WHERE A.USERNO = #{userno}
+		AND A.ISTRASH = 'F'
+		AND (CASE WHEN ISAUTOPAY = 'F' THEN ISDOWNLOAD = 'T' ELSE 1=1 END)
+		<choose>
+			<when test="sdate == 'pay'">
+				AND ISSUEDATE BETWEEN STR_TO_DATE(CONCAT(#{startdate},'000000'), '%Y-%m-%d%H%i%s') AND STR_TO_DATE(CONCAT(#{enddate},'235959'), '%Y-%m-%d%H%i%s')
+			</when>
+			<when test="sdate == 'use'">
+				AND USEDATE BETWEEN STR_TO_DATE(CONCAT(#{startdate},'000000'), '%Y-%m-%d%H%i%s') AND STR_TO_DATE(CONCAT(#{enddate},'235959'), '%Y-%m-%d%H%i%s')
+			</when>
+		</choose>
+		<choose>
+			<when test="psort == 'issuedate_desc'">
+				ORDER BY A.ISSUEDATE DESC
+			</when>
+			<when test="psort == 'issuedate_asc'">
+				ORDER BY A.ISSUEDATE ASC
+			</when>
+			<when test="psort == 'usedate_desc'">
+				ORDER BY A.USEDATE DESC
+			</when>
+			<when test="psort == 'usedate_asc'">
+				ORDER BY A.USEDATE ASC
+			</when>
+			<otherwise>
+				ORDER BY A.ISSUEDATE DESC
+			</otherwise>
+		</choose>
+		LIMIT #{startpage}, #{endpage} -- 페이징
+	</select>
+
+	<select id="selectCouponListCountForAdmin" parameterType="somap" resultType="somap">
+		SELECT 	/* CouponMemissueMapper.xml - selectCouponListCountForAdmin 쿠폰목록갯수 관리자용*/
+			COUNT(*) AS TOTAL
+			, IFNULL(SUM(IF(A.USEDATE IS NULL, 0, 1)), 0) AS USED
+			, IFNULL(SUM(IF(A.USEDATE IS NOT NULL, 0, 1)), 0) AS PAY
+			, IFNULL(SUM(IF(A.USEDATE IS NULL AND CURRENT_TIMESTAMP BETWEEN STR_TO_DATE(CPNUSESTDAY, '%Y%m%d%H%i') AND STR_TO_DATE(CPNUSEEDDAY, '%Y%m%d%H%i'), 1, 0)), 0) AS POS
+		FROM T_COMCOUPON_MEMISSUE A LEFT OUTER JOIN (
+		SELECT SA.COMCPNIDX, SB.CPNINFOIDX, SA.COMCPNNO, SB.CPNNAME, SA.COMCPNTYPE, CPNISSUETYPE, MUAPPCHTYPE, ISPERCENT, DISPERCENT, DISPRICE, ISAUTOPAY FROM T_COMCOUPON SA INNER JOIN T_COMCOUPON_INFO SB ON SA.COMCPNIDX = SB.COMCPNIDX
+		) B ON A.CPNINFOIDX = B.CPNINFOIDX
+		WHERE A.USERNO = #{userno}
+		AND A.ISTRASH = 'F'
+		AND (CASE WHEN ISAUTOPAY = 'F' THEN ISDOWNLOAD = 'T' ELSE 1=1 END)
+		<choose>
+			<when test="sdate == 'pay'">
+				AND ISSUEDATE BETWEEN STR_TO_DATE(CONCAT(#{startdate},'000000'), '%Y-%m-%d%H%i%s') AND STR_TO_DATE(CONCAT(#{enddate},'235959'), '%Y-%m-%d%H%i%s')
+			</when>
+			<when test="sdate == 'use'">
+				AND USEDATE BETWEEN STR_TO_DATE(CONCAT(#{startdate},'000000'), '%Y-%m-%d%H%i%s') AND STR_TO_DATE(CONCAT(#{enddate},'235959'), '%Y-%m-%d%H%i%s')
+			</when>
+		</choose>
+	</select>
+	
+	<select id="selectCouponListByUser" parameterType="somap" resultType="somap">
+		SELECT /* CouponMemissueMapper - selectCouponListByUser 사용자별 쿠폰 조회*/
+	          a.cpnmisidx       -- 공통쿠폰회원IDX
+	        , b.cpninfoidx		-- 쿠폰발급정보IDX
+	        , c.comcpnidx       -- 공통쿠폰idx
+	        , c.cpnname         -- 쿠폰명
+	        , c.comcpnno        -- 쿠폰번호
+	        , c.comcpntype      -- 쿠폰종류
+	        , c.istotcate       -- 전체카테고리여부
+	        , c.goodsrangetype  -- 전체상품범위
+	        , c.isorderlimit    -- 사용가능금액적용여부
+	        , c.orlimitamt      -- 사용가능기준금액
+	        , c.ispercent       -- 정률여부
+	        , c.disprice        -- 할인액
+	        , c.dispercent      -- 할인률
+	        , c.maxdisamt       -- 최대할인금액
+	        , c.isrvmargin      -- 역마진체크여부
+	        , c.iscntlimt       -- 쿠폰수량제한여부
+	        , c.cpnlimtcnt      -- 쿠폰수량제한
+	        , c.isdupperson     -- 동일인재발급여부
+	        , c.dupcnt          -- 동일인재발급수량
+	        , c.mucpnduptype    -- 장바구니쿠폰중복사용범위
+	        , a.cpnusestday     -- 쿠폰사용시작일
+	        , a.cpnuseedday     -- 쿠폰사용종료일
+	        , a.isdownload      -- 다운로드여부
+	        , IF(date_format(DATE_ADD(NOW(),  INTERVAL +7 DAY), '%Y%m%d%H%i') <![CDATA[>=]]> b.cpnuseedday, 'T', 'F') AS isdeadline
+	        , COUNT(*) OVER() as totcnt
+	    FROM t_comcoupon_memissue a
+	    INNER JOIN t_comcoupon_info b 
+	    ON a.cpninfoidx = b.cpninfoidx
+	    INNER JOIN t_comcoupon c 
+	    ON b.comcpnidx = c.comcpnidx
+	    and c.istrash = 'F'
+	    WHERE a.userno = #{userno}
+	    AND a.usedate IS NULL
+	    AND a.ISTRASH = 'F'
+	    AND c.siteid = #{siteid}
+	    AND NOT EXISTS (
+			SELECT 1
+			FROM t_comcoupon sub1 WHERE sub1.COMCPNIDX  = c.COMCPNIDX
+			AND sub1.COMCPNTYPE = 'CCT001'    -- 상품쿠폰
+			AND SUB1.CPNISSUETYPE = 'CIT001'  -- 즉시할인
+			AND SUB1.ISAUTOPAY = 'T'          -- 자동지급
+		)
+	    AND c.muappchtype like concat('%', #{platform}, '%') -- 다중적용채널
+	    AND date_format(sysdate(), '%Y%m%d%H%i') BETWEEN a.cpnusestday AND a.cpnuseedday
+	    <if test="isdownload != null and isdownload !=''">
+	   	AND a.isdownload = #{isdownload}
+	    </if>
+	    ORDER BY b.cpnuseedday ASC
+	    <if test='isnopaging != "T"'>
+	    LIMIT #{startpage}, #{endpage}
+	    </if>
+	</select>
+	
+	<select id="selectCouponCntInfo" parameterType="somap" resultType="somap">
+	      SELECT  /*CouponMemissueMapper.xml - selectCouponCntInfo::쿠폰수 조회*/
+	              IFNULL(SUM(isdeadline),0) AS deadlinecnt
+		        , IFNULL(SUM(isdowncnt),0) AS downcnt
+		        , IFNULL(SUM(isusecnt),0) AS usecnt
+		   FROM (
+		        SELECT
+			           IF(a.isdownload = 'T' AND date_format(DATE_ADD(NOW(),  INTERVAL +7 DAY), '%Y%m%d%H%i') <![CDATA[>=]]> b.cpnuseedday, 1, 0) AS isdeadline
+			         , IF(a.isdownload = 'F', 1, 0) AS isdowncnt
+			         , IF(a.isdownload = 'T', 1, 0) AS isusecnt
+			    FROM t_comcoupon_memissue a
+			    INNER JOIN t_comcoupon_info b 
+			    ON a.cpninfoidx = b.cpninfoidx 
+			    INNER JOIN t_comcoupon c 
+			    ON b.comcpnidx = c.comcpnidx
+			    and c.istrash = 'F'
+			    WHERE a.userno = #{userno}
+			    AND a.usedate IS NULL
+			    AND c.siteid = #{siteid}
+			    AND a.istrash = 'F'
+			    AND NOT EXISTS (
+					SELECT 1
+					FROM t_comcoupon sub1 WHERE sub1.COMCPNIDX  = c.COMCPNIDX
+					AND sub1.COMCPNTYPE = 'CCT001'    -- 상품쿠폰
+					AND SUB1.CPNISSUETYPE = 'CIT001'  -- 즉시할인
+					AND SUB1.ISAUTOPAY = 'T'          -- 자동지급
+				)
+			    AND date_format(sysdate(), '%Y%m%d%H%i') BETWEEN a.cpnusestday AND a.cpnuseedday
+		   )AA
+	</select>
+	
+	<select id="selectCouponListByGoods" parameterType="somap" resultType="somap">
+		/* CouponMemissueMapper - selectCouponListByGoods 상품별 쿠폰 조회*/
+		WITH goodslist AS (
+			<foreach item="item" collection="items" separator="UNION ALL">
+			select
+				  #{item.goodsno}		as goodsno
+				, #{item.optioncode}	as optioncode
+				, #{item.isaddgoods} 	as isaddgoods
+				, #{item.ordcnt}		as ordcnt
+				, #{item.orggoodsno}	as orggoodsno
+			</foreach>
+		), coupon AS (
+		    SELECT
+		          a.cpnmisidx       -- 공통쿠폰회원IDX
+		        , b.cpninfoidx		-- 쿠폰발급정보IDX
+		        , c.comcpnidx       -- 공통쿠폰idx
+		        , c.cpnname as maincpnname
+		        , b.cpnname         -- 쿠폰명
+		        , c.comcpnno        -- 쿠폰번호
+		        , c.comcpntype      -- 쿠폰종류
+		        , c.cpnissuetype	-- 쿠폰발급종류
+		        , c.istotcate       -- 전체카테고리여부
+		        , c.goodsrangetype  -- 전체상품범위
+		        , c.isorderlimit    -- 사용가능금액적용여부
+		        , c.orlimitamt      -- 사용가능기준금액
+		        , c.ispercent       -- 정률여부
+		        , c.disprice        -- 할인액
+		        , c.dispercent      -- 할인률
+		        , c.maxdisamt		-- 최대할인금액
+		        , if(c.maxdisamt = 0, 99999999, c.maxdisamt) as maxdisamt2 -- 최대할인금액
+		        , c.isrvmargin      -- 역마진체크여부
+		        , c.iscntlimt       -- 쿠폰수량제한여부
+		        , c.cpnlimtcnt      -- 쿠폰수량제한
+		        , c.isdupperson     -- 동일인재발급여부
+		        , c.dupcnt          -- 동일인재발급수량
+		        , c.mucpnduptype    -- 장바구니쿠폰중복사용범위
+		        , c.isnowissue		-- 즉시발급여부
+		        , c.isautopay		-- 즉시지급여부
+		        , a.cpnusestday     -- 쿠폰사용시작일
+		        , a.cpnuseedday     -- 쿠폰사용종료일
+		        , a.isdownload  as isdownload1    -- 다운로드여부
+		    FROM t_comcoupon_memissue a
+		    INNER JOIN t_comcoupon_info b 
+		    ON a.cpninfoidx = b.cpninfoidx 
+		    INNER JOIN t_comcoupon c 
+		    ON b.comcpnidx = c.comcpnidx
+		    and c.istrash = 'F'
+		    WHERE c.siteid = #{siteid} 
+		    AND a.usedate IS NULL
+		    AND a.userno = #{userno}
+		    AND a.istrash = 'F'
+		    AND (c.ismemtype = 'F' OR (c.ismemtype = 'T' AND c.mumemlvtype like concat('%', #{memlvtype}, '%') AND c.mumembertype like  concat('%', #{membertype}, '%')))
+		    AND c.muappchtype like concat('%', #{platform}, '%') -- 다중적용채널
+		    AND date_format(sysdate(), '%Y%m%d%H%i') BETWEEN a.cpnusestday AND a.cpnuseedday
+		    <choose>
+		    <when test='isdownload == "T"'>
+		    AND a.isdownload = 'T'
+		    AND a.usedate IS NULL
+		    </when>
+		    <when test='isdownload == "F"'>
+		    AND c.isautopay = 'F'
+		    </when>
+		    <otherwise>
+		    </otherwise>
+		    </choose>
+		    <if test="comcpnidx != null and comcpnidx !=''">
+		   	AND c.comcpnidx = #{comcpnidx}
+		    </if>
+		), allcoupon AS ( /* 전체카테고리 쿠폰, 전체상품 쿠폰 */
+		    SELECT comcpnidx
+		    FROM coupon
+		    WHERE istotcate = 'T'
+		    AND goodsrangetype = 'GGT001'
+		), incatecoupon AS ( /* 추가카테고리 쿠폰 */
+		    SELECT a.comcpnidx, b.cateidx
+		    FROM coupon a
+		    INNER JOIN t_comcoupon_cate b 
+		    ON a.comcpnidx = b.comcpnidx
+		    AND b.isadd = 'T'
+		    WHERE a.istotcate = 'F'
+		), ingoodscoupon AS ( /* 추가상품 쿠폰 */
+		    SELECT a.comcpnidx, b.goodsno, b.optioncode
+		    FROM coupon a
+		    INNER JOIN t_comcoupon_goods b 
+		    ON a.comcpnidx = b.comcpnidx
+		    WHERE a.goodsrangetype = 'GGT002'
+		), outcatecoupon AS ( /* 제외카테고리 쿠폰 */
+		    SELECT a.comcpnidx, b.cateidx
+		    FROM coupon a
+		    INNER JOIN t_comcoupon_cate b 
+		    ON a.comcpnidx = b.comcpnidx
+		    AND b.isadd = 'F'
+		    WHERE a.istotcate = 'F'
+		), outgoodscoupon AS ( /* 제외상품 쿠폰 */
+		    SELECT a.comcpnidx, b.goodsno, b.optioncode
+		    FROM coupon a
+		    INNER JOIN t_comcoupon_goods b 
+		    ON a.comcpnidx = b.comcpnidx
+		    WHERE a.goodsrangetype = 'GGT003'
+		), goods AS (
+		    SELECT a.goodsno, b.optioncode, a.ordcnt, c.cateidx, b.price, b.originalprice, FN_GET_GOODS_SALEPROMOAMT(#{siteid}, a.goodsno, b.optioncode, #{userno}, #{platform}) as saleamt
+		    FROM goodslist a
+		    INNER JOIN t_goods_option_detail b
+		    ON a.goodsno = b.goodsno
+		    <if test='isoption != null and isoption == "T"'>
+		    AND a.optioncode = b.optioncode
+		    </if>
+		    INNER JOIN t_goods_category c
+		    ON a.goodsno = c.goodsno
+		)
+		SELECT 
+			  *
+            , if(isdirectcoupon = 'T', ordcnt, dupcouponcnt) * discountamt as maxdiscountamt
+            , if(isdirectcoupon = 'T', isdownload1, isdownload2) as isdownload
+        FROM (
+			SELECT
+				  ttt.*
+				, if(discount > saleamt, saleamt, TRUNCATE(discount, 0)) as discountamt
+				, FN_GET_OPTION_CONCAT(ttt.goodsno, ttt.optioncode, ' | ') as optionname
+				, fn_check_directcoupon(ttt.comcpnidx) as isdirectcoupon
+				, if(limitcnt > ordcnt, ordcnt, limitcnt) as dupcouponcnt
+				, case
+					when iscntlimt = 'F' and isdupperson = 'T' and dupcnt > userdowncnt then 'F'
+					when iscntlimt = 'T' and isdupperson = 'F' and cpnlimtcnt > downcnt then 'F'
+					when iscntlimt = 'T' and isdupperson = 'T' and cpnlimtcnt > downcnt and dupcnt > userdowncnt then 'F'
+					else isdownload1
+				  end isdownload2
+			FROM (
+				SELECT DISTINCT
+					  tt1.goodsno
+					, tt1.optioncode
+					, (select goodsname from t_goods where goodsno = tt1.goodsno) as goodsname
+					, tt1.ordcnt
+	                , tt1.price
+			        , tt1.saleamt
+			        , tt1.originalprice
+			        , IF(tt2.ispercent = 'F', tt2.disprice, IF(tt1.saleamt * (dispercent/100) > maxdisamt2, maxdisamt2, tt1.saleamt * (dispercent/100))) as discount
+					, tt2.*
+					, (
+	                    SELECT COUNT(*)
+	                    FROM t_comcoupon_memissue a
+	                    INNER JOIN t_comcoupon_info b 
+	                    ON a.cpninfoidx = b.cpninfoidx 
+	                    WHERE a.userno = #{userno}
+	                    AND a.isdownload = 'T'
+	                    AND a.usedate is null
+	                    AND b.comcpnidx  = tt2.comcpnidx
+	                    AND b.cpninfoidx  = tt2.cpninfoidx
+	                  ) AS limitcnt
+					, (
+				        SELECT count(*)
+				        FROM t_comcoupon_memissue a
+				        INNER JOIN t_comcoupon_info b 
+				        ON a.cpninfoidx = b.cpninfoidx 
+				        WHERE b.comcpnidx  = tt2.comcpnidx
+				        AND b.cpninfoidx  = tt2.cpninfoidx
+				        AND a.isdownload = 'T'
+				      ) as downcnt
+				    , (
+				        SELECT count(*)
+				        FROM t_comcoupon_memissue a
+				        INNER JOIN t_comcoupon_info b 
+				        ON a.cpninfoidx = b.cpninfoidx 
+				        WHERE b.comcpnidx  = tt2.comcpnidx
+				        AND b.cpninfoidx  = tt2.cpninfoidx
+				        AND a.userno = #{userno}
+				        AND a.isdownload = 'T'
+				      ) as userdowncnt
+				FROM (
+				    /* 전체 적용쿠폰 */
+	                SELECT b.goodsno, b.optioncode, b.ordcnt, b.cateidx, b.price, b.originalprice, b.saleamt, a.comcpnidx
+	                FROM allcoupon a
+	                INNER JOIN goods b 
+	                UNION ALL
+	                /* 카페고리포함 적용쿠폰 */
+	                SELECT a.goodsno, a.optioncode, a.ordcnt, a.cateidx, a.price, a.originalprice, a.saleamt, b.comcpnidx
+	                FROM goods a
+	                INNER JOIN (
+	                    WITH RECURSIVE incate AS (
+	                        SELECT comcpnidx, cateidx
+	                        FROM incatecoupon
+	                        UNION ALL
+	                        SELECT t2.comcpnidx, idx
+	                        FROM t_category t1, incate t2
+	                        WHERE t1.parent = t2.cateidx
+	                    )
+	                    SELECT comcpnidx, cateidx
+	 					FROM incate
+	                ) b
+	                ON a.cateidx = b.cateidx
+	                UNION ALL
+	                /* 카페고리제회 적용쿠폰 */
+	                SELECT a.goodsno, a.optioncode, a.ordcnt, a.cateidx, a.price, a.originalprice, a.saleamt, b.comcpnidx
+	                FROM goods a
+	                LEFT JOIN (
+	                    WITH RECURSIVE outcate AS (
+	                        SELECT comcpnidx, cateidx
+	                        FROM outcatecoupon
+	                        UNION ALL
+	                        SELECT t2.comcpnidx, idx
+	                        FROM t_category t1, outcate t2
+	                        WHERE t1.parent = t2.cateidx
+	                    )
+	                    SELECT comcpnidx, cateidx
+	 					FROM outcate
+	                ) b
+	                ON a.cateidx = b.cateidx
+	                WHERE b.cateidx IS NULL 
+	                UNION ALL
+	                /* 특정상품포함 적용쿠폰 */
+	                SELECT a.goodsno, a.optioncode, a.ordcnt, a.cateidx, a.price, a.originalprice, a.saleamt, b.comcpnidx
+	                FROM goods a
+	                INNER JOIN ingoodscoupon b
+	                ON a.goodsno = b.goodsno
+	                AND a.optioncode = b.optioncode
+	                UNION ALL
+	                /* 특정상품제외 적용쿠폰 */
+	                SELECT a.goodsno, a.optioncode, a.ordcnt, a.cateidx, a.price, a.originalprice, a.saleamt, b.comcpnidx
+	                FROM goods a
+	                INNER JOIN outgoodscoupon b
+	                ON a.goodsno = b.goodsno
+	                AND a.optioncode = b.optioncode
+	                WHERE b.goodsno IS NULL
+				) tt1
+				INNER JOIN coupon tt2
+				ON tt1.comcpnidx = tt2.comcpnidx
+			) ttt
+			WHERE ordcnt > 0 
+			AND (ifnull(isrvmargin, 'F') = 'F'	OR (isrvmargin = 'T' AND originalprice > discount)) /* 역마진제외 */
+			<!-- 다운로드 전, 쿠폰제한없음 & 동일인재발급가능(다운로드수비교), 쿠폰제한있음 & 동일인재발급불가능(전체다운로드,다운로드여부), 쿠폰제한있음 & 동일인재발급가능(다운로드수, 전체다운로드수비교) -->
+			<if test='isdownload == "F"'>
+			AND ((iscntlimt = 'F' AND isdupperson = 'F' AND isdownload1 = 'F')
+                OR (iscntlimt = 'F' AND isdupperson = 'T' AND dupcnt > userdowncnt)
+                OR (iscntlimt = 'T' AND isdupperson = 'F' AND cpnlimtcnt > downcnt)
+                OR (iscntlimt = 'T' AND isdupperson = 'T' AND cpnlimtcnt > downcnt AND dupcnt > userdowncnt)
+            )
+			</if>
+		) TTTT
+		ORDER BY goodsno, maxdiscountamt desc
+	</select>
+	
+	
+	<!-- 쿠폰 다운로드 체크항목조회  -->
+	<select id="selectCouponChkInfo" parameterType="somap" resultType="somap">
+		SELECT /* CouponMemissueMapper.xml - selectCouponChkInfo 쿠폰 다운로드 체크항목조회 */
+			A.CPNINFOIDX
+			, A.CPNUSESTDAY 
+		    , A.CPNUSEEDDAY
+			, A.ISSUEMEMBERTYPE
+			, A.ISSUEMEMLVTYPE
+		    , A.ISDOWNLOAD
+		    , A.ISSUEDATE
+		    , C.ISCNTLIMT 
+		    , C.CPNLIMTCNT 
+		    , C.ISDUPPERSON 
+		    , C.DUPCNT
+		    , (
+                SELECT COUNT(*)
+                FROM T_COMCOUPON_MEMISSUE T1
+                INNER JOIN T_COMCOUPON_INFO T2 
+                ON T1.CPNINFOIDX = T2.CPNINFOIDX 
+                WHERE T2.COMCPNIDX  = B.COMCPNIDX
+                AND T1.ISDOWNLOAD = 'T') AS DOWNCNT
+            , (
+                SELECT COUNT(*)
+                FROM T_COMCOUPON_MEMISSUE T1
+                INNER JOIN T_COMCOUPON_INFO T2 
+                ON T1.CPNINFOIDX = T2.CPNINFOIDX 
+                WHERE T2.COMCPNIDX  = B.COMCPNIDX
+                AND A.USERNO = #{userno}
+                AND T1.ISDOWNLOAD = 'T') AS USERDOWNCNT
+		FROM T_COMCOUPON_MEMISSUE A
+		INNER JOIN T_COMCOUPON_INFO B 
+		ON A.CPNINFOIDX = B.CPNINFOIDX 
+		INNER JOIN T_COMCOUPON C 
+		ON B.COMCPNIDX = C.COMCPNIDX
+		WHERE A.CPNMISIDX = #{cpnmisidx}
+	</select>
+	
+	<!-- 쿠폰 다운로드  -->
+	<update id="updateCouponDownload" parameterType="somap">
+		UPDATE /* CouponMemissueMapper.xml - updateCouponDownload 쿠폰 다운로드 */
+			T_COMCOUPON_MEMISSUE
+		SET ISDOWNLOAD = 'T'
+		WHERE CPNMISIDX = #{cpnmisidx}
+	</update>
+	
+	<!--  쿠폰 사용일시 수정 -->
+	<update id="updateCouponUsed" parameterType="somap">
+		UPDATE /* CouponMemissueMapper.xml - updateCouponUsed 쿠폰사용일시 수정  */
+			T_COMCOUPON_MEMISSUE
+		SET USEDATE = sysdate()
+			, ORDNO = #{ordno}
+		WHERE CPNMISIDX = #{cpnmisidx}
+	</update>
+	
+	<!--  쿠폰 사용일시 취소 -->
+	<update id="updateCouponUsedCancel" parameterType="somap">
+		UPDATE /* CouponMemissueMapper.xml - updateCouponUsedCancel 쿠폰사용일시 취소  */
+			T_COMCOUPON_MEMISSUE
+		SET USEDATE = NULL
+			, ORDNO = NULL
+		WHERE CPNMISIDX = #{cpnmisidx}
+	</update>
+	
+	<!-- 공통쿠폰회원발급사용이력 저장  -->
+	<insert id="insertCouponMemissue" parameterType="somap" useGeneratedKeys="true" keyProperty="cpnmisidx">
+		INSERT /* CouponMemissueMapper.xml - insertCouponMemissue 공통쿠폰회원발급사용이력 저장 */
+			INTO T_COMCOUPON_MEMISSUE (
+			  CPNINFOIDX
+			, USERNO
+			, CPNUSESTDAY
+			, CPNUSEEDDAY
+			, ISSUEMEMBERTYPE
+			, ISSUEMEMLVTYPE
+			, ISDOWNLOAD
+			, ISSUEDATE
+			, USEDATE
+			, ORDNO
+			, ISTRASH
+			, REGUSERID
+			, REGDATE
+		) VALUES (
+			  #{cpninfoidx}
+			, #{userno}
+			, #{cpnusestday}
+			, #{cpnuseedday}
+			, #{issuemembertype}
+			, #{issuememlvtype}
+			, #{isdownload}
+			, #{issuedate}
+			, #{usedate}
+			, #{ordno}
+			, 'F'
+			, #{userid}
+			, sysdate()
+		)
+	</insert>
+
+	<select id="selectLastUsedCoupon" parameterType="somap" resultType="somap">
+		SELECT
+			   IFNULL(B.CPNNAME, '') AS CPNNAME
+			 , IFNULL(DATE_FORMAT(A.USEDATE, '%Y-%m-%d %H:%i:%s'), '') AS LASTDATE
+		FROM T_COMCOUPON_MEMISSUE A LEFT OUTER JOIN (
+			SELECT SA.COMCPNIDX, SB.CPNINFOIDX, SA.COMCPNNO, SB.CPNNAME, SA.COMCPNTYPE, CPNISSUETYPE, MUAPPCHTYPE, ISPERCENT, DISPERCENT, DISPRICE, ISAUTOPAY FROM T_COMCOUPON SA INNER JOIN T_COMCOUPON_INFO SB ON SA.COMCPNIDX = SB.COMCPNIDX
+		) B ON A.CPNINFOIDX = B.CPNINFOIDX
+		WHERE A.USERNO = #{userno}
+		AND (CASE WHEN ISAUTOPAY = 'F' THEN ISDOWNLOAD = 'T' ELSE 1=1 END)
+		AND A.ISTRASH = 'F'
+		AND A.USEDATE IS NOT NULL
+		ORDER BY A.USEDATE DESC
+		LIMIT 1
+	</select>
+
+	<select id="selectLastIssuedCoupon" parameterType="somap" resultType="somap">
+		SELECT
+			   IFNULL(B.CPNNAME, '') AS CPNNAME
+			 , IFNULL(DATE_FORMAT(A.ISSUEDATE, '%Y-%m-%d %H:%i:%s'), '') AS LASTDATE
+		FROM T_COMCOUPON_MEMISSUE A LEFT OUTER JOIN (
+			SELECT SA.COMCPNIDX, SB.CPNINFOIDX, SA.COMCPNNO, SB.CPNNAME, SA.COMCPNTYPE, CPNISSUETYPE, MUAPPCHTYPE, ISPERCENT, DISPERCENT, DISPRICE, ISAUTOPAY FROM T_COMCOUPON SA INNER JOIN T_COMCOUPON_INFO SB ON SA.COMCPNIDX = SB.COMCPNIDX
+		) B ON A.CPNINFOIDX = B.CPNINFOIDX
+		WHERE A.USERNO = #{userno}
+		AND (CASE WHEN ISAUTOPAY = 'F' THEN ISDOWNLOAD = 'T' ELSE 1=1 END)
+		AND A.ISTRASH = 'F'
+		AND A.USEDATE IS NULL
+		ORDER BY A.ISSUEDATE DESC
+		LIMIT 1
+	</select>
+	
+	<select id="selectSignUpCoupon" parameterType="somap" resultType="somap">
+		SELECT /*회원가입시 지급한 쿠폰 조회*/
+		       tcm.USERNO
+		     , tcm.CPNUSESTDAY
+		     , DATE_FORMAT(tcm.CPNUSESTDAY, '%Y.%m.%d %H:%i') AS CPNUSESTDAY
+		     , date_format(STR_TO_DATE(tcm.CPNUSESTDAY, '%Y%m%d%H%i'), '%Y.%m.%d %H:%i') AS CPNUSESTDAYSTR
+		     , tcm.CPNUSEEDDAY
+		     , date_format(STR_TO_DATE(tcm.CPNUSEEDDAY, '%Y%m%d%H%i'), '%Y.%m.%d %H:%i') AS CPNUSEEDDAYSTR
+		     , tci.CPNNAME
+		FROM t_comcoupon tc
+		INNER JOIN t_comcoupon_info tci ON tc.COMCPNIDX = tci.COMCPNIDX
+		INNER JOIN t_comcoupon_memissue tcm ON tci.CPNINFOIDX = tcm.CPNINFOIDX
+		AND tcm.ISTRASH = 'F'
+		WHERE 1 = 1
+		AND tc.CPNISSUETYPE = 'CIT002'
+		AND tcm.ISDOWNLOAD = 'T'
+		AND tcm.USERNO = #{userno}
+	</select>
+	
+	<select id="selectCouponListByCpnidx" parameterType="somap" resultType="somap">
+		SELECT /* CouponMemissueMapper.xml - selectCouponListByCpnidx 공통쿠폰 회원발급사용이력 조회(By COMCPNIDX) 조회 */
+		       tc.COMCPNIDX
+		     , tc.COMCPNTYPE
+		     , tcm.CPNMISIDX
+		FROM t_comcoupon tc
+		INNER JOIN t_comcoupon_info tci ON tc.COMCPNIDX = tci.COMCPNIDX
+		INNER JOIN t_comcoupon_memissue tcm ON tci.CPNINFOIDX = tcm.CPNINFOIDX
+		WHERE tc.COMCPNIDX = #{comcpnidx}
+		AND tcm.USERNO = #{userno}
+		AND tcm.ISDOWNLOAD = 'T'
+		AND tcm.USEDATE is null
+		AND tcm.ISTRASH = 'F'
+	</select>
+	
+	
+	<!-- 쿠폰 다운로드 정보  -->
+	<select id="selectCouponInfo" parameterType="somap" resultType="somap">
+		SELECT /* CouponMemissueMapper.xml - selectCouponInfo 쿠폰 다운로드 정보 */
+			  A.CPNMISIDX
+			, A.CPNINFOIDX
+			, A.CPNUSESTDAY
+		    , A.CPNUSEEDDAY
+		    , IF(date_format(sysdate(), '%Y%m%d%H%i') >= A.CPNUSESTDAY AND date_format(sysdate(), '%Y%m%d%H%i') <![CDATA[<=]]> A.CPNUSEEDDAY , 'T','F') AS ISPERIOD
+			, A.ISSUEMEMBERTYPE
+			, A.ISSUEMEMLVTYPE
+		    , A.ISDOWNLOAD
+		    , A.ISSUEDATE
+		    , C.ISCNTLIMT 
+		    , C.CPNLIMTCNT 
+		    , C.ISDUPPERSON 
+		    , C.DUPCNT
+		    , (
+                SELECT COUNT(*)
+                FROM T_COMCOUPON_MEMISSUE T1
+                INNER JOIN T_COMCOUPON_INFO T2 
+                ON T1.CPNINFOIDX = T2.CPNINFOIDX 
+                WHERE T2.COMCPNIDX  = B.COMCPNIDX
+                AND T1.ISDOWNLOAD = 'T') AS DOWNCNT
+            , (
+                SELECT COUNT(*)
+                FROM T_COMCOUPON_MEMISSUE T1
+                INNER JOIN T_COMCOUPON_INFO T2 
+                ON T1.CPNINFOIDX = T2.CPNINFOIDX 
+                WHERE T2.COMCPNIDX  = B.COMCPNIDX
+                AND T1.USERNO = A.USERNO
+                AND T1.ISDOWNLOAD = 'T') AS USERDOWNCNT
+		FROM T_COMCOUPON_MEMISSUE A
+		INNER JOIN T_COMCOUPON_INFO B 
+		ON A.CPNINFOIDX = B.CPNINFOIDX 
+		INNER JOIN T_COMCOUPON C 
+		ON B.COMCPNIDX = C.COMCPNIDX
+		WHERE A.USERNO = #{userno}
+		AND A.CPNINFOIDX = #{cpninfoidx}
+		LIMIT 1
+	</select>
+</mapper>

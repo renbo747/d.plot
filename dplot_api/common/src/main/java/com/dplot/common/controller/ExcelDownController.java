@@ -1,0 +1,220 @@
+package com.dplot.common.controller;
+
+import org.apache.poi.hssf.usermodel.HSSFDataFormat;
+import org.apache.poi.ss.usermodel.HorizontalAlignment;
+import org.apache.poi.ss.usermodel.IndexedColors;
+import org.apache.poi.ss.usermodel.VerticalAlignment;
+import org.apache.poi.xssf.usermodel.*;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.core.io.ByteArrayResource;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.RestController;
+
+import java.io.ByteArrayOutputStream;
+import java.net.URLEncoder;
+import java.nio.charset.StandardCharsets;
+import java.util.List;
+import java.util.Map;
+
+@RestController
+public class ExcelDownController {
+	private static final Logger logger = LoggerFactory.getLogger(SampleController.class);
+	
+	XSSFWorkbook wb;
+	XSSFSheet sheet;
+	XSSFRow row;
+	XSSFCell cell;
+	XSSFCellStyle style;
+	XSSFCellStyle cellStyle;
+	// 헤더 한글이름
+	String[] excelHeader;
+	// DB상의 헤더 column명
+	String[] excelColumn;
+	// 헤더별 너비
+	int[] columnSize;
+	
+	/**
+	 * 엑셀 다운을 위한 워크북 기본 세팅
+	 */
+	public void setWorkbook(){
+		// 워크북 생성
+		wb = new XSSFWorkbook();
+		// 워크시트 생성
+		sheet = wb.createSheet();
+		// 행 생성
+		row = sheet.createRow(0);
+		// 셀 생성
+		cell = null;
+		
+		// 셀 스타일 생성(헤더)
+		style = wb.createCellStyle();
+		style.setAlignment(HorizontalAlignment.CENTER);
+    	style.setVerticalAlignment(VerticalAlignment.CENTER);
+    	style.setFillForegroundColor(IndexedColors.GREY_40_PERCENT.index);
+    	style.setFillPattern(XSSFCellStyle.SOLID_FOREGROUND);
+    	style.setBorderRight(XSSFCellStyle.BORDER_THIN);
+    	style.setBorderLeft(XSSFCellStyle.BORDER_THIN);
+    	style.setBorderTop(XSSFCellStyle.BORDER_THIN);
+    	style.setBorderBottom(XSSFCellStyle.BORDER_THIN);
+    	XSSFFont font = wb.createFont();
+    	font.setBold(true);
+    	style.setFont(font);
+    	
+    	// 셀 스타일 생성(row)
+    	cellStyle = wb.createCellStyle();
+    	cellStyle.setAlignment(HorizontalAlignment.CENTER);
+    	cellStyle.setVerticalAlignment(VerticalAlignment.CENTER);
+    	cellStyle.setBorderRight(XSSFCellStyle.BORDER_THIN);
+    	cellStyle.setBorderLeft(XSSFCellStyle.BORDER_THIN);
+    	cellStyle.setBorderTop(XSSFCellStyle.BORDER_THIN);
+    	cellStyle.setBorderBottom(XSSFCellStyle.BORDER_THIN);
+    	cellStyle.setDataFormat(HSSFDataFormat.getBuiltinFormat("#,##0"));
+	}
+	
+	/**
+	 * 헤더의 한글 이름 지정(엑셀출력 list의 컬럼 이름 한글로 설정)
+	 * @param header
+	 */
+	public void setHeaderInfo(String[] header){
+		setHeaderInfo(header, null, null);
+	}
+	
+	/**
+	 * 헤더의 한글,영어 이름 지정(엑셀출력 list의 컬럼이름 영어로 설정)
+	 * @param header
+	 * @param column
+	 */
+	public void setHeaderInfo(String[] header, String[] column){
+		setHeaderInfo(header, column, null);
+	}
+	
+	/**
+	 * 헤더의 한글,영어 이름 지정 및 엑셀 컬럼별 너비 설정(엑셀출력 list의 컬럼이름 영어로 설정)
+	 * @param header
+	 * @param column
+	 * @param columnSize
+	 */
+	public void setHeaderInfo(String[] header, String[] column, int[] columnSize){
+		excelHeader = header;
+		if(column != null){
+			excelColumn = column;
+		}
+		if(columnSize != null){
+			this.columnSize = columnSize;
+		}
+	}
+	
+	/**
+	 * 헤더 생성
+	 */
+	public void setHeader(){
+		if(excelHeader != null){
+			for(int i=0; i<excelHeader.length; i++){
+	    		cell = row.createCell(i);
+	        	cell.setCellValue(excelHeader[i]);
+	        	cell.setCellStyle(style);
+	    	}
+		}
+    }
+    
+	/**
+	 * 행 생성
+	 * @param list
+	 */
+    public void setRow(List<Map<String, Object>> list){
+    	if(excelColumn != null){
+    		for(int k=0; k<list.size(); k++){
+    			Map<String, Object> map = list.get(k);
+    			row = sheet.createRow(k+1);
+    			for(int i=0; i<excelColumn.length; i++){
+            		cell = row.createCell(i);
+            		
+            		String checkVal =  map.get(excelColumn[i]) != null ? map.get(excelColumn[i]).toString() : "";
+            		boolean isNumeric =(map.get(excelColumn[i]) != null ? map.get(excelColumn[i]).toString() : "").chars().allMatch(Character::isDigit);
+            		if(!isNumeric || checkVal.isEmpty() || checkVal == null) {
+            			/*if(!isNumeric && checkVal.charAt(0) == '-') {
+            				// 음수 -- 숫자
+                 			cell.setCellValue(Long.parseLong(checkVal)  != 0 ? Long.parseLong(checkVal)  : 0);
+            			} else {
+            				cell.setCellValue(map.get(excelColumn[i]) != null ? map.get(excelColumn[i]).toString() : "");
+            			}*/
+        				cell.setCellValue(checkVal);
+            		} else {
+            			if((checkVal.charAt(0) == '0' && checkVal.length() > 1) || checkVal.length() >= 12 || checkVal.isEmpty() || checkVal == null) {
+            				//문자
+             				cell.setCellValue(checkVal);
+                 		/*} else if(checkVal.charAt(0) == '-') {
+            				// 음수 -- 숫자
+                 			cell.setCellValue(Long.parseLong(checkVal)  != 0 ? Long.parseLong(checkVal)  : 0);*/
+            			} else {
+                 			//숫자
+                 			cell.setCellValue(Long.parseLong(checkVal)  != 0 ? Long.parseLong(checkVal)  : 0);
+                 		}
+            		}
+            		cell.setCellStyle(cellStyle);
+            	}
+    		}
+    	}else if(excelHeader != null){
+    		for(int k=0; k<list.size(); k++){
+    			Map<String, Object> map = list.get(k);
+    			row = sheet.createRow(k+1);
+    			for(int i=0; i<excelHeader.length; i++){
+            		cell = row.createCell(i);
+            		cell.setCellValue(map.get(excelHeader[i]) != null ? map.get(excelHeader[i]).toString() : "");
+            		cell.setCellStyle(cellStyle);
+            	}
+    		}
+    	}
+    }
+    
+    /**
+     * fileName으로 브라우저에 다운로드 생성
+     * @param fileName
+     * @return
+     */
+    public ResponseEntity<ByteArrayResource> outExcelFile(String fileName){
+    	if(excelHeader != null && columnSize != null){
+    		int min = Math.min(excelHeader.length, columnSize.length);
+    		for(int i=0; i<min; i++){
+    			sheet.setColumnWidth(i, columnSize[i]);
+    		}
+    	}
+    	
+    	try {
+			ByteArrayOutputStream stream = new ByteArrayOutputStream();
+			HttpHeaders httpHeader = new HttpHeaders();
+			fileName = URLEncoder.encode(fileName, String.valueOf(StandardCharsets.UTF_8));
+
+			httpHeader.set(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename="+fileName);
+			httpHeader.set(HttpHeaders.CONTENT_TYPE, "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet");
+			wb.write(stream);
+			stream.close();
+
+			return new ResponseEntity<>(new ByteArrayResource(stream.toByteArray()),
+					httpHeader, HttpStatus.CREATED);
+		} catch (Exception e) {
+			return new ResponseEntity<>(HttpStatus.INTERNAL_SERVER_ERROR);
+		}
+    }
+    
+    /**
+     * 엑셀파일 생성(헤더 한글이름, 헤더 db상 저장이름, 헤더별 너비, 데이터 리스트, 파일명-확장자포함)
+     * @param header
+     * @param column
+     * @param columnSize
+     * @param list
+     * @param fileName
+     * @return
+     */
+    public ResponseEntity<ByteArrayResource> makeExcelFile(String[] header, String[] column, int[] columnSize, List<Map<String, Object>> list, String fileName){
+    	setWorkbook();
+    	setHeaderInfo(header, column, columnSize);
+    	setHeader();
+    	setRow(list);
+    	
+    	return outExcelFile(fileName);
+    }
+}

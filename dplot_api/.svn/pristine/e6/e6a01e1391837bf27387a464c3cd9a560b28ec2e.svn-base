@@ -1,0 +1,39 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.dplot.mapper.ConfigDealerMapper">
+	<select id="selectConfigDealer" parameterType="somap" resultType="somap" >
+		SELECT
+		siteid,apprdealerjoin, apprdealerregist, apprdealereventregist, apprdealeraccount,
+		permdealergoodscms, permdealergoodsdisplay,
+		dealeraccountcycle,
+		permdealercmoney, sharedealer,
+		apprdealerregistitem1, apprdealerregistitem2, apprdealerregistitem3, apprbrandregist, muaddauthtype
+		FROM T_CONFIG_DEALER
+		<where>
+			AND SiteID=#{siteid}
+		</where>
+	</select>
+	
+	<select id="selectConfigMuAddAuth" parameterType="somap" resultType="somap">
+		SELECT 
+			muaddauthtype
+			, if(muaddauthtype is null, 'T', 'F') as isfirst 
+		FROM t_config_dealer
+		<where>
+			AND siteid = #{siteid}
+		</where>
+	</select>
+	
+	<update id="updateConfigDealer" parameterType="somap">
+		UPDATE t_config_dealer
+		<set>
+			<if test="muaddauthtype != null">
+				muaddauthtype = #{muaddauthtype}
+			</if>
+		</set>
+		<where>
+			AND siteid = #{siteid}
+		</where>
+	</update>
+</mapper>

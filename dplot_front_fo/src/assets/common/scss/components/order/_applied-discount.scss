@@ -1,0 +1,65 @@
+.applied-discount {
+  // 드롭다운 메뉴
+  .base-dropdown .dropdown__input input {
+    font-size: 14px;
+  }
+  .base-dropdown .dropdown__ul li {
+    font-size: 14px;
+  }
+  .coupon-apply-drop-area {
+    .coupon-apply-drop {
+    }
+    .add-discount-title {
+      margin-bottom: 30px;
+    }
+  }
+
+  // 사용 된 버튼
+  .used-coupon-btn {
+    background: $gray-700;
+  }
+  // 적용 된 할인 정보
+  .applied-discount__area {
+    padding-top: 10px;
+    .applied-amount {
+      margin-bottom: 20px;
+      .applied-amount__title {
+        font-size: 14px;
+        letter-spacing: -.56px;
+        line-height: 24px;
+      }
+      .form-select {
+        width: 155px;
+      }
+    }
+    .applied-discount-ul {
+      padding-bottom: 22px;
+      li + li {
+        padding-top: 13px;
+      }
+      .applied-discount-li {
+        display: flex;
+        justify-content: space-between;
+        p {
+          margin-bottom: 0;
+        }
+        .discount-title {
+          color: $gray-700;
+        }
+        .price-unit {
+          margin-left: 1px;
+        }
+      }
+    }
+    .total-discount {
+      display: flex;
+      justify-content: space-between;
+      .total-discount-title {
+        font-weight: 700;
+      }
+      .price-unit {
+        margin-left: 2px;
+      }
+    }
+  }
+}

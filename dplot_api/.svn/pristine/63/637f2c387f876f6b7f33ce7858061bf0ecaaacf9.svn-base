@@ -1,0 +1,177 @@
+package com.dplot.common.service;
+
+import com.dplot.common.SOMap;
+
+import java.util.List;
+
+public interface CJMessageService {
+    /**
+     * 문자 메세지 발송 단건 (직접발송)
+     */
+    SOMap sendMessage(SOMap param) throws Exception;
+
+    /**
+     * 문자 메세지 발송 다건 (직접발송)
+     */
+    SOMap sendMessage(SOMap param, List<SOMap> list) throws Exception;
+
+    /**
+     * 이메일 발송 (직접발송)
+     */
+    SOMap sendEmail(SOMap param, List<SOMap> list) throws Exception;
+
+    /**
+     * 카카오 메세지
+     */
+    SOMap sendKakaoMessage(SOMap param, List<SOMap> list);
+
+    /**
+     * 광고성 정보 수신내역 안내 메일 발송
+     */
+    SOMap sendADAgreeInfo(SOMap param) throws Exception;
+
+    /**
+     * 휴면계정 전환안내 메일 발송
+     */
+    SOMap sendDormantAccount(SOMap param);
+
+    /**
+     * 회원가입 축하 메일 발송
+     */
+    SOMap sendJoinMember(SOMap param);
+
+    /**
+     * 개인정보 이용내역 안내 메일 발송
+     */
+    SOMap sendPersonalInfo(SOMap param);
+
+    /**
+     * 뉴스레터 구독 신청 감사 메일 발송
+     */
+    SOMap sendNewsletterApply(SOMap param);
+
+    /**
+     * 임직원 인증번호 메일 발송(아이디 찾기/ 비밀번호 찾기)
+     */
+    SOMap sendEmpAuthNumber(SOMap param);
+
+    /**
+     * 파트너사 입점 신청 메일 발송
+     */
+    SOMap sendPartnersApply(SOMap param);
+
+    /**
+     * AS 신청 안내 카카오톡 발송
+     */
+    SOMap sendAsApply(SOMap param);
+
+    /**
+     * AS 완료 카카오톡 발송
+     */
+    SOMap sendAsComplete(SOMap param);
+
+    /**
+     * 1:1문의 또는 상품Q&A 에 대한 답변 카카오톡 발송
+     */
+    SOMap sendCustomerQuestionsAndAnswer(SOMap param);
+
+    /**
+     * 무통장 입금안내 카카오톡 발송 메일도 발송 함
+     * (주문자에게 발송)
+     */
+    SOMap sendDepositWithOutBankBook(SOMap param);
+
+    /**
+     * 배송 출고 안내 카카오톡 발송
+     * (수령인에게 발송)
+     */
+    SOMap sendShippingOut(SOMap param);
+
+    /**
+     * 입금대기/상품준비중 취소시 카카오톡 발송
+     * (주문자에게 발송)
+     */
+    SOMap sendOrderCancelBeforeDelivery(SOMap param);
+
+    /**
+     * 주문 결제 완료시 카카오톡 발송
+     * (주문자에게 발송)
+     */
+    SOMap sendPayComplete(SOMap param);
+
+    /**
+     * 반품/교환 접수 안내 카카오톡 발송
+     * (확인해야됨)
+     */
+    SOMap sendInquiryrReception(SOMap param);
+
+    /**
+     * 환불 처리 완료 안내 카카오톡 발송
+     * (확인해야됨)
+     */
+    SOMap sendRefundComplete(SOMap param);
+
+    /**
+     * 미입금 취소 카카오톡 발송 (배치 취소)
+     * (주문자에게 발송)
+     */
+    SOMap sendOutstandingDepositCancel(SOMap param);
+
+    /**
+     * 미입금 취소 카카오톡 발송 (고객취소)
+     */
+    SOMap sendOutstandingDepositCancel2(SOMap param);
+
+    /**
+     * 강제 주문취소 안내(취소완료)
+     * 관리자 / 파트너사에서 강제 주문 취소 처리했을 경우
+     */
+    SOMap sendManagerOrderCancel(SOMap param);
+
+    /**
+     * 배송 완료시 카카오톡 발송
+     * (수령인에게 발송)
+     */
+    SOMap sendDeliveryComplete(SOMap param);
+    
+    /**
+     * 구매확정시 카카오톡 발송
+     * (주문자에게 발송)
+     */
+    SOMap sendConfirmOrder(SOMap param);
+
+    /**
+     * 재입고 신청에 대한 재입고 안내 카카오톡 발송
+     */
+    SOMap sendRestockInfo(SOMap param);
+
+    /**
+     * 적립금 소멸 예정 카카오톡 발송
+     */
+    SOMap sendReserveExtinct(SOMap param);
+
+    /**
+     * 직접배송에 대한 안내 카카오 톡 발송
+     */
+    SOMap sendDirectDelivery(SOMap param);
+
+    /**
+     * 파트너사 지연현황 데이터 카카오 톡 발송
+     */
+    SOMap sendPartnersDelayInfo(SOMap param);
+
+    /**
+     * 관리자 회원에게 직접 메일 전송
+     */
+	SOMap sendMemberEmail(SOMap params);
+	
+	/**
+	 * 알림톡 발송 공통함수
+	 * */
+	SOMap sendKakaoMsgReserve(SOMap params);
+	
+	/**
+	 * 쿠폰소멸 알림톡 발송
+	 * */
+	SOMap sendCpnExtinctionMsg(SOMap params);
+}

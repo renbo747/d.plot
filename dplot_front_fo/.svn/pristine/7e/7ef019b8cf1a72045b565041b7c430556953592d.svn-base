@@ -1,0 +1,36 @@
+.form-select {
+  width: 100%;
+  appearance: none;
+  padding: 0 28px 0 12px;
+  height: 44px;
+  border: 1px solid $border-color;
+  outline: 0;
+  font-size: 14px;
+  letter-spacing: -.56px;
+  color: $gray-800;
+  background: url("~@/assets/common/icon/dropdown_btn.png") no-repeat center right 12px;
+  &.sm {
+    height: 32px;
+    background: url("~@/assets/common/icon/icon-arrow-bottom-black-16px.svg") no-repeat center right 12px;
+  }
+  &::-ms-expand {
+    display: none;
+  }
+  &:focus {
+    border-color: $black;
+    background: url("~@/assets/common/icon/dropdown_btn_up.png") no-repeat center right 12px;
+  }
+  option[value=""][disabled] {
+    display: none;
+  }
+  &:disabled {
+    background-color: $gray-100;
+    opacity: 1;
+  }
+}
+
+.form-select.select-list {
+  border: none;
+  background-position: right;
+  color: $black;
+}

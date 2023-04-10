@@ -1,0 +1,156 @@
+package com.dplot.mapper;
+
+import com.dplot.annontation.MapperInterface;
+import com.dplot.common.SOMap;
+
+import java.util.List;
+import java.util.Map;
+
+
+/**
+ * @author : sjryn
+ * @discription : 이벤트 테이블 Mapper (t_dadaevent)
+ * @fileName : DadaEventMapper.java
+ * @date : 2021-11-22
+ * =================================================================
+ * DATE			AUTHOR		NOTE
+ * -----------------------------------------------------------------
+ * 2021-11-22	   sjryn		최초생성
+ * -----------------------------------------------------------------
+ */
+@MapperInterface
+public interface DadaEventMapper {
+
+    /**
+     * 이벤트 수정
+     *
+     * @param params
+     */
+    void updateEvent(SOMap params);
+
+    /**
+     * 이벤트 등록
+     *
+     * @param params
+     */
+    void insertEvent(SOMap params);
+
+    /**
+     * 이벤트 조회수 증가
+     *
+     * @param eventIdx
+     */
+    void updateReadCnt(String eventIdx);
+
+    /**
+     * 이벤트관리, 출첵이벤트 저장 가능 여부
+     *
+     * @param params
+     * @return
+     */
+    SOMap isAdminCanSaveCheckEventAndCheckEvent(SOMap params);
+
+    /**
+     * 메인_BEST 상품 리스트 조회
+     *
+     * @param params
+     * @return
+     */
+    List<SOMap> selectEventFrontListSQL(SOMap params);
+
+    /**
+     * 메인_BEST 상품 상세
+     *
+     * @param params
+     * @return
+     */
+    List<SOMap> selectEventFrontDetailSQL(SOMap params);
+
+    /**
+     * 메인_BEST 상품 덧글
+     *
+     * @param params
+     * @return
+     */
+    List<SOMap> selectEventFrontDetailCommetSQL(SOMap params);
+
+
+    /**
+     * 메인_BEST 상품 덧글 개수
+     *
+     * @param params
+     * @return
+     */
+    List<SOMap> selectEventFrontDetailCommetLenthSQL(SOMap params);
+
+    /**
+     * @param params
+     * @return
+     */
+    List<SOMap> selectEventFrontDetailCommetPage(SOMap params);
+
+    /**
+     * @param params
+     * @return
+     */
+    List<SOMap> selectEventFrontDetailCommentSubSQL(SOMap params);
+
+    /**
+     * 이벤트 조회
+     *
+     * @param params
+     * @return
+     */
+    List<SOMap> selectAdminEventList(SOMap params);
+
+    /**
+     * 종료 이벤트 조회
+     *
+     * @param
+     * @return
+     */
+    List<SOMap> selectAdminEndEventList(SOMap params);
+
+    /**
+     * 이벤트 건별 조회 (전체, 사용, 미사용)
+     *
+     * @param params
+     * @return
+     */
+    SOMap selectAdminEventStateList(SOMap params);
+
+    /**
+     * 이벤트 상세 조회
+     *
+     * @param params
+     * @return
+     */
+    SOMap selectAdminEventDtl(SOMap params);
+
+    /**
+     * 프로모션 수량 체크
+     * @param params
+     * @return
+     */
+	int checkDisplayCnt(SOMap params);
+	
+	/**FRONT 프로모션 화면 노출 리스트
+	 * @param params
+	 * @return
+	 */
+	List<SOMap> selectEventList(SOMap params);
+	
+	/**FRONT 프로모션 화면 노출 리스트 갯수
+	 * @param params
+	 * @return
+	 */
+	int selectEventListCount(SOMap params);
+	
+	/**FRONT 프로모션 상세 
+	 * @param params
+	 * @return
+	 */
+	SOMap selectEventDetail(SOMap params);
+
+	SOMap selectEventSimpleDetail(SOMap params);
+}

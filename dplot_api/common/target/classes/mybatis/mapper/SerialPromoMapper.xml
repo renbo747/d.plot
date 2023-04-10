@@ -1,0 +1,424 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.dplot.mapper.SerialPromoMapper">
+
+    <!-- 시리얼 프로모션 저장 -->
+    <insert id="insertSerialPromo" parameterType="somap" useGeneratedKeys="true" keyProperty="srpidx">
+        INSERT INTO t_serial_promo
+        (srpidx, siteid, title, srpstday,
+         srpedday, srptype, srctype, isequalserial,
+         issuecnt, dupcnt, srppoint, isepointdup,
+         couponidx, istrash, reguserid, regdate,
+         moduserid, moddate)
+        VALUES (#{srpidx}, #{siteid}, #{title}, #{srpstday},
+                #{srpedday}, #{srptype}, #{srctype}, #{isequalserial},
+                #{issuecnt}, #{dupcnt}, #{srppoint}, #{isepointdup},
+                #{comcpnidx}, #{istrash}, #{reguserid}, now(),
+                #{moduserid}, #{moddate})
+    </insert>
+
+    <!-- 시리얼 프로모션 수정 -->
+    <update id="updateSerialPromo" parameterType="somap">
+        UPDATE t_serial_promo
+        <set>
+            <if test="title != null">
+                title = #{title},
+            </if>
+
+            <if test="srpstday != null">
+                srpstday = #{srpstday},
+            </if>
+
+            <if test="srpedday != null">
+                srpedday = #{srpedday},
+            </if>
+
+            <if test="srptype != null">
+                srptype = #{srptype},
+            </if>
+
+            <if test="srctype != null">
+                srctype = #{srctype},
+            </if>
+
+            <if test="isequalserial != null">
+                isequalserial = #{isequalserial},
+            </if>
+
+            <if test='issuecnt != null and issuecnt != ""'>
+                issuecnt = #{issuecnt},
+            </if>
+            <if test='issuecnt == ""'>
+                issuecnt = null,
+            </if>
+
+            <if test='dupcnt != null and dupcnt != ""'>
+                dupcnt = #{dupcnt},
+            </if>
+            <if test='dupcnt == ""'>
+                dupcnt = null,
+            </if>
+
+            <if test="srppoint != null">
+                srppoint = #{srppoint},
+            </if>
+
+            <if test="isepointdup != null">
+                isepointdup = #{isepointdup},
+            </if>
+
+            <if test='comcpnidx != null and comcpnidx != ""'>
+                couponidx = #{comcpnidx},
+            </if>
+            <if test='comcpnidx == ""'>
+                couponidx = null,
+            </if>
+
+            <if test="istrash != null">
+                istrash = #{istrash},
+            </if>
+
+            <if test="moduserid != null">
+                moduserid = #{moduserid},
+            </if>
+
+            moddate = now()
+        </set>
+        WHERE 1 = 1
+        AND srpidx = #{srpidx}
+    </update>
+
+    <!-- 시리얼 프로모션 상태값 (전체) -->
+    <select id="selectAdminSerialPromotionState" parameterType="somap" resultType="somap">
+        <![CDATA[
+        SELECT count(a.srpidx) as total
+        FROM (
+             SELECT a.title
+                  , FN_GET_CODENAME_STR(srptype, 'SRPTYPE')                       AS srptype
+                  , FN_GET_CODENAME_STR(srctype, 'SRCTYPE')                       AS srctype
+                  , if(isequalserial = 'T', '한 개의 동일한 시리얼 번호', '여러 개의 다른 시리얼 번호') AS isequalserial
+                  , count(b.srpidx)                                               AS ncount
+                  , a.dupcnt
+                  , if(isequalserial = 'T', max(b.usecnt), sum(b.usecnt))         AS mcount
+                  , concat(format(srppoint, 0), ' 포인트')                           AS srppoint
+                  , str_to_date(a.srpedday, '%Y%m%d')                             AS epoedday
+                  , if(isepointdup = 'Y', '허용', '미허용')                            AS isepointdup
+                  , str_to_date(a.srpstday, '%Y%m%d%H%i')                         AS srpstday
+                  , str_to_date(a.srpedday, '%Y%m%d%H%i')                         AS srpedday
+                  , if(a.istrash = 'T', '미사용', '사용')                              AS istrash
+                  , a.reguserid
+                  , date_format(a.regdate, '%Y-%m-%d')                            AS regdate
+                  , isequalserial                                                 AS equals
+                  , d.cpnname                                                     AS coutitle
+                  , a.srpidx
+                  , (CASE
+                         WHEN (str_to_date(a.srpstday, '%Y%m%d%H%i') > date_format(now(), '%Y-%m-%d %H:%i')) THEN '진행전'
+                         WHEN ((str_to_date(a.srpstday, '%Y%m%d%H%i') <= date_format(now(), '%Y-%m-%d-%H:%i'))
+                             AND (str_to_date(a.srpedday, '%Y%m%d%H%i') > date_format(now(), '%Y-%m-%d %H:%i'))) THEN '진행중'
+                         WHEN (str_to_date(a.srpstday, '%Y%m%d%H%i') < date_format(now(), '%Y-%m-%d %H:%i')) THEN '종료' END
+                 )                                                                as bptype
+             FROM t_serial_promo a
+                      LEFT OUTER JOIN t_serial_no b ON a.srpidx = b.srpidx
+                      LEFT JOIN t_comcoupon d ON a.couponidx = d.comcpnidx
+             GROUP BY a.srpidx
+        ) a
+        LEFT JOIN t_user c ON a.reguserid = c.userid
+        LEFT JOIN t_admin e ON c.no = e.userno
+        WHERE 1 = 1
+        ]]>
+        <if test="istrash != null and istrash != ''">
+            AND a.istrash = #{istrash}
+        </if>
+        <if test="srctypelist != null and srctypelist.size > 0">
+            AND a.srctype IN
+            <foreach collection="srctypelist" open="(" separator="," close=")" item="item">
+                #{item}
+            </foreach>
+        </if>
+        <if test="srptypelist != null and srptypelist.size > 0">
+            AND a.srptype IN
+            <foreach collection="srptypelist" open="(" separator="," close=")" item="item">
+                #{item}
+            </foreach>
+        </if>
+        <if test="promostlist != null and promostlist.size > 0">
+            AND a.bptype IN
+            <foreach collection="promostlist" open="(" separator="," close=")" item="item">
+                #{item}
+            </foreach>
+        </if>
+        <if test="sword != null and sword != ''">
+            <choose>
+                <when test="skey == 'title'">
+                    AND a.title LIKE concat('%',#{sword}, '%') -- 직접 (당첨자발표제목)
+                </when>
+                <when test="skey == 'reguserid'">
+                    AND e.name LIKE concat('%', #{sword}, '%') -- 직접 (이벤트제목)
+                </when>
+                <otherwise>
+                    AND (
+                    a.title LIKE concat('%',#{sword}, '%') -- 직접 (당첨자발표제목)
+                    OR e.name LIKE concat('%', #{sword}, '%') -- 직접 (이벤트제목)
+                    )
+                </otherwise>
+            </choose>
+        </if>
+        <choose>
+            <when test="sdate == 'srpstday'">
+                AND a.srpstday BETWEEN #{startdate} AND #{enddate}
+            </when>
+            <when test="sdate == 'srpedday'">
+                AND a.srpedday BETWEEN #{startdate} AND #{enddate}
+            </when>
+            <when test="sdate == 'regdate'">
+                AND a.regdate BETWEEN #{startdate} AND #{enddate}
+            </when>
+            <otherwise>
+                AND (
+                a.srpstday BETWEEN #{startdate} AND #{enddate}
+                or a.srpedday BETWEEN #{startdate} AND #{enddate}
+                or a.regdate BETWEEN #{startdate} AND #{enddate}
+                )
+            </otherwise>
+        </choose>
+    </select>
+
+    <!-- 시리얼 프로모션 전체 리스트 -->
+    <select id="selectAdminSerialPromotionList" parameterType="somap" resultType="somap">
+        SELECT *
+             , @ROWNUM := @ROWNUM + 1 AS rn
+        FROM (
+            SELECT a.srpidx
+             , a.title                                                                      -- 관리제목
+             , a.srptype                                                                    -- 혜택구분
+             , a.srctype                                                                    -- S/N 생성방법
+             , if(srctype = '엑셀업로드', '-', isequalserial)            AS isequalserial    -- S/N 발급 기준
+             , a.ncount                                                                     -- 등록
+             , if(equals = 'T', a.dupcnt - mcount, ncount - mcount) AS availablecount       -- 사용가능
+             , if(srptype = '쿠폰', a.coutitle, a.srppoint)           AS srppoint            -- 지급혜택
+             , if(srptype = 'D포인트', a.epoedday, '-')                AS epoedday          -- 소멸일자
+             , if(srptype = 'D포인트', a.isepointdup, '-')             AS isepointdup        -- 중복사용여부
+             , a.istrash                                                                    -- 사용여부
+             , date_format(a.srpstday, '%Y-%m-%d')                  AS srpstday             -- 시작일자
+             , date_format(a.srpedday, '%Y-%m-%d')                  AS srpedday             -- 종료일자
+             , e.name                                               AS regname              -- 등록자
+             , a.regdate                                                                    -- 등록일자
+             , a.bptype                                                                     -- 진행상태
+            FROM (
+                <![CDATA[
+                 SELECT a.title
+                      , FN_GET_CODENAME_STR(srptype, 'SRPTYPE')                       AS srptype
+                      , FN_GET_CODENAME_STR(srctype, 'SRCTYPE')                       AS srctype
+                      , if(isequalserial = 'T', '한 개의 동일한 시리얼 번호', '여러 개의 다른 시리얼 번호') AS isequalserial
+                      , count(b.srpidx)                                               AS ncount
+                      , a.dupcnt
+                      , if(isequalserial = 'T', max(b.usecnt), sum(b.usecnt))         AS mcount
+                      , concat(format(srppoint, 0), ' 포인트')                           AS srppoint
+                      , str_to_date(a.srpedday, '%Y%m%d')                             AS epoedday
+                      , if(isepointdup = 'Y', '허용', '미허용')                            AS isepointdup
+                      , str_to_date(a.srpstday, '%Y%m%d%H%i')                         AS srpstday
+                      , str_to_date(a.srpedday, '%Y%m%d%H%i')                         AS srpedday
+                      , if(a.istrash = 'T', '미사용', '사용')                              AS istrash
+                      , a.reguserid
+                      , date_format(a.regdate, '%Y-%m-%d')                            AS regdate
+                      , isequalserial                                                 AS equals
+                      , d.cpnname                                                     AS coutitle
+                      , a.srpidx
+                      , (CASE
+                             WHEN (str_to_date(a.srpstday, '%Y%m%d%H%i') > date_format(now(), '%Y-%m-%d %H:%i')) THEN '진행전'
+                             WHEN ((str_to_date(a.srpstday, '%Y%m%d%H%i') <= date_format(now(), '%Y-%m-%d-%H:%i'))
+                                 AND (str_to_date(a.srpedday, '%Y%m%d%H%i') > date_format(now(), '%Y-%m-%d %H:%i'))) THEN '진행중'
+                             WHEN (str_to_date(a.srpstday, '%Y%m%d%H%i') < date_format(now(), '%Y-%m-%d %H:%i')) THEN '종료' END
+                     )                                                                as bptype
+                 ]]>
+                 FROM t_serial_promo a
+                          LEFT OUTER JOIN t_serial_no b ON a.srpidx = b.srpidx
+                          LEFT JOIN t_comcoupon d ON a.couponidx = d.comcpnidx
+                 GROUP BY a.srpidx
+            ) a LEFT JOIN t_user c ON a.reguserid = c.userid
+                LEFT JOIN t_admin e ON c.no = e.userno,
+                 (SELECT @ROWNUM := #{startpage}) AS b
+            WHERE 1 = 1
+            <if test="istrash != null and istrash != ''">
+                AND a.istrash = #{istrash}
+            </if>
+            <if test="srctypelist != null and srctypelist.size > 0">
+                AND a.srctype IN
+                <foreach collection="srctypelist" open="(" separator="," close=")" item="item">
+                    #{item}
+                </foreach>
+            </if>
+            <if test="srptypelist != null and srptypelist.size > 0">
+                AND a.srptype IN
+                <foreach collection="srptypelist" open="(" separator="," close=")" item="item">
+                    #{item}
+                </foreach>
+            </if>
+            <if test="promostlist != null and promostlist.size > 0">
+                AND a.bptype IN
+                <foreach collection="promostlist" open="(" separator="," close=")" item="item">
+                    #{item}
+                </foreach>
+            </if>
+            <if test="sword != null and sword != ''">
+                <choose>
+                    <when test="skey == 'title'">
+                        AND a.title LIKE concat('%',#{sword}, '%') -- 직접 (당첨자발표제목)
+                    </when>
+                    <when test="skey == 'reguserid'">
+                        AND e.name LIKE concat('%', #{sword}, '%') -- 직접 (이벤트제목)
+                    </when>
+                    <otherwise>
+                        AND (
+                        a.title LIKE concat('%',#{sword}, '%') -- 직접 (당첨자발표제목)
+                        OR e.name LIKE concat('%', #{sword}, '%') -- 직접 (이벤트제목)
+                        )
+                    </otherwise>
+                </choose>
+            </if>
+            <choose>
+                <when test="sdate == 'srpstday'">
+                    AND a.srpstday BETWEEN #{startdate} AND #{enddate}
+                </when>
+                <when test="sdate == 'srpedday'">
+                    AND a.srpedday BETWEEN #{startdate} AND #{enddate}
+                </when>
+                <when test="sdate == 'regdate'">
+                    AND a.regdate BETWEEN #{startdate} AND #{enddate}
+                </when>
+                <otherwise>
+                    AND (
+                    a.srpstday BETWEEN #{startdate} AND #{enddate}
+                        or a.srpedday BETWEEN #{startdate} AND #{enddate}
+                        or a.regdate BETWEEN #{startdate} AND #{enddate}
+                    )
+                </otherwise>
+            </choose>
+            ) a
+        <choose>
+            <when test="psort == 'ncount_desc'">
+                ORDER BY a.ncount DESC
+            </when>
+            <when test="psort == 'ncount_asc'">
+                ORDER BY a.ncount ASC
+            </when>
+
+            <when test="psort == 'availablecount_desc'">
+                ORDER BY availablecount DESC
+            </when>
+            <when test="psort == 'availablecount_asc'">
+                ORDER BY availablecount ASC
+            </when>
+
+            <when test="psort == 'epoedday_desc'">
+                ORDER BY a.epoedday DESC
+            </when>
+            <when test="psort == 'epoedday_asc'">
+                ORDER BY a.epoedday ASC
+            </when>
+
+            <when test="psort == 'srpstday_desc'">
+                ORDER BY a.srpstday DESC
+            </when>
+            <when test="psort == 'srpstday_asc'">
+                ORDER BY a.srpstday ASC
+            </when>
+
+            <when test="psort == 'srpedday_desc'">
+                ORDER BY a.srpedday DESC
+            </when>
+            <when test="psort == 'srpedday_asc'">
+                ORDER BY a.srpedday ASC
+            </when>
+
+            <when test="psort == 'regdate_desc'">
+                ORDER BY a.regdate DESC
+            </when>
+            <when test="psort == 'regdate_asc'">
+                ORDER BY a.regdate ASC
+            </when>
+            <otherwise>
+                ORDER BY srpidx DESC
+            </otherwise>
+        </choose>
+        LIMIT #{startpage}, #{endpage} -- 페이징
+    </select>
+
+    <!-- 시리얼 프로모션 상세 조회 -->
+    <select id="selectAdminSerialPromotionDetail" parameterType="somap" resultType="somap">
+        SELECT date_format(a.fsrpstday, '%Y-%m-%d') AS startyyyymmdd
+             , date_format(a.fsrpstday, '%H')       AS starthh
+             , date_format(a.fsrpstday, '%i')       AS startmm
+             , date_format(a.fsrpedday, '%Y-%m-%d') AS toyyyymmdd
+             , date_format(a.fsrpedday, '%H')       AS tohh
+             , date_format(a.fsrpedday, '%i')       AS tomm
+             , a.*
+        FROM (
+                 SELECT reguserid                                           -- 등록자id
+                      , date_format(regdate, '%Y-%m-%d')        AS regdate  -- 등록일
+                      , date_format(moddate, '%Y-%m-%d')        AS moddate  -- 수정일
+                      , istrash                                             -- 사용여부
+                      , title                                               -- 제목
+                      , str_to_date(srpstday, '%Y%m%d%H%i')     AS fsrpstday -- 진행기간(시작)
+                      , str_to_date(srpedday, '%Y%m%d%H%i')     AS fsrpedday -- 진행기간(종료)
+                      , srpstday
+                      , srpedday
+#                       , FN_GET_CODENAME_STR(srptype, 'srptype') AS srptype  -- 혜택 구분
+#                       , FN_GET_CODENAME_STR(srctype, 'srctype') AS srctype  -- 생성방법
+                      , srptype
+                      , srctype
+                      , isequalserial                                           -- 동일 시리얼 여부
+                      , ifnull(dupcnt, '')                      AS dupcnt       -- 중복가능횟수
+                      , ifnull(issuecnt, '')                    AS issuecnt     -- 발급갯수
+                      , ifnull(srppoint, '')                    AS srppoint     -- 지급포인트
+                      , ifnull(isepointdup, 'T')                AS isepointdup  -- e포인트 중복 사용 여부
+                      , ifnull(couponidx, '')                   AS comcpnidx    -- 쿠폰 idx
+                 FROM t_serial_promo
+                 WHERE 1 = 1
+                   AND srpidx = #{srpidx}
+             ) a
+    </select>
+
+    <!-- 진행전 상태 확인 -->
+    <select id="isAdminCanUpdateCheck" parameterType="somap" resultType="somap">
+        SELECT if(str_to_date(srpstday, '%Y%m%d%H%i') > now(), true, false) AS `check`
+        FROM t_serial_promo
+        WHERE srpidx = #{srpidx}
+    </select>
+
+    <!-- 오늘 등록된 시리얼 프로모션 갯수 -->
+    <select id="currentDateBySerialPromotionRegisterCount" resultType="int">
+        SELECT count(srpidx) AS count
+        FROM t_serial_promo
+        WHERE 1 = 1
+          AND date_format(REGDATE, '%Y-%m-%d') = curdate();
+    </select>
+
+	<select id="selectFrontSerialInfo" parameterType="somap" resultType="somap">
+	    SELECT A.SRPIDX
+			 , A.TITLE
+			 , A.SRPSTDAY
+			 , A.SRPEDDAY
+			 , A.SRPTYPE
+			 , A.SRCTYPE
+			 , A.ISEQUALSERIAL
+			 , A.ISSUECNT
+			 , A.DUPCNT
+			 , A.SRPPOINT
+			 , A.ISEPOINTDUP
+			 , A.COUPONIDX
+			 , B.SERIALNO
+			 , B.USECNT
+			 , (CASE WHEN (str_to_date(a.srpstday, '%Y%m%d%H%i') <![CDATA[>]]> date_format(now(), '%Y-%m-%d %H:%i')) THEN '진행전'
+                     WHEN ((str_to_date(a.srpstday, '%Y%m%d%H%i') <![CDATA[<=]]> date_format(now(), '%Y-%m-%d-%H:%i'))
+                             AND (str_to_date(a.srpedday, '%Y%m%d%H%i') <![CDATA[>]]> date_format(now(), '%Y-%m-%d %H:%i'))) THEN '진행중'
+                     WHEN (str_to_date(a.srpstday, '%Y%m%d%H%i') <![CDATA[<]]> date_format(now(), '%Y-%m-%d %H:%i')) THEN '종료' END
+                )  as bptype
+		FROM t_serial_promo A
+		INNER JOIN t_serial_no B ON A.SRPIDX  = B.SRPIDX 
+		WHERE SITEID = #{siteid}
+		AND b.serialno = #{serialno}
+		GROUP BY B.SERIALNO 
+	</select>
+</mapper>

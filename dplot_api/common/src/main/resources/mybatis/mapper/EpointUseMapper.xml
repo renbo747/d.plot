@@ -1,0 +1,108 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.dplot.mapper.EpointUseMapper">
+	<select id="selectEpointUseByOrder" parameterType="somap" resultType="somap">
+		SELECT /* ReserveUseMapper.xml - selectReserveUseByOrder 적립금사용내역 조회 */
+		      C.EPOPAYIDX
+		    , C.USERNO
+		    , C.PAYPOINT
+		    , C.USEDPOINT
+		FROM T_EPOINT_USE A
+		INNER JOIN T_EPOINT_USEPAY B 
+		ON A.EPOUSEIDX = B.EPOUSEIDX 
+		INNER JOIN T_EPOINT_PAY C 
+		ON B.EPOPAYIDX = C.EPOPAYIDX 
+		WHERE A.USERNO = #{userno}
+		AND A.ORDERCODE = #{ordercode}
+	</select>
+	
+    <select id="selectAdminEpointUseList" parameterType="somap" resultType="somap">
+        SELECT a.epouseidx
+             , a.no                                              AS userno
+             , a.userid                                                          -- 아이디
+             , a.name                                                            -- 이름
+             , a.mumembertype                                                    -- 유형
+             , a.mumemlvtype                                                     -- 등급
+             , concat('- ', a.usepoint)                          AS paypoint     -- e포인트
+             , if(a.epopaytype like '%수동%', '수동', '자동')          AS type         -- 자동/수동
+             , a.epopaytype                                                      -- 상세 구분
+             , if(a.epopaytype like '%수동%', a.epopayreason, '-') AS epopayreason -- 수동지급 사유
+             , ifnull(nullif(a.ordercode, ''), '-')              AS ordercode    -- 주문번호
+             , date_format(a.regdate, '%Y-%m-%d')                AS regdate      -- 적립/차감/소멸일자
+             , if(nullif(a.ordercode, '') is null, '', 'link')   AS style        -- 주문번호
+             , a.mumembertypestr
+             , a.mumemlvtypestr
+        FROM (
+                 SELECT a.epouseidx
+                      , b.userid
+                      , c.name
+                      , fn_get_codename_str(a.usemembertype, 'DADAMEMBERTYPE') AS mumembertypestr
+                      , fn_get_codename_str(a.usememlvtype, 'MUMEMLVTYPE')     AS mumemlvtypestr
+                      , a.usemembertype AS mumembertype
+                      , a.usememlvtype AS mumemlvtype
+                      , a.usepoint
+                      , fn_get_codename_str(a.epousetype, 'EPOUSETYPE')        AS epopaytype
+                      , '-'                                                    AS epopayreason
+                      , a.ordercode
+                      , a.regdate
+                      , b.no
+                 FROM t_epoint_use a
+                          JOIN t_user b ON a.userno = b.no
+                          JOIN t_member c ON b.no = c.userno
+                 WHERE 1 = 1
+                   AND a.epouseidx IN
+                       (
+                       		SELECT epouseidx
+                       		FROM t_epoint_pay ep
+                       		INNER JOIN t_epoint_usepay eup
+                       			ON ep.epopayidx = eup.epopayidx
+                       		WHERE ep.epoidx = #{epoidx}
+                       )
+             ) a
+    </select>
+    
+    <!-- E포인트사용내역 저장 -->
+	<insert id="insertEpointUse" parameterType="somap" useGeneratedKeys="true" keyProperty="epouseidx">
+		/* EpointUseMapper.xml - insertEpointUse E포인트사용내역 저장 */
+		INSERT INTO T_EPOINT_USE (
+			  USERNO		/* 회원일련번호 */
+			, EPOUSETYPE	/* E포인트사용구분 */
+			, EPOUSEREASON	/* E포인트사용사유 */
+			, USEMEMBERTYPE	/* 사용시회원유형 */
+			, USEMEMLVTYPE	/* 사용시회원등급 */
+			, USEPOINT		/* 사용포인트 */
+			, ORDERCODE		/* 주문번호 */
+			, REGDATE		/* 등록일시 */
+			, REGUSERID		/* 등록자ID */
+		) VALUES
+		(	  
+			  #{userno}
+			, #{epousetype}
+			, #{epousereason}
+			, #{usemembertype}
+			, #{usememlvtype}
+			, #{usepoint}
+			, #{ordercode}
+			, sysdate()
+			, #{userid}
+	    )
+	</insert>
+	
+	<!-- E포인트사용지급내역 저장 -->
+	<insert id="insertEpointUsepay" parameterType="somap">
+		/* EpointUseMapper.xml - insertEpointUsepay E포인트사용지급내역 저장 */
+		INSERT INTO T_EPOINT_USEPAY (
+			  EPOPAYIDX		/* E포인트지급내역IDX */
+			, EPOUSEIDX		/* E포인트사용내역IDX */
+			, USEPOINT		/* 사용포인트 */
+			, REGDATE		/* 등록일시 */
+		) VALUES
+		(	  
+			  #{epopayidx}
+			, #{epouseidx}
+			, #{usepoint}
+			, sysdate()
+	    )
+	</insert>
+</mapper>

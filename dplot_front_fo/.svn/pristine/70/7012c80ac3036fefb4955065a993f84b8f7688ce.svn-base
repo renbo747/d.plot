@@ -1,0 +1,7 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 20 20">
+    <path data-name="사각형 6402" style="opacity:.2;fill:none" d="M0 0h20v20H0z"/>
+    <g data-name="그룹 20528">
+        <path data-name="합치기 5" d="m.706 8.485 2.829 2.829L0 12.022zm0 0L9.192 0l2.828 2.829-8.485 8.485z" transform="translate(4.415 3)" style="stroke-linejoin:round;stroke:#111;stroke-linecap:round;fill:none"/>
+        <path data-name="선 739" transform="translate(4 17.435)" style="stroke:#111;stroke-linecap:round;fill:none" d="M0 0h12"/>
+    </g>
+</svg>

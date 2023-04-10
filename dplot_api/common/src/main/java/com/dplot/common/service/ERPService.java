@@ -1,0 +1,209 @@
+package com.dplot.common.service;
+
+import com.dplot.common.SOMap;
+
+import java.util.List;
+
+public interface ERPService {
+
+    /**
+     * 협력사 데이터 ERP 전송
+     */
+    void sendPartnersERPData(SOMap param) throws Exception;
+
+    /**
+     * ERP 브랜드코드 호출
+     */
+    void receiveBrandERPData(SOMap param) throws Exception;
+
+    /**
+     * ERP 제조사코드 호출
+     */
+    void receiveManufacturerERPData(SOMap param) throws Exception;
+
+    /**
+     * ERP 기준정보 카테고리 호출
+     */
+    void receiveCategoryERPData(SOMap param) throws Exception;
+
+    /**
+     * ERP 직매입 상품 배송상태 변경
+     */
+    void receiveOrderDeliveryInfoERPData(SOMap param) throws Exception;
+
+    /**
+     * ERP 직매입 회수 상태 변경
+     */
+    void receiveReturnDeliveryInfoERPData(SOMap param) throws Exception;
+
+    /**
+     * 오리지널 상품코드 리스트 조회
+     */
+    SOMap selectReceiveERPOrgGoodsList(SOMap param) throws Exception;
+
+    /**
+     * ERP 재고조회
+     */
+    SOMap erpGetGoodsAndGiftStock(SOMap param);
+
+    /**
+     * ERP MD 호출
+     */
+    void receiveMDCodeERPData(SOMap param) throws Exception;
+
+    /**
+     * 상품등록/수정 ERP 전송
+     */
+    void sendGoodsERPData(SOMap param) throws Exception;
+
+    /**
+     * 전시 카테고리 ERP 전송
+     */
+    void sendCategoryERPData(SOMap param) throws Exception;
+
+    /**
+     * 회원정보 전달 (회원가입, 휴면, 탈퇴 정보 전달)
+     */
+    void sendMemberERPData(SOMap param) throws Exception;
+
+    /**
+     * 회원정보 탈퇴
+     */
+    void sendResignMemberERPData(SOMap param) throws Exception;
+
+    /**
+     * 쿠폰 등록/수정 ERP 전송
+     */
+    void sendCouponERPData(SOMap param) throws Exception;
+
+    /**
+     * 프로모션 등록/수정 ERP 전송
+     */
+    void sendPromotionERPData(SOMap param);
+
+    /**
+     * 적립금/임직원적립금/EPOINT ERP 전송
+     */
+    void sendReserveERPData(SOMap param);
+
+    /**
+     * 주문생성 ERP 전송
+     */
+    void sendOrderERPData(SOMap param) throws Exception;
+
+    /**
+     * 주문 정보 변경 ERP 전송
+     */
+    void sendOrderDeliveryInfoERPData(SOMap param) throws Exception;
+
+    /**
+     * 배송중/배송완료시 ERP 전송
+     */
+    void sendOrderGoodsDeliveryData(SOMap param) throws Exception;
+
+    /**
+     * 구매확정 ERP 전송
+     */
+    void sendOrderConfirmERPData(SOMap param) throws Exception;
+
+    /**
+     * 구매취소 ERP 전송
+     */
+    void sendOrderCancelERPData(SOMap param) throws Exception;
+
+    /**
+     * 사은품 등록/수정/삭제 ERP 전송
+     */
+    void sendGiftGoodsERPData(SOMap param) throws Exception;
+
+    /**
+     * 파트너 회원가입시 인터페이스 로그 등록
+     */
+    int insertPartnershipERPData(SOMap param);
+
+    /**
+     * 전시카테고리 인터페이스 로그 등록
+     */
+    int insertCategoryERPData(SOMap param);
+
+    /**
+     * 회원 등록/수정/휴면회원 로그 등록
+     */
+    int insertMemberERPData(SOMap param);
+
+    /**
+     * 회원 탈퇴 로그 등록
+     */
+    int insertResignMemberERPData(SOMap param);
+
+    /**
+     * 임시 ERP 배치 스케쥴러 서비스
+     */
+    void sendERPServiceForBatch(SOMap param);
+
+    /**
+     * 주문생성 인터페이스 등록
+     */
+    int insertOrderERPData(SOMap param);
+
+    /**
+     * 배송중/배송완료 상태변경에 따른 인터페이스 등록
+     */
+    int insertOrderDeliveryStateERPData(SOMap param);
+
+    /**
+     * 구매 확정 인터페이스 등록
+     */
+    int insertOrderConfirmERPData(SOMap param);
+
+    /**
+     * 사은품 인터페이스 로그 등록
+     */
+	int insertGiftERPData(SOMap logParam);
+
+    /**
+     * 주문 취소 인터페이스 등록
+     */
+    int insertOrderCancelERPData(SOMap param);
+
+    /**
+     * 반품 신청 인터페이스 등록
+     */
+    int insertOrderReturnApplyERPData(SOMap param);
+
+    /**
+     * 교환 신청 인터페이스 등록
+     */
+    int insertOrderExchangeApplyERPData(SOMap param);
+
+    /**
+     * 반품 완료 인터페이스 등록
+     */
+    int insertOrderReturnCompleteERPData(SOMap param);
+
+    /**
+     * 교환 완료 인터페이스 등록
+     */
+    int insertOrderExchangeCompleteERPData(SOMap param);
+
+
+    /**
+     * 반품 접수 안내
+     */
+    void sendReturnApplyERPData(SOMap param) throws Exception;
+
+    /**
+     * 반품 접수 안내
+     */
+    void sendExchangeApplyERPData(SOMap param) throws Exception;
+
+    /**
+     *
+     */
+    void sendReturnCompleteERPData(SOMap param) throws Exception;
+
+    /**
+     *
+     */
+    void sendExchangeCompleteERPData(SOMap param) throws Exception;
+}

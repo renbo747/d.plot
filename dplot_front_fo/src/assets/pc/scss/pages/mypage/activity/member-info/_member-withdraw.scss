@@ -1,0 +1,94 @@
+.dp-member-withdraw-pc {
+  width: 400px;
+  margin-left: 230px;
+  .form-select {
+    height: 48px;
+  }
+  .base-textarea .form-control {
+    min-height: 120px;
+  }
+  .member-withdraw__title__area {
+    .member-withdraw__title {
+      font-size: 26px;
+      letter-spacing: -1.04px;
+      line-height: 22px;
+      font-weight: 700;
+      padding-bottom: 40px;
+    }
+  }
+  .member-withdraw__txt {
+    padding-bottom: 24px;
+    p {
+      font-weight: 400;
+    }
+  }
+  .benefit__text-area {
+    padding: 20px;
+    padding-right: 0;
+    background: $gray-100;
+    margin-bottom: 24px;
+
+    li {
+      .text-area__key {
+        width: 100px;
+        span {
+          font-size: 14px;
+          letter-spacing: -.56px;
+          color: $gray-700;
+        }
+      }
+      .text-area__value {
+        width: calc(100% - 100px);
+
+        .benefit__value {
+          font-size: 14px;
+          letter-spacing: -.56px;
+          font-weight: 700;
+          margin-right: 2px;
+        }
+        .value__unit {
+          font-size: 14px;
+          letter-spacing: -.56px;
+        }
+      }
+    }
+    li+ li {
+      padding-top: 10px;
+    }
+  }
+  .withdraw__reason-select {
+    padding-bottom: 20px;
+    .reason-select__title {
+      font-size: 14px;
+      letter-spacing: -.56px;
+      line-height: 22px;
+      padding-bottom: 10px;
+    }
+    .reason-select__box {
+      margin-bottom: 16px;
+    }
+    .caution__text {
+      font-size: 14px;
+      letter-spacing: -.56px;
+      line-height: 22px;
+      color: $gray-700;
+    }
+  }
+  .agree__area {
+    .magic-checkbox + label {
+      word-break: keep-all;
+      font-size: 14px;
+      letter-spacing: -.56px;
+      line-height: 22px;
+      color: $black;
+    }
+  }
+  .member-withdraw__btn-area {
+    padding-top: 40px;
+    .btn-group {
+      .dp-btn:first-child {
+        margin-right: 16px;
+      }
+    }
+  }
+}

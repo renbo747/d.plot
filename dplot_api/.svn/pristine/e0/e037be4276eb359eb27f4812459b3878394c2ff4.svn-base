@@ -1,0 +1,281 @@
+package com.dplot.common.service.impl;
+
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Properties;
+
+import javax.annotation.Resource;
+
+import org.apache.http.HttpResponse;
+import org.apache.http.NameValuePair;
+import org.apache.http.client.HttpClient;
+import org.apache.http.client.ResponseHandler;
+import org.apache.http.client.config.RequestConfig;
+import org.apache.http.client.entity.UrlEncodedFormEntity;
+import org.apache.http.client.methods.HttpPost;
+import org.apache.http.impl.client.BasicResponseHandler;
+import org.apache.http.impl.client.HttpClientBuilder;
+import org.apache.http.message.BasicNameValuePair;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Service;
+
+import com.dplot.common.CMConst;
+import com.dplot.common.SOMap;
+import com.dplot.common.service.NaverService;
+import com.dplot.common.service.util.MallBaseService;
+import com.dplot.exception.BizException;
+import com.dplot.mapper.ExIfLogMapper;
+import com.dplot.util.Util;
+import com.fasterxml.jackson.databind.ObjectMapper;
+
+@Service
+public class NaverServiceImpl extends MallBaseService implements NaverService {
+	
+	private static final Logger logger = LoggerFactory.getLogger(NaverServiceImpl.class);
+	
+	@Autowired
+	private ExIfLogMapper exIfLogMapper;
+	
+	@Resource(name="propertiesFactory")
+    private Properties prop;
+	
+	@Override
+	public SOMap naverPayment(SOMap param) throws Exception {
+		String domain = prop.getProperty("naverpay.domain");
+		String partnerId = prop.getProperty("naverpay.partner.id");
+		String reqUrl = domain + "/" + partnerId + "/naverpay/payments/v2.2/apply/payment";
+		
+		SOMap result = new SOMap();
+		
+		HttpClient client = HttpClientBuilder.create().build(); // HttpClient 생성
+		HttpPost postRequest = new HttpPost(reqUrl); //POST 메소드 URL 새성 
+		postRequest.setHeader("Content-Type", "application/x-www-form-urlencoded");
+		postRequest.setHeader("X-Naver-Client-Id", prop.getProperty("naverpay.client.id"));
+		postRequest.setHeader("X-Naver-Client-Secret", prop.getProperty("naverpay.client.secret"));
+		
+		RequestConfig requestConfig = RequestConfig.custom()
+				  .setSocketTimeout(60*1000)
+				  .setConnectTimeout(60*1000)
+				  .setConnectionRequestTimeout(60*1000)
+				  .build();
+		postRequest.setConfig(requestConfig);
+		
+		Map<String,Object> paramMap = new HashMap<String, Object>();
+		paramMap.put("paymentId", param.getDbStr("paymentkey"));
+		
+		postRequest.setEntity(new UrlEncodedFormEntity(convertParam(paramMap)));
+
+		HttpResponse response = client.execute(postRequest);
+
+		//Response 출력
+		/**
+		 * 중요 JSON -> SOMap : 1Depth는 소문자 키, 2Depth 객체는 대문자 키
+		 */
+		ResponseHandler<String> handler = new BasicResponseHandler();
+		String body = handler.handleResponse(response);
+		
+		logger.debug("Naver Response : " + body);
+		this.insertLog(body, param.getDbStr("orderid"));
+		
+		ObjectMapper mapper = new ObjectMapper();
+		
+		
+		if (response.getStatusLine().getStatusCode() == 200) {
+			SOMap payInfo = (SOMap)mapper.readValue(body,  SOMap.class);
+			
+			if("Success".equals(payInfo.getDbStr("code"))) {
+				SOMap resultBody = payInfo.getSOMap("body");
+				
+				result.put("paywaytype", CMConst.PAYWAY_TYPE_NAVER);
+				result.put("paymentkey", resultBody.getStr("paymentId"));
+				
+				SOMap detail = resultBody.getSOMap("detail");
+				
+				result.put("paymentdate", detail.getStr("admissionYmdt"));
+				result.put("cardcompany", detail.getStr("cardCorpCode"));
+				result.put("cardnumber", detail.getStr("cardNo"));
+				result.put("planmonth", detail.getInt("cardInstCount"));
+				result.put("appoveno", detail.getStr("cardAuthNo"));
+				result.put("isusecardpoint", Util.bool2Flag(detail.getStr("useCardPoint")));
+				result.put("cardtype", detail.getStr("cardType"));
+				result.put("trsbank", detail.getStr("bankCorpCode"));
+				result.put("primarypaymeans", detail.getStr("primaryPayMeans")); //주 결제 수단(CARD:신용카드, BANK:계좌이체)
+				result.put("primarypayamount", detail.getInt("primaryPayAmount")); //주 결제 수단 결제/취소 금액
+				result.put("npointpayamount", detail.getInt("npointPayAmount")); //네이버페이 포인트
+				result.put("giftcardamount", detail.getInt("giftCardAmount")); //기프트카드 결제 금액
+				result.put("environmentdepositamount", detail.getInt("environmentDepositAmount")); //컵 보증금 결제 금액
+				result.put("totalpayamount", detail.getInt("totalPayAmount"));
+			} else {
+				throw new BizException(payInfo.getDbStr("message"));
+			}
+		} else {
+			logger.error("결제처리중 에러가 발생하였습니다.[" + body + "]");
+			throw new BizException("결제처리중 에러가 발생하였습니다.");
+		} 
+	
+		return result;
+	}
+
+	@Override
+	public SOMap naverPaymentCancel(SOMap param) throws Exception {
+		String domain = prop.getProperty("naverpay.domain");
+		String partnerId = prop.getProperty("naverpay.partner.id");
+		String reqUrl = domain + "/" + partnerId + "/naverpay/payments/v1/cancel";
+		
+		SOMap result = new SOMap();
+		
+		HttpClient client = HttpClientBuilder.create().build(); // HttpClient 생성
+		HttpPost postRequest = new HttpPost(reqUrl); //POST 메소드 URL 새성 
+		postRequest.setHeader("Content-Type", "application/x-www-form-urlencoded");
+		postRequest.setHeader("X-Naver-Client-Id", prop.getProperty("naverpay.client.id"));
+		postRequest.setHeader("X-Naver-Client-Secret", prop.getProperty("naverpay.client.secret"));
+		
+		RequestConfig requestConfig = RequestConfig.custom()
+				  .setSocketTimeout(60*1000)
+				  .setConnectTimeout(60*1000)
+				  .setConnectionRequestTimeout(60*1000)
+				  .build();
+		postRequest.setConfig(requestConfig);
+				
+		Map<String,Object> paramMap = new HashMap<String, Object>();
+		paramMap.put("paymentId", param.getDbStr("paymentkey"));
+		paramMap.put("cancelAmount", param.getDbInt("amount"));
+		paramMap.put("cancelReason", param.getDbStr("reason"));
+		paramMap.put("cancelRequester", param.getDbStr("requester"));
+		paramMap.put("taxScopeAmount", param.getDbInt("amount"));
+		paramMap.put("taxExScopeAmount", 0);
+		postRequest.setEntity(new UrlEncodedFormEntity(convertParam(paramMap)));
+		
+		ObjectMapper mapper = new ObjectMapper();
+
+		HttpResponse response = client.execute(postRequest);
+
+		//Response 출력
+		ResponseHandler<String> handler = new BasicResponseHandler();
+		String body = handler.handleResponse(response);
+		
+		logger.debug("Naver Response : " + body);
+		this.insertLog(body, param.getDbStr("clmno"));
+		
+		
+		if (response.getStatusLine().getStatusCode() == 200) {
+			SOMap payInfo = (SOMap)mapper.readValue(body,  SOMap.class);
+			
+			if("Success".equals(payInfo.getDbStr("code")) || "CancelNotComplete".equals(payInfo.getDbStr("code"))) {
+				SOMap resultBody = payInfo.getSOMap("body");
+				
+				result.put("paywaytype", CMConst.PAYWAY_TYPE_NAVER);
+				result.put("paymentkey", resultBody.getStr("paymentId"));
+				result.put("primarypaymeans", resultBody.getStr("primaryPayMeans")); //주 결제 수단(CARD:신용카드, BANK:계좌이체)
+				result.put("primarypaycancelamount", resultBody.getStr("primaryPayCancelAmount")); //주 결제 수단 취소 금액
+				result.put("npointcancelamount", resultBody.getStr("npointCancelAmount")); //네이버페이 포인트 취소 금액
+				result.put("giftcardcancelamount", resultBody.getStr("giftCardCancelAmount")); //기프트카드 취소 금액
+				result.put("environmentdepositamount", resultBody.getStr("environmentDepositAmount")); //컵 보증금 취소 금액
+			} else {
+				throw new BizException(payInfo.getDbStr("message"));
+			}
+			
+		} else {
+			logger.error("결제취소중 에러가 발생하였습니다.[" + body + "]");
+			throw new BizException("결제취소중 에러가 발생하였습니다.");
+		} 
+	
+		return result;
+	}
+	
+	@Override
+	public SOMap naverPaymentCashReceipts(SOMap param) throws Exception {
+		String domain = prop.getProperty("naverpay.domain");
+		String partnerId = prop.getProperty("naverpay.partner.id");
+		String reqUrl = domain + "/" + partnerId + "/naverpay/payments/v1/receipt/cash-amount";
+		
+		SOMap result = new SOMap();
+		
+		HttpClient client = HttpClientBuilder.create().build(); // HttpClient 생성
+		HttpPost postRequest = new HttpPost(reqUrl); //POST 메소드 URL 새성 
+		postRequest.setHeader("Content-Type", "application/x-www-form-urlencoded");
+		postRequest.setHeader("X-Naver-Client-Id", prop.getProperty("naverpay.client.id"));
+		postRequest.setHeader("X-Naver-Client-Secret", prop.getProperty("naverpay.client.secret"));
+		
+		RequestConfig requestConfig = RequestConfig.custom()
+				  .setSocketTimeout(60*1000)
+				  .setConnectTimeout(60*1000)
+				  .setConnectionRequestTimeout(60*1000)
+				  .build();
+		postRequest.setConfig(requestConfig);
+				
+		Map<String,Object> paramMap = new HashMap<String, Object>();
+		paramMap.put("paymentId", param.getDbStr("paymentkey"));
+
+		postRequest.setEntity(new UrlEncodedFormEntity(convertParam(paramMap)));
+		
+		ObjectMapper mapper = new ObjectMapper();
+
+		HttpResponse response = client.execute(postRequest);
+
+		//Response 출력
+		ResponseHandler<String> handler = new BasicResponseHandler();
+		String body = handler.handleResponse(response);
+		
+		logger.debug("Naver Response : " + body);
+		this.insertLog(body, param.getDbStr("orderid"));
+		
+		
+		if (response.getStatusLine().getStatusCode() == 200) {
+			SOMap payInfo = (SOMap)mapper.readValue(body,  SOMap.class);
+			
+			if("Success".equals(payInfo.getDbStr("code"))) {
+				SOMap resultBody = payInfo.getSOMap("body");
+				
+				result.put("primarypaymeans", resultBody.getStr("primaryPayMeans")); //결제에 사용된 현금성 주 결제 수단 정보(BANK: 계좌이체, 수단정보가 없고 npointCashAmount값이 있으면 충전결제)
+				result.put("primarycashamount", resultBody.getStr("primaryCashAmount")); //현금성 주 결제 수단 결제 금액 중 현금 영수증 발행 대상 금액
+				result.put("npointcashamount", resultBody.getStr("npointCashAmount")); //기프트카드 결제 금액 중 현금 영수증 발행 대상 금액
+				result.put("giftcardcashamount", resultBody.getStr("giftCardCashAmount")); //기프트카드 취소 금액
+				result.put("envdepositcashamount", resultBody.getStr("envDepositCashAmount")); //현금성 결제 금액 중 컵 보증금, 현금 영수증 발행 제외 대상 금액
+				result.put("totalcashamount", resultBody.getStr("totalCashAmount")); //현금 영수증 발행 대상 총 금액 npointCashAmount + giftCardCashAmount + primaryCashAmount - envDepositCashAmount
+			} else {
+				throw new BizException(payInfo.getDbStr("message"));
+			}
+			
+		} else {
+			logger.error("현금영수증 발행대상 금액조회중 에러가 발생하였습니다.[" + body + "]");
+			throw new BizException("현금영수증 발행대상 금액조회중 에러가 발생하였습니다.");
+		} 
+	
+		return result;
+	}
+	
+	/**
+	 * Toss결제 로그이력
+	 * @param log
+	 * @param orgno
+	 */
+	private void insertLog(String log, String orgno) {
+		SOMap param = new SOMap();
+		param.put("exlogtype", "EXL002");
+		param.put("iflog", log);
+		param.put("orgno", orgno);
+		try {
+			exIfLogMapper.insertExIfLog(param);
+		} catch (Exception e) {
+			logger.error("", e);
+		}
+	}
+	
+	private static List<NameValuePair> convertParam(Map<String, Object> params) {
+        List<NameValuePair> paramList = new ArrayList<NameValuePair>();
+
+        if(params != null) {
+            for(Object item : params.keySet()) {
+                String key = String.valueOf(item);
+                paramList.add(new BasicNameValuePair(key, params.get(key).toString()));
+            }
+        }
+
+        return paramList;
+    }
+}

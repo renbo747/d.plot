@@ -1,0 +1,68 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.dplot.mapper.MemberGoodsMapper">
+	
+	<!-- 상품별회원 목록 조회 -->
+	<select id="selectGoodsMemberList" parameterType="somap" resultType="somap" >
+		SELECT	/* MemberGoodsMapper.xml - selectGoodsMemberList 상품별회원 목록 조회 */
+			a.userno, a.userid, a.username, DATE_FORMAT(a.regdate, '%Y-%m-%d') AS regdate,
+			a.dadamembertype, a.dadamembertypeName, a.memlvtype, memlvtypename
+		FROM (	SELECT 
+					tmg.userno, tu.userid, tm.name AS username, tu.regdate,
+					tm.dadamembertype, FN_GET_CODENAME(#{siteid}, 'DADAMEMBERTYPE', tm.dadamembertype) AS dadamembertypename,
+					tm.memlvtype, FN_GET_CODENAME(#{siteid}, 'MEMLVTYPE', tm.memlvtype) AS memlvtypename
+				FROM t_member_goods tmg
+					INNER JOIN t_user tu ON tmg.userno = tu.no
+					INNER JOIN t_member tm ON tu.no = tm.userno
+				<where>
+					AND tmg.goodsno = #{goodsno}
+				</where>
+			 ) a
+		ORDER BY a.regdate DESC
+	</select>
+	
+	<!-- 상품별회원 추가 -->
+	<insert id="insertMemberGoods" parameterType="somap">
+		/* MemberGoodsMapper.xml - insertMemberGoods 상품별회원 추가 */
+		INSERT INTO t_member_goods (
+			  goodsno
+			, userno
+			, reguserid
+			, regdate
+		)
+		<choose>
+			<when test="usernolist != null and usernolist.size > 0">
+				VALUES
+				<foreach collection="usernolist" item="_userno" open="" separator="," close="">
+			    (	  
+					  #{goodsno}
+					, #{_userno}
+					, #{authuserid}
+					, NOW()
+			    )
+			    </foreach>
+			</when>
+			<otherwise>
+			VALUES (
+				  #{goodsno}
+				, #{userno}
+				, #{authuserid}
+				, NOW()
+			)
+			</otherwise>
+		</choose>
+	</insert>
+	
+	<!-- 상품별회원 삭제 -->
+	<delete id="deleteMemberGoods" parameterType="somap">
+		/* MemberGoodsMapper.xml - deleteMemberGoods 상품별회원 삭제 */
+		DELETE FROM t_member_goods
+		<where>
+			AND goodsno = #{goodsno}
+			<if test='userno != null and userno != ""'>
+			AND userno = #{userno}
+			</if>
+		</where>
+	</delete>
+</mapper>

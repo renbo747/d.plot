@@ -1,0 +1,281 @@
+.mypage-like {
+
+  hr {
+    margin-top: 0;
+    margin-bottom: 0;
+  }
+
+  .status-text {
+    color: #333333;
+    border: 1px solid #333333;
+  }
+
+  .product-status {
+    background: rgba(248, 248, 248, .5);
+  }
+
+  .dp-product .product__ctg {
+    font-weight: 700;
+    //text-transform: uppercase;
+  }
+
+  .dp-product .product__title {
+    margin-bottom: 5px;
+  }
+
+  .product__price {
+    align-items: baseline;
+  }
+
+  .product__price-unit {
+    line-height: 20px;
+  }
+
+  // tab 메뉴
+  .nav-tabs {
+    border-bottom: 2px solid $gray-400;
+    // TODO : 7/13 like 탭 숨김으로 인해 50%로 변경
+    > li {
+      width: 50%;
+      text-align: center;
+    }
+    .nav-link {
+      color: $gray-700;
+      font-size: 14px;
+      letter-spacing: -.56px;
+      line-height: 20px;
+      padding: 15px 0;
+    }
+
+    .nav-link.active, .nav-tabs .nav-item.show .nav-link {
+      position: relative;
+      top: 1px;
+
+      color: $black;
+      font-size: 16px;
+      letter-spacing: -.64px;
+      line-height: 24px;
+      font-weight: 700;
+      border: none;
+      border-bottom: 2px solid $black;
+      padding: 13px 0;
+    }
+  }
+
+  // 내용 비어있읋 때 공통사항
+  .empty__area {
+    .empty__body {
+      height: calc((var(--vh, 1vh) * 100) - 162px);
+      padding-top: 80px;
+    }
+    .empty-icon-area {
+      width: 94px;
+      height: 94px;
+      background: $gray-100;
+      border-radius: 50%;
+    }
+    .empty-text__area {
+      padding-top: 20px;
+    }
+  }
+
+  // 내용 있을 때 공통사항
+  .content__area {
+    padding-top: 20px;
+
+    .like-hr {
+      margin-top: 20px;
+      padding-bottom: 20px;
+      border-color: #ddd;
+    }
+    .like-tab__content__area {
+      // header
+      .like-tab__content__header {
+        padding-bottom: 20px;
+
+        .total-delete__btn__area {
+          .dp-btn {
+            padding: 0 15px;
+
+            span {
+              color: $gray-800;
+            }
+          }
+        }
+      }
+      // 내용
+      .like-tab__content__li {
+        position: relative;
+        margin-top: 20px;
+        padding: 0;
+      }
+      .close-icon__wrap {
+        position: absolute;
+        top: -20px;
+        right: 0;
+      }
+      .product__price-number {
+        font-family: 'AttenNew', sans-serif;
+        font-size: 18px;
+        letter-spacing: -.54px;
+        font-weight: 600;
+      }
+      .product__price-unit {
+        font-size: 14px;
+        letter-spacing: -.56px;
+      }
+    }
+  }
+
+  // like 탭 있을 때
+  .like__area {
+    padding-bottom: 60px;
+
+    // 탭메뉴
+    .like-tab__ul__area {
+      padding-top: 20px;
+      padding-bottom: 26px;
+      .dp-sort__ul {
+        li + li {
+          margin-left: 12px;
+        }
+      }
+      .dp-sort__badge {
+        height: 40px;
+        border-radius: 20px;
+        background: #ffffff;
+        border: 1px solid $gray-300;
+        font-size: 14px;
+        letter-spacing: -.42px;
+        color: $gray-700;
+      }
+    }
+
+    // 내용
+    .like-tab__content__area {
+      // header
+      .like-tab__content__header {
+        padding-bottom: 20px;
+        .total-delete__btn__area {
+          .dp-btn {
+            padding: 0 15px;
+
+            span {
+              color: $gray-800;
+            }
+          }
+        }
+      }
+      // body
+      .like-tab__content__body {
+        .like-tab__content__ul {
+          line-height: 1;
+          border-top: 1px solid $gray-400;
+          border-bottom: 1px solid $gray-400;
+
+          .like-tab__content__li {
+            position: relative;
+            padding: 40px 0 20px;
+          }
+
+          .like-tab__content__li + .like-tab__content__li {
+            border-top: 1px solid $gray-400;
+          }
+
+
+
+          .li-container {
+            display: flex;
+          }
+
+          .logo__img__wrap {
+            width: 100px;
+            height: 100px;
+            margin-right: 16px;
+
+            img {
+              height: 100%;
+            }
+          }
+          .content__li__text__area {
+
+            .badge__wrap {
+              margin-bottom: 6px;
+            }
+            .title__wrap {
+              margin-bottom: 2px;
+
+              p {
+                font-size: 14px;
+                letter-spacing: -.56px;
+                line-height: 20px;
+                //text-transform: uppercase;
+
+                &.atten-new {
+                  font-size: 12px;
+                  letter-spacing: -.36px;
+                  line-height: 14px;
+                  font-weight: 600;
+                }
+              }
+            }
+            .text__wrap {
+              p {
+                color: $gray-700;
+                word-break: keep-all;
+                padding-right: 28px;
+              }
+            }
+          }
+          .close-icon__wrap {
+            position: absolute;
+            top: 20px;
+            right: 0;
+          }
+        }
+      }
+    }
+  }
+
+  // like 상품 탭 있을 때
+  .like-product__area {
+    padding-bottom: 126px;
+
+    .product__like {
+      display: none;
+    }
+
+    .like-tab__content__header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+  }
+
+  // 최근 본 상품 탭 있을 때
+  .recent-view-product__area {
+    padding-bottom: 58px;
+
+    .product__price-area {
+      position: relative;
+    }
+
+    .data__wrap {
+      padding-bottom: 10px;
+
+      .date {
+        font-family: 'AttenNew', sans-serif;
+        font-size: 12px;
+        letter-spacing: -.36px;
+        line-height: 14px;
+        color: $gray-800;
+      }
+    }
+    .product__like {
+      top: 45%;
+      right: 0;
+      transform: translate(0, 0);
+    }
+  }
+
+}

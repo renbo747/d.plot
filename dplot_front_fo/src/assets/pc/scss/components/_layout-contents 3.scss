@@ -1,0 +1,9 @@
+.divided-layout {
+  .left-layout {
+    width: 885px;
+  }
+  .right-layout {
+    width: calc(100% - 945px);
+    margin-left: 60px;
+  }
+}

@@ -1,0 +1,50 @@
+// Todo: (pub) aside layout 컴포넌트 잘 되는지 확인 후, 파일 삭제하기
+
+//.dp-cs {
+//  .cs__area {
+//    padding-top: 100px;
+//    padding-left: 20px;
+//    padding-right: 20px;
+//  }
+//  .side-menu__area {
+//    max-width: 190px;
+//    width: 100%;
+//    margin-right: 60px;
+//  }
+//  .cs__title {
+//    padding-bottom: 16px;
+//    font-weight: 500;
+//    border-bottom: 2px solid $black;
+//  }
+//  .side-menu {
+//    a {
+//      color: $gray-700;
+//
+//      &:hover {
+//        color: $primary;
+//      }
+//    }
+//  }
+//  .side-menu__ul-box {
+//    padding-top: 14px;
+//  }
+//  .side-menu__ul {
+//    padding: 16px 0 20px;
+//    border-bottom: 1px solid $gray-400;
+//    li {
+//      padding-bottom: 10px;
+//      &:first-child {
+//        font-size: 18px;
+//        letter-spacing: -0.72px;
+//        line-height: 22px;
+//        font-weight: 500;
+//        & a {
+//          color: $black;
+//        }
+//      }
+//      &:last-child {
+//        padding-bottom: 0;
+//      }
+//    }
+//  }
+//}

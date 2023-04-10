@@ -1,0 +1,160 @@
+.order-coupon {
+  position: relative;
+  //height: 170px;
+  .order-coupon-area {
+    height: 100%;
+  }
+  .coupon__text-area {
+    width: calc(100% - 80px);
+    padding: 20px;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    border: 1px solid $primary;
+    border-right: none;
+    @include media-breakpoint-up(xl) {
+      padding: 20px 15px 20px 20px;
+    }
+    .discount-title {
+      font-size: 20px;
+      letter-spacing: -.8px;
+      line-height: 29px;
+      font-weight: 700;
+      color: $primary;
+      padding-bottom: 4px;
+      @include text-truncate();
+      @include media-breakpoint-up(xl) {
+        font-size: 22px;
+        letter-spacing: -.88px;
+        line-height: 32px;
+      }
+    }
+    .coupon-title {
+      font-size: 12px;
+      letter-spacing: -.48px;
+      line-height: 17px;
+      font-weight: 500;
+      padding-bottom: 8px;
+      @include text-truncate();
+      @include media-breakpoint-up(xl) {
+        font-size: 14px;
+        letter-spacing: -.56px;
+        padding-bottom: 6px;
+      }
+    }
+    .coupon-use-condition {
+      display: -webkit-box;
+      font-size: 12px;
+      letter-spacing: -.48px;
+      color: $gray-700;
+      margin-bottom: 16px;
+      -webkit-line-clamp: 2;
+      -webkit-box-orient: vertical;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      height: 44px;
+      @include media-breakpoint-up(xl) {
+        font-size: 14px;
+        letter-spacing: -.76px;
+        line-height: 22px;
+        margin-bottom: 10px;
+      }
+    }
+    .coupon-special {
+      font-size: 12px;
+      letter-spacing: -.48px;
+      color: $gray-700;
+      height: 22px;
+      margin-bottom: 4px;
+      @include media-breakpoint-up(xl) {
+        font-size: 14px;
+        letter-spacing: -.76px;
+        line-height: 22px;
+      }
+    }
+    .coupon-use-period {
+      font-size: 12px;
+      letter-spacing: -.48px;
+      line-height: 17px;
+      color: $gray-700;
+      margin-top: auto;
+      @include text-truncate();
+      @include media-breakpoint-up(xl) {
+        font-size: 14px;
+        letter-spacing: -.56px;
+        line-height: 20px;
+      }
+      // 쿠폰 기간 컬러변경될 때
+      &.period-color {
+        color: $primary;
+      }
+    }
+  }
+  .coupon-download-area {
+    position: relative;
+    width: 80px;
+    background-color: $primary;
+    .circle-style {
+      position: absolute;
+      top: 2px;
+      left: -9px;
+      > span {
+        left: 0;
+        width: 4px;
+        height: 4px;
+        border-radius: 50%;
+        background-color: #ffffff;
+        margin: 7px;
+      }
+
+      @include media-breakpoint-up(xl) {
+        top: 5px;
+      }
+    }
+    .icon-download-area {
+    }
+    .icon-area {
+      border: 1px solid #ffffff;
+      border-radius: 50%;
+      width: 40px;
+      height: 40px;
+      cursor: pointer;
+    }
+    .icon-download {
+
+    }
+    .down-text {
+      font-size: 10px;
+      letter-spacing: -.4px;
+      color: $white;
+      padding-top: 4px;
+      text-align: center;
+      @include media-breakpoint-up(xl) {
+        font-size: 12px;
+        letter-spacing: -.48px;
+        line-height: 17px;
+      }
+    }
+  }
+  // 쿠폰 완료되었을 때
+  &.disabled {
+    color: $gray-400;
+    border-color: $gray-400;
+    .coupon__text-area {
+      border: 1px solid $gray-400;
+      border-right: none;
+    }
+    .coupon__text-area .discount-title {
+      color: $gray-400;
+    }
+    .coupon__text-area .coupon-use-condition {
+      color: $gray-400;
+    }
+    .coupon__text-area .coupon-use-period {
+      color: $gray-400;
+    }
+    .coupon-download-area {
+      background-color: $gray-400;
+    }
+  }
+}

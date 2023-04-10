@@ -1,0 +1,482 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.dplot.mapper.GoodsOptionDetailMapper">
+	<!-- 상품옵션상세 목록 조회 -->
+	<select id="selectGoodsOptionDetailList" parameterType="somap" resultType="somap">
+		SELECT	/* GoodsOptionDetailMapper.xml - selectGoodsOptionDetailList 상품옵션상세 목록 조회 */
+			  'N' AS status		/* 옵션처리상태 */
+			, od.goodsno  		/* 상품번호 */
+			, od.optioncode  	/* 옵션코드 */
+			, od.goodsname  	/* 상품명 */
+			, od.marketprice  	/* 시중가 */
+			, od.price  		/* 판매가 */
+		    , od.originalprice	/* 공급가 */
+			, od.commrate  		/* 수수료율 */
+			, od.stockcnt  		/* 재고 */
+			, od.safestockcnt	/* 안전재고 */
+			, od.optionno1  	/* 옵션_번호1 */
+			, od.optionnm1  	/* 옵션명1 */
+			, od.optionno2  	/* 옵션_번호2 */
+			, od.optionnm2  	/* 옵션명2 */
+			, od.optionno3  	/* 옵션_번호3 */
+			, od.optionnm3  	/* 옵션명3 */
+			, od.optionno4  	/* 옵션_번호4 */
+			, od.optionnm4  	/* 옵션명4 */
+			, od.ismaingoods  	/* 대표상품여부 */
+			, od.isoptdisplay  	/* 옵션전시여부 */
+			, od.colortype		/* 컬러코드값 */
+			, (	SELECT COUNT(*)
+			   	FROM t_option_erp
+			   	WHERE goodsno = od.goodsno
+			   	AND optioncode = od.optioncode
+			  ) AS linkedcnt	/* 연결상품수 */
+		FROM t_goods_option_detail od
+		WHERE od.goodsno = #{goodsno}
+		and od.istrash = 'F'
+		ORDER BY od.optioncode
+    </select>
+    
+	<!-- 옵션코드 채번 -->
+	<select id="selectOptionCode" parameterType="somap" resultType="String">
+		/* GoodsOptionDetailMapper.xml - selectOptionCode 옵션코드 채번 */
+		SELECT FN_GET_OPTION_CODE(#{goodsno}) FROM dual
+    </select>
+    
+    <select id="selectColorList" parameterType="somap" resultType="somap">
+	    SELECT /*GoodsOptionDetailMapper.xml - selectColorList:: 컬러 목록 조회*/
+	           COLORTYPE 
+		FROM t_goods_option_detail tgod
+		WHERE 1 = 1
+		AND COLORTYPE is NOT NULL
+		AND COLORTYPE <![CDATA[<>]]> ''
+		GROUP BY COLORTYPE
+    </select>
+    
+	<!-- 상품옵션상세 추가 -->
+	<insert id="insertGoodsOptionDetail" parameterType="somap">
+		/* GoodsOptionDetailMapper.xml - insertGoodsOptionDetail 상품옵션상세 추가 */
+		INSERT INTO t_goods_option_detail (
+			  goodsno  		/* 상품번호 */
+			, optioncode  	/* 옵션코드 */
+			, goodsname  	/* 상품명 */
+			, marketprice  	/* 정상가 */
+			, price  		/* 판매가 */
+			, originalprice	/* 공급가 */
+			, commrate  	/* 수수료율 */
+			, stockcnt  	/* 재고 */
+			, safestockcnt  /* 안전재고 */
+			, optionno1  	/* 옵션_번호1 */
+			, optionnm1  	/* 옵션명1 */
+			, optionno2  	/* 옵션_번호2 */
+			, optionnm2  	/* 옵션명2 */
+			, optionno3  	/* 옵션_번호3 */
+			, optionnm3  	/* 옵션명3 */
+			, optionno4  	/* 옵션_번호4 */
+			, optionnm4  	/* 옵션명4 */
+			, ismaingoods  	/* 대표상품여부 */
+			, isoptdisplay  /* 옵션전시여부 */
+			, colortype		/* 컬러코드값 */
+			, istrash		/* 삭제여부 */
+			, reguserid  	/* 등록자ID */
+			, regdate  		/* 등록일시 */
+			, moduserid  	/* 수정자ID */
+			, moddate  		/* 수정일시 */
+		)
+		<choose>
+			<when test="optionlist != null and optionlist.size > 0">
+				VALUES
+				<foreach collection="optionlist" item="data" index="index" open="" separator="," close="">
+				(	  #{goodsno}
+					, #{data.optioncode}
+					, #{data.goodsname}
+					, IFNULL(#{data.marketprice}, 0)
+					, IFNULL(#{data.price}, 0)
+					, #{data.originalprice}
+					, IFNULL(#{data.commrate}, 0)
+					, IFNULL(#{data.stockcnt}, 0)
+					, IFNULL(#{data.safestockcnt}, 0)
+					, IF(#{data.optionno1}='', null, #{data.optionno1})
+					, #{data.optionnm1}
+					, IF(#{data.optionno2}='', null, #{data.optionno2})
+					, #{data.optionnm2}
+					, IF(#{data.optionno3}='', null, #{data.optionno3})
+					, #{data.optionnm3}
+					, IF(#{data.optionno4}='', null, #{data.optionno4})
+					, #{data.optionnm4}
+					, #{data.ismaingoods}
+					, #{data.isoptdisplay}
+					, #{data.colortype}
+					, 'F'
+					, #{authuserid}
+					, now()
+					, #{authuserid}
+					, now()
+				)
+			    </foreach>
+			</when>
+			<otherwise>
+			VALUES (
+				  #{goodsno}
+				, #{optioncode}
+				, #{goodsname}
+				, IFNULL(#{marketprice}, 0)
+				, IFNULL(#{price}, 0)
+				, #{originalprice}
+				, IFNULL(#{commrate}, 0)
+				, IFNULL(#{stockcnt}, 0)
+				, IFNULL(#{safestockcnt}, 0)
+				, IF(#{optionno1}='', null, #{optionno1})
+				, #{optionnm1}
+				, IF(#{optionno2}='', null, #{optionno2})
+				, #{optionnm2}
+				, IF(#{optionno3}='', null, #{optionno3})
+				, #{optionnm3}
+				, IF(#{optionno4}='', null, #{optionno4})
+				, #{optionnm4}
+				, #{ismaingoods}
+				, #{isoptdisplay}
+				, #{colortype}
+				, 'F'
+				, #{authuserid}
+				, now()
+				, #{authuserid}
+				, now()
+			)
+			</otherwise>
+		</choose>
+	</insert>
+	
+	<!-- 상품옵션상세 수정 -->
+	<update id="updateGoodsOptionDetail" parameterType="somap">
+		/* GoodsOptionDetailMapper.xml - updateGoodsOptionDetail 상품옵션상세 수정 */
+		UPDATE t_goods_option_detail
+		SET	  goodsname = #{goodsname}
+			, marketprice = IFNULL(#{marketprice}, 0)
+			, price = IFNULL(#{price}, 0)
+			, originalprice = #{originalprice}
+			, commrate = IFNULL(#{commrate}, 0)
+			, stockcnt = IFNULL(#{stockcnt}, 0)
+			, safestockcnt = IFNULL(#{safestockcnt}, 0)
+			, optionno1 = IF(#{optionno1}='', null, #{optionno1})
+			, optionnm1 = #{optionnm1}
+			, optionno2 = IF(#{optionno2}='', null, #{optionno2})
+			, optionnm2 = #{optionnm2}
+			, optionno3 = IF(#{optionno3}='', null, #{optionno3})
+			, optionnm3 = #{optionnm3}
+			, optionno4 = IF(#{optionno4}='', null, #{optionno4})
+			, optionnm4 = #{optionnm4}
+			, ismaingoods = #{ismaingoods}
+			, isoptdisplay = #{isoptdisplay}
+			, colortype = #{colortype}
+			, moduserid = #{authuserid}
+			, moddate = now()
+		WHERE goodsno = #{goodsno}
+		AND optioncode = #{optioncode}
+	</update>
+	
+	<!-- 상품옵션상세 삭제 -->
+	<update id="updateGoodsOptionDetailUse" parameterType="somap">
+		/* GoodsOptionDetailMapper.xml - updateGoodsOptionDetailUse 상품옵션상세 삭제 */
+		UPDATE t_goods_option_detail
+		SET istrash = 'T'
+		WHERE goodsno = #{goodsno}
+		<choose>
+			<when test="deloptioncodelist != null and deloptioncodelist.size > 0">
+			AND optioncode IN
+			<foreach collection="deloptioncodelist" item="_optioncode" index="index" open="(" separator="," close=")">
+				#{_optioncode}
+			</foreach>
+			</when>
+			<otherwise>
+			AND optioncode = #{optioncode}
+			</otherwise>
+		</choose>
+	</update>
+	
+	<select id="selectGoodsOptionDetailByIndex" parameterType="somap" resultType="somap">
+		/* GoodsOptionDetailMapper.xml - selectGoodsOptionDetailByIndex 인덱스로 상품옵션상세 조회 */
+		SELECT distinct a.goodsno
+			, b.goodscode
+			, fullcategoryname
+			, concat_ws(' , ', a.optionnm1, a.optionnm2, a.optionnm3, a.optionnm4) AS fulloptionnm
+			<if test="index != null and index == 0">
+				, if(a.optionnm1 is null or a.optionnm1 = '', a.goodsname, a.optionnm1) as optionnm
+			</if>
+			<if test="index != null and index == 1">
+				, a.optionnm2 as optionnm
+			</if>
+			<if test="index != null and index == 2">
+				, a.optionnm3 as optionnm
+			</if>
+			<if test="index != null and index == 3">
+				, a.optionnm4 as optionnm
+			</if>
+			<if test='islast == "T"'>
+			    , a.optioncode
+				, b.goodsname
+				, (select name from t_brand where idx = b.brandidx) as brandname -- 브랜드명
+				, a.marketprice
+				, fn_get_option_price(#{siteid}, a.goodsno, a.optioncode) as price
+				, fn_get_goods_salepromoamt(#{siteid}, a.goodsno, a.optioncode, 0, #{platform}) as saleamt 
+				, fn_get_goods_salecouponamt(#{siteid}, a.goodsno, a.optioncode, 0, #{platform}) as goodscpnamt -- 즉시할인쿠폰할인가
+				, fn_get_option_stock(#{siteid}, a.goodsno, a.optioncode) as stockcnt
+				, b.delividx    /* 배송템플릿일련번호 */ 
+                , b.iscombdeliv /* 묶음배송여부 */
+                , c.delivtype
+                , c.delivfaretype
+                , IFNULL(c.delivfare, 0) as delivfare           /* 배송비 */
+                , IFNULL(c.delivfreefare, 0) as delivfreefare   /* 조건부주문금액 */
+                , IFNULL((select cateidx from t_goods_category where goodsno = a.goodsno and isrepre = 'T'), 0) as cateidx /* 대표카테고리 */
+				, b.minordcnt
+				, b.maxordcnt
+				, b.daymaxordcnt
+				, ifnull(b.permaxordcnt, 0) as  permaxordcnt
+				, FN_GET_ORDER_COUNT(#{siteid}, a.goodsno, #{userno}, 'D') as dayordcnt
+				, FN_GET_ORDER_COUNT(#{siteid}, a.goodsno, #{userno}, null) as allordcnt
+				, FN_GET_FILE_URL(a.goodsno, 'FLT001', #{imgtype}) AS fullpath2
+			</if>
+		FROM t_goods_option_detail a
+		INNER JOIN t_goods b
+		ON a.goodsno = b.goodsno
+		LEFT JOIN t_deliv_template c
+		ON b.delividx = c.idx
+		LEFT OUTER JOIN (
+			WITH category AS (
+				SELECT idx, name, depth, parent
+				FROM t_category
+				WHERE siteid = #{siteid}
+				AND hidden = 0 
+			)
+			SELECT 
+				  t.cateidx, t.depth1idx, t.depth2idx, t.depth3idx, t.depth4idx, t.fullcategoryname
+			FROM (
+				SELECT 
+					  a.idx AS depth1idx, b.idx AS depth2idx, c.idx AS depth3idx, d.idx AS depth4idx
+					, concat_ws(' , ', a.name, b.name, c.name, d.name) AS fullcategoryname
+					, (CASE WHEN d.idx IS NOT NULL THEN d.idx
+							WHEN c.idx IS NOT NULL THEN c.idx
+							WHEN b.idx IS NOT NULL THEN b.idx
+						ELSE a.idx END) AS cateidx
+				FROM category a
+				LEFT OUTER JOIN category b ON a.idx = b.parent
+				LEFT OUTER JOIN category c ON b.idx = c.parent
+				LEFT OUTER JOIN category d ON c.idx = d.parent
+				WHERE a.depth = 1
+			) t
+		) tc ON IFNULL((select cateidx from t_goods_category where goodsno = a.goodsno and isrepre = 'T'), 0) = tc.cateidx
+		WHERE a.goodsno = #{goodsno}
+		AND a.isoptdisplay = 'T'
+		AND a.istrash = 'F'
+		<if test="index != null and index == 1">
+			AND a.optionnm1 = #{optionnm1}
+		</if>
+		<if test="index != null and index == 2">
+			AND a.optionnm1 = #{optionnm1}
+			AND a.optionnm2 = #{optionnm2}
+		</if>
+		<if test="index != null and index == 3">
+			AND a.optionnm1 = #{optionnm1}
+			AND a.optionnm2 = #{optionnm2}
+			AND a.optionnm3 = #{optionnm3}
+		</if>
+		<if test='islast == "F"'>
+			<if test="index != null and index == 0">
+				group by a.goodsno, a.optioncode, if(a.optionnm1 is null or a.optionnm1 = '', a.goodsname, a.optionnm1)
+			</if>
+			<if test="index != null and index == 1">
+				group by a.goodsno, a.optioncode, a.optionnm2
+			</if>
+			<if test="index != null and index == 2">
+				group by a.goodsno, a.optioncode, a.optionnm3 
+			</if>
+			<if test="index != null and index == 3">
+				group by a.goodsno, a.optioncode, a.optionnm4
+			</if>
+		</if>
+	</select>
+
+	<select id="selectGoodsOptionDetailListERP" parameterType="somap" resultType="somap">
+		SELECT
+			goodsno, optioncode, goodsname, marketprice, price, originalprice, commrate, stockcnt, safestockcnt, optionno1, optionnm1, optionno2, optionnm2, optionno3, optionnm3, optionno4, optionnm4, ismaingoods, isoptdisplay, colortype
+		FROM T_GOODS_OPTION_DETAIL
+		WHERE GOODSNO = #{goodsno}
+	</select>
+	
+	<select id="selectGetOptionCode" parameterType="somap" resultType="somap">
+		SELECT 
+			GOODSNO
+			, OPTIONCODE
+			, GOODSNAME
+			, MARKETPRICE
+			, PRICE
+			, ORIGINALPRICE
+			, COMMRATE
+			, STOCKCNT
+			, SAFESTOCKCNT
+			, OPTIONNO1
+			, OPTIONNM1
+			, OPTIONNO2
+			, OPTIONNM2
+			, OPTIONNO3
+			, OPTIONNM3
+			, OPTIONNO4
+			, OPTIONNM4
+			, ISMAINGOODS
+			, ISOPTDISPLAY
+			, REGUSERID
+			, REGDATE
+			, MODUSERID
+			, MODDATE
+			, COLORTYPE
+		FROM 
+			t_goods_option_detail 
+		WHERE goodsno = #{goodsno}
+		<if test='index != null and index == 1'>
+			and optionnm1 = #{optionnm1}
+		</if>
+		<if test='index != null and index == 2'>
+			and optionnm1 = #{optionnm1}
+			and optionnm2 = #{optionnm2}
+		</if>
+		<if test='index != null and index == 3'>
+			and optionnm1 = #{optionnm1}
+			and optionnm2 = #{optionnm2}
+			and optionnm3 = #{optionnm3}
+		</if>
+		<if test='index != null and index == 4'>
+			and optionnm1 = #{optionnm1}
+			and optionnm2 = #{optionnm2}
+			and optionnm3 = #{optionnm3}
+			and optionnm4 = #{optionnm4}
+		</if>
+	</select>
+	
+	<select id="selectDetailOptionCode" parameterType="somap" resultType="somap">
+		SELECT  
+			GOODSNO
+			, OPTIONCODE
+			, GOODSNAME
+			, MARKETPRICE
+			, PRICE
+			, ORIGINALPRICE
+			, COMMRATE
+			, STOCKCNT
+			, SAFESTOCKCNT
+			, OPTIONNO1
+			, OPTIONNM1
+			, OPTIONNO2
+			, OPTIONNM2
+			, OPTIONNO3
+			, OPTIONNM3
+			, OPTIONNO4
+			, OPTIONNM4
+			, ISMAINGOODS
+			, ISOPTDISPLAY
+			, REGUSERID
+			, REGDATE
+			, MODUSERID
+			, MODDATE
+			, COLORTYPE
+		FROM T_GOODS_OPTION_DETAIL 
+		WHERE GOODSNO = #{goodsno} 
+		AND OPTIONCODE = #{optioncode}	
+	</select>
+	
+	<!-- 교환출고상품 조회 -->
+	<select id="selectExcGoodsList" parameterType="somap" resultType="somap">
+		/* GoodsOptionDetailMapper.xml - selectExcGoodsList 교환출고상품 조회 */
+		WITH clmgoods AS (
+			SELECT
+				  goodsno 
+				, optioncode 
+				, price
+			FROM t_goods_option_detail
+			WHERE goodsno = #{goodsno}
+			AND optioncode = #{optioncode}
+		)
+		SELECT 
+			  ta.goodsno
+			, tb.goodscode
+			, tb.goodsname
+			, ta.optioncode
+			, FN_GET_OPTION_DETAIL(ta.goodsno, ta.optioncode, ' | ') AS optionname
+			, concat_ws(' , ', ta.optionnm1, ta.optionnm2, ta.optionnm3, ta.optionnm4) AS fulloptionnm
+			
+			, ta.price
+			, tb.ispbgoods
+			, #{clmcnt} AS exccnt
+			, (CASE WHEN tb.dealerno is not null and tb.dealerno != 0
+					THEN (select name from t_dealer where userno = tb.dealerno)
+					ELSE ''
+			   END) AS dealername
+		FROM (
+			SELECT
+				  a.goodsno
+				, a.optioncode
+				, a.price
+				, a.optionnm1
+                , a.optionnm2
+                , a.optionnm3
+                , a.optionnm4
+				, FN_CHECK_EXC_TARGET_GOODS(#{siteid}, a.goodsno, a.optioncode, #{goodscpnidx}, #{salepromoidx}) AS isexctarget
+				, FN_GET_OPTION_STOCK(#{siteid}, a.goodsno, a.optioncode) AS stockcnt
+			FROM t_goods_option_detail a
+			INNER JOIN clmgoods b 
+			ON a.GOODSNO = b.goodsno
+        	AND a.istrash = 'F'
+        	WHERE a.price = #{price}
+		) ta
+		INNER JOIN t_goods tb ON ta.goodsno = tb.goodsno
+		WHERE ta.isexctarget = 'T'
+		AND ta.stockcnt <![CDATA[>=]]> #{clmcnt}
+    </select>
+	
+	<update id="updateGoodsOptionDetailStockCnt" parameterType="somap">
+		UPDATE /* GoodsOptionDetailMapper.xml - updateGoodsOptionDetailStockCnt 재고수정 조회 */
+			T_GOODS_OPTION_DETAIL
+		SET STOCKCNT = #{stockcnt}
+		WHERE GOODSNO = #{goodsno}
+		AND OPTIONCODE = #{optioncode}	
+	</update>
+
+	<update id="updateGoodsOptionDetailStockCntLoop" parameterType="somap">
+		<foreach collection="goods" index="index" item="item" separator=";">
+			UPDATE
+				T_GOODS_OPTION_DETAIL
+			SET STOCKCNT = #{item.avail_qty}, SAFESTOCKCNT = #{item.stock_qty}
+			WHERE GOODSNO = #{item.goodsno}
+			AND OPTIONCODE = #{item.optioncode}
+		</foreach>
+	</update>
+	
+	<select id="selectFilterColorList" parameterType="somap" resultType="somap">
+		select  /*GoodsOptionDetailMapper.xml - selectFilterColorList:: 검색 필터 색상목록 조회*/
+		       b.CMCLASS
+			 , b.codename
+			 , b.detail
+		from t_goods_option_detail a
+		INNER JOIN t_common_code b on b.CMCODE = a.COLORTYPE
+		<choose>
+		  <when test="colorlist != null and colorlist.size > 0">
+			WHERE A.COLORTYPE IN (<foreach collection="colorlist" item="color" index="index" open="" separator="," close="">#{color.colortype}</foreach>)
+		  </when>
+		</choose>
+		GROUP BY b.CMCLASS, b.codename, b.detail
+	</select>
+	
+	<!-- 대표상품 정상가, 판매가 수정 -->
+	<update id="updateOptionDetailMainGoodsPrice" parameterType="somap">
+		/* GoodsOptionDetailMapper.xml - updateOptionDetailMainGoodsPrice 대표상품 정상가, 판매가 수정 */
+		UPDATE t_goods_option_detail
+		SET	  marketprice = IFNULL(#{marketprice}, 0)
+			, price = IFNULL(#{price}, 0)
+		WHERE ismaingoods = 'T'
+		<if test="goodsnolist != null and goodsnolist.size > 0">
+			AND goodsno IN
+			<foreach collection="goodsnolist" item="goodsno" index="index" open="(" separator="," close=")">
+				#{goodsno}
+			</foreach>
+		</if>
+	</update>
+</mapper>

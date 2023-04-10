@@ -1,0 +1,163 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.dplot.mapper.ReserveConfigMapper">
+	<!-- 적립금 자동지급설정 조회 (임시) -->
+	<select id="selectReserveConfig" parameterType="somap" resultType="somap">
+		SELECT 	/* ReserveConfigMapper.xml - selectReserveConfig 적립금 자동지급설정 조회 */
+			  membertype.cmcode AS membertype
+			, membertype.codename AS membertypename
+			, memlvtype.cmcode AS memlvtype
+			, memlvtype.codename AS memlvtypename
+			, respaytype.cmcode AS respaytype
+			, respaytype.codename AS respaytypename
+			, (CASE WHEN respaytype.cmcode = 'RPT001' THEN 'purcfmamt'			/* 구매확정 */
+					WHEN respaytype.cmcode = 'RPT002' THEN 'textreviewamt'		/* 리뷰작성(텍스트) */
+					WHEN respaytype.cmcode = 'RPT003' THEN 'photoreviewamt'		/* 리뷰작성(포토) */
+					WHEN respaytype.cmcode = 'RPT004' THEN 'movreviewamt'		/* 리뷰작성(동영상) */
+					WHEN respaytype.cmcode = 'RPT005' THEN 'birthdayamt'		/* 생일 */
+					WHEN respaytype.cmcode = 'RPT006' THEN 'frstpurcfmamt'		/* 첫구매확정 */
+					ELSE ''
+			   END) AS colname
+			, (CASE WHEN respaytype.cmcode = 'RPT001' THEN rc.purcfmamt			/* 구매확정 */
+					WHEN respaytype.cmcode = 'RPT002' THEN rc.textreviewamt		/* 리뷰작성(텍스트) */
+					WHEN respaytype.cmcode = 'RPT003' THEN rc.photoreviewamt	/* 리뷰작성(포토) */
+					WHEN respaytype.cmcode = 'RPT004' THEN rc.movreviewamt		/* 리뷰작성(동영상) */
+					WHEN respaytype.cmcode = 'RPT005' THEN rc.birthdayamt		/* 생일 */
+					WHEN respaytype.cmcode = 'RPT006' THEN rc.frstpurcfmamt		/* 첫구매확정 */
+					ELSE ''
+			   END) AS amt
+		FROM (	SELECT cc.cmcode, cc.codename
+			 	FROM t_common_code cc
+			 	WHERE cc.cmclass = 'DADAMEMBERTYPE'
+			 	AND cc.istrash = 'F'
+			 ) membertype				/* 회원유형 */
+		LEFT OUTER JOIN
+			 (	SELECT cc.cmcode, cc.codename
+			 	FROM t_common_code cc
+			 	WHERE cc.cmclass = 'MEMLVTYPE'
+			 	AND cc.istrash = 'F'
+			 ) memlvtype ON 1 = 1		/* 회원등급 */
+		LEFT OUTER JOIN
+			 (	SELECT cc.cmcode, cc.codename
+			 	FROM t_common_code cc
+			 	WHERE cc.cmclass = 'RESPAYTYPE'
+			 	AND cc.istrash = 'F'
+			 	AND cc.cmcode IN ('RPT001', 'RPT002', 'RPT003', 'RPT004', 'RPT005', 'RPT006')
+			 ) respaytype ON 1 = 1		/* 적립금지급구분 */
+		LEFT OUTER JOIN t_reserve_config rc 
+				ON membertype.cmcode = rc.membertype
+			   AND memlvtype.cmcode = rc.memlvtype
+			   AND rc.siteid = #{siteid}
+	</select>
+	
+	<select id="selectReserveConfigByMemberType" parameterType="somap" resultType="somap">
+		SELECT  /* ReserveConfigMapper.xml - selectReserveConfigByMemberType 회원유형별 적립금 자동지급설정 조회 */
+              membertype.cmcode AS membertype
+            , membertype.codename AS membertypename
+            , memlvtype.cmcode AS memlvtype
+            , memlvtype.codename AS memlvtypename
+            , respaytype.cmcode AS respaytype
+            , respaytype.codename AS respaytypename
+            , (CASE WHEN respaytype.cmcode = 'RPT001' THEN rc.purcfmamt			/* 구매확정 */
+					WHEN respaytype.cmcode = 'RPT002' THEN rc.textreviewamt		/* 리뷰작성(텍스트) */
+					WHEN respaytype.cmcode = 'RPT003' THEN rc.photoreviewamt	/* 리뷰작성(포토) */
+					WHEN respaytype.cmcode = 'RPT004' THEN rc.movreviewamt		/* 리뷰작성(동영상) */
+					WHEN respaytype.cmcode = 'RPT005' THEN rc.birthdayamt		/* 생일 */
+					WHEN respaytype.cmcode = 'RPT006' THEN rc.frstpurcfmamt		/* 첫구매확정 */
+					ELSE ''
+			   END) AS amt
+        FROM (  SELECT cc.cmcode, cc.codename
+                FROM t_common_code cc
+                WHERE cc.cmclass = 'DADAMEMBERTYPE'
+                AND cc.cmcode = #{dadamembertype}
+                AND cc.istrash = 'F'
+             ) membertype               /* 회원유형 */
+        LEFT OUTER JOIN
+             (  SELECT cc.cmcode, cc.codename
+                FROM t_common_code cc
+                WHERE cc.cmclass = 'MEMLVTYPE'
+                AND cc.istrash = 'F'
+                <if test='memlvtype != null and memlvtype != ""'>
+                AND cc.cmcode = '#{memlvtype}
+                </if>
+             ) memlvtype ON 1 = 1       /* 회원등급 */
+        LEFT OUTER JOIN
+             (  SELECT cc.cmcode, cc.codename
+                FROM t_common_code cc
+                WHERE cc.cmclass = 'RESPAYTYPE'
+                AND cc.istrash = 'F'
+                AND cc.cmcode = #{respaytype}
+             ) respaytype ON 1 = 1      /* 적립금지급구분 */
+        LEFT OUTER JOIN t_reserve_config rc 
+                ON membertype.cmcode = rc.membertype
+               AND memlvtype.cmcode = rc.memlvtype
+               AND rc.siteid = 'base'
+	</select>
+	
+	<!-- 적립금 지급설정 저장 -->
+	<insert id="mergeReserveConfig" parameterType="somap">
+		/* ReserveConfigMapper.xml - mergeReserveConfig 적립금 지급설정 저장 */
+		INSERT INTO t_reserve_config (
+			  siteid  			/* 사이트ID */
+			, membertype  		/* 다다픽회원유형 */
+			, memlvtype  		/* 회원등급 */
+			, purcfmamt  		/* 구매확정퍼센트 */
+			, textreviewamt  	/* 텍스트리뷰작성포인트 */
+			, photoreviewamt	/* 포토리뷰작성포인트 */
+			, movreviewamt  	/* 동영상리뷰작성포인트 */
+			, birthdayamt  		/* 생일포인트 */
+			, frstpurcfmamt  	/* 첫구매확정퍼센트 */
+			, reguserid  		/* 등록자ID */
+			, regdate  			/* 등록일시 */
+			, moduserid  		/* 수정자ID */
+			, moddate  			/* 수정일시 */
+		) VALUES (
+			  #{siteid}
+			, #{membertype}
+			, #{memlvtype}
+			, IF(#{purcfmamt}='', 0, #{purcfmamt})
+			, IF(#{textreviewamt}='', 0, #{textreviewamt})
+			, IF(#{photoreviewamt}='', 0, #{photoreviewamt})
+			, IF(#{movreviewamt}='', 0, #{movreviewamt})
+			, IF(#{birthdayamt}='', 0, #{birthdayamt})
+			, IF(#{frstpurcfmamt}='', 0, #{frstpurcfmamt})
+			, #{authuserid}
+			, NOW()
+			, #{authuserid}
+			, NOW()
+		)
+		ON DUPLICATE KEY UPDATE
+			  membertype = #{membertype}
+			, memlvtype = #{memlvtype}
+			, purcfmamt = IF(#{purcfmamt}='', 0, #{purcfmamt})
+			, textreviewamt = IF(#{textreviewamt}='', 0, #{textreviewamt})
+			, photoreviewamt = IF(#{photoreviewamt}='', 0, #{photoreviewamt})
+			, movreviewamt = IF(#{movreviewamt}='', 0, #{movreviewamt})
+			, birthdayamt = IF(#{birthdayamt}='', 0, #{birthdayamt})
+			, frstpurcfmamt = IF(#{frstpurcfmamt}='', 0, #{frstpurcfmamt})
+			, moduserid = #{authuserid}
+			, moddate = NOW()
+	</insert>
+	
+	<select id="selectReserveConfigInfoByMemberType" parameterType="somap" resultType="somap">
+		SELECT /*ReserveConfigMapper.xml - selectReserveConfigInfoByMemberType:: 회원 유형으로 적립금지급 설정 조회*/
+               PURCFMAMT       -- 구매확정퍼센트
+             , TEXTREVIEWAMT   -- 텍스트리뷰작성포인트
+             , PHOTOREVIEWAMT  -- 포토리뷰작성포인트
+             , MOVREVIEWAMT    -- 동영상리뷰작성포인트
+             , BIRTHDAYAMT     -- 생일포인트 
+             , FRSTPURCFMAMT   -- 첫구매확정포인트
+             , GREATEST(TEXTREVIEWAMT,PHOTOREVIEWAMT,MOVREVIEWAMT) AS REVIEWMAX -- 리뷰보상 가장 높은 포인트
+             , b.FRSTREVIEWAMT -- 첫리뷰 보상
+             , b.CFMSTDAY
+             , b.CFMEDDAY
+             , b.CFMMULTI
+             , if(CFMSTDAY <![CDATA[<=]]> date_format(now(),'%Y%m%d%H%i') and CFMEDDAY >= date_format(now(),'%Y%m%d%H%i'), 'T', 'F') as ISMULTI  
+        FROM T_RESERVE_CONFIG a
+        INNER JOIN T_CONFIG b
+        ON a.SITEID = b.SITEID
+		AND a.MEMBERTYPE = #{membertype}
+		AND a.MEMLVTYPE  = #{memlvtype}
+	</select>
+</mapper>

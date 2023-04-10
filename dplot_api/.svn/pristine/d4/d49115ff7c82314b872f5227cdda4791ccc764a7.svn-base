@@ -1,0 +1,346 @@
+package com.dplot.common.controller;
+
+import java.io.PrintWriter;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Properties;
+
+import javax.annotation.Resource;
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
+
+import com.dplot.common.Status;
+import com.dplot.common.service.CJMessageService;
+import com.dplot.common.service.ERPService;
+import com.dplot.mapper.BatchMapper;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.ui.ModelMap;
+import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
+import org.springframework.web.multipart.MultipartHttpServletRequest;
+
+import com.dplot.annontation.FrontInfo;
+import com.dplot.common.CMConst;
+import com.dplot.common.Response;
+import com.dplot.common.SOMap;
+import com.dplot.common.service.DeliveryTrackingService;
+import com.dplot.common.service.util.FileService;
+import com.dplot.mapper.UserMapper;
+
+
+
+@RestController
+public class SampleController {
+	private static final Logger logger = LoggerFactory.getLogger(SampleController.class);
+	
+	@Autowired
+	UserMapper userMapper;
+	
+	@Autowired
+	FileService fileService;
+
+	@Autowired
+	CJMessageService cjMessageService;
+
+	@Autowired
+	DeliveryTrackingService deliveryTrackingService;
+
+	@Autowired
+	BatchMapper batchMapper;
+
+	@Autowired
+	ERPService erpService;
+
+	@Resource(name="propertiesFactory")
+	private Properties prop;
+	
+	@FrontInfo
+	@RequestMapping(value = "test")
+	public Response test(@RequestBody SOMap param) throws Exception{
+		
+		logger.debug("====== " + prop.getProperty("cloud.aws.s3.accessKey"));
+		
+		//Map<String, Object> param = map.getMap(); 
+		for (String key : param.keySet()) {
+			logger.debug(key + " : " + param.get(key));
+		}
+		
+		SOMap params = new SOMap();
+		params.put("userid", "test17");
+		logger.debug("##### " + userMapper.selectUser(params));
+		logger.debug("=================");
+		Map<String, Object> test = (Map<String, Object>)param.get("test3");
+		for (String key : test.keySet()) {
+			logger.debug(key + " : " + test.get(key));
+		}
+
+		logger.debug("=================");
+		HashMap<String, Object> result = new HashMap<String, Object>();
+		
+		result.put("list", new ArrayList<String>());
+		result.put("depth", 3);
+		result.put("selected", new HashMap<String, Object>());
+		
+		return new Response(result);
+	}
+	
+	@RequestMapping(value = "file")
+	//public Response file(MultipartHttpServletRequest mReq, @RequestPart("params") HashMap<String, Object> param, ModelMap map) throws Exception{
+	public Response file(MultipartHttpServletRequest mReq, @RequestPart("params") SOMap param, ModelMap map) throws Exception{
+		logger.debug("Parameter ====================");
+		for (String key : param.keySet()) {
+			logger.debug(key + " : " + param.get(key));
+		}
+		logger.debug("Atacht File ==================");
+		Map<String, MultipartFile> files = mReq.getFileMap();
+		for (String key : files.keySet()) {
+			logger.debug(key + " : " + files.get(key));
+			
+			
+			MultipartFile file = files.get(key);
+			logger.debug(file.getContentType());
+			logger.debug(file.getOriginalFilename());
+			logger.debug(file.getName());
+			logger.debug(file.getSize() + "");
+			
+			if(file.getName().equals("params"))
+				continue;
+			
+			SOMap result = fileService.uploadMov(file, 12312314, CMConst.IMG_TYPE_EVENT_REPLY_VIDEO);
+			//List<SOMap> result = fileService.uploadGoodsImage(file, 148605, CMConst.IMG_TYPE_GOODS_IMG_PC_B);
+			//List<SOMap> result = fileService.upload(file, 148605, CMConst.IMG_TYPE_PARTNER1);
+			logger.debug("result : " + result.toString());
+			logger.debug("result : " + result.get(0));
+			//logger.debug("result : " + fileService.uploadAttach(file, 123456, 1));
+			
+		}
+		logger.debug("==============================");
+		
+		return new Response();
+	}
+	
+	@RequestMapping(value = "/delete")
+	public Response file2(@RequestBody SOMap param, ModelMap map) throws Exception{
+		
+		fileService.delete(param);
+		
+		return new Response();
+	}
+
+	/**
+	 * 배송추적요청
+	 * @param param
+	 * @return
+	 * @throws Exception
+	 */
+	@RequestMapping(value = "/external/sendTraceRequest", method = RequestMethod.POST)
+	public Response sendTraceRequest(@RequestBody SOMap param) throws Exception {
+//		param.put("from_name", "테스트API");
+//		param.put("to_name", "아무나받아");
+//		param.put("logistics_code", "korex");
+//		param.put("invoice_no", "646565904962");
+//		//D :정상 R: 반품
+//		param.put("dlvret_type", "D");
+//		param.put("trans_unique_code", "test01023812938182");
+
+		List<SOMap> orderList = new ArrayList<>();
+		SOMap map1 = new SOMap();
+		map1.put("order_no", "1");
+		map1.put("order_line", "1");
+		map1.put("item_name", "테스트1");
+		map1.put("item_qty", "1");
+		map1.put("order_date", "20220209000000");
+		map1.put("payment_date", "20220209000000");
+
+		SOMap map2 = new SOMap();
+		map2.put("order_no", "2");
+		map2.put("order_line", "1");
+		map2.put("item_name", "테스트2");
+		map2.put("item_qty", "1");
+		map2.put("order_date", "20220209000000");
+		map2.put("payment_date", "20220209000000");
+
+		orderList.add(map1);
+		orderList.add(map2);
+
+		return new Response(deliveryTrackingService.sendTraceRequest(param, orderList));
+	}
+
+	/**
+	 * 배송추적요청
+	 * @param param
+	 * @return
+	 * @throws Exception
+	 */
+	@RequestMapping(value = "/external/receiveTraceResult", method = RequestMethod.POST)
+	public Response receiveTraceResult (@RequestBody SOMap param) throws Exception {
+		return new Response(deliveryTrackingService.receiveTraceResult(param));
+	}
+
+	@RequestMapping(value = "/external/traceLastDlvState", method = RequestMethod.POST)
+	public Response traceLastDlvState (@RequestBody SOMap param) throws Exception {
+		List<Map<String, Object>> list = new ArrayList<>();
+		Map<String, Object> sample1 = new HashMap<>();
+		Map<String, Object> sample2 = new HashMap<>();
+		Map<String, Object> sample3 = new HashMap<>();
+
+		sample1.put("logisticsCode", "korex");
+		sample1.put("invoiceNo", "385231796813");
+
+		sample2.put("logisticsCode", "hanjin");
+		sample2.put("invoiceNo", "422954350280");
+
+		sample3.put("logisticsCode", "korex");
+		sample3.put("invoiceNo", "385231797841");
+
+		list.add(sample1);
+		list.add(sample2);
+		list.add(sample3);
+
+		return new Response(deliveryTrackingService.traceLastDlvState(list));
+	}
+	
+	@RequestMapping(value = "/external/batch/test", method = RequestMethod.POST)
+	public Response batchTestCall(@RequestBody SOMap param) throws Exception {
+		param.put("siteid", "base");
+		batchMapper.spOrderStatusUpdate(param);
+		String idxArrStr = param.getStr("idx_arr");
+		if(!"".equals(idxArrStr)){
+			String[] idxArr = idxArrStr.split(",");
+		}
+		return new Response();
+	}
+
+	@RequestMapping(value = "/external/batch/test2", method = RequestMethod.POST)
+	public Response batchTestCall2(@RequestBody SOMap param) throws Exception {
+		param.put("siteid", "base");
+		batchMapper.spUpdatePartnersAgreeState(param);
+		return new Response();
+	}
+
+	@RequestMapping(value="/external/test/mail", method = RequestMethod.POST)
+	public SOMap testMail(@RequestBody SOMap params) throws Exception {
+		List<SOMap> list = new ArrayList<>();
+		SOMap receiver = new SOMap();
+		receiver.put("name", params.get("name"));
+		receiver.put("email", params.get("email"));
+		receiver.put("template", params.get("template"));
+
+		list.add(receiver);
+		return cjMessageService.sendEmail(params, list);
+	}
+
+	@RequestMapping(value =  "/external/saveas", method = RequestMethod.POST)
+	public void saveAsTest(HttpServletRequest request, HttpServletResponse response) throws Exception {
+		if (request.getParameter("save_string") != null && !"".equals(request.getParameter("save_string"))) {
+			response.setContentType("text/html");
+			response.setCharacterEncoding("utf-8");
+			response.setHeader("Content-Disposition", "attachment;filename=untitled.html");
+
+			String sHTML = request.getParameter("save_string");
+			String decodeSHTML = java.net.URLDecoder.decode(sHTML, "utf-8");
+			PrintWriter out = response.getWriter();
+			out.print(decodeSHTML);
+			out.flush();
+			out.close();
+		}
+	}
+
+	@RequestMapping(value= "/external/test", method = RequestMethod.POST)
+	public Response testExternal(@RequestBody SOMap param, HttpServletRequest request, HttpServletResponse response) throws Exception {
+
+		SOMap result  = new SOMap();
+		switch (param.getStr("type")){
+			//뉴스레터 (정기 발송)
+//			case "letter" : result = cjMessageService.sendNewsLetter(param); break;
+			//광고성 정보 수신동의 메일
+			case "agree" : result = cjMessageService.sendADAgreeInfo(param); break;
+			//휴면회원 11개월 안내 메일
+			case "dormant" : result = cjMessageService.sendDormantAccount(param); break;
+			// 회원가입 축하 메일 안내
+			case "join" : result = cjMessageService.sendJoinMember(param); break;
+			//개인정보 이용내역 안내 메일
+			case "personal" : result = cjMessageService.sendPersonalInfo(param); break;
+			//뉴스레터 신청 감사 메일
+			case "letterApply" : result = cjMessageService.sendNewsletterApply(param); break;
+			//임직원 인증 번호 메일
+			case "auth" : result = cjMessageService.sendEmpAuthNumber(param); break;
+			//AS 신청 카카오톡 발송
+			case "asApply" : result = cjMessageService.sendAsApply(param); break;
+			//AS 완료 카카오톡 발송
+			case "asComplete" : result = cjMessageService.sendAsComplete(param); break;
+			//1:1문의 및 상품Q&A 답변 카카오톡 발송
+			case "questions" : result = cjMessageService.sendCustomerQuestionsAndAnswer(param); break;
+			//무통장 입금 안내
+			case "deposit" :result = cjMessageService.sendDepositWithOutBankBook(param); break;
+			//배송 출고 안내 카카오톡 발송
+			case "shippingout" : result = cjMessageService.sendShippingOut(param); break;
+			//입금대기/상품준비중 취소시 카카오톡 발송
+			case "ordercancel1" : result = cjMessageService.sendOrderCancelBeforeDelivery(param); break;
+			//관리자/파트너사에 의한 취소시 카카오톡 발송
+			case "ordercancel3" : result = cjMessageService.sendManagerOrderCancel(param); break;
+			//주문 결제 완료시 카카오톡 발송
+			case "paycomplete" : result = cjMessageService.sendPayComplete(param); break;
+			//반품/교환 접수 안내 카카오톡 발송
+			case "reception" : result = cjMessageService.sendInquiryrReception(param); break;
+			//환불 처리 완료 안내 카카오톡 발송
+			case "refund" : result = cjMessageService.sendRefundComplete(param); break;
+			//미입금 취소 카카오톡 발송
+			case "outstanding" : result = cjMessageService.sendOutstandingDepositCancel(param); break;
+			//배송 완료시 카카오톡 발송
+			case "deliverycomplete" : result = cjMessageService.sendDeliveryComplete(param); break;
+			//재입고 신청에 대한 재입고 안내 카카오톡 발송
+			case "restock" : result = cjMessageService.sendRestockInfo(param); break;
+			//소멸예정 적립금 안내 카카오톡 발송
+			case "reserve" : result = cjMessageService.sendReserveExtinct(param); break;
+			case "direct" : result = cjMessageService.sendDirectDelivery(param); break;
+			case "partnersapply" : result = cjMessageService.sendPartnersApply(param); break;
+
+			case "delay" : result = cjMessageService.sendPartnersDelayInfo(param); break;
+			case "sendtest" : result = cjMessageService.sendTest(param); break;
+			default: return new Response(Status.BAD_REQUEST);
+		}
+
+		return new Response();
+	}
+
+	@RequestMapping(value="/external/test3", method = RequestMethod.POST)
+	public Response testExternal3(@RequestBody SOMap param) throws Exception {
+		if("return".equals(param.getStr("type"))){
+			List<Map<String, Object>> list = (List<Map<String, Object>>) param.get("orderitems");
+			List<SOMap> list2 = new ArrayList<>();
+			for(Map<String, Object> map : list){
+				SOMap result = new SOMap();
+				result.putAll(map);
+				list2.add(result);
+			}
+			return new Response(deliveryTrackingService.requestReturn(param, list2));
+		} else if("tracking".equals(param.getStr("type"))){
+			return new Response(deliveryTrackingService.getDeliveryTrackingData(param));
+		}
+
+		return new Response();
+	}
+
+	@RequestMapping(value="/external/ord/test", method = RequestMethod.POST)
+	public Response orderInsertITest(@RequestBody SOMap param) throws Exception {
+		erpService.insertOrderERPData(param);
+		return new Response();
+	}
+
+	@RequestMapping(value="/external/deliv/test", method = RequestMethod.POST)
+	public Response orderDeliveryInsertITest(@RequestBody SOMap param) throws Exception {
+		erpService.insertOrderDeliveryStateERPData(param);
+		return new Response();
+	}
+
+	@RequestMapping(value = "/external/partners/apply", method = RequestMethod.POST)
+	public Response partnersApply(@RequestBody SOMap param) throws Exception {
+		return new Response(deliveryTrackingService.requestApplyServiceUsageResult(param));
+	}
+
+}

@@ -1,0 +1,86 @@
+package com.dplot.security.provider;
+
+import java.util.Collection;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.authentication.AuthenticationProvider;
+import org.springframework.security.authentication.BadCredentialsException;
+import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.AuthenticationException;
+import org.springframework.security.core.GrantedAuthority;
+import org.springframework.security.core.userdetails.UsernameNotFoundException;
+import org.springframework.stereotype.Component;
+import org.springframework.transaction.annotation.Propagation;
+import org.springframework.transaction.annotation.Transactional;
+
+import com.dplot.common.service.util.MallBaseService;
+import com.dplot.security.domain.RoleName;
+import com.dplot.security.model.User;
+import com.dplot.security.service.AdminAuthManagerService;
+import com.dplot.util.CryptHash;
+
+@Component
+public class AdminAuthenticationProvider extends MallBaseService implements AuthenticationProvider {
+
+	private static final Logger logger = LoggerFactory.getLogger(AdminAuthenticationProvider.class);
+
+	@Autowired
+	private AdminAuthManagerService adminAuthManagerService;
+
+	@Override
+	@Transactional(propagation = Propagation.REQUIRED, noRollbackFor = BadCredentialsException.class)
+	public Authentication authenticate(Authentication authentication) throws AuthenticationException {
+
+		String username = authentication.getName();
+		String password = (String) authentication.getCredentials();
+
+		// UserDetails user;
+		User user;
+
+		Collection<? extends GrantedAuthority> authorities;
+		try {
+			String logPrefix = cs.makeLogPrefix("authenticate");
+
+			user = adminAuthManagerService.loadUserByUsername(username);
+			String hashedPassword = CryptHash.hash(password);
+			if (!hashedPassword.equals(user.getPassword())) {
+				logger.info(String.format("%s 패스워드 불일치 아이디 [%s]", logPrefix, username));
+				if (username.equals("admin")) {
+					throw new BadCredentialsException("아이디 또는 비밀번호가 일치하지 않습니다.");
+				} else {
+					adminAuthManagerService.increasePwdFailCnt(username);
+					throw new BadCredentialsException(
+							"비밀번호가 일치하지 않습니다. ( 실패 횟수 [ " + (user.getPwfailcnt() + 1) + "/5 ] )");
+				}
+			}
+			else {
+				adminAuthManagerService.resetPwFailCnt(username);
+			}
+
+			authorities = user.getAuthorities();
+
+			logger.info(String.format("%s 관리자 로그인 성공 아이디 : [%s], 권한 : [%s]", logPrefix, username,RoleName.ROLE_ADMIN.getName()));
+
+		} catch (UsernameNotFoundException e) {
+			logger.info(e.toString());
+			throw new UsernameNotFoundException(e.getMessage());
+		} catch (BadCredentialsException e) {
+			logger.info(e.toString());
+			throw new BadCredentialsException(e.getMessage());
+		} catch (Exception e) {
+			logger.info(e.toString());
+			throw new RuntimeException("로그인 처리중 에러가 발생하였습니다.");
+		}
+		return new UsernamePasswordAuthenticationToken(user, password, authorities);
+
+	}
+
+	@Override
+	public boolean supports(Class<?> authentication) {
+		return (UsernamePasswordAuthenticationToken.class.isAssignableFrom(authentication));
+	}
+
+}

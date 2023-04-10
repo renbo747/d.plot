@@ -1,0 +1,27 @@
+.magazine {
+  .detail-section {
+    padding-bottom: 80px;
+  }
+  .detail-section__figure {
+    width: 100%;
+    img {
+      width: 100%;
+    }
+  }
+  .detail-section__text__box {
+    padding-top: 20px;
+  }
+  .detail-section__title {
+    padding-bottom: 16px;
+  }
+  .detail-section__title__text {
+    font-size: 32px;
+    letter-spacing: -.1.06px;
+  }
+  .detail-section__text-p {
+    font-size: 14px;
+    letter-spacing: -.56px;
+    font-weight: 400;
+    color: $gray-700;
+  }
+}

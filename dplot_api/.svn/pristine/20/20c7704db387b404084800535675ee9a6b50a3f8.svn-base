@@ -1,0 +1,342 @@
+package com.dplot.admin.controller.order;
+
+import java.util.List;
+import java.util.Map;
+
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.core.io.ByteArrayResource;
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestMethod;
+import org.springframework.web.bind.annotation.RequestPart;
+import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.multipart.MultipartHttpServletRequest;
+
+import com.dplot.admin.service.order.AdminClaimService;
+import com.dplot.common.CMConst;
+import com.dplot.common.Response;
+import com.dplot.common.SOMap;
+import com.dplot.common.controller.ExcelDownController;
+import com.dplot.common.service.impl.CommonClaimServiceImpl;
+import com.dplot.util.Util;
+
+/**
+ * @discription	: 클레임 Controller
+ * @fileName	: AdminClaimController.java
+ * @author		: JSK
+ * @date		: 2022.03.03
+ * =================================================================
+ * DATE			AUTHOR		NOTE
+ * -----------------------------------------------------------------
+ * 2022.03.03	JSK			최초생성
+ * -----------------------------------------------------------------
+ */
+@RestController
+@RequestMapping(value = {"/admin/order/claim", "/partners/order/claim"})
+public class AdminClaimController extends ExcelDownController{
+	
+    @Autowired
+    AdminClaimService adminClaimService;
+
+    /**
+     * 클레임(취소, 반품, 교환) 목록조회
+     * @param params
+     * @return Response
+     * @throws Exception
+     */
+    @RequestMapping(value = "/list", method = RequestMethod.POST)
+    public Response claimList(@RequestBody SOMap params) throws Exception {
+        return new Response(adminClaimService.selectClaimList(params));
+    }
+    
+    /**
+     * 클레임(취소, 반품, 교환) 목록 조회(엑셀용)
+     * @param params
+     * @return ResponseEntity<ByteArrayResource>
+     * @throws Exception
+     */
+    @RequestMapping(value = "/exceldown", method = RequestMethod.POST)
+    public ResponseEntity<ByteArrayResource> claimListForExcel(@RequestBody SOMap params) throws Exception {
+    	// 엑셀출력 내용 조회
+    	List<Map<String, Object>> list = adminClaimService.selectClaimListForExcel(params);
+
+        if (params.get("ispartner") != null && Util.equal(params.getStr("ispartner"), "true")) {
+	    	// 취소관리
+	    	if (Util.equal(params.getStr("clmtype"), CMConst.CLM_CANCEL)) {
+	    		String[] header = {"취소신청일", "취소완료일", "취소번호", "주문일"
+	            			     , "상품코드", "단품코드", "상품명", "옵션", "주문수량", "취소수량", "판매단가", "판매금액"
+	            			     , "취소금액", "신청구분", "취소상태", "주문번호"};
+	    		String[] column = {"clmreqday", "clmcompday", "clmno", "orderday"
+	            				 , "goodscode", "optioncode", "goodsname", "optionconts", "bfordcnt", "clmcnt", "price", "totprice"
+	            				 , "clmamt", "clmreqtypename", "cncstatusname", "ordno"};
+	    		int[] columnSize = {20*256, 20*256, 20*256, 20*256
+	            				  , 15*256, 10*256, 30*256, 20*256, 10*256, 10*256, 15*256, 15*256
+	            				  , 15*256, 10*256, 20*256, 20*256};
+	
+	        	return makeExcelFile(header, column, columnSize, list, "취소관리목록.xlsx");
+	    	}
+	    	// 반품관리
+	    	else if (Util.equal(params.getStr("clmtype"), CMConst.CLM_RETURN)) {
+	    		String[] header = {"반품신청일", "반품완료일", "반품번호", "주문일"
+			   			     	 , "상품코드", "단품코드", "상품명", "옵션", "주문수량", "반품수량", "판매단가", "판매금액"
+			   			     	 , "반품금액", "신청구분", "반품상태", "주문번호"};
+				String[] column = {"clmreqday", "clmcompday", "clmno", "orderday"
+				   				 , "goodscode", "optioncode", "goodsname", "optionconts", "bfordcnt", "clmcnt", "price", "totprice"
+				   				 , "clmamt", "clmreqtypename", "rtnstatusname", "ordno"};
+	    		int[] columnSize = {20*256, 20*256, 20*256, 20*256
+				  				  , 15*256, 10*256, 30*256, 20*256, 10*256, 10*256, 15*256, 15*256
+				  				  , 15*256, 10*256, 20*256, 20*256};
+	
+	        	return makeExcelFile(header, column, columnSize, list, "반품관리목록.xlsx");
+	    	}
+	    	// 교환관리
+	    	else if (Util.equal(params.getStr("clmtype"), CMConst.CLM_EXCHANGE)) {
+	    		String[] header = {"교환신청일", "교환완료일", "교환번호", "주문일"
+			  			     	 , "상품코드", "단품코드", "상품명", "옵션", "주문수량", "교환수량", "판매단가", "판매금액"
+			  			     	 , "신청구분", "교환상태", "주문번호"};
+				String[] column = {"clmreqday", "clmcompday", "clmno", "orderday"
+				   				 , "goodscode", "optioncode", "goodsname", "optionconts", "bfordcnt", "clmcnt", "price", "totprice"
+				   				 , "clmreqtypename", "excstatusname", "ordno"};
+	    		int[] columnSize = {20*256, 20*256, 20*256, 20*256
+				  				  , 15*256, 10*256, 30*256, 20*256, 10*256, 10*256, 15*256, 15*256
+				  				  , 10*256, 20*256, 20*256};
+	
+	        	return makeExcelFile(header, column, columnSize, list, "교환관리목록.xlsx");
+	    	}
+	    	// 이외
+	    	else {
+	    		String[] header = {"클레임신청일", "클레임완료일", "클레임번호", "주문일"
+			  			     	 , "상품코드", "단품코드", "상품명", "옵션", "주문수량", "클레임수량", "판매단가", "판매금액"
+			  			     	 , "클레임금액", "신청구분", "취소상태", "반품상태", "교환상태", "주문번호"};
+				String[] column = {"clmreqday", "clmcompday", "clmno", "orderday"
+				   				 , "goodscode", "optioncode", "goodsname", "optionconts", "bfordcnt", "clmcnt", "price", "totprice"
+				   				 , "clmamt", "clmreqtypename", "cncstatusname", "rtnstatusname", "excstatusname", "ordno"};
+	    		int[] columnSize = {20*256, 20*256, 20*256, 20*256
+				  				  , 15*256, 10*256, 30*256, 20*256, 10*256, 10*256, 15*256, 15*256
+				  				  , 15*256, 10*256, 20*256, 20*256};
+			
+				return makeExcelFile(header, column, columnSize, list, "클레임목록.xlsx");
+	    	}
+        } else {
+	    	// 취소관리
+	    	if (Util.equal(params.getStr("clmtype"), CMConst.CLM_CANCEL)) {
+	    		String[] header = {"취소신청일", "취소완료일", "취소번호", "주문일", "주문자", "주문자ID", "주문자연락처", "회원구분", "회원유형", "회원등급", "차수"
+	            			     , "판매구분", "파트너사명", "상품코드", "단품코드", "상품명", "옵션", "주문수량", "취소수량", "판매단가", "판매금액"
+	            			     , "취소금액", "신청구분", "취소상태", "주문번호"};
+	    		String[] column = {"clmreqday", "clmcompday", "clmno", "orderday", "ordname", "ordid", "ordtel", "isnonmembername", "membertypename", "memlvtypename", "clmturn"
+	            				 , "ispbgoodsname", "dealername", "goodscode", "optioncode", "goodsname", "optionconts", "bfordcnt", "clmcnt", "price", "totprice"
+	            				 , "clmamt", "clmreqtypename", "cncstatusname", "ordno"};
+	    		int[] columnSize = {20*256, 20*256, 20*256, 20*256, 15*256, 15*256, 15*256, 10*256, 15*256, 15*256, 10*256
+	            				  , 10*256, 15*256, 15*256, 10*256, 30*256, 20*256, 10*256, 10*256, 15*256, 15*256
+	            				  , 15*256, 10*256, 20*256, 20*256};
+	
+	        	return makeExcelFile(header, column, columnSize, list, "취소관리목록.xlsx");
+	    	}
+	    	// 반품관리
+	    	else if (Util.equal(params.getStr("clmtype"), CMConst.CLM_RETURN)) {
+	    		String[] header = {"반품신청일", "반품완료일", "반품번호", "주문일", "주문자", "주문자ID", "주문자연락처", "회원구분", "회원유형", "회원등급", "차수"
+			   			     	 , "판매구분", "파트너사명", "상품코드", "단품코드", "상품명", "옵션", "주문수량", "반품수량", "판매단가", "판매금액"
+			   			     	 , "반품금액", "신청구분", "반품상태", "주문번호"};
+				String[] column = {"clmreqday", "clmcompday", "clmno", "orderday", "ordname", "ordid", "ordtel", "isnonmembername", "membertypename", "memlvtypename", "clmturn"
+				   				 , "ispbgoodsname", "dealername", "goodscode", "optioncode", "goodsname", "optionconts", "bfordcnt", "clmcnt", "price", "totprice"
+				   				 , "clmamt", "clmreqtypename", "rtnstatusname", "ordno"};
+	    		int[] columnSize = {20*256, 20*256, 20*256, 20*256, 15*256, 15*256, 15*256, 10*256, 15*256, 15*256, 10*256
+				  				  , 10*256, 15*256, 15*256, 10*256, 30*256, 20*256, 10*256, 10*256, 15*256, 15*256
+				  				  , 15*256, 10*256, 20*256, 20*256};
+	
+	        	return makeExcelFile(header, column, columnSize, list, "반품관리목록.xlsx");
+	    	}
+	    	// 교환관리
+	    	else if (Util.equal(params.getStr("clmtype"), CMConst.CLM_EXCHANGE)) {
+	    		String[] header = {"교환신청일", "교환완료일", "교환번호", "주문일", "주문자", "주문자ID", "주문자연락처", "회원구분", "회원유형", "회원등급", "차수"
+			  			     	 , "판매구분", "파트너사명", "상품코드", "단품코드", "상품명", "옵션", "주문수량", "교환수량", "판매단가", "판매금액"
+			  			     	 , "신청구분", "교환상태", "주문번호"};
+				String[] column = {"clmreqday", "clmcompday", "clmno", "orderday", "ordname", "ordid", "ordtel", "isnonmembername", "membertypename", "memlvtypename", "clmturn"
+				   				 , "ispbgoodsname", "dealername", "goodscode", "optioncode", "goodsname", "optionconts", "bfordcnt", "clmcnt", "price", "totprice"
+				   				 , "clmreqtypename", "excstatusname", "ordno"};
+	    		int[] columnSize = {20*256, 20*256, 20*256, 20*256, 15*256, 15*256, 15*256, 10*256, 15*256, 15*256, 10*256
+				  				  , 10*256, 15*256, 15*256, 10*256, 30*256, 20*256, 10*256, 10*256, 15*256, 15*256
+				  				  , 10*256, 20*256, 20*256};
+	
+	        	return makeExcelFile(header, column, columnSize, list, "교환관리목록.xlsx");
+	    	}
+	    	// 이외
+	    	else {
+	    		String[] header = {"클레임신청일", "클레임완료일", "클레임번호", "주문일", "주문자", "주문자ID", "주문자연락처", "회원구분", "회원유형", "회원등급", "차수"
+			  			     	 , "판매구분", "파트너사명", "상품코드", "단품코드", "상품명", "옵션", "주문수량", "클레임수량", "판매단가", "판매금액"
+			  			     	 , "클레임금액", "신청구분", "취소상태", "반품상태", "교환상태", "주문번호"};
+				String[] column = {"clmreqday", "clmcompday", "clmno", "orderday", "ordname", "ordid", "ordtel", "isnonmembername", "membertypename", "memlvtypename", "clmturn"
+				   				 , "ispbgoodsname", "dealername", "goodscode", "optioncode", "goodsname", "optionconts", "bfordcnt", "clmcnt", "price", "totprice"
+				   				 , "clmamt", "clmreqtypename", "cncstatusname", "rtnstatusname", "excstatusname", "ordno"};
+	    		int[] columnSize = {20*256, 20*256, 20*256, 20*256, 15*256, 15*256, 15*256, 10*256, 15*256, 15*256, 10*256
+				  				  , 10*256, 15*256, 15*256, 10*256, 30*256, 20*256, 10*256, 10*256, 15*256, 15*256
+				  				  , 15*256, 10*256, 20*256, 20*256};
+			
+				return makeExcelFile(header, column, columnSize, list, "클레임목록.xlsx");
+	    	}
+        	
+        }
+    }
+
+    /**
+     * 환불관리 목록조회
+     * @param params
+     * @return Response
+     * @throws Exception
+     */
+    @RequestMapping(value = "/refund/list", method = RequestMethod.POST)
+    public Response refundList(@RequestBody SOMap params) throws Exception {
+        return new Response(adminClaimService.selectClaimRefundList(params));
+    }
+    
+    /**
+     * 환불관리 목록조회(엑셀용)
+     * @param params
+     * @return ResponseEntity<ByteArrayResource>
+     * @throws Exception
+     */
+    @RequestMapping(value = "/refund/exceldown", method = RequestMethod.POST)
+    public ResponseEntity<ByteArrayResource> refundListForExcel(@RequestBody SOMap params) throws Exception {
+    	// 엑셀출력 내용 조회
+    	List<Map<String, Object>> list = adminClaimService.selectClaimRefundListForExcel(params);
+    	
+    	String[] header = {"환불처리일", "주문일", "주문번호", "주문자", "주문자ID", "주문자연락처", "회원구분", "회원유형", "회원등급", "환불결제수단", "환불금액"
+					     , "환불은행", "계좌번호", "예금주", "클레임상태"};
+		String[] column = {"clmcompdate", "orderdate", "ordno", "ordname", "ordid", "ordtel", "isnonmembername", "membertypename", "memlvtypename", "paywaytypename", "finadjustamt"
+						 , "refbank", "refaccnumber", "refcusname", "clmstatusname"};
+		int[] columnSize = {20*256, 20*256, 20*256, 15*256, 15*256, 15*256, 10*256, 15*256, 15*256, 15*256, 15*256
+						  , 15*256, 20*256, 15*256, 25*256};
+		
+		return makeExcelFile(header, column, columnSize, list, "환불관리목록.xlsx");
+    }
+
+    /**
+     * 클레임상태이력 목록조회
+     * @param params
+     * @return Response
+     * @throws Exception
+     */
+    @RequestMapping(value = "/status/list", method = RequestMethod.POST)
+    public Response claimStatusList(@RequestBody SOMap params) throws Exception {
+        return new Response(adminClaimService.selectClaimStatusHistList(params));
+    }
+
+    /**
+     * 클레임신청 전 유효성체크
+     * @param params
+     * @return Response
+     * @throws Exception
+     */
+    @RequestMapping(value = "/check/valid", method = RequestMethod.POST)
+    public Response checkValid(@RequestBody SOMap params) throws Exception {
+        return adminClaimService.checkBeforeClaimValid(params);
+    }
+
+    /**
+     * 클레임신청 기본정보 조회
+     * @param params
+     * @return Response
+     * @throws Exception
+     */
+    @RequestMapping(value = "/apply/info", method = RequestMethod.POST)
+    public Response applyInfo(@RequestBody SOMap params) throws Exception {
+        SOMap result = adminClaimService.selectClaimApplyInfo(params);
+        return new Response(result);
+    }
+
+    /**
+     * 클레임신청 저장
+     * @param params
+     * @return Response
+     * @throws Exception
+     */
+    @RequestMapping(value = "/save", method = RequestMethod.POST)
+    public Response saveClaimApply(@RequestPart("params") SOMap params, MultipartHttpServletRequest fileParams) throws Exception {
+        SOMap result = adminClaimService.saveClaimApply(fileParams.getFileMap(), params);
+        return new Response(result);
+    }
+
+    /**
+     * 클레임 상세 기본정보 조회
+     * @param params
+     * @return Response
+     * @throws Exception
+     */
+    @RequestMapping(value = "/detail/info", method = RequestMethod.POST)
+    public Response claimDetailInfo(@RequestBody SOMap params) throws Exception {
+        SOMap result = adminClaimService.selectClaimDetailInfo(params);
+        return new Response(result);
+    }
+
+    /**
+     * 단건 클레임 상태 변경
+     * @param params
+     * @return Response
+     * @throws Exception
+     */
+    @RequestMapping(value = "/save/status", method = RequestMethod.POST)
+    public Response saveClaimStatus(@RequestBody SOMap params) throws Exception {
+        SOMap result = adminClaimService.saveClaimStatus(params);
+        return new Response(result);
+    }
+
+    /**
+     * 다건 클레임 상태 변경
+     * @param params
+     * @return Response
+     * @throws Exception
+     */
+    @RequestMapping(value = "/save/status/all", method = RequestMethod.POST)
+    public Response saveClaimStatusAll(@RequestBody SOMap params) throws Exception {
+        SOMap result = adminClaimService.saveClaimStatusAll(params);
+        return new Response(result);
+    }
+
+    /**
+     * 회수진행
+     * @param params
+     * @return Response
+     * @throws Exception
+     */
+    @RequestMapping(value = "/proc/return", method = RequestMethod.POST)
+    public Response procReturn(@RequestBody SOMap params) throws Exception {
+        SOMap result = adminClaimService.procReturn(params);
+        return new Response(result);
+    }
+
+    /**
+     * 교환배송진행
+     * @param params
+     * @return Response
+     * @throws Exception
+     */
+    @RequestMapping(value = "/proc/deliv", method = RequestMethod.POST)
+    public Response procDelivery(@RequestBody SOMap params) throws Exception {
+        SOMap result = adminClaimService.procDelivery(params);
+        return new Response(result);
+    }
+
+    /**
+     * 조정금액 저장
+     * @param params
+     * @return Response
+     * @throws Exception
+     */
+    @RequestMapping(value = "/save/adjust", method = RequestMethod.POST)
+    public Response saveAdjustamt(@RequestBody SOMap params) throws Exception {
+        SOMap result = adminClaimService.saveAdjustamt(params);
+        return new Response(result);
+    }
+
+    /**
+     * 환불상세내역 조회
+     * @param params
+     * @return Response
+     * @throws Exception
+     */
+    @RequestMapping(value = "/refund/info", method = RequestMethod.POST)
+    public Response refundInfo(@RequestBody SOMap params) throws Exception {
+        return new Response(adminClaimService.selectClaimRefundInfo(params));
+    }
+}

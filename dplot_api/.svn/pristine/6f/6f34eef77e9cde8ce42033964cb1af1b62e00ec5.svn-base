@@ -1,0 +1,126 @@
+package com.dplot.admin.service.common;
+
+import java.util.List;
+
+import com.dplot.common.SOMap;
+
+/**
+ * @discription	: 관리자 공통 Service
+ * @fileName	: AdminCommonService.java
+ * @author		: JSK
+ * @date		: 2021.11.09
+ * =================================================================
+ * DATE			AUTHOR		NOTE
+ * -----------------------------------------------------------------
+ * 2021.11.09	JSK			최초생성
+ * -----------------------------------------------------------------
+ */
+public interface AdminCommonService {
+
+	/**
+	 * 관리자 상단메뉴(1뎁스) 조회
+	 *
+	 * @param params
+	 * @return List<SOMap>
+	 * @throws Exception
+	 */
+	List<SOMap> selectAdminMenu(SOMap params) throws Exception;
+
+	/**
+	 * 관리자 서브메뉴(2뎁스 이상) 조회
+	 * @param params
+	 * @return List<SOMap>
+	 * @throws Exception
+	 */
+	List<SOMap> selectAdminSubMenu(SOMap params) throws Exception;
+
+	/**
+	 * 네비게이터에 노출할 메뉴 조회
+	 * @param params
+	 * @return SOMap
+	 * @throws Exception
+	 */
+	SOMap selectAdminMenuNav(SOMap params) throws Exception;
+
+	/**
+	 * 관리자 페이지 읽기/쓰기 권한 데이터 리턴
+	 * @param params
+	 * @return SOMap
+	 * @throws Exception
+	 */
+	SOMap selectAdminPageAuth(SOMap params) throws Exception;
+
+	/**
+	 * 다다픽 사용자 조회
+	 * @param params
+	 * @return SOMap
+	 * @throws Exception
+	 */
+	SOMap selectMemberList(SOMap params) throws Exception;
+
+	/**
+	 * 상품목록 조회
+	 * @param params
+	 * @return List<SOMap>
+	 * @throws Exception
+	 */
+	SOMap selectGoodsList(SOMap params) throws Exception;
+
+	/**
+	 * 사은품목록 조회
+	 * @param params
+	 * @return List<SOMap>
+	 * @throws Exception
+	 */
+	SOMap selectGiftList(SOMap params) throws Exception;
+
+	/**
+	 * 주문내역 조회
+	 * @param params
+	 * @return List<SOMap>
+	 * @throws Exception
+	 */
+	SOMap selectOrderList(SOMap params) throws Exception;
+
+	/**
+	 * 멤버 히스토리 리스트 팝업(회원유형, 회원등급, 광고성(이메일, SMS, PUSH) 동의여부)
+	 * @param params
+	 * @return
+	 * @throws Exception
+	 */
+	SOMap selectMemberInfoHistoryList(SOMap params) throws Exception;
+
+	/**
+	 * 사용가능한 쿠폰 목록 조회
+	 *
+	 * @param params
+	 * @return
+	 * @throws Exception
+	 */
+	SOMap selectUseCouponList(SOMap params) throws Exception;
+
+	/**
+	 * 즐겨찾기용 전체메뉴 조회
+	 * @param params
+	 * @return
+	 * @throws Exception
+	 */
+	List<SOMap> selectAdminFavoriteAllMenuList(SOMap params) throws Exception;
+
+	/**
+	 * 즐겨찾기 메뉴 저장
+	 * @param params
+	 * @return
+	 * @throws Exception
+	 */
+	SOMap saveFavoriteMenu(SOMap params) throws Exception;
+
+	/**
+	 * 즐겨찾기 메뉴조회
+	 * @param params
+	 * @return
+	 * @throws Exception
+	 */
+	List<SOMap> selectAdminFavoriteMenuList(SOMap params) throws Exception;
+
+}
