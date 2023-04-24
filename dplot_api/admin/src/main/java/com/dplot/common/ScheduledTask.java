@@ -631,7 +631,8 @@ public class ScheduledTask {
 		}
 	}
 	
-	//매일 08시 00분 ~ 20시 00분 10분 간격으로 배송시작 알림톡 발송
+	//매일 08시 00분 ~ 20시 00분 10분 간격
+	// 배송시작 알림톡 발송
 	@Scheduled(cron = "0 0/10 8-20 * * *")
 	@SchedulerLock(name = "sendDeliveryKakaoMsg")
 	public void sendDeliveryKakaoMsg(){
@@ -649,6 +650,8 @@ public class ScheduledTask {
 		}
 	}
 	
+	// 매일 15시 30분
+	// 소멸예정 쿠폰 알림톡 발송
 	@Scheduled(cron = "0 30 15 * * *")
 	@SchedulerLock(name = "sendCpnExtinctionMsg")
 	public void sendCpnExtinctionMsg(){

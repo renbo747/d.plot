@@ -20,6 +20,7 @@
 			tm.mdifidx, tm.mdsabun, tm.empname, tm.mdcode, tm.mdname, tm.mdemail, tm.isdp
 		FROM t_mdinfo tm
 		WHERE 1 = 1
+		AND ISTRASH = 'F'
 		<if test='mdifidx != null and mdifidx != ""'>
 		AND tm.mdifidx = #{mdifidx}
 		</if>

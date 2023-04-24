@@ -1066,6 +1066,7 @@
 		WHERE
 			TC.CPNISSUETYPE = 'CIT002'
 			AND TC.ISTRASH = 'F'
+			AND TCI.CPNISSUEST != 'CIS003'
 			AND sysdate() BETWEEN ifnull(STR_TO_DATE(tci.CPNISSUEDAY, '%Y%m%d%H%i'), DATE_ADD(sysdate(), INTERVAL - 1 DAY)) AND STR_TO_DATE(tci.CPNUSEEDDAY ,'%Y%m%d%H%i')
 			AND ( (TC.goodsrangetype = 'GGT001' /* 전체카테고리 쿠폰, 전체상품 쿠폰 */ )
 					OR ( TC.goodsrangetype = 'GGT002'

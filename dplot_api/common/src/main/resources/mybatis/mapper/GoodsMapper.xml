@@ -1177,6 +1177,7 @@
 				<if test="dealerno != null and dealerno != '' ">
 				AND a.dealerno = #{dealerno}	/* 임시저장여부 */
 				</if>
+				<if test="sword == null or sword == '' ">
 				<choose>
 					<when test="sdate != null and sdate == 'reg'">
 						<if test="(startdate != null and startdate != '') and (enddate == null or enddate == '') ">
@@ -1202,6 +1203,7 @@
 					</when>
 					<otherwise></otherwise>
 				</choose>
+				</if>
 				<if test="depth1cateidx != null and depth1cateidx != '' ">
 				AND d.depth1idx = #{depth1cateidx}	/* 대분류카테고리 */
 				</if>
