@@ -1,0 +1,70 @@
+.dp-mypage-return {
+  padding: 20px 0 40px;
+  min-height: calc(100vh - 110px);
+
+  .product__price {
+    margin-top: 8px;
+  }
+
+  .dp-hr {
+    margin-bottom: 0;
+  }
+
+  .form-select {
+    color: $gray-800;
+  }
+ // section mypage-return__header
+  .mypage-return__header {
+    padding-bottom: 30px;
+    .select__area {
+      .form-select:first-child {
+        margin-right: 12px;
+      }
+    }
+  }
+  // section   mypage-return-body
+  .mypage-return__body {
+    .product-info__area {
+      .product-info__header {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        padding-bottom: 14px;
+      }
+      .apply-date {
+        font-size: 14px;
+        letter-spacing: -.42px;
+        line-height: 20px;
+        font-weight: 500;
+      }
+      .return-hr {
+        margin-bottom: 30px;
+      }
+      .apply__product-info__area {
+
+        .apply__product-info__area__ul + .apply__product-info__area__ul {
+          margin-top: 40px;
+        }
+
+        .apply__product-info__li + .apply__product-info__li {
+          margin-top: 40px;
+        }
+      }
+    }
+
+    // 내역이 없을 때
+    .as__empty-apply__area {
+      padding-top: 80px;
+      .icon-empty-apply__area {
+        width: 94px;
+        height: 94px;
+        background: $gray-100;
+        border-radius: 50%;
+        margin-bottom: 20px;
+      }
+      .as__empty-apply__text {
+        color: $gray-700;
+      }
+    }
+  }
+}

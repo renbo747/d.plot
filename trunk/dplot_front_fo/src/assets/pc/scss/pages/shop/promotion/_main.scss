@@ -1,0 +1,59 @@
+.dp-promotion {
+  .promotion__header {
+    margin-bottom: 54px;
+  }
+  .promotion__header .promotion__title {
+    font-size: 26px;
+    letter-spacing: -1.04px;
+    line-height: 37px;
+    font-weight: 700;
+  }
+  .nav-tabs {
+    display: flex;
+    position: sticky;
+    top: 100px;
+    left: 0;
+    z-index: 10;
+    width: 100%;
+    background: #ffffff;
+
+    > li {
+      flex: 1 1 0;
+      text-align: center;
+    }
+  }
+  .nav-tabs .nav-link {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: $gray-700;
+    font-size: 18px;
+    letter-spacing: -.72px;
+    line-height: 20px;
+    height: 60px;
+    border-bottom: 2px solid $border-color;
+    &:hover {
+      border-top: none;
+      border-left: none;
+      border-right: none;
+    }
+  }
+  .nav-tabs .nav-link.active, .nav-tabs .nav-item.show .nav-link {
+    color: $black;
+    font-size: 22px;
+    letter-spacing: -.88px;
+    font-weight: 700;
+    border: none;
+    border-bottom: 2px solid $black;
+  }
+  .tab-content {
+    padding-top: 48px;
+  }
+  .promotion__more-btn {
+    border: 1px solid $gray-400;
+    margin-right: 20px;
+    margin-left: 20px;
+    margin-bottom: 40px;
+    color: $black;
+  }
+}

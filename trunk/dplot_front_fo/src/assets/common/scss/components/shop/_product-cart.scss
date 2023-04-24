@@ -1,0 +1,195 @@
+.product-cart {
+  width: 100%;
+  .product-cart__header {
+    align-items: center;
+    justify-content: space-between;
+  }
+
+  .icon-close-black {
+    cursor: pointer;
+  }
+  // 프로덕트 카트 바디
+  .product-cart__body {
+    display: flex;
+    .product-thumbnail {
+      min-width: 100px;
+      flex: 0 0 100px;
+      @include media-breakpoint-up(xl) {
+        flex: 0 0 150px;
+      }
+    }
+    .product-info {
+      width: calc(100% - 116px);
+    }
+    .product-info__status {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+    .delivery-status {
+      color: $primary;
+      font-size: 14px;
+      letter-spacing: -.56px;
+      line-height: 20px;
+      font-weight: 500;
+    }
+    .guarantee-container {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      span {
+        margin: 0 1px 0 3px;
+        color: $gray-800;
+        font-size: 12px;
+        letter-spacing: .48px;
+      }
+    }
+    .product__ctg {
+      color: $black;
+      font-size: 12px;
+      letter-spacing: -.36px;
+      line-height: 14px;
+      font-weight: 600;
+      text-transform: uppercase;
+    }
+    .product-option {
+      margin-bottom: 4px;
+      ul {
+        color: $gray-700;
+        font-size: 12px;
+        letter-spacing: -.48px;
+      }
+      li {
+        @include text-truncate;
+      }
+      li + li {
+        margin-top: 2px;
+      }
+    }
+    .product__price {
+      line-height: 0;
+    }
+    .price-number{
+      color: $black;
+      font-size: 18px;
+      letter-spacing: -.54px;
+      line-height: 18px;
+      font-weight: 600;
+      margin-right: 2px;
+    }
+    .price-unit {
+      color: $black;
+      font-size: 14px;
+      letter-spacing: -.56px;
+      line-height: 20px;
+    }
+    .discount-number {
+      position: relative;
+      display: inline-block;
+      margin-top: 2px;
+      font-size: 12px;
+      letter-spacing: -.36px;
+      line-height: 18px;
+      color: #999;
+      &::before {
+        position: absolute;
+        top: 55%;
+        left: 0;
+        width: 100%;
+        content: '';
+        height: 1px;
+        background: #999;
+      }
+    }
+    .dp-bar {
+      margin: 0 6px;
+    }
+    .badge__group {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      margin-bottom: -1px;
+      margin-left: 4px;
+    }
+    .dp-badge {
+      padding: 0 8px;
+    }
+    .dp-badge + .dp-badge {
+      margin-left: 4px;
+    }
+  }
+
+  // 프로덕트 카트 푸터
+  .product-cart__footer {
+    display: flex;
+    .base-counter {
+      margin-right: auto;
+    }
+    .product-cart__ul {
+      display: flex;
+      margin-left: auto;
+      li + li {
+        margin-left: 10px;
+      }
+      .dp-btn {
+        width: 100px;
+      }
+    }
+    .dp-btn {
+      font-size: 14px;
+      letter-spacing: -.56px;
+      line-height: 20px;
+      padding: 0 12px;
+
+      @include media-breakpoint-up(xl) {
+        min-width: 100px;
+      }
+    }
+    .mypage-footer {
+      display: flex;
+      align-items: center;
+      li {
+        width: auto;
+      }
+      li + li {
+        margin-left: 8px;
+      }
+    }
+  }
+
+  // 교환신청페이지 관련 레이아웃
+  .exchange-layout {
+    width: 100%;
+    .dp-btn {
+      width: 100px;
+      height: 32px;
+      margin-left: 10px;
+      color: $gray-800;
+    }
+  }
+
+  .exchange-layout-select {
+    width: 100%;
+
+    .form-select {
+      width: 100%;
+      margin-top: 10px;
+    }
+  }
+
+  .form-select {
+    width: 100px;
+  }
+
+}
+
+// 썸네일이 사라졌을 때 레이아웃을 위해
+.thumbnailHidden {
+  .product-thumbnail .thumbnail__img {
+    background: transparent !important;
+    img {
+      visibility: hidden;
+    }
+  }
+}

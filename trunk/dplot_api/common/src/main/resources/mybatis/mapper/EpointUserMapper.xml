@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.dplot.mapper.EpointUserMapper">
+
+    <insert id="insertEpointUser" parameterType="somap">
+        INSERT INTO t_epoint_user (epoidx, userno, reguserid, regdate)
+        VALUES
+        <if test="memberlist != null and memberlist.size > 0">
+            <foreach collection="memberlist" separator="," item="item">
+                (#{item.epoidx}, #{item.userno}, #{item.reguserid}, now())
+            </foreach>
+        </if>
+        <if test="member != null and member != ''">
+            (#{epoidx}, #{userno}, #{reguserid}, now())
+        </if>
+    </insert>
+
+    <delete id="deleteEpointUser" parameterType="somap">
+        DELETE FROM t_epoint_user
+        WHERE 1 = 1
+        <if test="usernolist != null and usernolist.size > 0">
+            AND userno IN
+            <foreach collection="usernolist" item="item" open="(" separator="," close=")">
+                #{item}
+            </foreach>
+        </if>
+        <if test="epoidx != null and epoidx != ''">
+            AND epoidx = #{epoidx}
+        </if>
+    </delete>
+</mapper>

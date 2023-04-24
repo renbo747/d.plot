@@ -1,0 +1,162 @@
+.dp-member-modify {
+  padding-top: 30px;
+  padding-bottom: 40px;
+
+  .form-group {
+    margin-bottom: 0;
+  }
+
+  .form-group + .form-group {
+    margin-top: 20px;
+  }
+
+  .info-modify__area {
+    padding-bottom: 30px;
+
+    .info-modify__header {
+      .member-info__title {
+        align-items: center;
+        padding-bottom: 30px;
+      }
+      .member-name {
+        font-weight: 400;
+        padding-right: 12px;
+      }
+      .member-info-area {
+        padding-bottom: 30px;
+        li {
+          color: $gray-700;
+
+          span:first-child {
+            width: 50px;
+            margin-right: 32px;
+            display: inline-block;
+          }
+          p {
+            padding-top: 12px;
+          }
+        }
+
+        li + li {
+          margin-top: 6px;
+        }
+      }
+    }
+    .phone-input__area {
+      width: calc(100% - 100px);
+    }
+    .modify-btn__area {
+      width: 100px;
+      margin-left: 10px;
+    }
+    .address-input__area {
+      width: calc(100% - 100px);
+    }
+    .address-search-btn__area {
+      width: 100px;
+      margin-left: 10px;
+    }
+  }
+  .easyLogin__area {
+    padding-top: 30px;
+    padding-bottom: 30px;
+
+    .easyLogin__title {
+      font-weight: 500;
+      padding-bottom: 22px;
+    }
+    .easyLogin__ul {
+      label {
+        margin-bottom: 0;
+      }
+      li {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        font-size: 14px;
+        letter-spacing: -.56px;
+      }
+      li + li {
+        padding-top: 16px;
+      }
+    }
+  }
+
+  .reception-agree__area {
+    padding: 30px 0;
+
+    .reception-agree__title {
+      margin-bottom: 20px;
+      p {
+        font-weight: 500;
+      }
+    }
+    .reception-agree__ul {
+      li {
+        margin-right: 20px;
+      }
+    }
+    .magic-checkbox + label {
+      color: $black;
+    }
+  }
+
+  .lifetime-member__area {
+    padding-top: 30px;
+
+    .lifetime-member__header {
+      padding-bottom: 24px;
+
+      .lifetime-member__title {
+        font-weight: 500;
+      }
+      .benefit-view {
+        i {
+          margin-top: 5px;
+          margin-left: 3px;
+        }
+      }
+    }
+    .lifetime-member__body {
+      .lifetime-member__radio-area {
+        margin-bottom: 24px;
+
+        .base-radio:first-child {
+          margin-right: 20px;
+        }
+        .magic-radio + label, .magic-checkbox + label {
+          color: $black;
+        }
+      }
+      .lifetime-member__join-text {
+        color: $gray-700;
+      }
+    }
+  }
+
+  .lifetime-member__footer {
+    padding-top: 50px;
+
+    .btn-group {
+      padding-bottom: 50px;
+      .dp-btn:first-child {
+        margin-right: 10px;
+      }
+    }
+    .member-withdraw__area {
+      text-align: center;
+
+      a {
+        color: $gray-700;
+      }
+
+      span {
+        font-size: 14px;
+        letter-spacing: -.56px;
+        line-height: 20px;
+        text-decoration: underline;
+      }
+    }
+  }
+
+}

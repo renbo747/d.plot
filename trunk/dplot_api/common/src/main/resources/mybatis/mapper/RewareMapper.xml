@@ -1,0 +1,103 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.dplot.mapper.RewareMapper">
+	<select id="selectRewareList" parameterType="somap" resultType="somap">
+		SELECT  /*RewareMapper.xml - selectRewareList:: 재입고알림 신청목록 조회*/
+		        tr.REWIDX    -- 재입고IDX
+			  , DATE_FORMAT(tr.regdate, '%Y.%m.%d') AS regdate
+			  , DATE_FORMAT(tr.notidate, '%Y.%m.%d') AS notidate
+		      , tr.ISNOTI    -- 입고알림여부
+		      , tg.GOODSNAME -- 상품명
+		      , tg.GOODSCODE -- 상품코드
+		      , tg.ISUSEADDITION -- 추가상품 여부
+		      , ifnull((SELECT name FROM t_brand WHERE idx = tg.brandidx), '') AS brandname
+		      , FN_GET_OPTION_CONCAT(tg.goodsno, tgod.optioncode, ',')  AS options
+		      , (SELECT group_concat(tg.GOODSNAME SEPARATOR ',')
+				FROM t_goods_addition tga
+				INNER JOIN t_goods tg ON tga.SUBGOODSNO = tg.GOODSNO 
+				WHERE MAINGOODSNO = tr.goodsno) as addtionname
+		      , fn_get_option_marketprice(#{siteid}, tr.goodsno, tr.OPTIONCODE) as marketprice  -- 정산가
+			  , fn_get_option_price(#{siteid}, tr.goodsno, tr.OPTIONCODE) as price   -- 판매가
+			  , fn_get_goods_salepromoamt(#{siteid}, tr.goodsno, tr.OPTIONCODE, 0, #{platform}) as saleamt -- 프로모션할인적용가(할인가)
+			  , fn_get_goods_salecouponamt(#{siteid}, tr.goodsno, tr.OPTIONCODE, 0, #{platform}) as goodscpnamt -- 즉시할인쿠폰할인가
+			  , FN_GET_FILE_URL(tr.goodsno, 'FLT001', #{imgtype}) as fullpath
+			  , fn_get_goods_stock(#{siteid}, tg.goodsno) as stockcnt -- 재고 
+			  , tg.goodsselltype
+		FROM t_reware tr
+		INNER JOIN  t_goods_option_detail tgod ON tr.GOODSNO  = tgod.GOODSNO 
+			AND tr.OPTIONCODE  = tgod.OPTIONCODE
+		INNER JOIN t_goods tg  ON tgod.GOODSNO = tg.GOODSNO 
+			AND tgod.ISTRASH  = 'F'
+		WHERE tr.ISTRASH = 'F'
+		AND tr.USERNO = #{userno}
+		-- AND tg.isdisplay = 'T'
+		AND tg.goodsapprtype = 'GAT004' -- 승인완료
+		-- AND tg.goodsselltype IN ('GST002', 'GST004', 'GST005')
+		AND date_format(now(), '%Y%m%d%H%i%s')  BETWEEN disstdate AND diseddate
+		ORDER BY tr.REGDATE desc
+		LIMIT #{startpage}, #{endpage}
+	</select>
+	
+	<select id="selectRewareListCnt" parameterType="somap" resultType="int">
+		SELECT  /*RewareMapper.xml - selectRewareListCnt:: 재입고알림 신청목록 수 조회*/
+		      count(*)
+		FROM t_reware tr
+		INNER JOIN  t_goods_option_detail tgod ON tr.GOODSNO  = tgod.GOODSNO 
+			AND tr.OPTIONCODE  = tgod.OPTIONCODE
+		INNER JOIN t_goods tg  ON tgod.GOODSNO = tg.GOODSNO 
+			AND tgod.ISTRASH  = 'F'
+		WHERE tr.ISTRASH = 'F'
+		AND tr.USERNO = #{userno}
+		-- AND tg.isdisplay = 'T'
+		AND tg.goodsapprtype = 'GAT004' -- 승인완료
+		-- AND tg.goodsselltype IN ('GST002', 'GST004', 'GST005')
+		AND date_format(now(), '%Y%m%d%H%i%s')  BETWEEN disstdate AND diseddate
+	</select>
+	
+	<select id="selectRewareDupCnt" parameterType="somap" resultType="int">
+		 SELECT count(*)
+		 FROM t_reware
+		 WHERE USERNO  = #{userno}
+		 AND GOODSNO  = #{goodsno}
+		 AND OPTIONCODE = #{optioncode}
+		 AND ISTRASH = 'F'
+	</select>
+	
+	<delete id="updateRestockDel" parameterType="somap">
+		UPDATE /*RewareMapper.xml - deletelRestock:: 재입고알림 삭제*/
+		       t_reware
+		SET ISTRASH  = 'T'
+		WHERE USERNO = #{userno}
+		<if test='rewidx != null and rewidx != ""'> 
+		AND REWIDX = #{rewidx}
+		</if>
+	</delete>
+	
+	<insert id="insertReware" parameterType="somap">
+	INSERT INTO  t_reware /*RewareMapper.xml - insertReware::재입고알림 신청*/
+	(USERNO, GOODSNO, OPTIONCODE, NOTIDATE, ISNOTI, ISTRASH, REGUSERID, REGDATE)
+	VALUES(#{userno}, #{goodsno}, #{optioncode}, null, 'F', 'F', #{reguserid}, now())
+	</insert>
+
+	<select id="selectRewareTargetList" parameterType="somap" resultType="somap">
+		SELECT
+			A.REWIDX, A.USERNO, C.MOBILE, C.EMAIL
+		     , CONCAT((SELECT GOODSNAME FROM T_GOODS WHERE GOODSNO = B.GOODSNO), FN_GET_OPTION_CONCAT(B.GOODSNO, B.OPTIONCODE, '|')) AS GOODSNAME
+		     , B.GOODSNO, (SELECT GOODSCODE FROM T_GOODS WHERE GOODSNO = B.GOODSNO) AS GOODSCODE
+		FROM T_REWARE A INNER JOIN T_GOODS_OPTION_DETAIL B ON A.GOODSNO = B.GOODSNO AND A.OPTIONCODE = B.OPTIONCODE
+						INNER JOIN T_MEMBER C ON A.USERNO = C.USERNO AND C.STATE = 'MST001'
+		WHERE A.ISTRASH = 'F'
+		  AND ISNOTI = 'F'
+		  AND C.ISIFSMS = 'T'
+		  AND FN_GET_OPTION_STOCK(#{siteid}, A.GOODSNO, A.OPTIONCODE) > 0
+	</select>
+
+	<update id="updateRestockNotiByIdx" parameterType="somap">
+		UPDATE T_REWARE SET ISNOTI = 'T', NOTIDATE = CURRENT_TIMESTAMP
+		WHERE REWIDX IN
+		<foreach collection="list" item="item" open="(" separator="," close=")">
+			#{item}
+		</foreach>
+	</update>
+</mapper>

@@ -1,0 +1,63 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.dplot.mapper.MainMapper">
+	
+	<!-- 모바일 메인 설정 정보 -->
+	<select id="selectMobileMainFrontList" parameterType="somap" resultType="somap">
+		SELECT m.idx          -- 일련번호
+		     , m.flatform     -- 플랫폼
+		     , m.areacode     -- 영역_코드
+		     , m.name         -- 메인_영역명
+		     , mm.title       -- 타이틀
+		     , mm.goodssize   -- 상품_갯수
+		     , mm.bannersize  -- 배너_갯수
+		FROM t_main m 
+		JOIN t_area a ON m.areacode = a.code 
+		JOIN t_main_mobile mm ON m.idx = mm.mainidx
+		<where>
+			AND m.siteid = #{siteid}
+			AND m.flatform = #{flatform}
+			AND a.kind = #{kind}
+			AND m.isdisplay='t'
+		</where> 
+		ORDER BY m.sort ASC
+	</select>
+	
+	<!-- 메인 상품 정보 -->
+	<sql id="selectMainGoodsFrontListSQL">
+		SELECT *  
+		FROM (
+			   SELECT G.GOODSNO          -- 상품번호
+			        , G.GOODSNAME        -- 상품명
+			        , G.GOODSCODE        -- 상품코드
+			        , G.SUMMARY          -- 부가설명  
+			        , G.IMGM             -- 상품이미지_중
+			        , G.MARKETPRICE      -- 시중가
+			        , MG.IMG_GOODS       -- 상품_이미지
+			        , G.PRICE            -- 가격
+			        , B.NAME AS BRAND    -- 브랜드명
+			FROM T_GOODS G 
+			JOIN T_MAIN_GOODS MG ON G.GOODSNO = MG.GOODSNO
+			JOIN T_BRAND B ON G.BRANDIDX = B.IDX
+			<where>
+				AND G.SITEID = #{siteid}
+				AND G.ISDISPLAY='T'
+				AND G.STATE = #{state}
+				AND MG.MAINIDX = #{mainidx}
+				<if test="childno != null and childno != ''">
+				AND MG.CHILDNO = #{childno}
+				</if>
+			</where> 
+			ORDER BY MG.NO ASC
+			 <if test='limit != null and limit != ""'>
+			 LIMIT #{limit}
+			 </if>
+		) A
+	</sql>
+	
+	<!--메인상품정보 조회  -->
+	<select id="selectMainGoodsFrontList" parameterType="somap" resultType="somap">
+	  <include refid="selectMainGoodsFrontListSQL"/>
+	</select>
+</mapper>

@@ -1,0 +1,703 @@
+<template>
+    <!-- 컨텐츠 영역 -->
+    <div class="content m-leftmenu">
+        <common-navigator></common-navigator>
+        <div class="inner">
+            <div class="boxing search-area">
+                <dl>
+                    <dt>직접검색</dt>
+                    <dd>
+                        <select v-model="searchData.skey">
+                            <option value="">전체</option>
+                            <option value="comcpnno">쿠폰번호</option>
+                            <option value="cpnname">쿠폰명</option>
+                        </select>
+                        <input type="text" v-model="searchData.sword" maxlength="200" @keyup.enter="searchList(1)"/>
+                    </dd>
+                </dl>
+                <dl>
+                    <dt>조회기간</dt>
+                    <dd>
+                        <common-date-picker :value="searchData.startdate" @change="onChangeStartDate"></common-date-picker>
+                        <span>-</span>
+                        <common-date-picker :value="searchData.enddate" @change="onChangeEndDate"></common-date-picker>
+                        <div class="radio_wrap">
+                            <input type="radio" v-model="searchData.period" id="period_aday_1" value='aday_1'/><label for="period_aday_1">어제</label>
+                            <input type="radio" v-model="searchData.period" id="period_aday_0" value='aday_0'/><label for="period_aday_0">오늘</label>
+                            <input type="radio" v-model="searchData.period" id="period_days_7" value='days_7'/><label for="period_days_7">일주일</label>
+                            <input type="radio" v-model="searchData.period" id="period_months_1" value='months_1'/><label for="period_months_1">1개월</label>
+                            <input type="radio" v-model="searchData.period" id="period_months_3" value='months_3'/><label for="period_months_3">3개월</label>
+                            <input type="radio" v-model="searchData.period" id="period_months_6" value='months_6'/><label for="period_months_6">6개월</label>
+                        </div>
+                    </dd>
+                </dl>
+                <dl>
+                    <dt>쿠폰종류</dt>
+                    <dd>
+                        <div class="check-wrap">
+                            <input type="checkbox" v-model="searchData.isallcomcpn" id="isallcomcpn" true-value="T" false-value="F" @change="checkAllComcpntype">
+                            <label for="isallcomcpn">전체</label>
+                        </div>
+                        <div class="check-wrap" v-for="item in commonCode.comcpntype" :key="item.cmcode">
+                            <input type="checkbox" v-model="searchData.comcpntypearr" :id="'comcpntype_'+item.cmcode" true-value="[]" :value="item.cmcode">
+                            <label :for="'comcpntype_'+item.cmcode">{{item.codename}}</label>
+                        </div>
+                    </dd>
+                </dl>
+                <dl>
+                    <dt>사용여부</dt>
+                    <dd>
+                        <div class="radio_wrap wide3">
+                            <input type="radio" v-model="searchData.istrash" name="istrash" id="istrashAll" value="" checked/><label for="istrashAll">전체</label>
+                            <input type="radio" v-model="searchData.istrash" name="istrash" id="istrashF" value="F"/><label for="istrashF">사용</label>
+                            <input type="radio" v-model="searchData.istrash" name="istrash" id="istrashT" value="T"/><label for="istrashT">미사용</label>
+                        </div>
+                    </dd>
+                </dl>
+                <dl>
+                    <dt>사용채널</dt>
+                    <dd>
+                        <div class="check-wrap">
+                            <input type="checkbox" v-model="searchData.isallmuappch" id="isallmuappch" true-value="T" false-value="F" @change="checkAllAppchtype">
+                            <label for="isallmuappch">전체</label>
+                        </div>
+                        <div class="check-wrap" v-for="item in commonCode.muappchtype" :key="item.cmcode">
+                            <input type="checkbox" v-model="searchData.muappchtypearr" :id="'muappchtype_'+item.cmcode" true-value="[]" :value="item.cmcode">
+                            <label :for="'muappchtype_'+item.cmcode">{{item.codename}}</label>
+                        </div>
+                    </dd>
+                </dl>
+                <dl>
+                    <dt>할인</dt>
+                    <dd>
+                        <div class="check-wrap">
+                            <input type="checkbox" v-model="searchData.ispercentall" id="ispercentall" true-value="T" false-value="F" @change="checkAllIspercent">
+                            <label for="ispercentall">전체</label>
+                        </div>
+                        <div class="check-wrap" v-for="item in commonCode.ispercent" :key="item.cmcode">
+                            <input type="checkbox" v-model="searchData.ispercentarr" :id="'ispercent_'+item.cmcode" true-value="[]" :value="item.cmcode">
+                            <label :for="'ispercent_'+item.cmcode">{{item.codename}}</label>
+                        </div>
+                    </dd>
+                </dl>
+                <dl>
+                    <dt>발급상태</dt>
+                    <dd>
+                        <div class="check-wrap">
+                            <input type="checkbox" v-model="searchData.isallcpnissuest" id="isallcpnissuest" true-value="T" false-value="F" @change="checkAllCpnissuest">
+                            <label for="isallcpnissuest">전체</label>
+                        </div>
+                        <div class="check-wrap" v-for="item in commonCode.cpnissuest" :key="item.cmcode">
+                            <input type="checkbox" v-model="searchData.cpnissuestarr" :id="'cpnissuest_'+item.cmcode" true-value="[]" :value="item.cmcode">
+                            <label :for="'cpnissuest_'+item.cmcode">{{item.codename}}</label>
+                        </div>
+                    </dd>
+                </dl>
+                <dl>
+                    <dt>발급종류</dt>
+                    <dd>
+                        <div class="check-wrap">
+                            <input type="checkbox" v-model="searchData.isallcpnissue" id="isallcpnissue" true-value="T" false-value="F" @change="checkAllCpnissuetype">
+                            <label for="isallcpnissue">전체</label>
+                        </div>
+                        <div class="check-wrap" v-for="item in commonCode.cpnissuetype" :key="item.cmcode">
+                            <input type="checkbox" v-model="searchData.cpnissuetypearr" :id="'cpnissuetype_'+item.cmcode" true-value="[]" :value="item.cmcode">
+                            <label :for="'cpnissuetype_'+item.cmcode">{{item.codename}}</label>
+                        </div>
+                    </dd>
+                </dl>
+            </div>
+            <div class="btn-group">
+                <button type="button" class="btn big blue" v-if="isRead" @click="searchList(1)">검색</button>
+                <button type="button" class="btn big gray" v-if="isRead" @click="initSearchData">초기화</button>
+            </div>
+            <div class="caption-group mt10 clearfix">
+                <div class="total-group fl">
+                    <span class="total">전체 <strong>{{ count.totalcnt }}</strong>건</span>
+                    <span>발급전 <strong>{{ count.prevcnt }}</strong>건</span>
+                    <span>발급중 <strong>{{ count.issuecnt }}</strong>건</span>
+                    <span>발급중지 <strong>{{ count.stopcnt }}</strong>건</span>
+                    <span>발급완료 <strong>{{ count.endcnt }}</strong>건</span>
+                </div>
+                <div class="btn-group fr">
+                    <button type="button" v-if="isWrite" class="btn black-line" @click="removeCoupon($store.getters['ADMIN'].COUPON_ADMIN_DELETE)">목록삭제</button>
+                    <button type="button" v-if="isWrite" class="btn red-line" @click="removeCoupon($store.getters['ADMIN'].COUPON_MEMBER_DELETE)">완전삭제</button>
+                    <button type="button" v-if="isRead" class="btn green-line" @click="fnExcelDownload"><i class="icon-excel"></i>엑셀다운로드</button>
+                    <select v-model="pagingData.pageCount" v-if="isRead">
+                        <option value="20">20개씩 보기</option>
+                        <option value="50">50개씩 보기</option>
+                        <option value="100">100개씩 보기</option>
+                    </select>
+                </div>
+            </div>
+            <table cellpadding="0" cellspacing="0" class="data-tb align-c">
+                <caption>이벤트</caption>
+                <colgroup>
+                    <col width="40px" /><!-- checkbox -->
+                    <col width="6%" /><!-- 쿠폰번호 -->
+                    <col width="" /><!-- 쿠폰명 -->
+                    <col width="6%" /><!-- 쿠폰종류 -->
+                    <col width="7%" /><!-- 발급종류 -->
+                    <col width="5%" /><!-- 파트너사분담비율 -->
+                    <col width="5%" /><!-- 발급/사용 -->
+                    <col width="7%" /><!-- 등록일자 -->
+                    <col width="9%" /><!-- 사용시간 -->
+                    <col width="8%" /><!-- 사용채널 -->
+                    <col width="7%" /><!-- 할인 -->
+                    <col width="85px" /><!-- 발급상태 -->
+                    <col width="4.5%" /><!-- 사용여부 -->
+                    <col width="5%" /><!-- 발급방법 -->
+                    <col width="80px" /><!-- 복사 -->
+                    <col width="100px" /><!-- 직접접근경로 -->
+                </colgroup>
+                <thead>
+                    <tr>
+                        <th><input type="checkbox" id="chkall" v-model="isallchk" @change="checkAllList($event.target.checked)"/></th>
+                        <th>쿠폰번호</th>
+                        <th>쿠폰명</th>
+                        <th>쿠폰종류</th>
+                        <th>발급종류</th>
+                        <th>파트너사분담비율
+                            <button type="button" v-if="isRead" 
+                                    :value="sortData.partratio" 
+                                    class="sort"
+                                    :class="[{up : sortData.partratio === 'partratio_asc'}, {down : sortData.partratio === 'partratio_desc'}]"
+                                    @click="sortToggle(sortData.partratio)">
+                            </button>
+                        </th>
+                        <th>발급/사용</th>
+                        <th>등록일자
+                            <button type="button" v-if="isRead" 
+                                    :value="sortData.regdate"
+                                    class="sort"
+                                    :class="[{up : sortData.regdate === 'regdate_asc'}, {down : sortData.regdate === 'regdate_desc'}]"
+                                    @click="sortToggle(sortData.regdate)">
+                            </button>
+                        </th>
+                        <th>사용기간</th>
+                        <th>사용채널</th>
+                        <th>할인</th>
+                        <th>발급상태</th>
+                        <th>사용여부</th>
+                        <th>발급방법</th>
+                        <th>복사</th>
+                        <th>직접접근경로</th>
+                    </tr>
+                </thead>
+                <tbody v-if="this.list.length > 0">
+                    <tr v-for="(item, index) in this.list" :key="index">
+                        <td><input type="checkbox" v-model="checkedList" :id="item.cpninfoidx" :value="item.cpninfoidx" @change="checkList($event.target.checked)"/></td>
+                        <td>{{ item.comcpnno }}</td>
+                        <td class="left"><a class="link" @click="goDetail(item.comcpnidx, item.cpninfoidx)">{{ item.cpnname }}</a></td>
+                        <td>{{ item.comcpntypename }}</td>
+                        <td>{{ item.cpnissuetypename }}</td>
+                        <td>{{ $util.isNull(item.partratio)? '': item.partratio+'%' }}</td>
+                        <td><input type="hidden" v-model="cpview"/>
+                            <div v-if="item.isCouponDownUseCount">{{ $util.maskComma(item.issuecnt) }}/{{ $util.maskComma(item.usecnt) }}</div>
+                        <button type="button" v-if="!item.isCouponDownUseCount" class="btn blue-line" @click="getCouponDownUseCount(item)">조회</button>
+                        </td>
+                        <td>{{ item.regdate }}</td>
+                        <td>{{ item.cpnusetypeconts }}</td>
+                        <td>{{ item.muappchtypename }}</td>
+                        <td>{{ item.discountconts }}</td>
+                        <td>{{ item.cpnissuestname }}
+                            <button type="button" v-if="item.cpnissuest === $store.getters['ADMIN'].CPN_ISSUE_ST_ISSUE" class="btn blue-line" @click="goControlIssue(item)">발급중지</button>
+                            <button type="button" v-if="item.cpnissuest === $store.getters['ADMIN'].CPN_ISSUE_ST_STOP" class="btn blue-line" @click="goControlIssue(item)">발급재개</button>
+                        </td>
+                        <td>{{ item.istrashname }}</td>
+                        <td>{{ item.isautopayname }}</td>
+                        <td><button type="button" class="btn blue-line" @click="copyRegist(item.comcpnidx, item.cpninfoidx)">복사</button></td>
+                        <td>{{ item.isautopay === 'T' ? '-' : '' }}<button type="button" v-if="item.isautopay === 'F'" class="btn blue-line" @click="openCopyDownloadScript(item.cpninfoidx)">스크립트 복사</button></td>
+                    </tr>
+                </tbody>
+                <tbody v-else>
+                    <tr><td colspan="16">조회 결과가 존재하지 않습니다.</td></tr>
+                </tbody>
+            </table>
+            <div class="bottom-group">
+                <div class="paging">
+                    <CommonPageNavigator v-show="isRead" :pagingData="pagingData" v-on:setPagingData="setPagingData" />
+                </div>
+                <div class="btn-group">
+                    <button type="button" class="btn blue" v-if="isWrite" @click="goRegist">쿠폰 등록</button>
+                </div>
+            </div>
+        </div>
+        <CouponRegist v-if="isShowRegist" :activeComcpnidx="activeComcpnidx" :activeCpninfoidx="activeCpninfoidx" @closePopup="closeRegist"></CouponRegist>
+        <CouponDetail v-if="isShowDetail" :activeComcpnidx="activeComcpnidx" :activeCpninfoidx="activeCpninfoidx" @closePopup="closeDetail"></CouponDetail>
+    </div>
+    <!-- /컨텐츠 영역 -->
+</template>
+
+<script>
+import CommonNavigator from '@views.admin/common/CommonNavigator.vue';
+import CommonDatePicker from '@views.admin/common/CommonDatePicker';
+import CommonPageNavigator from '@views.admin/common/CommonPageNavigator';
+import CouponRegist from '@views.admin/promotion/coupon/CouponRegist.vue';
+import CouponDetail from '@views.admin/promotion/coupon/CouponDetail.vue';
+import ControllIssuePopup from '@views.admin/promotion/coupon/popup/ControllIssuePopup.vue';
+import CopyDownloadScriptPopup from '@views.admin/promotion/coupon/popup/CopyDownloadScriptPopup.vue';
+
+export default {
+    name: 'admin.promotion.coupon.couponlist',
+    components: {
+        CommonNavigator,
+        CommonDatePicker,
+        CommonPageNavigator,
+        CouponRegist,
+        CouponDetail
+    },
+    data() {
+        return {
+            searchData: {
+                skey: '',               // 직접검색 조건(comcpnno: 쿠폰번호, cpnname: 쿠폰명)
+                sword: '',              // 직접검색 단어
+                startdate: '',          // 조회시작날짜
+                enddate: '',            // 조회종료날짜
+                period: '',             // 조회기간
+                istrash: '',            // 쿠폰 사용여부
+                isallcomcpn: 'T',       // 쿠폰종류 전체선택여부
+                comcpntypearr: [],      // 쿠폰종류 배열
+                ispercentall: 'T',      // 할인 전체선택여부
+                ispercentarr: [],       // 할인 배열
+                isallmuappch: 'T',      // 적용채널 전체선택여부
+                muappchtypearr: [],     // 적용채널 배열  
+                isallcpnissuest: 'T',   // 발급상태 전체선택여부
+                cpnissuestarr: [],      // 발급상태 배열
+                isallcpnissue: 'T',     // 발급종류 전체선택여부
+                cpnissuetypearr: [],    // 발급종류 배열
+                psort: 'regdate_desc'   // 정렬
+            },
+            pagingData: {
+                pageCount: 20,      // 페이징 옵션(최대수)
+                page: 1,            // 현재 페이지
+                listCount: 0        // 총 수량
+            },
+            commonCode: {
+                comcpntype: [],         // 쿠폰종류
+                muappchtype: [],        // 적용채널
+                ispercent: [{cmcode: 'F', codename:'정액'}, {cmcode: 'T', codename:'정률'}],    // 할인구분(정률여부)
+                cpnissuest: [],         // 발급상태
+                cpnissuetype: []        // 발급종류
+            },
+            sortData: {
+                partratio: 'partratio_asc', // 파트너사분담비율 정렬기준
+                regdate: 'regdate_desc',    // 등록일자 정렬기준
+            },
+            isallchk: false,        // 목록 전체체크여부
+            list: [],               // 조회 데이터
+            checkedList: [],        // 선택된 목록
+            count : {
+                totalcnt: 0,        // 전체 수량
+                prevcnt: 0,         // 발급전 수량
+                issuecnt: 0,        // 발급중 수량
+                stopcnt: 0,         // 발급중지 수량
+                endcnt: 0,          // 발급완료 수량
+            },
+            isRead: false,              // 읽기권한여부
+            isWrite: false,             // 쓰기권한여부
+            activeComcpnidx: '',        // 오픈한 쿠폰상세 쿠폰idx
+            activeCpninfoidx: '',       // 오픈한 쿠폰상세 쿠폰정보idx
+            isShowDetail: false,        // 쿠폰상세 팝업 오픈여부
+            isShowRegist: false,        // 쿠폰등록 팝업 오픈여부
+            isLink : false, //대시보드에서 링크를 타고왔는지 체크
+            cpview: [],
+        }
+    },
+    mounted() {
+        this.$http.post('/admin/common/pageAuth/check', {url : this.$options.name, isloading: false}).then(result => {
+            this.isRead = (result.data.isread === 'T');
+            this.isWrite = (result.data.iswrite === 'T');
+
+            if(this.isRead){
+                // 초기데이터 세팅
+                this.oninit();
+            }
+        }).catch(error => {
+            this.$util.debug(error);
+        });
+    },
+    methods: {
+        oninit() {
+            if(typeof this.$route.params.type !== 'undefined' && this.$route.params.type === 'LINK'){
+              this.isLink = true;
+            }
+            // 공통코드 조회
+            this.getCommonCodeList();
+        },
+        // 검색조건 초기화
+        initSearchData: function () {
+            this.searchData.skey = '';
+            this.searchData.sword = '';
+            this.searchData.period = 'months_3';
+            this.searchData.startdate = this.$util.getAddMonth(this.$util.getDate(), -3, '-');
+            this.searchData.enddate = this.$util.getDate('-');
+            this.searchData.istrash = '';
+            this.searchData.isallcomcpn = 'T';
+            this.searchData.isallmuappch = 'T';
+            this.searchData.ispercentall = 'T';
+            this.searchData.isallcpnissuest = 'T';
+            this.searchData.isallcpnissue = 'T';
+
+            this.checkAllComcpntype();
+            this.checkAllAppchtype();
+            this.checkAllIspercent();
+            this.checkAllCpnissuest();
+            this.checkAllCpnissuetype();
+        },
+        // 쿠폰 내역 조회
+        searchList: function(page) {
+            let params = Object.assign(this.searchData, this.pagingData);
+            params.page = (typeof page === 'undefined') ? this.pagingData.page : 1;
+            this.$http.post('/admin/promotion/coupon/list', params)
+                .then(result => {
+                    this.$util.debug(result);
+                    let data = result.data;
+                    this.list = data.list;
+                    
+                    this.list.forEach(function(item, index) {
+                        item.isCouponDownUseCount = false;
+                    });
+                    
+                    this.count = data.count;
+                    this.pagingData.listCount = data.count.totalcnt;
+                    this.$util.dataSetSearchParam(this);
+                    this.isallchk = false;
+                    this.checkedList = [];
+                })
+                .catch(error => {
+                    this.$util.debug(error);
+                });
+        },
+        // 공통코드 목록 조회
+        getCommonCodeList: function() {
+            let cmclassArr = ['COMCPNTYPE', 'MUAPPCHTYPE', 'CPNISSUEST', 'CPNISSUETYPE'];
+            this.$http.post('/common/code/map/list', {cmclass : cmclassArr, isloading: false})
+                .then(result =>{
+                    let data = result.data;
+                    for (const [key] of Object.entries(data)) {
+                        this.commonCode[key] = data[key];
+                    }
+                    // 검색조건 초기화
+                    this.initSearchData();
+                    this.$util.componentSetSearchParam(this);
+
+                    if(this.isLink){
+                      let linkParam = this.$route.params;
+                      this.searchData.period = linkParam.period;
+                      this.searchData.startdate = linkParam.startdate;
+                      this.searchData.enddate = linkParam.enddate;
+                      if(typeof linkParam.cpnissuest !== 'undefined'){
+                        this.searchData.isallcpnissuest = 'F';
+                        this.searchData.istrash = 'F';
+                        this.searchData.cpnissuestarr = [linkParam.cpnissuest];
+                      }
+
+                    }
+                    // 목록 조회
+                    this.searchList();
+                })
+                .catch(error => {
+                    this.$util.debug(error);
+                });
+        },
+        // 날짜 picker 콜백 함수
+        onChangeStartDate(value) {
+            this.searchData.startdate = value;
+        },
+        // 날짜 picker 콜백 함수
+        onChangeEndDate(value) {
+            this.searchData.enddate = value;
+        },
+        // 조회조건 - 쿠폰종류 전체선택 체크
+        checkAllComcpntype() {
+            let isAllCheck = this.searchData.isallcomcpn;
+            this.searchData.comcpntypearr = [];
+            if (isAllCheck === 'T') {
+                for(let type of this.commonCode.comcpntype){
+                    this.searchData.comcpntypearr.push(type.cmcode);
+                }
+            }
+        },
+        // 조회조건 - 적용채널 전체체크
+        checkAllAppchtype: function() {
+            let isAllCheck = this.searchData.isallmuappch;
+            this.searchData.muappchtypearr = [];
+            if (isAllCheck == 'T') {
+                for(let type of this.commonCode.muappchtype){
+                    this.searchData.muappchtypearr.push(type.cmcode);
+                }
+            }
+        },
+        // 조회조건 - 할인구분(정률여부) 전체체크
+        checkAllIspercent: function() {
+            let isAllCheck = this.searchData.ispercentall;
+            this.searchData.ispercentarr = [];
+            if (isAllCheck == 'T') {
+                for(let type of this.commonCode.ispercent){
+                    this.searchData.ispercentarr.push(type.cmcode);
+                }
+            }
+        },
+        // 조회조건 - 발급상태 전체선택 체크
+        checkAllCpnissuest() {
+            let isAllCheck = this.searchData.isallcpnissuest;
+            this.searchData.cpnissuestarr = [];
+            if (isAllCheck == 'T') {
+                for(let type of this.commonCode.cpnissuest){
+                    this.searchData.cpnissuestarr.push(type.cmcode);
+                }
+            }
+        },
+        // 조회조건 - 발급종류 전체선택 체크
+        checkAllCpnissuetype() {
+            let isAllCheck = this.searchData.isallcpnissue;
+            this.searchData.cpnissuetypearr = [];
+            if (isAllCheck === 'T') {
+                for(let type of this.commonCode.cpnissuetype){
+                    this.searchData.cpnissuetypearr.push(type.cmcode);
+                }
+            }
+        },
+        // 페이징 콜백
+        setPagingData(param){
+            this.pagingData = param;
+            this.searchList();
+        },
+        // 정렬조건으로 검색
+        sortToggle (key) {
+            let arr = key.split('_');
+            let sortKey = arr[0];
+            let sortOrder = (arr[1] === 'asc') ? 'desc' : 'asc';
+            let sortName = sortKey + '_' + sortOrder;
+
+            this.sortData = this.$options.data().sortData;
+
+            this.sortData[sortKey] = sortName;
+            this.searchData.psort = sortName;
+
+            this.searchList();
+        },
+        // 목록,완전삭제
+        removeCoupon(cpndeltype) {
+            if(this.checkedList.length === 0){
+                alert('삭제할 쿠폰을 선택해주세요.');
+                return;
+            }
+
+            let targetList = [];
+            for (let i=0; i<this.checkedList.length; i++) {
+                let cpninfoidx = this.checkedList[i];
+                for (let j=0; j<this.list.length; j++) {
+                    let item = this.list[j];
+                    if (cpninfoidx === item.cpninfoidx) {
+                        targetList.push(item);
+                    }
+                }
+            }
+
+            let params = {
+                cpndeltype: cpndeltype,
+                istrash: 'T',
+                targetlist: targetList
+            }
+            let typename = (cpndeltype===this.$store.getters['ADMIN'].COUPON_ADMIN_DELETE)? '목록삭제':'완전삭제';
+            if(confirm('선택한 쿠폰을 '+ typename +'하시겠습니까?')) {
+                this.$http.post('/admin/promotion/coupon/remove', params)
+                    .then(result => {
+                        if(result.statusCode === 200) {
+                            alert(typename + '가 완료되었습니다.');
+                            this.searchList();
+                        }
+                    })
+                    .catch(error => {
+                        this.$util.debug(error);
+                    });
+            }
+        },
+        // 엑셀다운로드
+        fnExcelDownload: function() {
+            if (this.list.length == 0) {
+                alert('다운로드할 내역이 존재하지 않습니다.');
+                return;
+            }
+            let config = { responseType: 'arraybuffer' };
+            this.$http.post('/admin/promotion/coupon/exceldown', this.searchData, config)
+                .then(result => {
+                    this.$util.debug(result);
+                })
+                .catch(error => {
+                    this.$util.debug(error);
+                });
+        },
+        // 목록 전체체크
+        checkAllList: function(value) {
+            this.checkedList = [];
+            if (value) {
+                this.list.forEach(item => {
+                    this.checkedList.push(item.cpninfoidx);
+                });
+            }
+        },
+        // 목록 개별체크
+        checkList: function() {
+            if (this.list.length > this.checkedList.length){
+                this.isallchk = false;
+            } else {
+                this.isallchk = true;
+            }
+        },
+        // 선택된 쿠폰정보와 동일한 쿠폰등록 생성
+        copyRegist: function(comcpnidx, cpninfoidx) {
+            this.activeComcpnidx = comcpnidx;
+            this.activeCpninfoidx = cpninfoidx;
+            this.isShowRegist = true;
+        },
+        // 다운로드 스크립트 팝업 오픈
+        openCopyDownloadScript: function(value) {
+            this.$eventBus.$emit('modalShow', CopyDownloadScriptPopup, { cpninfoidx: value }, null);
+        },
+        // 발급재개, 발급중지 팝업 실행
+        goControlIssue: function(obj) {
+            let params = {
+                comcpnidx: obj.comcpnidx,
+                cpninfoidx: obj.cpninfoidx,
+                reqCpnistype: ''
+            }
+            if (obj.cpnissuest === this.$store.getters['ADMIN'].CPN_ISSUE_ST_ISSUE) {
+                params.reqCpnistype = this.$store.getters['ADMIN'].CPN_IS_STOP;
+            }else if (obj.cpnissuest === this.$store.getters['ADMIN'].CPN_ISSUE_ST_STOP) {
+                params.reqCpnistype = this.$store.getters['ADMIN'].CPN_IS_RESTART;
+            }
+            this.$eventBus.$emit('modalShow', ControllIssuePopup, params,
+                (result) => {
+                    if (result.isreload) {
+                        this.searchList();
+                    }
+                }
+            );
+
+        },
+        // 쿠폰 다운/사용 횟수 가져오기
+        getCouponDownUseCount: function(obj) {
+            let params = {
+                cpninfoidx: obj.cpninfoidx,
+                comcpntype: obj.comcpntype,
+                isautopay: obj.isautopay
+            }
+            this.$http.post('/admin/promotion/coupon/getDownUseCount', params)
+                .then(result => {
+                    this.setCouponUseDownCount(result.data.result);
+                    this.$util.debug(result);
+                })
+                .catch(error => {
+                    this.$util.debug(error);
+                });
+        },
+        // 쿠폰 다운/사용 횟수 가져온 이후 값 셋팅
+        setCouponUseDownCount: function(obj) {
+            let cpninfoidx = obj.cpninfoidx;
+            let cplist = new Object();
+            
+            this.list.forEach(function(item, index) {
+                if(item.cpninfoidx === cpninfoidx) {
+                    item.issuecnt = obj.issuecnt;
+                    item.usecnt = obj.usecnt;
+                    item.isCouponDownUseCount = true;
+                    cplist.isCouponDownUseCount = true;
+                    cplist.idx = index;
+                }
+            });
+            this.cpview.push(cplist);
+        },
+        checkValue: function(obj) {
+            alert(obj.cpninfoidx + ' ' + obj.issuecnt + ' ' + obj.usecnt + ' ' + obj.isCouponDownUseCount);
+        },
+        // 쿠폰상세 팝업 열기
+        goDetail: function(comcpnidx, cpninfoidx) {
+            this.activeComcpnidx = comcpnidx;
+            this.activeCpninfoidx = cpninfoidx;
+            this.isShowDetail = true;
+        },
+        // 쿠폰상세 팝업 닫기
+        closeDetail: function(isreload) {
+            this.isShowDetail = false;
+            if (isreload) {
+                this.searchList();
+            }
+        },
+        // 쿠폰등록 팝업 열기
+        goRegist: function() {
+            this.activeComcpnidx = '';
+            this.activeCpninfoidx = '';
+            this.isShowRegist = true;
+        },
+        // 쿠폰등록 팝업 닫기
+        closeRegist: function(isreload) {
+            this.isShowRegist = false;
+            if (isreload) {
+                this.searchList();
+            }
+        }
+    },
+    watch: {
+        // 조회기간
+        'searchData.period': function (value) {
+            let params = value.split('_');
+            let type = params[0];
+            let addValue = parseInt(params[1]) * -1;
+
+            if (type == 'aday') {
+                this.searchData.startdate = this.$util.getAddDate(this.$util.getDate(), addValue, '-');
+                this.searchData.enddate = this.$util.getAddDate(this.$util.getDate(), addValue, '-');
+            } else if (type == 'days') {
+                this.searchData.startdate = this.$util.getAddDate(this.$util.getDate(), addValue, '-');
+                this.searchData.enddate = this.$util.getDate('-');
+            } else if (type == 'months') {
+                this.searchData.startdate = this.$util.getAddMonth(this.$util.getDate(), addValue, '-');
+                this.searchData.enddate = this.$util.getDate('-');
+            }
+        },
+        // 쿠폰종류
+        'searchData.comcpntypearr': function(value){
+            if (value.length < this.commonCode.comcpntype.length) {
+                this.searchData.isallcomcpn = 'F';
+            } else {
+                this.searchData.isallcomcpn = 'T';
+            }
+        },
+        // 사용채널
+        'searchData.muappchtypearr': function(value){
+            if (value.length < this.commonCode.muappchtype.length) {
+                this.searchData.isallmuappch = 'F';
+            } else {
+                this.searchData.isallmuappch = 'T';
+            }
+        },
+        // 할인구분(정률여부)
+        'searchData.ispercentarr': function(value){
+            if (value.length < this.commonCode.ispercent.length) {
+                this.searchData.ispercentall = 'F';
+            } else {
+                this.searchData.ispercentall = 'T';
+            }
+        },
+        // 발급상태
+        'searchData.cpnissuestarr': function(value){
+            if (value.length < this.commonCode.cpnissuest.length) {
+                this.searchData.isallcpnissuest = 'F';
+            } else {
+                this.searchData.isallcpnissuest = 'T';
+            }
+        },
+        // 발급종류
+        'searchData.cpnissuetypearr': function(value){
+            if (value.length < this.commonCode.cpnissuetype.length) {
+                this.searchData.isallcpnissue = 'F';
+            } else {
+                this.searchData.isallcpnissue = 'T';
+            }
+        }
+    },
+}
+</script>

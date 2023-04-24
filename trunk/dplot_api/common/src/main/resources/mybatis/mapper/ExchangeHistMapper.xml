@@ -1,0 +1,72 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.dplot.mapper.ExchangeHistMapper">
+	
+	<!-- 교환이력 조회 -->
+	<select id="selectExchangeList" parameterType="somap" resultType="somap">
+		SELECT /*ExchangeHistMapper.xml - selectExchangeList:: 교환이력 조회*/
+		       tc2.ORDERIDX                                  -- 주문IDX
+		     , tc2.ORDNO                                     -- 주문번호
+		     , tc.CLMIDX                                     -- 클레임IDX 
+		     , tc.CLMNO                                      -- 클레임번호
+		     , tc.CLMTYPE                                    -- 클레임종류
+		     , tcg.ORDGDIDX                                  -- 주문상품IDX 
+		     , (
+			     CASE WHEN tc.CLMTYPE  = 'CLM001' THEN tc.CNCSTATUS
+				      WHEN tc.CLMTYPE  = 'CLM002' THEN tc.RTNSTATUS
+				      WHEN tc.CLMTYPE  = 'CLM003' THEN tc.EXCSTATUS
+				 ELSE '' END) AS ORDSTATUS                   -- 주문상태코드
+			 , (
+			     CASE WHEN tc.CLMTYPE  = 'CLM001' THEN FN_GET_FRONT_CODENAME('base', 'CNCSTATUS', tc.CNCSTATUS)
+				      WHEN tc.CLMTYPE  = 'CLM002' THEN FN_GET_FRONT_CODENAME('base', 'RTNSTATUS', tc.RTNSTATUS)
+				      WHEN tc.CLMTYPE  = 'CLM003' THEN FN_GET_FRONT_CODENAME('base', 'EXCSTATUS', tc.EXCSTATUS)
+				 ELSE '' END ) AS ordstatusnm                -- 주문상태코드명
+			 , tg.GOODSNAME                                  -- 상품명
+			 , tcg.CLMCNT                                    -- 주문수량
+			 , tcg.SALEAMT                                   -- 판매금액
+			 , tcg.SALEPROMOAMT                              -- 프로모션할인금액
+			 , tcg.GOODSCPNAMT                               -- 상품쿠폰할인금액
+			 , tcg.REALGOODSAMT                              -- 할인적용후금액
+			 , ifnull((SELECT NAME FROM t_dealer WHERE USERNO = tcg2.DEALERNO), tb.NAME) AS brandnm -- 입점업체가 있으면 입점업체 없으면 브랜드
+			 , FN_GET_FILE_URL(tg.GOODSNO , 'FLT001', 'IGT002') AS fullpath -- 이미지경로
+			 , tgod.OPTIONNM1                                -- 옵션명1 
+			 , tgod.OPTIONNM2                                -- 옵션명2
+			 , tgod.OPTIONNM3                                -- 옵션명3
+			 , tgod.OPTIONNM4                                -- 옵션명4
+		FROM t_exchagne_hist teh
+		INNER JOIN t_claim tc ON teh.AFCLMIDX = tc.CLMIDX
+		    AND teh.ORDERIDX = tc.ORDERIDX
+			AND tc.ISTRASH  = 'F'
+		INNER JOIN t_comorder tc2 ON tc.ORDERIDX  = tc2.ORDERIDX
+			AND tc.ISTRASH = 'F'
+		INNER JOIN t_claim_goods tcg  ON tc.CLMIDX  = tcg.CLMIDX
+			AND tcg.ISCLMOPTION  = 'T'
+		INNER JOIN t_comorder_goods tcg2  ON tcg.ORDGDIDX  = tcg2.ORDGDIDX
+		INNER JOIN t_goods tg ON tcg.GOODSNO  = tg.GOODSNO
+			AND tg.SITEID  = #{siteid}
+		INNER JOIN t_goods_option_detail tgod ON tcg.GOODSNO  = tgod.GOODSNO
+			AND tgod.OPTIONCODE = tcg.OPTIONCODE
+		LEFT OUTER JOIN t_brand tb ON tb.IDX = tg.BRANDIDX
+		WHERE 1 = 1
+		AND tcg.ORDGDIDX = #{ordgdidx}
+	</select>
+	
+	<insert id="insertExchangeHist" parameterType="somap" useGeneratedKeys="true" keyProperty="cmlexcidx">
+		INSERT  /* ExchangeHistMapper - insertExchangeHist 클레임 쿠폰 저장*/
+			INTO T_EXCHANGE_HIST (
+				  ORDERIDX		/* 주문IDX(FK) */
+				, BFCLMIDX		/* 이전클레임IDX */
+				, AFCLMIDX		/* 이후클레임IDX */
+				, ISTRASH		/* 삭제여부 */
+				, REGUSERID		/* 등록자ID */
+				, REGDATE		/* 등록일시 */
+			) VALUES (
+				  #{orderidx}
+				, #{bfclmidx}
+				, #{afclmidx}
+				, 'F'
+				, #{userid}
+				, sysdate()
+			)
+	</insert>
+</mapper>

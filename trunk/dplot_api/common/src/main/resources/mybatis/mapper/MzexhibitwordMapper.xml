@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.dplot.mapper.MzexhibitwordMapper">
+	<!-- 전시관리키워드 저장 -->
+	<insert id="insertMzexhibitword" parameterType="somap">
+        /* MzexhibitwordMapper.xml - insertMzexhibitword 전시관리키워드 저장  */
+        INSERT INTO t_mzexhibitword
+        (mzexidx, keyword, reguserid, regdate)
+        VALUES
+        <foreach collection="keywordlist" index="index" item="item" separator=",">
+        	(#{mzexidx}, #{item.keyword}, #{reguserid}, now())
+        </foreach>
+    </insert>
+    
+    <!-- 전시관리키워드 조회 -->
+	<select id="selectMzexhibitwordList" resultType="somap" parameterType="somap">
+        /* MzexhibitwordMapper.xml - selectMzexhibitwordList 전시관리키워드 조회  */
+        SELECT mzexwdidx, keyword
+        FROM t_mzexhibitword
+        WHERE mzexidx = #{mzexidx}
+    </select>
+    
+    <!-- 전시관리키워드 삭제 -->
+	<delete id="deleteMzexhibitword" parameterType="somap">
+        /* MzexhibitwordMapper.xml - deleteMzexhibitword 전시관리키워드 삭제  */
+        DELETE FROM t_mzexhibitword
+        WHERE mzexwdidx IN 
+        <foreach collection="deletekeywordlist" item="item" open="(" close=")" separator=",">
+        	#{item}
+        </foreach>
+    </delete>
+</mapper>

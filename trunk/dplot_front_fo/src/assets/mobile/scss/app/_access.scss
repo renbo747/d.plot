@@ -1,0 +1,53 @@
+.dp-app {
+  padding-top: 40px;
+  //app title
+  .dp-app-title {
+    font-size: 18px;
+    letter-spacing: -.72px;
+  }
+  //section
+  .app-section {
+    padding: 40px 0;
+  }
+  .app-section-title {
+    font-size: 16px;
+    letter-spacing: -.64px;
+  }
+  .app-access__wrap {
+    li + li {
+      padding-top: 14px;
+    }
+  }
+  .access__list__item {
+    align-items: center;
+  }
+  .access__item__img__wrap {
+    margin-right: 20px;
+  }
+  .access__item__img {
+    align-items: center;
+    justify-content: center;
+    width: 56px;
+    height: 56px;
+    border-radius: 50%;
+    background-color: $gray-800;
+  }
+  .access-icon {
+    background-image: url("~@/assets/common/icon/icon-bio-white-30px.svg");
+  }
+  .app-access__explanation {
+    padding-top: 14px;
+  }
+  .access__item__text__p {
+    font-size: 14px;
+    letter-spacing: -.56px;
+  }
+  .access__explanation__text__p {
+    font-size: 14px;
+    letter-spacing: -.56px;
+  }
+  .app-button-text {
+    font-size: 16px;
+    letter-spacing: -.64px;
+  }
+}

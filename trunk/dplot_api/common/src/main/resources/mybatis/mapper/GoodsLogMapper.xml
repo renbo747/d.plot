@@ -1,0 +1,41 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.dplot.mapper.GoodsLogMapper">
+
+<select id="selectGoodsLogCount" parameterType="somap" resultType="int">
+	/* GoodsLogMapper.xml - selectGoodsLogCount 상품로그 조회 */
+	SELECT COUNT(*)
+	FROM T_GOODS_LOG
+	WHERE GOODSNO = #{goodsno}
+		AND `DATE` = DATE_FORMAT(NOW(), '%Y-%m-%d')
+		AND `TIME` = DATE_FORMAT(NOW(), '%H ')
+</select>
+
+<insert id="insertGoodsLog" parameterType="somap" useGeneratedKeys="true" keyColumn="IDX" keyProperty="idx">
+	/* GoodsLogMapper.xml - insertGoodsLog 상품로그 등록 */
+	INSERT INTO T_GOODS_LOG (
+		GOODSNO
+		, DATE
+		, TIME
+		, WEEK
+		, CNT
+	) VALUES (
+		#{goodsno}
+		, DATE_FORMAT(NOW(), '%Y-%m-%d')
+		, DATE_FORMAT(NOW(), '%H ')
+		, WEEKDAY(DATE_FORMAT(NOW(),'%Y%m%d'))
+		, 1
+	)
+</insert>
+
+<update id="updateGoodsLog" parameterType="somap" >
+	/* GoodsLogMapper.xml - insertGoodsLog 상품로그 수정 */
+	UPDATE T_GOODS_LOG
+	SET CNT = CNT + 1
+	WHERE GOODSNO = #{goodsno}
+		AND `DATE` = DATE_FORMAT(NOW(), '%Y-%m-%d')
+		AND `TIME` = DATE_FORMAT(NOW(), '%H ')
+</update>
+
+</mapper>

@@ -1,0 +1,731 @@
+package com.dplot.front.service;
+
+import java.util.ArrayList;
+import java.util.List;
+
+import org.apache.commons.lang3.ArrayUtils;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Propagation;
+import org.springframework.transaction.annotation.Transactional;
+
+import com.dplot.common.CMConst;
+import com.dplot.common.Response;
+import com.dplot.common.SOMap;
+import com.dplot.common.Status;
+import com.dplot.common.service.TossService;
+import com.dplot.common.service.util.MallBaseService;
+import com.dplot.exception.BizException;
+import com.dplot.mapper.BestGoodsMapper;
+import com.dplot.mapper.CardBenefitMapper;
+import com.dplot.mapper.CategoryMapper;
+import com.dplot.mapper.ConfigCompanyMapper;
+import com.dplot.mapper.ConfigMapper;
+import com.dplot.mapper.CouponMapper;
+import com.dplot.mapper.CouponMemissueMapper;
+import com.dplot.mapper.DealerInfoMapper;
+import com.dplot.mapper.DelivTemplateMapper;
+import com.dplot.mapper.FileMapper;
+import com.dplot.mapper.GiftMapper;
+import com.dplot.mapper.GoodsAdditionMapper;
+import com.dplot.mapper.GoodsMapper;
+import com.dplot.mapper.GoodsNotifyMapper;
+import com.dplot.mapper.GoodsOptionDetailMapper;
+import com.dplot.mapper.GoodsOptionMapper;
+import com.dplot.mapper.ReserveConfigMapper;
+import com.dplot.mapper.RewareMapper;
+import com.dplot.mapper.WishMapper;
+import com.dplot.util.Util;
+
+/**
+ * The Class FrontGoodsServiceImpl.
+ */
+@Service
+public class FrontGoodsServiceImpl extends MallBaseService implements FrontGoodsService {
+
+	/** The Constant logger. */
+	private static final Logger logger = LoggerFactory.getLogger(FrontGoodsServiceImpl.class);
+
+	@Autowired
+	private GoodsMapper goodsMapper;
+
+	@Autowired
+	private BestGoodsMapper bestGoodsMapper;
+
+	@Autowired
+	private GoodsAdditionMapper goodsAdditionMapper;
+
+	@Autowired
+	GiftMapper giftMapper;
+
+	@Autowired
+	private FileMapper fileMapper;
+
+	@Autowired
+	private GoodsNotifyMapper goodsNotifyMapper;
+
+	@Autowired
+	private DelivTemplateMapper delivTemplateMapper;
+
+	@Autowired
+	private WishMapper wishMapper;
+
+	@Autowired
+	private DealerInfoMapper dealerInfoMapper;
+
+	@Autowired
+	private ConfigCompanyMapper configCompanyMapper;
+
+	@Autowired
+	private GoodsOptionMapper goodsOptionMapper;
+
+	@Autowired
+	private GoodsOptionDetailMapper goodsOptionDetailMapper;
+
+	@Autowired
+	private ReserveConfigMapper reserveConfigMapper;
+
+	@Autowired
+	private CardBenefitMapper cardBenefitMapper;
+
+	@Autowired
+	private ConfigMapper configMapper;
+
+	@Autowired
+	private RewareMapper rewareMapper;
+
+	@Autowired
+	private TossService tossService;
+
+	@Autowired
+	private CategoryMapper categoryMapper;
+
+	@Autowired
+	private CouponMapper couponMapper;
+
+	@Autowired
+	private CouponMemissueMapper couponMemissueMapper;
+
+//	@Autowired
+//	private MemberMapper memberMapper;
+//
+//	@Autowired
+//	private OrderMapper orderMapper;
+	/**
+	 * 상품 정보 조회
+	 * @param params
+	 * @return
+	 * @throws Exception
+	 */
+	@Override
+	public SOMap goodsDetail(SOMap params) throws Exception {
+		SOMap result = new SOMap();
+
+		params.put("siteid", cs.getStr("siteid"));
+		params.put("userno", cs.getInt("authmemberno"));
+		params.put("platform", cs.getStr("platform"));
+		if (Util.flag2Bool(cs.getStr("ismobile"))) {
+			params.put("imgtype", CMConst.IMG_TYPE_GOODS_IMG_MO_B);
+		} else {
+			params.put("imgtype", CMConst.IMG_TYPE_GOODS_IMG_PC_B);
+		}
+
+		params.put("muappchtype", cs.getStr("platform"));
+		if (params.getInt("userno")  == 0) {
+			params.put("mumembertype", "DMT001"); //일반회원
+			params.put("mumemlvtype", "MDL001");  //브론즈
+		}else {
+			params.put("mumembertype", cs.getStr("authmembertype"));
+			params.put("mumemlvtype", cs.getStr("authmemlvtype"));
+		}
+
+		// 상품 상세조회
+		SOMap detail = goodsMapper.selectFrontGoodsDetail(params);
+		if (Util.isEmpty(detail)) {
+			throw new BizException("상품정보가 존재하지 않습니다.");
+		}
+
+		// 관리자가 아닐경우
+		if(cs.getInt("authadminno") == 0 && cs.getInt("authdealerno") == 0){
+			String[] selltype = {CMConst.GOODS_SELL_TYPE_SALE, CMConst.GOODS_SELL_TYPE_AUTO_SOLDOUT, CMConst.GOODS_SELL_TYPE_HAND_SOLDOUT};
+			if(!ArrayUtils.contains(selltype, detail.getDbStr("goodsselltype"))){ //판매중, 품절
+				throw new BizException("판매중인 상품이 아닙니다.");
+			}
+//			if(!Util.flag2Bool(detail.getDbStr("isdisdate"))) { //전시기간
+//				throw new BizException("판매중인 상품이 아닙니다.");
+//			}
+//			if(!Util.flag2Bool(detail.getDbStr("isdisplay"))) { //전시여부
+//				throw new BizException("판매중인 상품이 아닙니다.");
+//			}
+			if(!CMConst.GOODS_STATUS_APPROVAL.equals(detail.getDbStr("goodsapprtype"))) { //승인여부
+				throw new BizException("판매중인 상품이 아닙니다.");
+			}
+
+			this.spGoodsLog(params);
+		}
+
+		//뱃지 str split처리
+		detail.put("badge", "".equals(detail.getStr("mugicontypenm"))? new ArrayList<>(): ((String) detail.get("mugicontypenm")).split(","));
+
+		result.putAll(detail);
+
+		// 상품 스와이프 이미지 조회
+		SOMap swiperImageParams = new SOMap();
+		swiperImageParams.put("orgidx", detail.getDbInt("goodsno"));
+		swiperImageParams.put("filetype", CMConst.FILE_TYPE_IMG);
+
+		// 모바일인지 PC인지 구분해야함!
+		List<String> list = new ArrayList<>();
+		if (Util.flag2Bool(cs.getStr("ismobile"))) {
+			list.add(CMConst.IMG_TYPE_GOODS_IMG_MO_B);
+		} else {
+			list.add(CMConst.IMG_TYPE_GOODS_IMG_PC_B);
+		}
+
+		list.add(CMConst.IMG_TYPE_GOODS_IMG_ADD_B1);
+		list.add(CMConst.IMG_TYPE_GOODS_IMG_ADD_B2);
+		list.add(CMConst.IMG_TYPE_GOODS_IMG_ADD_B3);
+		list.add(CMConst.IMG_TYPE_GOODS_IMG_ADD_B4);
+		list.add(CMConst.IMG_TYPE_GOODS_IMG_ADD_B5);
+		list.add(CMConst.IMG_TYPE_GOODS_IMG_ADD_B6);
+		list.add(CMConst.IMG_TYPE_GOODS_IMG_ADD_B7);
+		list.add(CMConst.IMG_TYPE_GOODS_IMG_ADD_B8);
+		list.add(CMConst.IMG_TYPE_GOODS_IMG_ADD_B9);
+		list.add(CMConst.IMG_TYPE_GOODS_IMG_ADD_B10);
+
+		swiperImageParams.put("imgtypes", list.toArray());
+
+		List<SOMap> swiperlist = fileMapper.selectFileList(swiperImageParams);
+		result.put("swiperlist", swiperlist);
+
+		// 사은품 목록
+		params.put("memlvtype", cs.getStr("authmemlvtype"));
+		params.put("membertype", cs.getStr("authmembertype"));
+
+		SOMap item = new SOMap();
+		item.put("goodsno", detail.getDbInt("goodsno"));
+		item.put("ordcnt", 1);
+
+		List<SOMap> items = new ArrayList<SOMap>();
+
+		items.add(item);
+		params.put("items", items);
+		params.put("gifttermtype", "GFT001"); //특정상품구매사은품
+		params.put("imgtype", Util.flag2Bool(cs.getStr("ismobile")) ? CMConst.IMG_TYPE_GIFT_IMG_MO_B : CMConst.IMG_TYPE_GIFT_IMG_PC_B);
+		params.put("isoption", "F");
+		List<SOMap> giftlist = giftMapper.selectGiftListByGoods(params);
+		result.put("giftlist", giftlist);
+
+
+		//쿠폰목록 조회
+		if(isMember()) {
+			params.put("isdownload", "F");
+			params.put("isoption", "F");
+			params.put("comcpntype", CMConst.COM_CPN_GOODS);
+			result.put("couponlist", couponMemissueMapper.selectCouponListByGoods(params));
+			result.put("couponcnt", 0);
+		} else {
+			result.put("couponcnt", couponMapper.selectGoodsCouponCnt(params));
+			result.put("couponlist", new ArrayList<SOMap>());
+		}
+		params.put("goodsno", detail.getDbInt("goodsno"));
+		// 신규가입쿠폰 적용 할인 후 판매금액
+		Integer saleamt = (int) result.get("saleamt") - (int) result.get("goodscpnamt");
+		params.put("saleamt", saleamt);
+
+		Integer newJoinCouponSaleAmt = couponMapper.newJoinCouponSaleAmt(params);
+		if (newJoinCouponSaleAmt > 0) {
+			result.put("isnewjoincoupon", "T");
+		} else {
+			result.put("isnewjoincoupon", "F");
+		}
+		result.put("totsaleamt", newJoinCouponSaleAmt);
+		// 판매자, AS정보
+		SOMap dbparams = new SOMap();
+		int dealerno = detail.getDbInt("dealerno");
+		if (dealerno > 0) {
+			dbparams.put("dealerno", dealerno);
+			result.put("dealer", dealerInfoMapper.selectDealerAsInfo(dbparams));
+		} else {
+			dbparams.put("siteid", cs.getStr("siteid"));
+			result.put("dealer", configCompanyMapper.selectCompanyAsInfo(dbparams));
+		}
+
+		// 배송정보(템플릿에서 조회)
+		int delividx = detail.getInt("delividx");
+		if (delividx > 0) {
+			SOMap dbparam = new SOMap();
+			dbparam.put("delividx", delividx);
+			dbparam.put("isgoodsdetail", "T");
+			dbparam.put("goodsno", detail.get("goodsno"));
+			result.put("deliv", delivTemplateMapper.selectDelivTemplateDetail(dbparam));
+		} else {
+			result.put("deliv", null);
+		}
+
+		// 상품고시정보
+		dbparams.put("goodsno", detail.getInt("goodsno"));
+		List<SOMap> goodsnotifylist = goodsNotifyMapper.selectGoodsNotifyList(dbparams);
+		result.put("goodsnotifylist", goodsnotifylist);
+
+		// 회원별적립금
+//		dbparams.put("dadamembertype", "DMT001"); //일반회원
+//		dbparams.put("respaytype", "RPT001"); //구매확정
+//
+//		List<SOMap> reservelist = reserveConfigMapper.selectReserveConfigByMemberType(dbparams);
+//		result.put("reservelist", reservelist);
+
+		// 구매적립금
+		if(!isMember()) {
+			params.put("memlvtype", CMConst.MEMLVTYPE_BRONZE);
+			params.put("membertype", CMConst.MEMBERTYPE_BASIC);
+		} else {
+//			String userId = getRealMemberId();
+//			SOMap memberInfo = memberMapper.selectMemberInfo(userId);
+//			params.put("memlvtype", memberInfo.get("memlvtype"));
+//			params.put("membertype", memberInfo.get("membertype"));
+			params.put("memlvtype", CMConst.MEMLVTYPE_BRONZE);
+			params.put("membertype", CMConst.MEMBERTYPE_BASIC);
+		}
+		SOMap reserve = reserveConfigMapper.selectReserveConfigInfoByMemberType(params);
+		result.put("reserve", reserve);
+
+		// 프로모션 적립금
+		params.put("goodsno", detail.getInt("goodsno"));
+		List<SOMap> promReserve = reserveConfigMapper.selectPromReserveByMemberType(params);
+		result.put("promreserve", promReserve);
+
+		//첫주문여부
+//		int orderCnt = orderMapper.selectOrderCnt(params);
+//		String isFirstOrder = "F";
+//		if(orderCnt > 0) {
+//			isFirstOrder = "T";
+//		}
+//		result.put("isFirstOrder", isFirstOrder);
+
+		//카드혜택
+		params.put("istoday", "T");
+		SOMap cardPromition = tossService.tossCardPromotion(params);
+		cardPromition.put("cardbenefit", cardBenefitMapper.selectCardBenefitList(params));
+		cardPromition.putAll(configMapper.selectConfigCardBenefit(params));
+		result.put("cardpromotion", cardPromition);
+
+		return result;
+	}
+
+	@Override
+    @Transactional(propagation = Propagation.REQUIRED, rollbackFor = {Exception.class})
+	public void spGoodsLog(SOMap param) throws Exception {
+		// TODO Auto-generated method stub
+		goodsMapper.updateGoodsHits(param);
+	}
+
+	/**
+	 * 쿠폰 조회
+	 *
+	 * @param isValid 상품정보(DB)유효여부
+	 * @param state 	상품상태
+	 * @param isDisplay 상품노출여부
+	 * @return response
+	 * @throws Exception the exception
+	 */
+	@Override
+	public Response getCoupon(SOMap params) throws Exception {
+		Response res = new Response();
+		res.setErrorShow(false);
+		if (cs.getInt("authmemberno") == 0) {
+			res.setStatusCode(Status.UNAUTHORIZED.getKey());
+			res.setMessage("로그인정보가 없습니다.");
+			return res;
+		} else {
+
+		}
+		return res;
+	}
+
+	/**
+	 * 상품 하트
+	 */
+	@Override
+	public Response wish(SOMap params) throws Exception {
+		Response res = new Response();
+		res.setErrorShow(false);
+		int userno = cs.getInt("authmemberno");
+		if (userno == 0) {
+			res.setStatusCode(Status.UNAUTHORIZED.getKey());
+			res.setMessage("로그인정보가 없습니다.");
+			return res;
+		}
+		int goodsno = params.getInt("goodsno");
+		if (goodsno == 0) {
+			res.setStatusCode(Status.BAD_REQUEST.getKey());
+			res.setMessage("상품정보가 없습니다.");
+			return res;
+		}
+		int cateidx = params.getInt("cateidx");
+		if (cateidx == 0) {
+			res.setStatusCode(Status.BAD_REQUEST.getKey());
+			res.setMessage("카테고리정보가 없습니다.");
+			return res;
+		}
+		SOMap dbparam = new SOMap();
+		dbparam.put("siteid", cs.getStr("siteid"));
+		dbparam.put("userno", userno);
+		dbparam.put("goodsno", goodsno);
+		dbparam.put("cateidx", cateidx);
+		dbparam.put("istrash", "F");
+
+		SOMap wishMap = wishMapper.selectWish(dbparam);
+		if (Util.isEmpty(wishMap)) {
+			wishMapper.insertWish(dbparam);
+		} else {
+			String istrashed = wishMap.getStr("istrash");
+			wishMap.put("istrash", istrashed.equals("T") ? "F" : "T");
+			wishMapper.updateWish(wishMap);
+		}
+		return res;
+	}
+
+	/*
+	 * 상품옵션 목록
+	 */
+	@Override
+	public SOMap selectOptionList(SOMap params) throws Exception {
+		SOMap result = new SOMap();
+
+		params.put("siteid", cs.getStr("siteid"));
+		params.put("userno", cs.getInt("authmemberno"));
+
+		List<SOMap> list = goodsOptionMapper.selectGoodsOptionList(params);
+
+		result.put("list", list);
+
+		return result;
+	}
+
+	/*
+	 * 추가상품 목록
+	 */
+	@Override
+	public SOMap selectAddGoodsList(SOMap params) throws Exception {
+		SOMap result = new SOMap();
+
+		params.put("siteid", cs.getStr("siteid"));
+		params.put("userno", cs.getInt("authmemberno"));
+
+		if (CMConst.CM_PLATFORM_PC.equals(cs.getStr("platform"))) {
+			params.put("imgtype", CMConst.IMG_TYPE_GOODS_IMG_PC_M);
+		} else {
+			params.put("imgtype", CMConst.IMG_TYPE_GOODS_IMG_MO_M);
+		}
+
+		List<SOMap> list = goodsAdditionMapper.selectGoodsAdditionList(params);
+
+		result.put("list", list);
+
+		return result;
+	}
+
+	/*
+	 * 상품옵션 상세목록
+	 */
+	@Override
+	public SOMap selectOptionDetailList(SOMap params) throws Exception {
+		SOMap result = new SOMap();
+
+		params.put("siteid", cs.getStr("siteid"));
+		params.put("userno", cs.getInt("authmemberno"));
+		params.put("platform", cs.getStr("platform"));
+
+		if(!isMember()) {
+			params.put("userno", -1);
+		}
+		if (CMConst.CM_PLATFORM_PC.equals(cs.getStr("platform"))) {
+			params.put("imgtype", CMConst.IMG_TYPE_GOODS_IMG_PC_M);
+		} else {
+			params.put("imgtype", CMConst.IMG_TYPE_GOODS_IMG_MO_M);
+		}
+
+		List<SOMap> optionDetail = goodsOptionDetailMapper.selectGoodsOptionDetailByIndex(params);
+
+		result.put("list", optionDetail);
+
+		return result;
+	}
+
+
+	/**
+	 * 쇼핑 상품 목록 조회
+	 */
+	@Override
+	public SOMap selectGoodsListByCateIdx(SOMap param) throws Exception {
+		SOMap result = new SOMap();
+
+		if (param.getInt("idx") == 0) {
+			throw new BizException("카테고리 정보가 없습니다.");
+		}
+
+		//todo:추후 조회 조건으로 변경
+		param.put("siteid",cs.getStr("siteid"));
+		param.put("userno", cs.getInt("authmemberno"));
+		param.put("imgtype", Util.flag2Bool(cs.getStr("ismobile")) ? CMConst.IMG_TYPE_GOODS_IMG_MO_M : CMConst.IMG_TYPE_GOODS_IMG_PC_M);
+		param.put("muappchtype", cs.getStr("platform"));
+
+		if (param.getInt("userno")  == 0) {
+			param.put("mumembertype", "DMT001"); //일반회원
+			param.put("mumemlvtype", "MDL001");  //브론즈
+		}else {
+			param.put("mumembertype", cs.getStr("authmembertype"));
+			param.put("mumemlvtype", cs.getStr("authmemlvtype"));
+		}
+
+		int page = param.getInt("currentpage");
+		int startPage = (page > 1) ? ((page -1 ) * param.getInt("listcnt")) : 0;
+		param.put("startpage", startPage);
+		param.put("endpage", param.getInt("listcnt"));
+
+		//
+		if(Util.flag2Bool(param.getDbStr("init")) && !cs.getStr("platform").equals("MAC001")) {
+			param.put("startpage", 0);
+			param.put("endpage", startPage + param.getInt("listcnt"));
+		}
+
+	    SOMap cateInfo = categoryMapper.selectGoodsListCateInfo(param);
+	    if (cateInfo ==  null) {
+	    	throw new BizException("카테고리 정보가 없습니다.");
+		}
+	    if (cateInfo.getInt("depth1idx") != 0) {
+			param.put("depth1idx", cateInfo.getInt("depth1idx"));
+		}
+	    if (cateInfo.getInt("depth2idx") != 0) {
+			param.put("depth2idx", cateInfo.getInt("depth2idx"));
+		}
+	    if (cateInfo.getInt("depth3idx") != 0) {
+			param.put("depth3idx", cateInfo.getInt("depth3idx"));
+		}
+	    if (cateInfo.getInt("depth4idx") != 0) {
+			param.put("depth4idx", cateInfo.getInt("depth4idx"));
+		}
+
+		List<SOMap> goodsList = goodsMapper.selectFrontGoodsList(param);
+		result.put("goodslist", goodsList);
+		if (goodsList.size() > 0) {
+			result.put("listtotal", goodsList.get(0).get("totcnt"));
+		}else {
+			result.put("listtotal", 0);
+		}
+//		int totcnt = goodsMapper.selectFrontGoodsCnt(param);
+//		result.put("listtotal", totcnt);
+		return result;
+	}
+
+
+	/**
+	 * 상품 위시 목록 조회
+	 */
+	/**
+	 * 마이페이지_찜한 상품 조회
+	 */
+	@Override
+	public SOMap selectWishList(SOMap param) throws Exception {
+		SOMap resultMap = new SOMap();
+
+		param.put("siteid", cs.getStr("siteid"));
+		param.put("userno", cs.getInt("authmemberno"));
+		param.put("imgtype", Util.flag2Bool(cs.getStr("ismobile")) ? CMConst.IMG_TYPE_GOODS_IMG_MO_M : CMConst.IMG_TYPE_GOODS_IMG_PC_M);
+		param.put("platform", cs.getStr("platform"));
+		if (param.getInt("userno") == 0) {
+			throw new BizException("로그인이 필요한 서비스입니다.");
+		}
+		/*****************
+		 * 페이징 처리 및 param값 셋팅
+		 ******************/
+		int page = param.getInt("currentpage");
+		int startPage = (page > 1) ? ((page -1 ) * param.getInt("listcnt")) : 0;
+		param.put("startpage", startPage);
+		param.put("endpage", param.getInt("listcnt"));
+
+		if(Util.flag2Bool(param.getDbStr("init")) && !cs.getStr("platform").equals("MAC001")) {
+			param.put("startpage", 0);
+			param.put("endpage", startPage + param.getInt("listcnt"));
+		}
+		/*******************************************************
+		 * 찜한 상품 목록 조회
+		 *******************************************************/
+		List<SOMap> wishList = wishMapper.selectWishList(param);
+		int listTotal = wishMapper.selectWishListCnt(param);
+		resultMap.put("likelist", wishList);
+		resultMap.put("listtotal", listTotal);
+		return resultMap;
+	}
+
+	/**
+	 * 상품 위시리스트 전체 삭제처리
+	 */
+	@Override
+	@Transactional(propagation = Propagation.REQUIRED, rollbackFor = {Exception.class})
+	public SOMap deleteWishLike(SOMap param) throws Exception {
+		SOMap resultMap = new SOMap();
+		int resultCnt = 0;
+		param.put("siteid", cs.getStr("siteid"));
+		param.put("userno", cs.getInt("authmemberno"));
+		if (param.getInt("userno") == 0) {
+			throw new BizException("로그인이 필요한 서비스입니다.");
+		}
+		resultCnt = wishMapper.updateWishDel(param);
+
+	    if (resultCnt <= 0) {
+	    	throw new Exception("전체 삭제에 실패했습니다.");
+		}
+
+		return resultMap;
+	}
+
+	/**
+	 * 최근 본상품 목록 조회
+	 */
+	@Override
+	public SOMap selectRecentList(SOMap param) throws Exception {
+		SOMap resultMap = new SOMap();
+		param.put("siteid", cs.getStr("siteid"));
+		param.put("userno", cs.getInt("authmemberno"));
+		param.put("platform", cs.getStr("platform"));
+		if (Util.flag2Bool(cs.getStr("ismobile"))) {
+			param.put("imgtype", CMConst.IMG_TYPE_GOODS_IMG_MO_M);
+		} else {
+			param.put("imgtype", CMConst.IMG_TYPE_GOODS_IMG_PC_M);
+		}
+
+		//List<SOMap> recentWishList = wishMapper.selectRecentGoodsWish(param);
+		List<SOMap> recentGoodsList = new ArrayList<>();
+		if (param.getArrayList("goodsnolist").size() > 0) {
+			recentGoodsList = goodsMapper.selectRecentGoodList(param);
+		}
+		resultMap.put("recentList", recentGoodsList);
+		return resultMap;
+	}
+
+	@Override
+	public SOMap selectBestList(SOMap param) throws Exception {
+		SOMap resultMap = new SOMap();
+		param.put("siteid", cs.getStr("siteid"));
+		param.put("userno", cs.getInt("authmemberno"));
+		param.put("platform", cs.getStr("platform"));
+		if (Util.flag2Bool(cs.getStr("ismobile"))) {
+			param.put("imgtype", CMConst.IMG_TYPE_GOODS_IMG_MO_M);
+		} else {
+			param.put("imgtype", CMConst.IMG_TYPE_GOODS_IMG_PC_M);
+		}
+
+		List<SOMap> bestGoodsList = bestGoodsMapper.selectBestGoodsList(param);
+		resultMap.put("bestList", bestGoodsList);
+		return resultMap;
+	}
+
+	/**
+	 * 재입고알림 신청 목록 조회
+	 */
+	@Override
+	public SOMap selectRestockList(SOMap param) throws Exception {
+		SOMap resultMap = new SOMap();
+		param.put("siteid", cs.getStr("siteid"));
+		param.put("userno", cs.getInt("authmemberno"));
+		param.put("platform", cs.getStr("platform"));
+		if (Util.flag2Bool(cs.getStr("ismobile"))) {
+			param.put("imgtype", CMConst.IMG_TYPE_GOODS_IMG_MO_M);
+		} else {
+			param.put("imgtype", CMConst.IMG_TYPE_GOODS_IMG_PC_M);
+		}
+		/*************************
+		 * 페이징 처리
+		 *************************/
+		int page = param.getInt("currentpage");
+		int startPage = (page > 1) ? ((page -1 ) * param.getInt("listcnt")) : 0;
+		param.put("startpage", startPage);
+		param.put("endpage", param.getInt("listcnt"));
+
+		if(Util.flag2Bool(param.getDbStr("init")) && !cs.getStr("platform").equals("MAC001")) {
+			param.put("startpage", 0);
+			param.put("endpage", startPage + param.getInt("listcnt"));
+		}
+
+		List<SOMap> restockList = rewareMapper.selectRewareList(param);
+		resultMap.put("restocklist", restockList);
+		int listtotal = rewareMapper.selectRewareListCnt(param);
+		resultMap.put("listtotal", listtotal);
+		return resultMap;
+	}
+
+	/**
+	 * 재입고 알림 신청
+	 */
+	@Override
+	@Transactional(propagation = Propagation.REQUIRED, rollbackFor = {Exception.class})
+	public SOMap insertReware(SOMap param) throws Exception {
+		SOMap resultMap = new SOMap();
+		int resultCnt = 0;
+		param.put("userno", cs.getInt("authmemberno"));
+		param.put("reguserid", cs.getStr("authmemberid"));
+		if (param.getInt("userno") == 0) {
+			throw new BizException("로그인이 필요한 서비스입니다.");
+		}
+		if (param.getStr("goodsno") == "") {
+			throw new BizException("상품번호가 없습니다.");
+		}
+		if (param.getStr("optioncode") == "") {
+			throw new BizException("옵션코드가 없습니다.");
+		}
+		int dupCnt = rewareMapper.selectRewareDupCnt(param);
+		if (dupCnt > 0) {
+			throw new BizException("이미 재입고 알림 신청된 상품입니다.");
+		}
+		resultCnt = rewareMapper.insertReware(param);
+
+	    if (resultCnt <= 0) {
+	    	throw new BizException("재입고 알림 신청에 실패했습니다.");
+		}
+
+		return resultMap;
+	}
+
+	/**
+	 * 재입고알림 목록 삭제 처리
+	 */
+	@Override
+	@Transactional(propagation = Propagation.REQUIRED, rollbackFor = {Exception.class})
+	public SOMap deletelRestock(SOMap param) throws Exception {
+		SOMap resultMap = new SOMap();
+		int resultCnt = 0;
+		param.put("siteid", cs.getStr("siteid"));
+		param.put("userno", cs.getInt("authmemberno"));
+		if (param.getInt("userno") == 0) {
+			throw new BizException("로그인이 필요한 서비스입니다.");
+		}
+		resultCnt = rewareMapper.updateRestockDel(param);
+
+	    if (resultCnt <= 0) {
+	    	throw new Exception("전체 삭제에 실패했습니다.");
+		}
+
+		return resultMap;
+	}
+
+	/**
+	 * 필터 상품목록 조회 목록의 좋아요 여부 가져오기
+	 */
+	@Override
+	public SOMap selectIswished(SOMap param) throws Exception {
+		SOMap resultMap = new SOMap();
+		param.put("siteid", cs.getStr("siteid"));
+		param.put("userno", cs.getInt("authmemberno"));
+		List<SOMap> goodswished = new ArrayList<>();
+
+		if (param.getArrayList("goodslist").size() > 0) {
+			goodswished = wishMapper.selectGoodsWish(param);
+		}
+		resultMap.put("goodswishlist", goodswished);
+		return resultMap;
+	}
+}

@@ -1,0 +1,47 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.dplot.mapper.BuyGuideMapper">
+
+	<!-- Front 구매 가이드 목록 노출(추후 회원구별 필요) -->
+	<select id="selectFrontBuyGuidelist" parameterType="somap" resultType="somap">
+	 SELECT /*BuyGuideMapper - selectFrontBuyGuidelist:: Front 구매 가이드 목록 노출(추후 회원구별 필요)*/
+ 	        GUIDEIDX      -- 가이드번호
+ 	      , SUBJECT       -- 제목
+ 	      , GUDESC        -- 설명
+ 	      , GUSTTIME      -- 전시시작일
+ 	      , GDEDTIME      -- 전시종료일
+ 	      , ISEXPERTREC   -- 전문가추천여부
+ 	      , GUINFO        -- 구매가이드내용
+ 	      , GUINFOMOBILE  -- 국매가이드내용모바일
+ 	      , READCNT       -- 조회수
+ 	      , CONCAT(HOST, IMGPATH, IMGFNAME) AS FULLPATH -- 이미지 경로
+	 FROM t_buyguide tb
+	 LEFT OUTER JOIN t_file tf ON tb.GUIDEIDX  = tf.ORGIDX
+	 AND tf.ISTRASH  = 'F'
+	 AND tf.FILETYPE = 'FLT001'
+	 <choose>
+	  <when test='platform == "MOBILE"'>
+	  	AND tf.IMGTYPE  = 'IGT071'
+	  </when>
+	  <otherwise>
+	  	AND tf.IMGTYPE  = 'IGT070'
+	  </otherwise>
+	 </choose>
+	 WHERE 1 = 1
+	 AND date_format(now(), '%Y%m%d%H%i') BETWEEN GUSTTIME AND GDEDTIME
+	 AND tb.SITEID = #{siteid}
+	 AND tb.ISTRASH = 'F'
+	 -- AND GUMAINTYPE  <![CDATA[<>]]> 'GMT001'
+	 <choose>
+	 	<when test='isexpertrec == true'>
+	 	AND tb.GUMAINTYPE = 'GMT002'
+	 	AND tb.ISEXPERTREC = 'T'
+	 	</when>
+	 	<otherwise>
+	 	AND tb.GUMAINTYPE IN ('GMT003', 'GMT004')
+	 	</otherwise>
+	 </choose>
+	 ORDER BY GUMAINTYPE DESC
+	</select>
+</mapper>

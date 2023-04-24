@@ -1,0 +1,98 @@
+.dp-mypage-invitation-pc {
+  .hr-h1 {
+    background: $gray-400;
+    margin-top: 30px;
+    margin-bottom: 30px;
+  }
+  .mypage-invitation__header {
+    padding-bottom: 50px;
+    .invitation__title {
+      font-size: 26px;
+      letter-spacing: -1.04px;
+      line-height: 22px;
+      font-weight: 700;
+      padding-bottom: 60px;
+    }
+    .member__count {
+      font-size: 18px;
+      letter-spacing: -.0.72px;
+    }
+  }
+  .mypage-invitation__body {
+    // 초대로 가입한 친구가 있는경우
+    .invitation__wrap {
+      .invitation-member__ul {
+        .invitation-member__body {
+          .member-name__wrap {
+            width: 120px;
+            .member-name {
+              font-size: 18px;
+              letter-spacing: .72px;
+            }
+          }
+          .benefit-info__wrap {
+            width: calc(100% - 240px);
+            .my-benefit__area {
+              width: 50%;
+            }
+            .friend-benefit__area {
+              width: 50%;
+            }
+            .empty-benefit__wrap {
+              .empty-benefit__p {
+                font-size: 16px;
+                letter-spacing: -.64px;
+              }
+            }
+            .dp-badge {
+              padding: 0;
+              width: 55px;
+              margin-right: 8px;
+            }
+            .benefit__p span {
+              font-size: 16px;
+              letter-spacing: -.64px;
+            }
+          }
+          .date__wrap {
+            width: 120px;
+            .date {
+              font-size: 14px;
+              letter-spacing: .56px;
+              color: $gray-700;
+            }
+          }
+        }
+      }
+    }
+    .pagination__area {
+      padding-top: 10px;
+    }
+    // 초대로 가입한 친구가 없는 경우
+    .empty__invitation__wrap {
+      width: 400px;
+      margin: 0 auto;
+      padding-top: 100px; // 보여주기 위한 임시 padding
+      .empty__invitation__header {
+        padding-bottom: 30px;
+        .empty__invitation__header__P {
+          font-size: 18px;
+          letter-spacing: -.72px;
+          line-height: 26px;
+          font-weight: 500;
+        }
+      }
+      .empty__invitation__body {
+        .empty__invitation__body__P {
+          font-size: 16px;
+          letter-spacing: -.64px;
+          line-height: 24px;
+          color: $gray-700;
+        }
+      }
+      .empty__invitation__footer {
+        padding-top: 40px;
+      }
+    }
+  }
+}

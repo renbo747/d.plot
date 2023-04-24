@@ -1,0 +1,252 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.dplot.mapper.RecomRewardLogMapper">
+	<!-- ADMIN 쿼리 시작 -->
+	
+	<!-- 추천리워드로그 목록 조회 -->
+	<select id="selectRecomRewardLogList" parameterType="somap" resultType="HashMap">
+		WITH tcp AS (   
+			SELECT 
+				CONCAT('(', tc.comcpnno,') ', tci.cpnname,' | ', fn_get_codename_str(tc.comcpntype,'COMCPNTYPE')) as title
+				, tc.comcpnidx as idx
+			FROM t_comcoupon tc
+			INNER JOIN t_comcoupon_info tci ON tc.comcpnidx = tci.comcpnidx
+			WHERE tc.siteid = #{siteid}
+		)
+		SELECT /* RecomRewardLogMapper.xml - selectRecomRewardLogList 추천리워드로그 목록 조회 */
+			a.*, FORMAT(@ROWNUM := @ROWNUM+1,0) AS no
+		FROM (
+			SELECT 
+				(SELECT codename FROM t_common_code WHERE cmcode = trl.recomtype) as recomtype
+				, date_format(str_to_date(recomstday,'%Y%m%d%H%i'),'%Y-%m-%d %H:%i') as recomstday
+				, date_format(str_to_date(recomedday,'%Y%m%d%H%i'),'%Y-%m-%d %H:%i') as recomedday
+				, CASE WHEN revpoint IS NULL THEN (SELECT title FROM tcp WHERE tcp.idx = trl.revcpidx) ELSE CONCAT(revpoint,'P') END as revpoint
+				, CASE WHEN recjoinpoint IS NULL THEN (SELECT title FROM tcp WHERE tcp.idx = trl.recjoincpidx) ELSE CONCAT(recjoinpoint,'P') END as recjoinpoint
+				, CASE WHEN reccfmpoint IS NULL THEN (SELECT title FROM tcp WHERE tcp.idx = trl.reccfmcpidx) ELSE CONCAT(reccfmpoint,'P') END as reccfmpoint
+				, CASE recomtype WHEN 'RCT002' THEN date_format(str_to_date(recomedday, '%Y%m%d%H%i'),'%Y-%m-%d %H:%i') ELSE '-' END as limitdate
+				, CASE isepointdup WHEN 'T' THEN '허용' WHEN 'F' THEN '미허용' ELSE '-' END as isepointdup
+				, reclimitcnt
+				, ta.name as regusername
+				, date_format(trl.regdate,'%Y-%m-%d') as regdate
+			FROM t_recom_reward_log trl
+			LEFT JOIN t_user tu ON trl.reguserid = tu.userid 
+			LEFT JOIN t_admin ta ON tu.no = ta.userno
+			<where>
+				AND trl.siteid = #{siteid}
+			<if test="sword != null and sword != ''">
+				AND ta.name like concat('%',#{sword},'%')
+			</if>
+			<![CDATA[
+				AND trl.regdate >= date_format(concat(#{startdate}, ' ', '00:00:00') , '%Y-%m-%d %H:%i:%s')
+				AND trl.regdate <= date_format(concat(#{enddate}, ' ', '23:59:59'), '%Y-%m-%d %H:%i:%s')
+			]]>
+			<choose>
+				<when test='isallrecom == "T"'>
+				</when>
+				<when test="recomtype != null and recomtype != ''">
+					AND (
+					<foreach collection="recomtypearr" item="item" index="index" separator="OR">
+						trl.recomtype like concat('%',#{item},'%')
+					</foreach>
+					<if test='isallrecom == "T"'>
+						OR trl.recomtype is null
+						OR trl.recomtype = ''
+					</if>
+					)
+				</when>
+				<otherwise>
+					AND ( trl.recomtype is null
+					OR trl.recomtype = '')
+				</otherwise>
+			</choose>
+			</where>
+			<choose>
+				<when test="psort == 'reclimitcnt_asc'">
+					ORDER BY trl.reclimitcnt ASC
+				</when>
+				<when test="psort == 'reclimitcnt_desc'">
+					ORDER BY trl.reclimitcnt DESC
+				</when>
+				<when test="psort == 'regdate_asc'">
+					ORDER BY trl.regdate ASC
+				</when>
+				<otherwise>
+					ORDER BY trl.regdate DESC
+				</otherwise>
+			</choose>
+		) a, (select @ROWNUM := #{startpage}) as b
+		LIMIT #{startpage}, #{endpage}
+	</select>
+	
+	<!-- 추천리워드로그 목록 수량조회 -->
+	<select id="selectRecomRewardLogCnt" parameterType="somap" resultType="Integer">
+		SELECT /* RecomRewardLogMapper.xml - selectRecomRewardLogList 추천리워드로그 목록 조회 */
+			count(*)
+		FROM t_recom_reward_log trl
+		LEFT JOIN t_user tu ON trl.reguserid = tu.userid 
+		LEFT JOIN t_admin ta ON tu.no = ta.userno
+		<where>
+			AND trl.siteid = #{siteid}
+		<if test="sword != null and sword != ''">
+			AND ta.name like concat('%',#{sword},'%')
+		</if>
+		<![CDATA[
+			AND trl.regdate >= date_format(concat(#{startdate}, ' ', '00:00:00') , '%Y-%m-%d %H:%i:%s')
+			AND trl.regdate <= date_format(concat(#{enddate}, ' ', '23:59:59'), '%Y-%m-%d %H:%i:%s')
+		]]>
+		<choose>
+			<when test='isallrecom == "T"'>
+			</when>
+			<when test="recomtype != null and recomtype != ''">
+				AND (
+				<foreach collection="recomtypearr" item="item" index="index" separator="OR">
+					trl.recomtype like concat('%',#{item},'%')
+				</foreach>
+				<if test='isallrecom == "T"'>
+					OR trl.recomtype is null
+					OR trl.recomtype = ''
+				</if>
+				)
+			</when>
+			<otherwise>
+				AND ( trl.recomtype is null
+				OR trl.recomtype = '')
+			</otherwise>
+		</choose>
+		</where>
+		<choose>
+			<when test="psort == 'reclimitcnt_asc'">
+				ORDER BY trl.reclimitcnt ASC
+			</when>
+			<when test="psort == 'reclimitcnt_desc'">
+				ORDER BY trl.reclimitcnt DESC
+			</when>
+			<when test="psort == 'regdate_asc'">
+				ORDER BY trl.regdate ASC
+			</when>
+			<otherwise>
+				ORDER BY trl.regdate DESC
+			</otherwise>
+		</choose>
+	</select>
+	
+	<!-- 추천리워드로그 엑셀 조회 -->
+	<select id="selectRecomRewardLogExcel" parameterType="somap" resultType="HashMap">
+		WITH tcp AS (   
+			SELECT 
+				CONCAT('(', tc.comcpnno,') ', tci.cpnname,' | ', fn_get_codename_str(tc.comcpntype,'COMCPNTYPE')) as title
+				, tc.comcpnidx as idx
+			FROM t_comcoupon tc
+			INNER JOIN t_comcoupon_info tci ON tc.comcpnidx = tci.comcpnidx
+			WHERE tc.siteid = #{siteid}
+		)
+		SELECT /* RecomRewardLogMapper.xml - selectRecomRewardLogExcel 추천리워드로그 목록 조회 */
+			a.*, FORMAT(@ROWNUM := @ROWNUM+1,0) AS no
+		FROM (
+			SELECT 
+				(SELECT codename FROM t_common_code WHERE cmcode = trl.recomtype) as recomtype
+				, concat(date_format(str_to_date(recomstday,'%Y%m%d%H%i'),'%Y-%m-%d %H:%i'), ' ~ ', date_format(str_to_date(recomedday,'%Y%m%d%H%i'),'%Y-%m-%d %H:%i')) as recomday
+				, CASE WHEN revpoint IS NULL THEN (SELECT title FROM tcp WHERE tcp.idx = trl.revcpidx) ELSE CONCAT(revpoint,'P') END as revpoint
+				, CASE WHEN recjoinpoint IS NULL THEN (SELECT title FROM tcp WHERE tcp.idx = trl.recjoincpidx) ELSE CONCAT(recjoinpoint,'P') END as recjoinpoint
+				, CASE WHEN reccfmpoint IS NULL THEN (SELECT title FROM tcp WHERE tcp.idx = trl.reccfmcpidx) ELSE CONCAT(reccfmpoint,'P') END as reccfmpoint
+				, CASE recomtype WHEN 'RCT002' THEN date_format(str_to_date(recomedday, '%Y%m%d%H%i'),'%Y-%m-%d %H:%i') ELSE '-' END as limitdate
+				, CASE isepointdup WHEN 'T' THEN '허용' WHEN 'F' THEN '미허용' ELSE '-' END as isepointdup
+				, reclimitcnt
+				, ta.name as regusername
+				, date_format(trl.regdate,'%Y-%m-%d') as regdate
+			FROM t_recom_reward_log trl
+			LEFT JOIN t_user tu ON trl.reguserid = tu.userid 
+			LEFT JOIN t_admin ta ON tu.no = ta.userno
+			<where>
+				AND trl.siteid = #{siteid}
+			<if test="sword != null and sword != ''">
+				AND ta.name like concat('%',#{sword},'%')
+			</if>
+			<![CDATA[
+				AND trl.regdate >= date_format(concat(#{startdate}, ' ', '00:00:00') , '%Y-%m-%d %H:%i:%s')
+				AND trl.regdate <= date_format(concat(#{enddate}, ' ', '23:59:59'), '%Y-%m-%d %H:%i:%s')
+			]]>
+			<choose>
+				<when test='isallrecom == "T"'>
+				</when>
+				<when test="recomtype != null and recomtype != ''">
+					AND (
+					<foreach collection="recomtypearr" item="item" index="index" separator="OR">
+						trl.recomtype like concat('%',#{item},'%')
+					</foreach>
+					<if test='isallrecom == "T"'>
+						OR trl.recomtype is null
+						OR trl.recomtype = ''
+					</if>
+					)
+				</when>
+				<otherwise>
+					AND ( trl.recomtype is null
+					OR trl.recomtype = '')
+				</otherwise>
+			</choose>
+			</where>
+			<choose>
+				<when test="psort == 'reclimitcnt_asc'">
+					ORDER BY trl.reclimitcnt ASC
+				</when>
+				<when test="psort == 'reclimitcnt_desc'">
+					ORDER BY trl.reclimitcnt DESC
+				</when>
+				<when test="psort == 'regdate_asc'">
+					ORDER BY trl.regdate ASC
+				</when>
+				<otherwise>
+					ORDER BY trl.regdate DESC
+				</otherwise>
+			</choose>
+		) a, (select @ROWNUM := 0) as b
+	</select>
+	
+	<select id="selectSignupRewardLog" parameterType="somap" resultType="somap">
+		 SELECT /*RecomRewardLogMapper.xml - selectSignupReward 회원가입시 지급할 리워드 정보*/
+		 	a.*
+		 FROM (
+             SELECT
+	             RELOGIDX -- 추천리워드로그
+			     , date_format(str_to_date(trr.RECOMSTDAY, '%Y%m%d%H%i'), '%Y-%m-%d') AS RECOMSTDAY  -- 진행시작일자
+			     , date_format(str_to_date(trr.RECOMEDDAY, '%Y%m%d%H%i'), '%Y-%m-%d') AS RECOMEDDAY  -- 진행종료일자
+			     , trr.RECOMTYPE       -- 추천리워드혜택구분
+			     , trr.REVPOINT        -- 피추천인지급포인트
+			     , trr.ISJOINGIVE      -- 회원가입시지급여부
+			     , trr.ISCFMGIVE       -- 첫구매확정지급
+			     , trr.RECJOINPOINT    -- 추천인회원가입지급포인트
+			     , trr.RECCFMPOINT     -- 추천인구매확정지급포인트
+			     , trr.RECLIMITCNT     -- 피추천인수제한
+			     , trr.ISEPOINTDUP     -- E포인트중복사용여부
+			     , trr.REVCPIDX        -- 피추천인쿠폰IDX
+			     , tc.CPNNAME AS REVCPNAME     -- 피추천인쿠폰명
+			     , trr.RECJOINCPIDX            -- 추천인회원가입쿠폰IDX
+			     , tc2.CPNNAME AS RECJOINCPNAME -- 추천인회원가입쿠폰명
+			     , trr.RECCFMCPIDX             -- 추천인구매확정쿠폰IDX
+			     , tc3.CPNNAME AS RECCFMCPNAME  -- 추천인구매확정쿠폰명
+		 		 , trr.ISTRASH
+			FROM t_recom_reward_log trr
+			LEFT OUTER JOIN t_comcoupon tc ON trr.REVCPIDX = tc.COMCPNIDX
+			LEFT OUTER JOIN t_comcoupon tc2  ON trr.RECJOINCPIDX = tc2.COMCPNIDX
+			LEFT OUTER JOIN t_comcoupon tc3  ON trr.RECCFMCPIDX = tc3.COMCPNIDX
+			WHERE 1 = 1
+			AND trr.SITEID  = #{siteid}
+			AND date_format(now(),'%Y%m%d%H%i') BETWEEN trr.RECOMSTDAY AND trr.RECOMEDDAY
+			ORDER BY RELOGIDX DESC
+			LIMIT 1
+		) a
+		WHERE ISTRASH  = 'F'
+	</select>
+	
+	<!-- 추천리워드로그 추가 -->
+	<insert id="insertRecomRewardLog" parameterType="somap">
+		INSERT INTO t_recom_reward_log /* RecomRewardLogMapper.xml - insertRecomRewardLog 추천리워드로그 추가 */
+		(siteid, recomstday, recomedday, recomtype, revpoint, isjoingive, iscfmgive, recjoinpoint, reccfmpoint, reclimitcnt, isepointdup, revcpidx, recjoincpidx, reccfmcpidx, istrash, reguserid, regdate)
+		VALUES(#{siteid}, #{recomstday}, #{recomedday}, #{recomtype}, #{revpoint}, #{isjoingive}, #{iscfmgive}, #{recjoinpoint}, #{reccfmpoint}, #{reclimitcnt}, #{isepointdup}, #{revcpidx}, #{recjoincpidx}, #{reccfmcpidx}, #{istrash}, #{userid}, now())
+	</insert>
+	
+	
+	<!-- ADMIN 쿼리 끝 -->
+</mapper>

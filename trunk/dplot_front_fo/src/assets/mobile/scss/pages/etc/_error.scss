@@ -1,0 +1,33 @@
+.dp-app-error {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin: 0 auto;
+  height: 100vh;
+  .dp-app-error-wrap {
+    padding-top: 100px;
+  }
+  .dp-app-error__title {
+    padding-top: 30px;
+    padding-bottom: 20px;
+  }
+  .dp-app-error__title__p {
+    font-size: 18px;
+    letter-spacing: -.72px;
+    font-weight: 500;
+  }
+  .dp-app-error__text__wrap {
+    padding-bottom: 60px;
+  }
+  .dp-app-error-wrap {
+    text-align: center;
+  }
+  .dp-app-error__text {
+    font-size: 14px;
+    letter-spacing: -.56px;
+  }
+  .btn-group {
+    width: 100%;
+  }
+}
+

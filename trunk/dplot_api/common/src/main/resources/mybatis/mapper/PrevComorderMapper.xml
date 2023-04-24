@@ -1,0 +1,35 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.dplot.mapper.PrevComorderMapper">
+	<select id="selectPrevComorder" parameterType="somap" resultType="somap">
+		SELECT /*PrevComorderMapper.xml - selectPrevComorder:: 이전주문내역조회*/
+		          PREVIDX   -- 이전주문IDX
+			    , USERNO    -- 회원번호
+			    , ORDERDAY  -- 주문일자
+			    , ORDERNO   -- 주문번호
+			    , GOODSINFO -- 상품설명 
+			    , ORDERCNT  -- 주문수량
+			    , ORDERAMT  -- 주문금액
+			    , REGDATE   -- 등록일자
+			    , ORDSTSATUS -- 주문상태
+			    , ORDERDAYSTR -- 등록일자FORMAT
+		        , COUNT(*) OVER() as totcnt 
+		FROM (
+			SELECT 
+			      PREVIDX 
+			    , USERNO 
+			    , ORDERDAY 
+			    , ORDERNO 
+			    , GOODSINFO 
+			    , ORDERCNT 
+			    , ORDERAMT 
+			    , REGDATE 
+			    , ORDSTSATUS
+			    , date_format(STR_TO_DATE(ORDERDAY, '%Y%m%d'), '%Y.%m.%d') AS ORDERDAYSTR
+			FROM t_prev_comorder tpc 
+			WHERE USERNO  = #{userno}
+			) AA
+		ORDER BY ORDERDAY DESC, ORDERNO DESC
+		LIMIT #{startpage}, #{endpage}
+	</select>
+</mapper>

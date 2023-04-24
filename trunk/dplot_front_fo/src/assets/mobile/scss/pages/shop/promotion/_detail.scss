@@ -1,0 +1,177 @@
+.promotion-detail {
+  // 프로모션 타이틀
+  .promotion-detail__header {
+    position: relative;
+    top: 0;
+    left: 0;
+    z-index: 100;
+    width: 100%;
+    padding-top: 30px;
+    padding-bottom: 20px;
+    background: #ffffff;
+    min-height: 150px;
+  }
+  .promotion-detail__description-title {
+    font-weight: 400;
+    padding-bottom: 20px;
+  }
+  .promotion__title {
+    font-weight: 700;
+  }
+  .promotion__date {
+    color: $gray-700;
+  }
+
+  // 프로모션 상세 영역
+  .promotion__detail-area {
+    padding-top: 0px;
+    padding-bottom: 40px;
+    img {
+      max-width: 100%;
+    }
+  }
+
+  // 프로모션 상품
+  .promotion__product-area {
+    padding-bottom: 40px;
+  }
+  // 상품 썸네일 임시 수정
+  .thumbnail__img img {
+    width: 170px;
+    height: 170px;
+  }
+  .dp-product .product__ctg {
+    line-height: 1;
+  }
+  .dp-product .product__title {
+    line-height: 1.4;
+  }
+  .dp-product .product__price-number {
+    line-height: 1;
+  }
+  .dp-product .product__discount-percentage {
+    line-height: 1;
+  }
+  .dp-product .product__discount-area {
+    line-height: 1;
+  }
+  // 상품 썸네일 수정 끝
+
+  // 프로모션 브랜드 정보
+  .add-info__brand {
+    display: flex;
+    align-items: flex-start;
+    padding: 20px;
+    background: $gray-100;
+    margin-bottom: 40px;
+    .brand__figure {
+      height: 32px;
+      margin: 0 auto 16px auto;
+      text-align: center;
+      img {
+        height: 100%;
+      }
+    }
+    .brand__left {
+      width: 90px;
+      margin-right: 24px;
+      .dp-btn {
+        padding-left: 0;
+        padding-right: 0;
+      }
+    }
+    .brand__right {
+      width: calc(100% - 114px);
+    }
+  }
+
+  .comment-list__ul {
+    li {
+      padding-top: 20px;
+      padding-bottom: 20px;
+      border-top: 1px solid $gray-400;
+    }
+  }
+
+  // 프로모션 댓글
+  .promotion__comment-area {
+    padding-bottom: 20px;
+    .comment__title {
+      padding-bottom: 14px;
+    }
+  }
+  .comment__box {
+    .base-textarea .form-control {
+      height: 140px;
+    }
+  }
+  .comment-list__header {
+    font-weight: 500;
+    padding-top: 20px;
+    padding-bottom: 14px;
+  }
+  .promotion__comment__hr {
+    width: 100%;
+    border-bottom: 1px solid $gray-400;
+  }
+  .comment-list__area {
+    .comment-header-left {
+      color:$gray-700;
+    }
+    .comment-date {
+      padding-right: 10px;
+    }
+    .comment-edit {
+      color: $gray-800;
+      padding-bottom: 10px;
+    }
+    .dp-bar {
+      margin-right: 10px;
+      margin-left: 10px;
+    }
+    .comment-text {
+      color:$gray-700;
+      margin-bottom: 0;
+      word-break: break-all;
+    }
+    .comment-footer {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding-top: 20px;
+      padding-bottom: 20px;
+    }
+    .comment-report {
+      font-size: 12px;
+      letter-spacing: -.48px;
+      color: #333;
+    }
+    .comment-write {
+      width: 83px;
+      height: 30px;
+    }
+  }
+  .base-input .form-control {
+    height: 75px;
+  }
+  .comment-reply-btn-area {
+    .btn.dp-btn.btn-h32 {
+      font-size: 14px;
+      letter-spacing: -.56px;
+      line-height: 16;
+    }
+    .reply-cancel-btn {
+      width: 100px;
+      margin-right: 10px;
+    }
+    .reply-registration-btn {
+      width: 100px;
+    }
+  }
+
+  .reply {
+    margin-top: 20px;
+    padding: 20px;
+    background: $gray-100;
+  }
+}

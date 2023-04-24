@@ -1,0 +1,136 @@
+.dp-signup-executive {
+  padding: 30px 20px 40px;
+
+  .form-group {
+    margin-bottom: 0;
+  }
+
+  .form-group + .form-group {
+    margin-top: 20px;
+  }
+
+  .dp-signup-executive__description {
+    font-size: 18px;
+    letter-spacing: -.72px;
+    line-height: 28px;
+    margin-bottom: 30px;
+  }
+
+  .email__label {
+    font-size: 14px;
+    letter-spacing: -.56px;
+    line-height: 20px;
+    margin-bottom: 10px;
+  }
+
+  .email-phone-find {
+    display: flex;
+    align-items: center;
+  }
+
+  .email-input {
+    width: 50%;
+  }
+
+  .at-sign {
+    padding: 9px 10px;
+  }
+
+  .domain-select {
+    width: 48%;
+  }
+
+  .email-number__label {
+    font-size: 14px;
+    letter-spacing: -.56px;
+    line-height: 20px;
+    margin-bottom: 10px;
+  }
+
+  .send-btn {
+    margin-top: 10px;
+    margin-bottom: 20px;
+  }
+
+  .number-input {
+    position: relative;
+    .icon-input-success {
+      display: none !important;
+    }
+    &::after {
+      content: attr(data-timer);
+      position: absolute;
+      top: 50%;
+      right: 16px;
+      transform: translateY(-50%);
+      font-size: 14px;
+      letter-spacing: -.56px;
+      line-height: 20px;
+    }
+  }
+
+  .confirm-btn {
+    margin-top: 10px;
+  }
+
+  .dp-btn__gray-800 {
+    color: $gray-800;
+  }
+
+  // 이용약관 부분
+  .agree-service__description {
+    font-size: 16px;
+    letter-spacing: -.64px;
+    line-height: 24px;
+    padding-top: 40px;
+    margin-bottom: 0;
+  }
+
+  .agree-service__box {
+    margin-top: 24px;
+    padding: 0 14px;
+    color: $black;
+    font-size: 14px;
+
+    & > li {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    li + li {
+      padding-top: 14px;
+    }
+
+    li:first-child {
+      margin-bottom: 10px;
+    }
+  }
+
+  .dp-signup-executive__btn-box{
+    padding-top: 50px;
+  }
+
+  .success-text {
+    position: relative;
+    padding-left: 22px;
+    margin-top: 8px;
+    margin-bottom: 10px;
+
+    &:before {
+      position: absolute;
+      top: 44%;
+      left: 6px;
+      transform: translateY(-50%) rotate(45deg);
+      content: '';
+      display: block;
+      width: 6px;
+      height: 11px;
+      border-width: 1px;
+      border-style: solid;
+      border-color: $success;
+      border-top: 0;
+      border-left: 0;
+    }
+  }
+}

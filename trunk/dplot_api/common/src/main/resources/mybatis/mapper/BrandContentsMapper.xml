@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.dplot.mapper.BrandContentsMapper">
+	<!-- 브랜드컨텐츠 저장 -->
+	<insert id="insertBrandContents" parameterType="somap">
+        /* BrandContentsMapper.xml - insertBrandContents 브랜드컨텐츠 저장  */
+        INSERT INTO t_brand_contents
+        (bridx, title, sort, pclinkurl, ispcnwindow, molinkurl, ismonwindow, reguserid, regdate)
+        VALUES
+        <foreach collection="contentslist" index="index" item="item" separator=",">
+        	(#{idx}, #{item.title}, #{index}, #{item.pclinkurl}, #{item.ispcnwindow}, #{item.molinkurl}, #{item.ismonwindow}, #{authuserid}, now())
+        </foreach>
+    </insert>
+    
+    <!-- 매거진키워드 조회 -->
+	<select id="selectBrandContentsList" resultType="somap" parameterType="somap">
+        /* BrandContentsMapper.xml - selectBrandContentsList 브랜드컨텐츠 조회  */
+        SELECT brcntidx, brcntidx as idx, sort as sortnum,  title, pclinkurl, ispcnwindow, molinkurl, ismonwindow
+        FROM t_brand_contents
+        WHERE bridx = #{idx}
+        ORDER BY sort
+    </select>
+    
+    <!-- 매거진키워드 삭제 -->
+	<delete id="deleteBrandContents" parameterType="somap">
+        /* BrandContentsMapper.xml - deleteBrandContents 브랜드컨텐츠 삭제  */
+        DELETE FROM t_brand_contents
+        WHERE bridx = #{idx}
+    </delete>
+</mapper>

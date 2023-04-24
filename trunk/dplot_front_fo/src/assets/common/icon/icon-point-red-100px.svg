@@ -1,0 +1,14 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="100" height="100" viewBox="0 0 100 100">
+    <defs>
+        <clipPath id="iv28fhpw9a">
+            <path data-name="사각형 7534" transform="translate(-.427)" style="stroke:transparent;fill:none" d="M0 0h100v100H0z"/>
+        </clipPath>
+    </defs>
+    <g data-name="마스크 그룹 318" transform="translate(.427)" style="clip-path:url(#iv28fhpw9a)">
+        <g data-name="그룹 22896">
+            <path data-name="패스 19738" d="M16.816 5.427a36.727 36.727 0 0 0-2.5 1.716A35.76 35.76 0 1 0 35.76 0" transform="scale(-1) rotate(-53 -93.04 81.07)" style="stroke:#111;stroke-linecap:square;stroke-width:2px;fill:none"/>
+            <path data-name="패스 19737" d="M59.445 44.525a28.1 28.1 0 1 0-28.1 28.1 28.1 28.1 0 0 0 28.1-28.1" transform="translate(20.965 4.282)" style="stroke:#fff;fill:#f54c2b;stroke-width:1.5px"/>
+            <path data-name="패스 19739" d="M132.355 76.284c0 3.378-1.561 4.883-5 4.883h-6.9v9.4h-1.59V65.043h8.488c3.435 0 5 1.476 5 4.855zm-11.894 3.464h6.359c2.867 0 3.945-.994 3.945-3.719v-5.848c0-2.726-1.078-3.719-3.945-3.719h-6.359z" transform="translate(-72.522 -29.007)" style="fill:#fff;stroke-width:2.5px;stroke:#fff"/>
+        </g>
+    </g>
+</svg>

@@ -1,0 +1,282 @@
+<template>
+  <div class="promotion-detail">
+    <!-- 프로모션 타이틀 -->
+    <section class="promotion-detail__header__section">
+      <div class="container">
+        <h1><span class="promotion__title">[ {{Detail.eventname}} ] </span>{{ Detail.subject }}</h1>
+        <div class="d-flex align-content-center justify-content-between">
+          <h2>기간 : {{Detail.startdate }} ~ {{Detail.enddate}} <br />{{!$util.isNull(Detail.pubtime) ? '발표일 : ' + Detail.pubtime : ''}}</h2>
+          <div class="footer__btn"  @click="snsShareModal()">
+            <i class="dp-icon sm02 icon-share"></i>
+          </div>
+        </div>
+      </div>
+    </section>
+    <!-- <div class="promotion-detail__header container">
+      <div class="promotion-detail__description-title dp-title02">
+        <span class="promotion__title">[ {{Detail.eventname}} ] </span>{{ Detail.subject }}
+      </div>
+      <div class="banner__description__bottom d-flex justify-content-between">
+        <div class="promotion__date dp-p">
+          기간 : {{Detail.startdate }} ~ {{Detail.enddate}} <br/>
+          {{!$util.isNull(Detail.pubtime) ? '발표일 : ' + Detail.pubtime : ''}}
+          발표일 : 2022.12.16
+        </div>
+        <div class="promotion__icon-share">
+          <i class="dp-icon sm02 icon-share" @click="snsShareModal()"></i>
+        </div>
+      </div>
+    </div> -->
+    <!-- 프로모션 상세 영역    -->
+    <div class="promotion__detail-area">
+      <!-- <img
+        :src="Detail.fullpath"
+        alt="프로모션 상세 영역"
+      /> -->
+      <div v-html="Detail.evinfomobile"></div>
+    </div>
+    <!-- 프로모션 상품 영역    -->
+    <div class="promotion__product-area" :key="Date.now()">
+      <div class="container">
+        <ul class="row product-list">
+          <li
+            class="col-6"
+            v-for="(item, index) in goodsList"
+            :key="index"
+          >
+            <product :product-info="item" product_type="promotion" :isBedge="true"/>
+          </li>
+        </ul>
+      </div>
+    </div>
+    <!-- 프로모션 브랜드 정보   -->
+    <div v-if="!$util.isNull(Detail.brandidx)" class="promotion__brand-area container">
+      <div class="add-info__brand">
+        <div class="brand__left">
+          <figure class="brand__figure">
+            <img :src="Detail.brandpath" />
+          </figure>
+          <b-button
+            class="dp-btn dp-btn-icon"
+            variant="outline-gray-800 not-hover btn-h30"
+            squared
+            @click="goBrand(Detail.brandidx)"            
+          >
+            <span class="dp-caption">브랜드샵</span>
+            <i class="dp-icon icon-more sm"></i>
+          </b-button>
+        </div>
+        <div class="brand__right">
+          <p class="dp-caption text-gray-700 mb-0">
+            {{Detail.headcopy}}
+          </p>
+        </div>
+      </div>
+    </div>
+    <!-- 프로모션 댓글  -->
+    <div class="promotion__comment-area container"  v-if="Detail.iscomment === 'T'" >
+      <div class="comment__title dp-p">댓글</div>
+      <div class="comment__box">
+        <form>
+          <base-textarea
+            v-model="comment"
+            class="comment__box__textarea"
+            placeholder="개인정보를 공유 및 요청하거나, 명예훼손, 무단광고, 불법 정보 유포시 모니터링 후 삭제 될 수 있으며, 이에 대한 민형사상 책임은 게시자에게 있습니다."
+          ></base-textarea>
+        </form>
+      </div>
+      <div class="comment-btn-area">
+        <div class="comment-btn">
+          <b-button
+              @click="regComment()"
+              class="btn dp-btn dp-btn-icon not-hover btn-outline-gray-800 rounded-0"
+              variant="outline-gray-800"
+              squaredicon-review02
+              v-b-modal.productInquiryModal
+          >
+            <i class="dp-icon icon-review02"></i>
+            <span class="dp-p-sm text-black font-weight-400"
+            >댓글 등록하기</span
+            >
+          </b-button>
+        </div>
+      </div>
+      <div class="comment-list__header dp-p-sm">총 {{commentListTotal}}건</div>
+      <div class="comment-list__area">
+        <!--  댓글이 없을 때      -->
+        <template v-if="commentList.length === 0">
+          <p class="text-center dp-p-sm">댓글이 없습니다.</p>
+        </template>
+        <!--  댓글이 있을 때     -->
+        <template v-else>
+          <ul class="comment-list__ul list-style-none">
+            <li v-for="(list, index) in commentList" :key="index">
+              <!-- 댓글 -->
+              <div class="comment-list-item">
+                <div class="comment-header d-flex justify-content-between">
+                  <div class="dp-caption comment-header-left">
+                    <span class="comment-date">{{ list.regdate }}</span>
+                    <span>{{ $util.maskUserId(list.reguserid) }}</span><span v-if="list.own == 'true'"> (작성자)</span>
+                  </div>
+                  <div class="comment-edit dp-caption" v-if="list.own == 'true'">
+                    <span @click="reviseCmt(index)">수정</span>
+                    <span class="dp-bar h10"></span>
+                    <span @click="deleteCmt(list.commentidx)">삭제</span>
+                  </div>
+                </div>
+                <div class="comment-body">
+                  <p v-if="!reviseComment[index]" class="comment-text dp-p-sm">
+                    {{ list.comment }}
+                  </p>
+                
+                  <div v-if="reviseComment[index]" :key="skey" class="comment-reply">
+                    <div class="comment-textarea">
+                      <form>
+                        <base-textarea
+                          v-model="reviseCmtList[index]"
+                          class="comment-reply__box__textarea"
+                          placeholder="답글을 입력해주세요."
+                        ></base-textarea>
+                      </form>
+                    </div>               
+                    <div class="comment-reply-btn-area d-flex justify-content-end">
+                      <b-button
+                        @click="closeCmt(index)"
+                        class="dp-btn not-hover btn-h32 reply-cancel-btn"
+                        variant="outline-gray-800"
+                        squared
+                      >
+                        <span>취소</span>
+                      </b-button>
+                      <b-button
+                        @click="goReviseComment(index, list.commentidx)"
+                        class="dp-btn text-white btn-h32 reply-registration-btn"
+                        variant="gray-800"
+                        squared
+                      >
+                        <span>수정</span>
+                      </b-button>
+                    </div>
+                  </div>                
+                </div>
+                <div class="comment-footer">
+                  <b-button
+                    @click="openReply(index)"
+                    class="dp-btn btn-h32 not-hover comment-write"
+                    variant="outline-gray-800 type02"
+                    squared
+                    pill
+                  >
+                    <span>답글쓰기</span>
+                  </b-button>
+                  <span class="comment-report" @click="repReport(list.commentidx)">신고하기</span>
+
+                </div>
+              </div>
+              <!-- 댓글 -->
+
+              <!-- 댓글 답변 달기 -->
+              <div :key="skey">
+                <div v-if="replyWrite[index]" class="comment-reply">
+                  <div class="comment-textarea">
+                    <form>
+                      <base-textarea
+                        v-model="reply[index]"
+                        class="comment-reply__box__textarea"
+                        placeholder="답글을 입력해주세요."
+                      ></base-textarea>
+                    </form>
+                  </div>
+                  <div class="comment-reply-btn-area d-flex justify-content-end">
+                    <b-button
+                      @click="commentCancle(index)"
+                      class="dp-btn not-hover btn-h32 reply-cancel-btn"
+                      variant="outline-gray-800"
+                      squared
+                    >
+                      <span>취소</span>
+                    </b-button>
+                    <b-button
+                      @click="saveReply(index,list.commentidx)"
+                      class="dp-btn text-white btn-h32 reply-registration-btn"
+                      variant="gray-800"
+                      squared
+                    >
+                      <span>등록</span>
+                    </b-button>
+                  </div>
+                </div>
+              </div>
+              <!-- // 댓글 답변 달기 -->
+
+              <!-- 대댓글 -->
+              <div v-if="!$util.isEmpty(list.reply)">
+                <div v-for="(item, index2) in list.reply" :key="index2" class="comment-list-item reply">
+                  <div class="comment-header d-flex justify-content-between">
+                    <div class="dp-caption comment-header-left">
+                      <span class="comment-date">{{ item.regdate }}</span>
+                      <span>{{ $util.maskUserId(item.reguserid) }}</span><span v-if="item.own == 'true'"> (작성자)  </span>
+                      &nbsp;&nbsp;<span class="comment-report" @click="repReport(item.commentidx)">신고하기</span>
+                    </div>
+                    <div class="comment-edit dp-caption" v-if="item.own == 'true'">
+                      <span @click="reviseReply(index,index2)">수정</span>
+                      <span class="dp-bar h10"></span>
+                      <span @click="deleteReply(item.commentidx)">삭제</span>
+                    </div>
+                  </div>
+                  <div class="comment-body">
+                    <p v-if="!ReviseOpen[index2]" class="comment-text dp-p-sm">{{ item.comment  }}</p>
+                    <div v-if="ReviseOpen[index2]" :key="skey" class="comment-reply">
+                      <div class="comment-textarea">
+                        <form>
+                          <base-textarea
+                            v-model="reviseRlyList[index2]"
+                            class="comment-reply__box__textarea"
+                            placeholder="답글을 입력해주세요."
+                          ></base-textarea>
+                        </form>
+                      </div>
+                      <div class="comment-reply-btn-area d-flex justify-content-end">
+                        <b-button
+                          @click="reviseRlyClose(index,index2)"
+                          class="dp-btn not-hover btn-h32 reply-cancel-btn"
+                          variant="outline-gray-800"
+                          squared
+                        >
+                          <span>취소</span>
+                        </b-button>
+                        <b-button
+                          @click="updateReply(index,index2,item.commentidx)"
+                          class="dp-btn text-white btn-h32 reply-registration-btn"
+                          variant="gray-800"
+                          squared
+                        >
+                          <span>수정</span>
+                        </b-button>
+                      </div>
+                    </div>                   
+                  </div>
+                </div>
+              </div>
+              <!-- // 대댓글 -->
+            </li>
+          </ul>
+          <infinite-loading :identifier="infiniteId" @infinite="infiniteHandler" spinner="circles">
+              <div slot="no-more"></div>
+              <div slot="no-results"><p class="text-center dp-p-sm"></p></div>
+          </infinite-loading>
+        </template>
+      </div>
+    </div>
+  </div>
+</template>
+
+<script src="@views.mobile/shop/promotion/Detail.js"/>
+
+<style scoped>
+  .container {padding:0;}
+  h1 {margin-bottom: 10px; font-size: 18px; font-weight: 600; display: block !important;}
+  h2 {font-size: 14px; font-weight: 400; color: #666; margin: 0; line-height: 1; display: flex; align-items: center;}
+  .promotion-detail__header__section {border-bottom:1px solid #000; padding:0; margin:0 0 0; }
+  .promotion-detail__header__section .container {padding:20px 0; margin:0 20px 0; width: auto;}
+</style>

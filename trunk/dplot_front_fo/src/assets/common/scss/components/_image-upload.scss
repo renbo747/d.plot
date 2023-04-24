@@ -1,0 +1,153 @@
+.image-upload {
+  display: flex;
+  line-height: 0;
+  overflow: hidden;
+  .image-upload__label {
+    position: relative;
+    width: 100px;
+    height: 100px;
+    border: 1px solid $gray-400;
+    // margin-left: 20px;
+    margin-right: 10px;
+    margin-bottom: 0;
+    background: #fff url("~@/assets/common/icon/icon-camera-black-30px.svg") no-repeat center 30px;
+  }
+  .image-input__number {
+    position: absolute;
+    left: 50%;
+    bottom: 20px;
+    transform: translateX(-50%);
+    font-size: 12px;
+    letter-spacing: -.48px;
+    line-height: 17px;
+  }
+  .image-upload__box {}
+  .image-upload__list {
+    width: calc(100% - 110px) !important;
+    @include media-breakpoint-up(md) {
+      width: calc(100% - 200px) !important;
+      padding-right: 0;
+    }
+    .swiper-slide {
+      width: 100px;
+    }
+  }
+  .upload__item {
+    position: relative;
+    width: 100px;
+    height: 100px;
+    border: 1px solid $gray-400;
+    overflow: hidden;
+    figure {
+      margin-bottom: 0;
+      width: 100%;
+      height: 100%;
+      &.play {
+        position: relative;
+        &:before {
+          position: absolute;
+          top: 50%;
+          left: 50%;
+          transform: translate(-50%, -50%);
+          display: block;
+          content: '';
+          width: 40px;
+          height: 40px;
+          background-image: url("~@/assets/common/icon/icon-play-gray-56px.svg");
+          background-size: cover;
+        }
+      }
+    }
+    img {
+      width: 100%;
+    }
+  }
+  .upload__close-icon {
+    position: absolute;
+    right: -1px;
+    top: -1px;
+    width: 20px;
+    height: 20px;
+    background: #fff url('~@/assets/common/icon/icon-rect-close-black-20px.svg') no-repeat 0;
+    background-size: 20px;
+    border: 1px solid $border-color;
+    cursor: pointer;
+    &.pc {
+      width: 24px;
+      height: 24px;
+      background-size: 24px;
+      &:hover {
+        background: $primary url('~@/assets/common/icon/icon-rect-close-white-20px.svg') no-repeat 0;
+        background-size: 24px;
+        border-color: $primary;
+      }
+    }
+  }
+}
+
+.image-upload.pc {
+  .image-upload__label {
+    width: 190px;
+    height: 190px;
+    background: url("~@/assets/common/icon/icon-camera-black-30px.svg") no-repeat center 70px;
+    background-size: 40px;
+  }
+  .image-input__number {
+    bottom: 50px;
+    font-size: 14px;
+    letter-spacing: -.56px;
+  }
+  .image-upload__list {
+    width: calc(100% - 200px);
+    padding-right: 0;
+    .swiper-slide {
+      width: 190px;
+    }
+  }
+  .upload__item {
+    position: relative;
+    width: 190px;
+    height: 190px;
+    border: 1px solid $gray-400;
+    overflow: hidden;
+    figure {
+      margin-bottom: 0;
+      width: 100%;
+      height: 100%;
+      &.play {
+        position: relative;
+        &:before {
+          position: absolute;
+          top: 50%;
+          left: 50%;
+          transform: translate(-50%, -50%);
+          display: block;
+          content: '';
+          width: 56px;
+          height: 56px;
+          background-image: url("~@/assets/common/icon/icon-play-gray-56px.svg");
+          background-size: cover;
+        }
+      }
+    }
+    img {
+      width: 100%;
+    }
+  }
+  .upload__close-icon {
+    position: absolute;
+    right: -1px;
+    top: -1px;
+    width: 24px;
+    height: 24px;
+    background: #fff url('~@/assets/common/icon/icon-rect-close-black-20px.svg') no-repeat 0;
+    background-size: 24px;
+    border: 1px solid $border-color;
+    cursor: pointer;
+    &:hover {
+      background: $primary url('~@/assets/common/icon/icon-rect-close-white-20px.svg') no-repeat 0;
+      background-size: 24px;
+      border-color: $primary;
+    }
+  }
+}

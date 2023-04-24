@@ -1,0 +1,17 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="40" height="40" viewBox="0 0 40 40">
+    <defs>
+        <clipPath id="1zbzow3bla">
+            <path data-name="사각형 7783" style="fill:#f1f1f1" d="M0 0h40v40H0z"/>
+        </clipPath>
+    </defs>
+    <g data-name="마스크 그룹 370" style="clip-path:url(#1zbzow3bla)">
+        <g data-name="그룹 23364">
+            <path data-name="사각형 6402" transform="translate(2 3)" style="opacity:.2;fill:none" d="M0 0h36v36H0z"/>
+            <g data-name="합치기 17" style="stroke-linecap:round;stroke-linejoin:bevel;fill:none">
+                <path d="M23.72 23.7a7.414 7.414 0 0 0-4.141-1.437H4.108a5 5 0 0 1-5-5V4.107a5 5 0 0 1 5-5H21.9a5 5 0 0 1 5 5V26.9a20.2 20.2 0 0 0-3.18-3.2z" style="stroke:none" transform="translate(6.998 8.998)"/>
+                <path d="M25.896 24.3V4.106c0-2.206-1.795-4-4-4H4.107c-2.206 0-4 1.794-4 4v13.159c0 2.205 1.794 4 4 4l15.52.001c1.053.05 3.067.333 4.717 1.656.581.465 1.102.938 1.55 1.376m1 2.598s-1.244-1.648-3.175-3.194c-1.468-1.177-3.334-1.398-4.14-1.437H4.107c-2.762 0-5-2.24-5-5V4.106c0-2.76 2.238-5 5-5h17.787a5 5 0 0 1 5 5v22.791z" style="fill:#111;stroke:none" transform="translate(6.998 8.998)"/>
+            </g>
+            <path d="M20.55 25.329h-1.6v-1.6h1.6zm0-2.664h-1.6a3.977 3.977 0 0 1 .358-2.17 3.359 3.359 0 0 1 1.019-.863c.178-.114.346-.222.487-.335a1.978 1.978 0 0 0 .71-2.038 1.616 1.616 0 0 0-3.104.612h-1.6a3.212 3.212 0 0 1 6.093-1.4 3.206 3.206 0 0 1-.5 3.357 4.751 4.751 0 0 1-.807.712 3.863 3.863 0 0 0-.7.622 2.254 2.254 0 0 0-.356 1.502z"/>
+        </g>
+    </g>
+</svg>

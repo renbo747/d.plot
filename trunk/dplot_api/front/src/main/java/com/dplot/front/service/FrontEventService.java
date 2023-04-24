@@ -1,0 +1,122 @@
+package com.dplot.front.service;
+
+import com.dplot.common.Response;
+import com.dplot.common.SOMap;
+
+/**
+ *
+ * @FileName : FrontEventService.java
+ * @Project : datapick_api
+ * @Date : 2021. 11. 12.
+ * @Author : YIY
+ * ============================================================
+ *  DATE					AUTHOR			NOTE
+ * ============================================================
+ *  2021. 11. 12.			YIY			        최초작성
+ * ------------------------------------------------------------
+ *
+ */
+public interface FrontEventService {
+
+	/**
+	 * 이벤트 매인 리스트 조회
+	 * @param param
+	 * @return
+	 */
+	SOMap selectEventFrontListSQL(SOMap param) throws Exception;
+	/**
+	 * 이벤트 매인 리스트 조회
+	 * @param param
+	 * @return
+	 */
+	SOMap selectEventFrontDetailSQL(SOMap param) throws Exception;
+
+	/**
+	 * 이벤트 덧글 조회
+	 * @param param
+	 * @return
+	 */
+	SOMap selectEventFrontCommentSQL(SOMap param) throws Exception;
+
+	/**
+	 * 그랜드 오픈 스크래치 이벤트 응모횟수 가져오기
+	 * @param param
+	 * @return
+	 */
+	SOMap getScratchEventJoinCount(SOMap param) throws Exception;
+
+	/**
+	 * 그랜드 오픈 스크래치 이벤트 응모
+	 * @param param
+	 * @return
+	 */
+	SOMap joinScratchEvent(SOMap param) throws Exception;
+
+	/**
+	 * 그랜드 오픈 래플이벤트 조회
+	 * @param param
+	 * @return
+	 */
+	SOMap raffleEventInquire(SOMap param) throws Exception;
+
+	/**
+	 * 그랜드 오픈 래플이벤트 조회
+	 * @param param
+	 * @return
+	 * @throws Exception
+	 */
+	Response raffleEventApply(SOMap param) throws Exception;
+
+	/**
+	 * 해당 고객의 당첨여부
+	 * @param param
+	 * @return
+	 * @throws Exception
+	 */
+	Response raffleWinList(SOMap param) throws Exception;
+
+	/**
+	 * 그랜드 오픈 래플이벤트 조회
+	 *
+	 * @param param
+	 * @return
+	 */
+	SOMap raffle2EventInquire(SOMap param) throws Exception;
+
+	/**
+	 * 그랜드 오픈 래플이벤트 조회
+	 *
+	 * @param param
+	 * @return
+	 * @throws Exception
+	 */
+	Response raffle2EventApply(SOMap param) throws Exception;
+
+	/**
+	 * 해당 고객의 당첨여부
+	 *
+	 * @param param
+	 * @return
+	 * @throws Exception
+	 */
+	Response raffle2WinList(SOMap param) throws Exception;
+
+	/**
+	 * holiday이벤트 조회
+	 *
+	 * @param param
+	 * @return
+	 * @throws Exception
+	 */
+	Response selectHoliday(SOMap param) throws Exception;
+
+	/**
+	 * holiday이벤트 스탬프 업데이트
+	 *
+	 * @param param
+	 * @return
+	 * @throws Exception
+	 */
+	Response updateHolidayStamp(SOMap param) throws Exception;
+}
+

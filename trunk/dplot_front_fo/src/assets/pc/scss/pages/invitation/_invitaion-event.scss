@@ -1,0 +1,27 @@
+.mypage-invitation-event-pc {
+  .benefit__section {
+    padding-top: 30px;
+    padding-bottom: 30px;
+    .benefit__header {
+      padding-bottom: 30px;
+      .invitation__title {
+        font-size: 18px;
+        letter-spacing: -.72px;
+        line-height: 28px;
+      }
+    }
+
+    .benefit__body {
+      .benefit__title {
+        font-size: 16px;
+        letter-spacing: -.64px;
+        line-height: 24px;
+        font-weight: 500;
+        padding-bottom: 14px;
+      }
+    }
+    .benefit__footer {
+      padding-top: 50px;
+    }
+  }
+}

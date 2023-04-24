@@ -1,0 +1,531 @@
+.login {
+  margin-top: 100px;
+
+  .checkbox-button + .checkbox-button {
+    margin-left: 20px;
+  }
+
+  .btn.dp-btn {
+    font-size: 16px;
+    letter-spacing: -.64px;
+    line-height: 24px;
+  }
+
+  .dp-bar {
+    height: 10px;
+    margin-right: 20px;
+    margin-left: 20px;
+  }
+
+  //로그인 헤더
+  .login__header {
+    display: flex;
+    align-items: center;
+    flex-direction: column;
+    text-align: center;
+    margin-bottom: 30px;
+
+    .login__logo {
+      width: 145px;
+      height: 32px;
+      margin-bottom: 18px;
+
+      img {
+        width: 100%;
+      }
+    }
+  }
+
+  //로그인 폼 영역
+  .login__form {
+
+    .login__input {
+      margin-bottom: 20px;
+
+      .form-group-12 {
+        margin-bottom: 10px;
+      }
+    }
+
+    //로그인 보안문자 영역
+    .login__security {
+      display: flex;
+      flex-direction: column;
+      margin-bottom: 20px;
+
+      .security-description {
+        margin-bottom: 12px;
+      }
+
+      .description__text {
+        margin: 0;
+        color: $gray-700;
+      }
+
+      .security-box {
+        display: flex;
+        margin-bottom: 14px;
+      }
+
+      .security__img {
+        width: 270px;
+        height: 92px;
+        background-color: $gray-500;
+        margin-right: 20px;
+      }
+
+      .security__btn {
+        display: flex;
+        flex-direction: column;
+
+        li + li {
+          margin-top: 12px;
+        }
+      }
+
+      .pc-dp-btn-security {
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        padding: 0 15px;
+        box-sizing: border-box;
+
+        span {
+          font-size: 14px;
+          letter-spacing: -.56px;
+          line-height: 20px;
+          color: $gray-800;
+          margin-left: 8px;
+        }
+      }
+
+      .icon-reset {
+        background-image: url("~@/assets/common/icon/icon-reset-black-16px.svg");
+      }
+
+      .icon-play {
+        background-image: url("~@/assets/common/icon/icon-play-black-16px.svg");
+      }
+    }
+
+    // 로그인 체크박스 영역
+    .login__checkbox {
+      display: flex;
+      align-items: center;
+      margin-bottom: 40px;
+      font-size: 16px;
+
+      .magic-checkbox + label {
+        font-size: 16px;
+      }
+    }
+
+    // 회원가입 영역
+    .login__btn {
+
+      .btn-signin {
+        margin-bottom: 20px;
+      }
+
+      .btn.login-btn__confirm {
+        margin: 0;
+      }
+
+      .btn__signin-login {
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        margin-bottom: 40px;
+      }
+
+      .signin__list {
+        background: none;
+        border: 0;
+        padding: 0;
+        height: 20px;
+        letter-spacing: -.56px;
+        font-weight: 400;
+        color: $gray-700;
+      }
+
+      .non-member__button {
+        text-align: center;
+        margin-bottom: 40px;
+        a {
+          text-decoration: underline;
+        }
+      }
+    }
+  }
+
+  //sns 로그인 영역
+  .sns-login {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+
+    //sns 로그인 헤더
+    .sns-login__header {
+      position: relative;
+      width: 100%;
+      height: 20px;
+      margin-bottom: 30px;
+
+      &:before {
+        position: absolute;
+        top: 50%;
+        left: 0;
+        transform: translateY(-50%);
+        width: 100%;
+        height: 1px;
+        content: "";
+        border: 1px solid $gray-400;
+      }
+
+
+      .sns-title {
+        position: absolute;
+        left: 50%;
+        top: 50%;
+        transform: translate(-50%, -50%);
+        font-weight: 400;
+        margin: 0;
+        padding: 0 8px;
+        background: #fff;
+      }
+    }
+
+    //AOS WEB 간편로그인
+    .sns-login__list {
+      width: 100%;
+
+      li + li {
+        margin-top: 10px;
+      }
+
+      .sns-login__kakao {
+        background-color: #ffe500;
+        border: 0;
+        justify-content: flex-start;
+        height: 48px;
+
+        .btn-secondary {
+          background-color: #ffe500;
+        }
+      }
+
+      .sns-login__naver {
+        background-color: #03c75a;
+        border: 0;
+        justify-content: flex-start;
+        height: 48px;
+
+        .btn-secondary {
+          background-color: #03c75a;
+        }
+      }
+
+      .icon-kakao {
+        background-image: url("~@/assets/common/icon/icon-kakaotalk-black-16px.svg");
+        margin-right: 120px;
+      }
+
+      .icon-naver {
+        background-image: url("~@/assets/common/icon/icon-naver-white-14px.svg");
+        margin-right: 120px;
+      }
+
+      .login__kakao {
+        color: $black;
+        line-height: -.56px;
+        font-weight: 400;
+        margin-left: 8px;
+      }
+
+      .login__naver {
+        color: $white;
+        line-height: -.56px;
+        font-weight: 400;
+        margin-left: 8px;
+
+      }
+    }
+
+    //AOS 앱, IOS 웹앱 간편로그인
+    .sns-login__circle {
+      display: flex;
+      align-items: center;
+      margin-bottom: 117px;
+
+      li + li {
+        margin-left: 22px;
+      }
+
+      .circle-list {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+      }
+
+      .sns-circle-list {
+        width: 56px;
+        height: 56px;
+        margin-bottom: 8px;
+      }
+
+      .circle__kakao {
+        background-image: url("~@/assets/common/icon/icon-kakaotalk-circle-56px.svg");
+      }
+
+      .circle__naver {
+        background-image: url("~@/assets/common/icon/icon-naver-circle-56px.svg");
+      }
+
+      .circle__apple {
+        background-image: url("~@/assets/common/icon/icon-apple-black-circle-56px.svg");
+      }
+
+      .circle__faceid {
+        background-image: url("~@/assets/common/icon/icon-face-id-black056px.svg");
+      }
+
+      .circle__fingerprint {
+        background-image: url("~@/assets/common/icon/icon-fingerprint-black-56px.svg");
+      }
+
+      .circle-list__text {
+        display: none;
+        color: $gray-700;
+        font-size: 14px;
+        letter-spacing: .56px;
+        font-weight: 400;
+      }
+    }
+  }
+}
+
+// 네이버 로그인 페이지 (이용약관)
+.naver-login {
+  .magic-checkbox + label:after {
+    top: 0;
+    left: 9px;
+  }
+
+  .magic-checkbox + label {
+    padding-left: 34px;
+  }
+
+  .signup__title {
+    font-size: 26px;
+    letter-spacing: -1.04px;
+    line-height: 37px;
+    font-weight: 700;
+    margin-bottom: 60px;
+  }
+
+  .agree-service__description {
+    font-size: 16px;
+    letter-spacing: -.64px;
+    line-height: 24px;
+    font-weight: 500;
+    margin-bottom: 30px;
+  }
+
+  .agree-service__box {
+    color: $black;
+    font-size: 14px;
+    letter-spacing: -.56px;
+    padding: 0 14px;
+
+    > li {
+      display: flex;
+      justify-content: space-between;
+    }
+
+    li:first-child {
+      padding-bottom: 16px;
+    }
+
+    li + li {
+      padding-top: 14px;
+    }
+
+  }
+
+  .dp-signup__btn-box-pc {
+    font-size: 16px;
+    letter-spacing: -.64px;
+    padding-top: 40px;
+  }
+}
+
+// 카카오 모달
+.kakao-signup__success-pc {
+  .modal-dialog {
+    max-width: 457px;
+  }
+
+  .modal-header {
+    padding: 24px 20px;
+    height: 80px;
+  }
+
+  .modal-header .modal-title {
+    font-size: 22px;
+    letter-spacing: -.88px;
+  }
+
+  .modal-body {
+    padding: 32px 30px;
+  }
+
+  .name-box {
+    background-color: $gray-100;
+  }
+
+  .kakao-signup__success__desc-pc {
+    padding-bottom: 20px;
+  }
+
+  .now-name-pc {
+    padding: 14px 16px;
+
+    .dp-p {
+      color: $gray-700;
+    }
+  }
+
+  .name-enter-box {
+    padding-top: 30px;
+  }
+
+  .input-label {
+    font-size: 16px;
+    letter-spacing: -.64px;
+    line-height: 24px;
+  }
+
+  .change-name-btn {
+    padding-top: 30px;
+    padding-bottom: 20px;
+
+    .dp-p {
+      font-size: 18px;
+      letter-spacing: -.72px;
+      line-height: 26px;
+    }
+  }
+
+  .ul-dot {
+    li {
+      font-size: 14px;
+      letter-spacing: -.56px;
+      line-height: 22px;
+    }
+  }
+}
+
+// 이용약관 모달
+.sign-up-agreement-modal {
+  .modal-header {
+    height: 80px;
+
+    .modal-title {
+      font-size: 22px;
+    }
+  }
+
+  .agree-service__box {
+    color: $black;
+    font-size: 14px;
+    letter-spacing: -.56px;
+    > li {
+      display: flex;
+      justify-content: space-between;
+      padding-top: 12px;
+      padding-left: 14px;
+      padding-right: 14px;
+    }
+    li:first-child {
+      padding-top: 0;
+      padding-bottom: 18px;
+    }
+
+  }
+
+  .signup-last {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 14px 16px;
+    border: 1px solid $gray-400 ;
+    margin-top: 30px;
+
+    .magic-checkbox + label {
+      color: $black;
+      font-weight: 600;
+    }
+    i {
+      display: flex;
+      align-items: center;
+      font-style: normal;
+      span {
+        padding-right: 4px;
+      }
+    }
+  }
+}
+
+// 평생회원 모달
+.lifetime-member {
+  .modal-content {
+    padding-left: 20px;
+    padding-right: 20px;
+  }
+
+  .lifetime-box {
+    text-align: left;
+  }
+
+  .lifetime-box__title {
+    color: #111;
+    position: relative;
+    padding-left: 8px;
+    font-size: 14px;
+    letter-spacing: -.56px;
+    word-break: keep-all;
+    margin-bottom: 12px;
+    @include media-breakpoint-up(xl) {
+      font-size: 16px;
+      letter-spacing: -.64px;
+    }
+  }
+
+  .lifetime-box__text {
+    color: $gray-700;
+    position: relative;
+    padding-left: 8px;
+    font-size: 14px;
+    letter-spacing: -.56px;
+    word-break: keep-all;
+    @include media-breakpoint-up(xl) {
+      font-size: 16px;
+      letter-spacing: -.64px;
+    }
+  }
+
+  .lifetime-box + .lifetime-box {
+    margin-top: 30px;
+  }
+
+  .lifetime-member__confirm-btn {
+    font-size: 14px;
+    letter-spacing: -.56px;
+    line-height: 24px;
+  }
+
+  .dp-signup__btn-box-pc {
+    padding-top: 40px;
+  }
+}

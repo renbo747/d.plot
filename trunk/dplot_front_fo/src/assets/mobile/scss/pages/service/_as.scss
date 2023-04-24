@@ -1,0 +1,44 @@
+.service-as {
+  padding-top: 30px;
+  .as-header {
+    margin-bottom: 60px;
+  }
+
+  .as-body {
+  }
+
+  .as-contents {
+    margin-bottom: 40px;
+  }
+
+  .as-sub-title {
+    font-size: 18px;
+    letter-spacing: -.72px;
+    font-weight: 700;
+    margin-bottom: 10px;
+  }
+
+  .as-text {
+    font-size: 14px;
+    letter-spacing: -.56px;
+    line-height: 22px;
+    color: $gray-700;
+    margin-bottom: 30px;
+    b {
+      color: $black;
+    }
+  }
+
+  .dp-btn {
+    max-width: 360px;
+    font-size: 16px;
+    letter-spacing: -.64px;
+  }
+
+  .as-figure {
+    margin: 0 -20px;
+    img {
+      width: 100%;
+    }
+  }
+}

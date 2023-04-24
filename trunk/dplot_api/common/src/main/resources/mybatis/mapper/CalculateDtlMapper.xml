@@ -1,0 +1,529 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.dplot.mapper.CalculateDtlMapper">
+<!--    <select id="selectCalculateDtlData" parameterType="somap" resultType="somap">-->
+<!--        SELECT-->
+<!--               DEALERNO AS USERNO-->
+<!--             , IF(TYPE = 'CLM', GOODSIDX, NULL) AS CLMGDIDX-->
+<!--             , IF(TYPE = 'ORD', GOODSIDX, NULL) AS ORDGDIDX-->
+<!--             , ROUND(PRICE - IF(ISTAXFREE = 'T', 0 , PRICE * (10/110)), 0) AS SALEAMT-->
+<!--             , TRUNCATE(IF(ISTAXFREE = 'T', 0 , PRICE * (10/110)), 0) AS VATAMT-->
+<!--             , COMMRATE AS COMMRATE-->
+<!--             , GOODSCNT AS CNT-->
+<!--             , TRUNCATE(SALEPROMOAMT, 0) AS PROMOAMT-->
+<!--             , TRUNCATE(IF(SALEPROMOAMT = 0, 0, SALEPROMOAMT * (IF(PARTRATIO_PROMO = 0, 0, PARTRATIO_PROMO /100))) * IF(TYPE = 'CLM', 1, -1), 0) AS PROMOSHAREAMT-->
+<!--             , TRUNCATE(GOODSCPNAMT, 0) AS CPNAMT-->
+<!--             , TRUNCATE(IF(GOODSCPNAMT = 0, 0, GOODSCPNAMT * (IF(PARTRATIO_GOODS = 0, 0, PARTRATIO_GOODS /100))) * IF(TYPE = 'CLM', 1, -1) , 0) AS CPNSHAREAMT-->
+<!--             , TRUNCATE(DELIVAMT, 0) AS PTNDELIVAMT-->
+<!--             , IF(TYPE = 'CLM', (SELECT ADDRPAYTOTPRICE FROM T_CLAIM WHERE CLMIDX = T.MSTIDX), 0) AS ADDRPAYTOTPRICE-->
+<!--        FROM (-->
+<!--                 SELECT-->
+<!--                     'ORD' AS TYPE-->
+<!--                      , A.ORDERIDX AS MSTIDX, A.ORDGDIDX AS GOODSIDX, DEALERNO, A.GOODSNO, A.OPTIONCODE-->
+<!--                      , D.MARKETPRICE-->
+<!--                      , A.PRICE /* 판매가 */-->
+<!--                      , A.COMMRATE /* 수수로율 */-->
+<!--                      , B.FRSTORDCNT AS GOODSCNT /* 배송수량 */-->
+<!--                      , A.REALGOODSAMT-->
+<!--                      , A.DELIVAMT-->
+<!--                      , IFNULL((SELECT PARTRATIO FROM T_PROMOTION WHERE PROMOIDX = A.SALEPROMOIDX), 0) AS PARTRATIO_PROMO-->
+<!--                      , SALEPROMOAMT  /* 상품프로모션 할인 금액 */-->
+<!--                      , IFNULL((SELECT PARTRATIO FROM T_COMCOUPON WHERE COMCPNIDX = A.GOODSCPNIDX), 0) AS PARTRATIO_GOODS-->
+<!--                      , GOODSCPNAMT /* 상품쿠폰 할인 금액 */-->
+<!--                      , 0 AS MEDIATEAMT /* 조정금액 */-->
+<!--                      , (SELECT ISTAXFREE FROM T_GOODS WHERE GOODSNO = A.GOODSNO) AS ISTAXFREE-->
+<!--                 FROM T_COMORDER_GOODS A LEFT OUTER JOIN T_GOODS_OPTION_DETAIL D ON A.GOODSNO = D.GOODSNO AND A.OPTIONCODE = D.OPTIONCODE AND A.ISTRASH = 'F'-->
+<!--                 WHERE FN_GET_ORDER_STATUS(A.ORDGDIDX) = 'ODS009'-->
+<!--                   AND FN_GET_ORDER_COMPLETE_DATE(A.ORDGDIDX) BETWEEN STR_TO_DATE(CONCAT(#{calcmonth}, '01000000'), '%Y%m%d%H%i%s') AND DATE_FORMAT(LAST_DAY(STR_TO_DATE(CONCAT(#{calcmonth}, '01'), '%Y%m%d')), '%Y-%m-%d 23:59:59')-->
+<!--                 UNION ALL-->
+<!--                 SELECT-->
+<!--                     'CLM' AS TYPE-->
+<!--                      , A.CLMIDX AS MSTIDX, A.CLMGDIDX AS GOODSIDX-->
+<!--                      , (SELECT DEALERNO FROM T_COMORDER_GOODS WHERE ORDGDIDX = A.ORDGDIDX) AS DEALERNO-->
+<!--                      , A.GOODSNO-->
+<!--                      , A.OPTIONCODE-->
+<!--                      , B.MARKETPRICE-->
+<!--                      , (CAST(A.PRICE AS SIGNED) * -1) AS PRICE /* 판매가 */-->
+<!--                      , A.COMMRATE /* 수수로율 */-->
+<!--                      , A.CLMCNT AS GOODSCNT /* 배송수량 */-->
+<!--                      , A.REALGOODSAMT-->
+<!--                      , (A.DELIVAMT * -1) AS DELIVAMT /* 배송비할인 쿠폰은 자사부담이기 때문에 금액을 뺀다 */-->
+<!--                      , IFNULL((SELECT PARTRATIO FROM T_PROMOTION WHERE PROMOIDX = A.SALEPROMOIDX), 0) AS PARTRATIO_PROMO-->
+<!--                      , SALEPROMOAMT AS SALEPROMOAMT/* 상품프로모션 할인 금액 */-->
+<!--                      , IFNULL((SELECT PARTRATIO FROM T_COMCOUPON WHERE COMCPNIDX = A.GOODSCPNIDX), 0) AS PARTRATIO_GOODS-->
+<!--                      , GOODSCPNAMT AS GOODSCPNAMT /* 상품쿠폰 할인 금액 */-->
+<!--                      , 0 AS MEDIATEAMT /* 조정금액 */-->
+<!--                      , (SELECT ISTAXFREE FROM T_GOODS WHERE GOODSNO = A.GOODSNO) AS ISTAXFREE-->
+<!--                 FROM T_CLAIM C INNER JOIN T_CLAIM_GOODS A ON C.CLMIDX = A.CLMIDX LEFT OUTER JOIN T_GOODS_OPTION_DETAIL B ON A.GOODSNO = B.GOODSNO AND A.OPTIONCODE = B.OPTIONCODE-->
+<!--                 WHERE A.ISCLMOPTION = 'T'-->
+<!--                   AND A.ISTRASH = 'F'-->
+<!--                   AND C.ISTRASH = 'F'-->
+<!--                   AND ( (A.CNCSTATUS = 'CNS005' AND C.CNCSTATUS = 'CNS005') OR C.RTNSTATUS = 'RTS010' OR C.EXCSTATUS = 'EXS012')-->
+<!--                   AND C.CLMCOMPDATE BETWEEN STR_TO_DATE(CONCAT(#{calcmonth}, '01000000'), '%Y%m%d%H%i%s') AND DATE_FORMAT(LAST_DAY(STR_TO_DATE(CONCAT(#{calcmonth}, '01'), '%Y%m%d')), '%Y-%m-%d 23:59:59')-->
+<!--             )T-->
+<!--        WHERE DEALERNO = #{userno}-->
+<!--    </select>-->
+
+    <select id="selectCalculateDtlData" parameterType="somap" resultType="somap">
+        SELECT
+             DEALERNO AS USERNO
+             , CLMGDIDX
+             , ORDGDIDX
+             , PRICE AS SALEAMT
+             , CEIL(PRICE - IF(ISTAXFREE = 'T', 0 , PRICE * (10/110))) AS SALEAMTMVAT /* VAT제외 판매금액 */
+             , TRUNCATE(IF(ISTAXFREE = 'T', 0 , PRICE * (10/110)), 0) AS VATAMT
+             , CEIL(((ROUND(PRICE - IF(ISTAXFREE = 'T', 0 , PRICE * (10/110)), 0) * COMMRATE) / 100)) AS SUPPLYAMT
+              ,TRUNCATE((((ROUND(PRICE - IF(ISTAXFREE = 'T', 0 , PRICE * (10/110)), 0) * COMMRATE) / 100) / 10), 0) AS SUPPLYVATAMT
+             , FRSTORDCNT AS CNT
+             , COMMRATE
+             , SALEPROMOAMT AS PROMOAMT
+             , GOODSCPNAMT AS CPNAMT
+             , DELIVAMT AS PTNDELIVAMT
+             , (PROMOSHAREAMT * -1) AS PROMOSHAREAMT
+             , (CPNSHAREAMT * -1) AS CPNSHAREAMT
+             , IF(CLMGDIDX IS NULL, 0, ADDRPAYTOTPRICE) AS ADDRPAYTOTPRICE
+             , FINDADJUSTAMT
+             , BASKETCPNAMT
+        FROM (
+            SELECT
+                 NULL AS CLMGDIDX, B.ORDGDIDX, C.DEALERNO
+                 , (FRSTORDCNT - IFNULL(D.CLMCNT, 0)) AS FRSTORDCNT
+                 , B.PRICE AS PRICE
+                 , B.COMMRATE
+                 ,(B.SALEPROMOAMT - IFNULL(D.SALEPROMOAMT, 0)) AS SALEPROMOAMT
+                 ,(B.GOODSCPNAMT - IFNULL(D.GOODSCPNAMT, 0)) AS GOODSCPNAMT
+                 ,(B.DELIVAMT - IFNULL(D.DELIVAMT, 0)) AS DELIVAMT
+                 , TRUNCATE(IF(B.SALEPROMOAMT = 0, 0, B.SALEPROMOAMT * (IF(IFNULL((SELECT PARTRATIO FROM T_PROMOTION WHERE PROMOIDX = B.SALEPROMOIDX), 0) = 0, 0, IFNULL((SELECT PARTRATIO FROM T_PROMOTION WHERE PROMOIDX = B.SALEPROMOIDX), 0) /100))) - IFNULL(D.CLMPROMOSHAREAMT, 0) , 0) AS PROMOSHAREAMT
+                 , TRUNCATE(IF(B.GOODSCPNAMT = 0, 0, B.GOODSCPNAMT * (IF(IFNULL((SELECT PARTRATIO FROM T_COMCOUPON WHERE COMCPNIDX = B.GOODSCPNIDX), 0) = 0, 0, IFNULL((SELECT PARTRATIO FROM T_COMCOUPON WHERE COMCPNIDX = B.GOODSCPNIDX), 0) /100))) - IFNULL(D.CLMCPNSHAREAMT, 0), 0) AS CPNSHAREAMT
+                 , IFNULL(ADDRPAYTOTPRICE, 0) AS ADDRPAYTOTPRICE
+                 , IFNULL(FINADJUSTAMT, 0) AS FINDADJUSTAMT
+                 , (SELECT ISTAXFREE FROM T_GOODS WHERE GOODSNO = B.GOODSNO) AS ISTAXFREE
+                 , IFNULL(BASKETDIVAMT, 0) AS BASKETCPNAMT
+            FROM T_COMORDER A INNER JOIN T_COMORDER_GOODS B ON A.ORDERIDX = B.ORDERIDX AND A.ISTRASH = 'F' AND B.ISTRASH = 'F' INNER JOIN (
+                SELECT
+                    B.GOODSNO, A.GOODSCODE, B.OPTIONCODE, A.GOODSNAME, BRANDIDX, B.ORIGINALPRICE, ISPBGOODS, A.DEALERNO
+                     , FN_GET_OPTION_CONCAT(B.GOODSNO, B.OPTIONCODE, ', ') AS OPTIONNAME
+                     , (SELECT CATEIDX FROM T_GOODS_CATEGORY WHERE GOODSNO = A.GOODSNO AND ISREPRE = 'T') AS CATEIDX
+                FROM T_GOODS A INNER JOIN T_GOODS_OPTION_DETAIL B ON A.GOODSNO = B.GOODSNO
+            )C ON B.GOODSNO = C.GOODSNO AND B.OPTIONCODE = C.OPTIONCODE LEFT OUTER JOIN (
+                SELECT
+                    ORDERIDX, ORDGDIDX
+                     , SUM(CLMCNT) AS CLMCNT
+                     , SUM(SALEPROMOAMT) AS SALEPROMOAMT
+                     , SUM(GOODSCPNAMT) AS GOODSCPNAMT
+                     , SUM(DELIVAMT) AS DELIVAMT
+                     , SUM(TRUNCATE(IF(SALEPROMOAMT = 0, 0, SALEPROMOAMT * (IF(PARTRATIO_PROMO = 0, 0, PARTRATIO_PROMO /100))) , 0)) AS CLMPROMOSHAREAMT
+                     , SUM(TRUNCATE(IF(GOODSCPNAMT = 0, 0, GOODSCPNAMT * (IF(PARTRATIO_GOODS = 0, 0, PARTRATIO_GOODS /100))) , 0)) AS CLMCPNSHAREAMT
+                     , SUM(ADDRPAYTOTPRICE) AS ADDRPAYTOTPRICE
+                     , SUM(FINADJUSTAMT) AS FINADJUSTAMT
+                     , SUM(BASKETCPNAMT) AS BASKETCPNAMT
+                FROM (
+                         SELECT
+                             A.ORDERIDX, B.ORDGDIDX
+                              ,CLMCNT
+                              ,SALEPROMOAMT
+                              ,GOODSCPNAMT
+                              ,DELIVAMT
+                              , IFNULL((SELECT PARTRATIO FROM T_PROMOTION WHERE PROMOIDX = B.SALEPROMOIDX), 0) AS PARTRATIO_PROMO
+                              , IFNULL((SELECT PARTRATIO FROM T_COMCOUPON WHERE COMCPNIDX = B.GOODSCPNIDX), 0) AS PARTRATIO_GOODS
+                              , ROUND((A.ADDRPAYTOTPRICE) * ((B.PRICE * B.CLMCNT) / (SELECT SUM(PRICE * CLMCNT) FROM T_CLAIM_GOODS WHERE ISTRASH = 'F' AND B.ISCLMOPTION = 'T' AND CLMIDX = A.CLMIDX)), 0) AS ADDRPAYTOTPRICE
+                              , ROUND((A.FINADJUSTAMT) * ((B.PRICE * B.CLMCNT) / (SELECT SUM(PRICE * CLMCNT) FROM T_CLAIM_GOODS WHERE ISTRASH = 'F' AND B.ISCLMOPTION = 'T' AND CLMIDX = A.CLMIDX)), 0) AS FINADJUSTAMT
+                              , IFNULL(BASKETDIVAMT, 0) AS BASKETCPNAMT
+                         FROM T_CLAIM A INNER JOIN T_CLAIM_GOODS B ON A.CLMIDX = B.CLMIDX AND A.ISTRASH = 'F' AND B.ISTRASH = 'F' AND B.ISCLMOPTION = 'T'
+                         WHERE ( (A.CNCSTATUS = 'CNS005' AND B.CNCSTATUS = 'CNS005') OR A.RTNSTATUS = 'RTS010')
+                         AND FN_GET_ORDER_STATUS(B.ORDGDIDX) = 'ODS009'
+                         AND FN_GET_ORDER_COMPLETE_DATE(B.ORDGDIDX) BETWEEN STR_TO_DATE(CONCAT(#{calcmonth}, '01000000'), '%Y%m%d%H%i%s') AND DATE_FORMAT(LAST_DAY(STR_TO_DATE(CONCAT(#{calcmonth}, '01'), '%Y%m%d')), '%Y-%m-%d 23:59:59')
+                     )T
+                GROUP BY ORDERIDX, ORDGDIDX
+            )D ON B.ORDERIDX = D.ORDERIDX AND B.ORDGDIDX = D.ORDGDIDX
+            WHERE A.ISTRASH = 'F'
+              AND FN_GET_ORDER_STATUS(B.ORDGDIDX) = 'ODS009'
+              AND FN_GET_ORDER_COMPLETE_DATE(B.ORDGDIDX) BETWEEN STR_TO_DATE(CONCAT(#{calcmonth}, '01000000'), '%Y%m%d%H%i%s') AND DATE_FORMAT(LAST_DAY(STR_TO_DATE(CONCAT(#{calcmonth}, '01'), '%Y%m%d')), '%Y-%m-%d 23:59:59')
+              AND 0 <![CDATA[<]]> (B.FRSTORDCNT - IFNULL(CLMCNT, 0))
+            UNION ALL
+            SELECT
+                B.CLMGDIDX, NULL, C.DEALERNO
+                , 0, 0, B.COMMRATE, 0, 0, 0, 0, 0
+                , (B.ADDDELIVAMT + B.RTNDELIVAMT) AS ADDRPAYTOTPRICE
+                , 0
+                , (SELECT ISTAXFREE FROM T_GOODS WHERE GOODSNO = B.GOODSNO) AS ISTAXFREE, 0
+            FROM T_CLAIM A INNER JOIN T_CLAIM_GOODS B ON A.CLMIDX = B.CLMIDX AND A.ISTRASH = 'F' AND B.ISTRASH = 'F' AND B.ISCLMOPTION = 'T' INNER JOIN (
+                SELECT
+                    B.GOODSNO, A.GOODSCODE, B.OPTIONCODE, A.GOODSNAME, BRANDIDX, B.ORIGINALPRICE, ISPBGOODS, A.DEALERNO
+                     , FN_GET_OPTION_CONCAT(B.GOODSNO, B.OPTIONCODE, ', ') AS OPTIONNAME
+                     , (SELECT CATEIDX FROM T_GOODS_CATEGORY WHERE GOODSNO = A.GOODSNO AND ISREPRE = 'T') AS CATEIDX
+                FROM T_GOODS A INNER JOIN T_GOODS_OPTION_DETAIL B ON A.GOODSNO = B.GOODSNO
+            )C ON B.GOODSNO = C.GOODSNO AND B.OPTIONCODE = C.OPTIONCODE
+            WHERE (A.RTNSTATUS IN ('RTS009', 'RTS010') OR A.EXCSTATUS IN ('EXS011', 'EXS012'))
+            AND A.CLMCOMPDATE BETWEEN STR_TO_DATE(CONCAT(#{calcmonth}, '01000000'), '%Y%m%d%H%i%s') AND DATE_FORMAT(LAST_DAY(STR_TO_DATE(CONCAT(#{calcmonth}, '01'), '%Y%m%d')), '%Y-%m-%d 23:59:59')
+            AND B.ADDDELIVAMT <![CDATA[>]]> 0
+        )T
+        WHERE DEALERNO = #{userno}
+    </select>
+
+    <insert id="insertCalculateDtlForBatch" parameterType="somap">
+        INSERT INTO T_CALCULATE_DTL (CALCIDX, CLMGDIDX, ORDGDIDX, SALEAMT, COMMRATE, CNT, PROMOAMT, PROMOSHAREAMT, CPNAMT, CPNSHAREAMT, PTNDELIVAMT, ADDRPAYTOTPRICE, FINADJUSTAMT, CALCAMT, REGUSERID, REGDATE, VATAMT, SALEAMTMVAT, SUPPLYAMT, SUPPLYVATAMT, BASKETCPNAMT, BASKETCPNSHAREAMT)
+        VALUES
+        <foreach collection="list" item="item" separator=" , " >
+            (
+                 #{calcidx}, #{item.clmgdidx}, #{item.ordgdidx}, #{item.saleamt}, #{item.commrate}
+                , #{item.cnt}, #{item.promoamt}, #{item.promoshareamt}, #{item.cpnamt}, #{item.cpnshareamt}
+                , #{item.ptndelivamt}, #{item.addrpaytotprice}, 0, #{item.calcamt}, "SYSTEM", CURRENT_TIMESTAMP, #{item.vatamt}
+                , #{item.saleamtmvat}, #{item.supplyamt}, #{item.supplyvatamt}, #{item.basketcpnamt}, 0
+            )
+        </foreach>
+    </insert>
+
+    <delete id="deleteCalculateDtl" parameterType="somap">
+        DELETE FROM T_CALCULATE_DTL WHERE CALCIDX = #{calcidx}
+    </delete>
+
+    <select id="selectCalculateCsList" parameterType="somap" resultType="somap">
+        SELECT
+            NAME AS DEALERNAME, B.DEALERNO
+             , E.ORDNO
+             , B.GOODSNO, B.OPTIONCODE
+             , C.GOODSNAME
+             , FN_GET_OPTION_CONCAT(B.GOODSNO, B.OPTIONCODE, '|') AS OPTIONNAME
+             , D.CLMTYPE
+             , FN_GET_CODENAME(#{siteid}, 'CLMTYPE', D.CLMTYPE) AS CLMTYPENAME
+             , (CASE WHEN D.CLMTYPE = 'CLM001' THEN FN_GET_CODENAME(#{siteid}, 'CNCTYPE', D.CNCTYPE)
+                     WHEN D.CLMTYPE = 'CLM002' THEN FN_GET_CODENAME(#{siteid}, 'RTNTYPE', D.RTNTYPE)
+                     WHEN D.CLMTYPE = 'CLM003' THEN FN_GET_CODENAME(#{siteid}, 'EXCTYPE', D.EXCTYPE)
+                     ELSE '-' END) AS CLMREASON
+             , DATE_FORMAT(D.CLMCOMPDATE, '%Y-%m-%d %H:%i:%s') AS CLMCOMPDATE
+             , FORMAT(A.DELIVAMT, 0) AS DELIVAMT
+             , FORMAT(A.ADDDELIVAMT, 0) AS ADDDELIVAMT
+        FROM T_CLAIM_GOODS A INNER JOIN T_COMORDER_GOODS B ON A.ORDGDIDX = B.ORDGDIDX AND ISCLMOPTION = 'T' AND A.ISTRASH = 'F'
+                             LEFT OUTER JOIN T_GOODS C ON B.GOODSNO = C.GOODSNO
+                             LEFT OUTER JOIN T_CLAIM D ON A.CLMIDX = D.CLMIDX AND D.ISTRASH = 'F'
+                             LEFT OUTER JOIN T_COMORDER E ON B.ORDERIDX = E.ORDERIDX AND E.ISTRASH = 'F'
+                             LEFT OUTER JOIN T_DEALER F ON B.DEALERNO = F.USERNO
+        WHERE CLMGDIDX IN (
+            SELECT CLMGDIDX
+            FROM T_CALCULATE_DTL
+            WHERE CALCIDX = #{calcidx}
+              AND CLMGDIDX IS NOT NULL
+        )
+        AND A.ADDDELIVAMT <![CDATA[>]]> 0
+        <if test='startpage != null and endpage != null'>
+            LIMIT #{startpage}, #{endpage}
+        </if>
+    </select>
+
+    <select id="selectCalculateCsListCount" parameterType="somap" resultType="Integer">
+        SELECT
+            COUNT(0) AS CNT
+        FROM T_CLAIM_GOODS A INNER JOIN T_COMORDER_GOODS B ON A.ORDGDIDX = B.ORDGDIDX AND ISCLMOPTION = 'T' AND A.ISTRASH = 'F'
+                             LEFT OUTER JOIN T_GOODS C ON B.GOODSNO = C.GOODSNO
+                             LEFT OUTER JOIN T_CLAIM D ON A.CLMIDX = D.CLMIDX AND D.ISTRASH = 'F'
+                             LEFT OUTER JOIN T_COMORDER E ON B.ORDERIDX = E.ORDERIDX AND E.ISTRASH = 'F'
+                             LEFT OUTER JOIN T_DEALER F ON B.DEALERNO = F.USERNO
+        WHERE CLMGDIDX IN (
+            SELECT CLMGDIDX
+            FROM T_CALCULATE_DTL
+            WHERE CALCIDX = #{calcidx}
+              AND CLMGDIDX IS NOT NULL
+        )
+        AND D.ADDRPAYTOTPRICE <![CDATA[>]]> 0
+    </select>
+
+    <select id="selectAdjustDetailList" parameterType="somap" resultType="somap">
+    	SELECT TYPE, DEALERNO, ORDNO, ORDDATE, ORDTIME, ORDERDATE, GOODSNO, OPTIONCODE, GOODSTURN, GOODSNAME, OPTIONNAME
+			, PRICE, VATAMT, SALEAMTMVAT, COMMRATE, SUPPLYAMT, SUPPLYVATAMT
+			, CNT, SALEPROMOAMT, PROMOSHAREAMT, GOODSCPNAMT, CPNSHAREAMT
+			, DELIVAMT, ADDRPAYTOTPRICE, CALCAMT, STATUSNAME, COMDATE
+			, COMTIME, COMPLETEDATE, BASKETCPNAMT, BASKETCPNSHAREAMT FROM (
+        SELECT
+              TYPE
+            , DEALERNO
+            , ORDNO
+            , DATE_FORMAT(ORDERDATE, '%Y-%m-%d') AS ORDDATE
+            , DATE_FORMAT(ORDERDATE, '%H:%i:%s') AS ORDTIME
+            , ORDERDATE
+            , GOODSNO
+            , OPTIONCODE
+            , GOODSTURN
+            , GOODSNAME
+            , FN_GET_OPTION_CONCAT(GOODSNO, OPTIONCODE, '|') AS OPTIONNAME
+            , FORMAT(SALEAMT, 0) AS PRICE
+            , FORMAT(VATAMT, 0) AS VATAMT
+            , FORMAT(SALEAMTMVAT, 0) AS SALEAMTMVAT
+            , FORMAT(COMMRATE, 2) AS COMMRATE
+            , FORMAT(SUPPLYAMT, 0) AS SUPPLYAMT
+            , FORMAT(SUPPLYVATAMT, 0) AS SUPPLYVATAMT
+            , FORMAT(B.CNT, 0) AS CNT
+            , FORMAT(PROMOAMT, 0) AS SALEPROMOAMT
+            , FORMAT(PROMOSHAREAMT, 0) AS PROMOSHAREAMT
+            , FORMAT(CPNAMT, 0) AS GOODSCPNAMT
+            , FORMAT(CPNSHAREAMT, 0) AS CPNSHAREAMT
+            , FORMAT(PTNDELIVAMT, 0) AS DELIVAMT
+            , FORMAT(ADDRPAYTOTPRICE, 0) AS ADDRPAYTOTPRICE
+            , FORMAT(CALCAMT, 0) AS CALCAMT
+            , STATUSNAME
+            , DATE_FORMAT(COMPLETEDATE, '%Y-%m-%d') AS COMDATE
+            , DATE_FORMAT(COMPLETEDATE, '%H:%i:%s') AS COMTIME
+            , COMPLETEDATE
+            , FORMAT(BASKETCPNAMT, 0) AS BASKETCPNAMT
+            , BASKETCPNSHAREAMT
+        FROM T_CALCULATE A INNER JOIN T_CALCULATE_DTL B ON A.CALCIDX = B.CALCIDX LEFT OUTER JOIN (
+            SELECT
+                 '주문' AS TYPE
+                 , A.ORDERIDX, B.ORDGDIDX, NULL AS CLMIDX, NULL AS CLMGDIDX, ORDNO, ORDERDATE, B.GOODSNO, OPTIONCODE, GOODSTURN, GOODSNAME
+                 , FN_GET_CODENAME(#{siteid}, 'ORDSTATUS', FN_GET_ORDER_STATUS(B.ORDGDIDX)) AS STATUSNAME
+                 , DATE_FORMAT(FN_GET_ORDER_COMPLETE_DATE(B.ORDGDIDX), '%Y-%m-%d %H:%i:%s') AS COMPLETEDATE
+            FROM T_COMORDER A INNER JOIN T_COMORDER_GOODS B ON A.ORDERIDX = B.ORDERIDX AND A.ISTRASH = 'F' AND B.ISTRASH = 'F'
+                              INNER JOIN T_GOODS C ON B.GOODSNO = C.GOODSNO
+                              INNER JOIN T_COMORDER_GOODS_DELIV D ON B.ORDGDIDX = D.ORDGDIDX AND D.ISTRASH = 'F'
+            WHERE D.ORDSTATUS = 'ODS009'
+<!--             UNION ALL -->
+<!--             SELECT -->
+<!--                 FN_GET_CODENAME(#{siteid}, 'CLMTYPE', A.CLMTYPE) AS TYPE -->
+<!--                  , NULL AS ORDERIDX, NULL AS ORDGDIDX, A.CLMIDX, B.CLMGDIDX, CLMNO AS ORDNO, CLMREQDATE AS ORDERDATE, B.GOODSNO, B.OPTIONCODE -->
+<!--                  , (SELECT GOODSTURN FROM T_COMORDER_GOODS WHERE ORDGDIDX = B.ORDGDIDX) AS GOODSTURN, GOODSNAME -->
+<!--                  , (CASE WHEN CLMTYPE = 'CLM001' THEN FN_GET_CODENAME(#{siteid}, 'CNCSTATUS', B.CNCSTATUS) -->
+<!--                                           WHEN CLMTYPE = 'CLM002' THEN FN_GET_CODENAME(#{siteid}, 'RTNSTATUS', RTNSTATUS) -->
+<!--                                           WHEN CLMTYPE = 'CLM003' THEN FN_GET_CODENAME(#{siteid}, 'EXCSTATUS', EXCSTATUS) -->
+<!--                                           ELSE '-' END) AS STATUSNAME -->
+<!--                  , CLMCOMPDATE AS COMPLETEDATE -->
+<!--             FROM T_CLAIM A INNER JOIN T_CLAIM_GOODS B ON A.CLMIDX = B.CLMIDX AND ISCLMOPTION = 'T' AND A.ISTRASH = 'F' AND B.ISTRASH = 'F' -->
+<!--                            INNER JOIN T_GOODS C ON B.GOODSNO = C.GOODSNO -->
+<!--             WHERE (A.RTNSTATUS = 'RTS010' OR A.EXCSTATUS = 'EXS012') -->
+        )C ON CASE WHEN B.ORDGDIDX IS NOT NULL THEN B.ORDGDIDX = C.ORDGDIDX
+                   WHEN B.CLMGDIDX IS NOT NULL THEN B.CLMGDIDX = C.CLMGDIDX
+                   ELSE <![CDATA[1<>1]]> END
+        WHERE A.CALCIDX = #{calcidx}
+        <choose>
+            <when test="datetype == 'apply'">
+                AND C.ORDERDATE BETWEEN STR_TO_DATE(CONCAT(#{startdate}, '000000'), '%Y-%m-%d%H%i%s') AND STR_TO_DATE(CONCAT(#{enddate}, '235959'), '%Y-%m-%d%H%i%s')
+            </when>
+            <otherwise>
+                AND C.COMPLETEDATE BETWEEN STR_TO_DATE(CONCAT(#{startdate}, '000000'), '%Y-%m-%d%H%i%s') AND STR_TO_DATE(CONCAT(#{enddate}, '235959'), '%Y-%m-%d%H%i%s')
+            </otherwise>
+        </choose>
+        
+        UNION ALL
+        
+        SELECT
+              TYPE
+            , DEALERNO
+            , ORDNO
+            , DATE_FORMAT(ORDERDATE, '%Y-%m-%d') AS ORDDATE
+            , DATE_FORMAT(ORDERDATE, '%H:%i:%s') AS ORDTIME
+            , ORDERDATE
+            , GOODSNO
+            , OPTIONCODE
+            , GOODSTURN
+            , GOODSNAME
+            , FN_GET_OPTION_CONCAT(GOODSNO, OPTIONCODE, '|') AS OPTIONNAME
+            , FORMAT(SALEAMT, 0) AS PRICE
+            , FORMAT(VATAMT, 0) AS VATAMT
+            , FORMAT(SALEAMTMVAT, 0) AS SALEAMTMVAT
+            , FORMAT(COMMRATE, 2) AS COMMRATE
+            , FORMAT(SUPPLYAMT, 0) AS SUPPLYAMT
+            , FORMAT(SUPPLYVATAMT, 0) AS SUPPLYVATAMT
+            , FORMAT(B.CNT, 0) AS CNT
+            , FORMAT(PROMOAMT, 0) AS SALEPROMOAMT
+            , FORMAT(PROMOSHAREAMT, 0) AS PROMOSHAREAMT
+            , FORMAT(CPNAMT, 0) AS GOODSCPNAMT
+            , FORMAT(CPNSHAREAMT, 0) AS CPNSHAREAMT
+            , FORMAT(PTNDELIVAMT, 0) AS DELIVAMT
+            , FORMAT(ADDRPAYTOTPRICE, 0) AS ADDRPAYTOTPRICE
+            , FORMAT(CALCAMT, 0) AS CALCAMT
+            , STATUSNAME
+            , DATE_FORMAT(COMPLETEDATE, '%Y-%m-%d') AS COMDATE
+            , DATE_FORMAT(COMPLETEDATE, '%H:%i:%s') AS COMTIME
+            , COMPLETEDATE
+            , FORMAT(BASKETCPNAMT, 0) AS BASKETCPNAMT
+            , BASKETCPNSHAREAMT
+        FROM T_CALCULATE A INNER JOIN T_CALCULATE_DTL B ON A.CALCIDX = B.CALCIDX LEFT OUTER JOIN (
+<!--             SELECT -->
+<!--                  '주문' AS TYPE -->
+<!--                  , A.ORDERIDX, B.ORDGDIDX, NULL AS CLMIDX, NULL AS CLMGDIDX, ORDNO, ORDERDATE, B.GOODSNO, OPTIONCODE, GOODSTURN, GOODSNAME -->
+<!--                  , FN_GET_CODENAME(#{siteid}, 'ORDSTATUS', FN_GET_ORDER_STATUS(B.ORDGDIDX)) AS STATUSNAME -->
+<!--                  , DATE_FORMAT(FN_GET_ORDER_COMPLETE_DATE(B.ORDGDIDX), '%Y-%m-%d %H:%i:%s') AS COMPLETEDATE -->
+<!--             FROM T_COMORDER A INNER JOIN T_COMORDER_GOODS B ON A.ORDERIDX = B.ORDERIDX AND A.ISTRASH = 'F' AND B.ISTRASH = 'F' -->
+<!--                               INNER JOIN T_GOODS C ON B.GOODSNO = C.GOODSNO -->
+<!--                               INNER JOIN T_COMORDER_GOODS_DELIV D ON B.ORDGDIDX = D.ORDGDIDX AND D.ISTRASH = 'F' -->
+<!--             WHERE D.ORDSTATUS = 'ODS009' -->
+<!--             UNION ALL -->
+            SELECT
+                FN_GET_CODENAME(#{siteid}, 'CLMTYPE', A.CLMTYPE) AS TYPE
+                 , NULL AS ORDERIDX, NULL AS ORDGDIDX, A.CLMIDX, B.CLMGDIDX, CLMNO AS ORDNO, CLMREQDATE AS ORDERDATE, B.GOODSNO, B.OPTIONCODE
+                 , (SELECT GOODSTURN FROM T_COMORDER_GOODS WHERE ORDGDIDX = B.ORDGDIDX) AS GOODSTURN, GOODSNAME
+                 , (CASE WHEN CLMTYPE = 'CLM001' THEN FN_GET_CODENAME(#{siteid}, 'CNCSTATUS', B.CNCSTATUS)
+                                          WHEN CLMTYPE = 'CLM002' THEN FN_GET_CODENAME(#{siteid}, 'RTNSTATUS', RTNSTATUS)
+                                          WHEN CLMTYPE = 'CLM003' THEN FN_GET_CODENAME(#{siteid}, 'EXCSTATUS', EXCSTATUS)
+                                          ELSE '-' END) AS STATUSNAME
+                 , CLMCOMPDATE AS COMPLETEDATE
+            FROM T_CLAIM A INNER JOIN T_CLAIM_GOODS B ON A.CLMIDX = B.CLMIDX AND ISCLMOPTION = 'T' AND A.ISTRASH = 'F' AND B.ISTRASH = 'F'
+                           INNER JOIN T_GOODS C ON B.GOODSNO = C.GOODSNO
+            WHERE (A.RTNSTATUS = 'RTS010' OR A.EXCSTATUS = 'EXS012')
+        )C ON CASE WHEN B.ORDGDIDX IS NOT NULL THEN B.ORDGDIDX = C.ORDGDIDX
+                   WHEN B.CLMGDIDX IS NOT NULL THEN B.CLMGDIDX = C.CLMGDIDX
+                   ELSE <![CDATA[1<>1]]> END
+        WHERE A.CALCIDX = #{calcidx}
+        <choose>
+            <when test="datetype == 'apply'">
+                AND C.ORDERDATE BETWEEN STR_TO_DATE(CONCAT(#{startdate}, '000000'), '%Y-%m-%d%H%i%s') AND STR_TO_DATE(CONCAT(#{enddate}, '235959'), '%Y-%m-%d%H%i%s')
+            </when>
+            <otherwise>
+                AND C.COMPLETEDATE BETWEEN STR_TO_DATE(CONCAT(#{startdate}, '000000'), '%Y-%m-%d%H%i%s') AND STR_TO_DATE(CONCAT(#{enddate}, '235959'), '%Y-%m-%d%H%i%s')
+            </otherwise>
+        </choose>
+        <choose>
+            <when test="psort == 'type_asc'">
+                ORDER BY TYPE ASC
+            </when>
+            <when test="psort == 'type_desc'">
+                ORDER BY TYPE DESC
+            </when>
+            <when test="psort == 'ordno_asc'">
+                ORDER BY ORDNO ASC
+            </when>
+            <when test="psort == 'ordno_desc'">
+                ORDER BY ORDNO DESC
+            </when>
+            <when test="psort == 'orderdate_asc'">
+                ORDER BY ORDERDATE ASC
+            </when>
+            <when test="psort == 'orderdate_desc'">
+                ORDER BY ORDERDATE DESC
+            </when>
+            <when test="psort == 'goodsno_asc'">
+                ORDER BY GOODSNO ASC
+            </when>
+            <when test="psort == 'goodsno_desc'">
+                ORDER BY GOODSNO DESC
+            </when>
+            <when test="psort == 'optioncode_asc'">
+                ORDER BY OPTIONCODE ASC
+            </when>
+            <when test="psort == 'optioncode_desc'">
+                ORDER BY OPTIONCODE DESC
+            </when>
+            <when test="psort == 'turn_asc'">
+                ORDER BY GOODSTURN ASC
+            </when>
+            <when test="psort == 'turn_desc'">
+                ORDER BY GOODSTURN DESC
+            </when>
+            <when test="psort == 'goodsname_asc'">
+                ORDER BY GOODSNAME ASC
+            </when>
+            <when test="psort == 'goodsname_desc'">
+                ORDER BY GOODSNAME DESC
+            </when>
+            <when test="psort == 'optionname_asc'">
+                ORDER BY OPTIONNAME ASC
+            </when>
+            <when test="psort == 'optionname_desc'">
+                ORDER BY OPTIONNAME DESC
+            </when>
+            <when test="psort == 'ordstatus_asc'">
+                ORDER BY STATUSNAME ASC
+            </when>
+            <when test="psort == 'ordstatus_desc'">
+                ORDER BY STATUSNAME DESC
+            </when>
+            <when test="psort == 'completedate_asc'">
+                ORDER BY COMPLETEDATE ASC
+            </when>
+            <when test="psort == 'completedate_desc'">
+                ORDER BY COMPLETEDATE DESC
+            </when>
+            <otherwise>
+                ORDER BY COMPLETEDATE
+            </otherwise>
+        </choose>
+        ) AA
+        <if test='startpage != null and endpage != null'>
+            LIMIT #{startpage}, #{endpage}
+        </if>
+    </select>
+
+    <select id="selectAdjustDetailListCount" parameterType="somap" resultType="Integer">
+        SELECT
+        	COUNT(*) AS CNT
+        FROM (
+        SELECT
+             COUNT(*) AS CNT
+        FROM T_CALCULATE A INNER JOIN T_CALCULATE_DTL B ON A.CALCIDX = B.CALCIDX LEFT OUTER JOIN (
+            SELECT
+                 '주문' AS TYPE
+                 , A.ORDERIDX, B.ORDGDIDX, NULL AS CLMIDX, NULL AS CLMGDIDX, ORDNO, ORDERDATE, B.GOODSNO, OPTIONCODE, GOODSTURN, GOODSNAME
+                 , FN_GET_ORDER_STATUS(B.ORDGDIDX) AS STATUSNAME
+                 , FN_GET_ORDER_COMPLETE_DATE(B.ORDGDIDX) AS COMPLETEDATE
+            FROM T_COMORDER A INNER JOIN T_COMORDER_GOODS B ON A.ORDERIDX = B.ORDERIDX AND A.ISTRASH = 'F' AND B.ISTRASH = 'F'
+                              INNER JOIN T_GOODS C ON B.GOODSNO = C.GOODSNO
+                              INNER JOIN T_COMORDER_GOODS_DELIV D ON B.ORDGDIDX = D.ORDGDIDX AND D.ISTRASH = 'F'
+            WHERE D.ORDSTATUS = 'ODS009'
+<!--             UNION ALL -->
+<!--             SELECT -->
+<!--                 FN_GET_CODENAME(#{siteid}, 'CLMTYPE', A.CLMTYPE) AS TYPE -->
+<!--                  , NULL AS ORDERIDX, NULL AS ORDGDIDX, A.CLMIDX, B.CLMGDIDX, CLMNO AS ORDNO, CLMREQDATE AS ORDERDATE, B.GOODSNO, B.OPTIONCODE -->
+<!--                  , (SELECT GOODSTURN FROM T_COMORDER_GOODS WHERE ORDGDIDX = B.ORDGDIDX) AS GOODSTURN, GOODSNAME -->
+<!--                  , (CASE WHEN CLMTYPE = 'CLM001' THEN FN_GET_CODENAME(#{siteid}, 'CNCSTATUS', B.CNCSTATUS) -->
+<!--                                           WHEN CLMTYPE = 'CLM002' THEN FN_GET_CODENAME(#{siteid}, 'RTNSTATUS', RTNSTATUS) -->
+<!--                                           WHEN CLMTYPE = 'CLM003' THEN FN_GET_CODENAME(#{siteid}, 'EXCSTATUS', EXCSTATUS) -->
+<!--                                           ELSE '-' END) AS STATUSNAME -->
+<!--                  , CLMCOMPDATE AS COMPLETEDATE -->
+<!--             FROM T_CLAIM A INNER JOIN T_CLAIM_GOODS B ON A.CLMIDX = B.CLMIDX AND ISCLMOPTION = 'T' AND A.ISTRASH = 'F' AND B.ISTRASH = 'F' -->
+<!--                            INNER JOIN T_GOODS C ON B.GOODSNO = C.GOODSNO -->
+<!--             WHERE (A.RTNSTATUS = 'RTS010' OR A.EXCSTATUS = 'EXS012') -->
+        )C ON CASE WHEN B.ORDGDIDX IS NOT NULL THEN B.ORDGDIDX = C.ORDGDIDX
+                   WHEN B.CLMGDIDX IS NOT NULL THEN B.CLMGDIDX = C.CLMGDIDX
+                   ELSE <![CDATA[1<>1]]> END
+        WHERE A.CALCIDX = #{calcidx}
+        <choose>
+            <when test="datetype == 'apply'">
+                AND C.ORDERDATE BETWEEN STR_TO_DATE(CONCAT(#{startdate}, '000000'), '%Y-%m-%d%H%i%s') AND STR_TO_DATE(CONCAT(#{enddate}, '235959'), '%Y-%m-%d%H%i%s')
+            </when>
+            <otherwise>
+                AND C.COMPLETEDATE BETWEEN STR_TO_DATE(CONCAT(#{startdate}, '000000'), '%Y-%m-%d%H%i%s') AND STR_TO_DATE(CONCAT(#{enddate}, '235959'), '%Y-%m-%d%H%i%s')
+            </otherwise>
+        </choose>
+        
+        UNION ALL
+        
+        SELECT
+             COUNT(*) AS CNT
+        FROM T_CALCULATE A INNER JOIN T_CALCULATE_DTL B ON A.CALCIDX = B.CALCIDX LEFT OUTER JOIN (
+<!--             SELECT -->
+<!--                  '주문' AS TYPE -->
+<!--                  , A.ORDERIDX, B.ORDGDIDX, NULL AS CLMIDX, NULL AS CLMGDIDX, ORDNO, ORDERDATE, B.GOODSNO, OPTIONCODE, GOODSTURN, GOODSNAME -->
+<!--                  , FN_GET_ORDER_STATUS(B.ORDGDIDX) AS STATUSNAME -->
+<!--                  , FN_GET_ORDER_COMPLETE_DATE(B.ORDGDIDX) AS COMPLETEDATE -->
+<!--             FROM T_COMORDER A INNER JOIN T_COMORDER_GOODS B ON A.ORDERIDX = B.ORDERIDX AND A.ISTRASH = 'F' AND B.ISTRASH = 'F' -->
+<!--                               INNER JOIN T_GOODS C ON B.GOODSNO = C.GOODSNO -->
+<!--                               INNER JOIN T_COMORDER_GOODS_DELIV D ON B.ORDGDIDX = D.ORDGDIDX AND D.ISTRASH = 'F' -->
+<!--             WHERE D.ORDSTATUS = 'ODS009' -->
+<!--             UNION ALL -->
+            SELECT
+                FN_GET_CODENAME(#{siteid}, 'CLMTYPE', A.CLMTYPE) AS TYPE
+                 , NULL AS ORDERIDX, NULL AS ORDGDIDX, A.CLMIDX, B.CLMGDIDX, CLMNO AS ORDNO, CLMREQDATE AS ORDERDATE, B.GOODSNO, B.OPTIONCODE
+                 , (SELECT GOODSTURN FROM T_COMORDER_GOODS WHERE ORDGDIDX = B.ORDGDIDX) AS GOODSTURN, GOODSNAME
+                 , (CASE WHEN CLMTYPE = 'CLM001' THEN FN_GET_CODENAME(#{siteid}, 'CNCSTATUS', B.CNCSTATUS)
+                                          WHEN CLMTYPE = 'CLM002' THEN FN_GET_CODENAME(#{siteid}, 'RTNSTATUS', RTNSTATUS)
+                                          WHEN CLMTYPE = 'CLM003' THEN FN_GET_CODENAME(#{siteid}, 'EXCSTATUS', EXCSTATUS)
+                                          ELSE '-' END) AS STATUSNAME
+                 , CLMCOMPDATE AS COMPLETEDATE
+            FROM T_CLAIM A INNER JOIN T_CLAIM_GOODS B ON A.CLMIDX = B.CLMIDX AND ISCLMOPTION = 'T' AND A.ISTRASH = 'F' AND B.ISTRASH = 'F'
+                           INNER JOIN T_GOODS C ON B.GOODSNO = C.GOODSNO
+            WHERE (A.RTNSTATUS = 'RTS010' OR A.EXCSTATUS = 'EXS012')
+        )C ON CASE WHEN B.ORDGDIDX IS NOT NULL THEN B.ORDGDIDX = C.ORDGDIDX
+                   WHEN B.CLMGDIDX IS NOT NULL THEN B.CLMGDIDX = C.CLMGDIDX
+                   ELSE <![CDATA[1<>1]]> END
+        WHERE A.CALCIDX = #{calcidx}
+        <choose>
+            <when test="datetype == 'apply'">
+                AND C.ORDERDATE BETWEEN STR_TO_DATE(CONCAT(#{startdate}, '000000'), '%Y-%m-%d%H%i%s') AND STR_TO_DATE(CONCAT(#{enddate}, '235959'), '%Y-%m-%d%H%i%s')
+            </when>
+            <otherwise>
+                AND C.COMPLETEDATE BETWEEN STR_TO_DATE(CONCAT(#{startdate}, '000000'), '%Y-%m-%d%H%i%s') AND STR_TO_DATE(CONCAT(#{enddate}, '235959'), '%Y-%m-%d%H%i%s')
+            </otherwise>
+        </choose>
+        ) AA
+    </select>
+</mapper>

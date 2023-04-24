@@ -1,0 +1,266 @@
+.magazine-review {
+  padding-top: 100px;
+
+  .dp-bar {
+    margin-right: 10px;
+    margin-left: 10px;
+  }
+
+  .star-icon {
+    width: 22px;
+    height: 22px;
+    margin-right: 2px;
+    background: url("~@/assets/common/icon/icon-star-black-18px.svg")
+    no-repeat;
+    background-size: 22px !important;
+  }
+
+  .head__review-title {
+    font-size: 26px;
+    letter-spacing: -1.04px;
+    line-height: 37px;
+    font-weight: 700;
+    margin-bottom: 48px;
+  }
+
+  .review-title {
+    font-size: 20px;
+    letter-spacing: -.8px;
+    line-height: 29px;
+    font-weight: 700;
+    margin-bottom: 24px;
+  }
+
+  // 베스트 리뷰
+  .best-review {
+
+    .best-review__body {
+      position: relative;
+      margin-bottom: 250px;
+    }
+
+    .best-review__img {
+      display: flex;
+      align-items: flex-start;
+      justify-content: center;
+      margin-bottom: 40px;
+    }
+
+    .main-img__container {
+      width: 616px;
+      height: 616px;
+      margin-right: 10px;
+    }
+
+    .main-img {
+      position: relative;
+      width: 100%;
+      height: 100%;
+      margin-bottom: 0;
+
+      i {
+        position: absolute;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+      }
+
+      img {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+      }
+    }
+
+    .sub-img__container {
+      width: 616px;
+    }
+
+    .sub-img__ul {
+      width: 100%;
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      row-gap: 10px;
+      column-gap: 10px;
+      li:nth-child(3n + 1) {
+        background: url("~@/assets/common/img/review-noimage01.jpg") no-repeat 0;
+        background-size: cover;
+      }
+      li:nth-child(3n + 2) {
+        background: url("~@/assets/common/img/review-noimage02.jpg") no-repeat 0;
+        background-size: cover;
+      }
+      li:nth-child(3n + 3) {
+        background: url("~@/assets/common/img/review-noimage03.jpg") no-repeat 0;
+        background-size: cover;
+      }
+    }
+
+    .sub-img {
+      position: relative;
+      width: 198px;
+      height: 198px;
+      margin-bottom: 0;
+      i {
+        position: absolute;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+      }
+
+      img {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+      }
+    }
+
+
+
+    .review-info__head {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 28px;
+    }
+
+    .info-item {
+      display: flex;
+      align-items: center;
+      margin-bottom: 20px;
+      cursor: pointer;
+    }
+
+    .item-img {
+      width: 190px;
+      height: 190px;
+      margin-right: 14px;
+      margin-bottom: 0;
+
+      img {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+      }
+    }
+
+    .item-p {
+      font-size: 16px;
+      letter-spacing: -.64px;
+      line-height: 22px;
+      color: $gray-700;
+      margin-bottom: 0;
+    }
+
+    .item-p + .item-p {
+      margin-top: 4px;
+    }
+
+    .info-date {
+      font-size: 16px;
+      letter-spacing: -.64px;
+      line-height: 24px;
+      color: $gray-700;
+      margin-bottom: 10px;
+
+      span + span {
+        margin-left: 10px;
+      }
+    }
+
+    .info-name {
+      font-size: 18px;
+      letter-spacing: -.72px;
+      line-height: 26px;
+      color: $gray-700;
+      margin-bottom: 10px;
+    }
+
+    .info-rate {
+      display: flex;
+      align-items: center;
+      margin-bottom: 20px;
+    }
+
+    .rate-number {
+      margin-bottom: 0;
+      font-size: 18px;
+      letter-spacing: -.54px;
+      line-height: 21px;
+      font-weight: 600;
+    }
+
+    .info-text {
+      font-size: 18px;
+      letter-spacing: -.72px;
+      line-height: 28px;
+      color: $gray-700;
+      margin-bottom: 0;
+      // 다섯줄 말줄임
+      overflow: hidden;
+      text-overflow: ellipsis;
+      display: -webkit-box;
+      -webkit-line-clamp: 5;
+      -webkit-box-orient: vertical;
+    }
+
+    .swiper-pagination {
+      position: absolute;
+      bottom: -80px;
+      left: 50%;
+      transform: translateX(-50%);
+    }
+
+    .swiper-pagination-bullet {
+      width: 10px;
+      height: 10px;
+    }
+
+    .swiper-pagination-bullet + .swiper-pagination-bullet {
+      margin-left: 20px;
+    }
+
+    .swiper-pagination-bullet-active {
+      background-color: $black;
+    }
+  }
+
+  // 리뷰 라이브
+  .review-live {
+
+    .review-live__ul {
+      display: grid;
+      grid-template-columns: repeat(5, 1fr);
+      row-gap: 10px;
+      column-gap: 10px;
+
+      li:first-child {
+        grid-column-start: 1;
+        grid-column-end: 3;
+        grid-row-start: 1;
+        grid-row-end: 3;
+      }
+    }
+
+    .review-img {
+      position: relative;
+      width: 100%;
+      height: 100%;
+      margin-bottom: 0;
+
+      img {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+      }
+    }
+
+    .icon-video-play {
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      z-index: 1;
+    }
+  }
+}

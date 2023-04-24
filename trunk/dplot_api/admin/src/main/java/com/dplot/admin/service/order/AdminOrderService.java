@@ -1,0 +1,188 @@
+package com.dplot.admin.service.order;
+
+import java.util.List;
+import java.util.Map;
+
+import com.dplot.common.SOMap;
+
+/**
+ * @discription	: 주문관리 Service
+ * @fileName	: AdminOrderService.java
+ * @author		: JSK
+ * @date		: 2022.02.10
+ * =================================================================
+ * DATE			AUTHOR		NOTE
+ * -----------------------------------------------------------------
+ * 2022.02.10	JSK			최초생성
+ * -----------------------------------------------------------------
+ */
+public interface AdminOrderService {
+
+    /**
+     * 전체 주문, 클레임 목록 조회
+     * @param params
+     * @return SOMap
+     * @throws Exception
+     */
+    SOMap selectOrderClaimList(SOMap params) throws Exception;
+
+    /**
+     * 전체 주문, 클레임 목록 조회(엑셀용)
+     * @param params
+     * @return List<Map<String, Object>>
+     * @throws Exception
+     */
+    List<Map<String, Object>> selectOrderClaimListForExcel(SOMap params) throws Exception;
+    
+    /**
+     * 전체 주문, 클레임 목록 조회(엑셀용)
+     * @param params
+     * @return List<Map<String, Object>>
+     * @throws Exception
+     */
+    List<Map<String, Object>> selectOrderClaimListForExcelNew(SOMap params) throws Exception;
+
+    /**
+     * 상태별 주문목록 조회
+     * @param params
+     * @return SOMap
+     * @throws Exception
+     */
+    SOMap selectOrderList(SOMap params) throws Exception;
+
+    /**
+     * 주문 목록 조회(엑셀용)
+     * @param params
+     * @return List<Map<String, Object>>
+     * @throws Exception
+     */
+    List<Map<String, Object>> selectOrderListForExcel(SOMap params) throws Exception;
+    
+    /**
+     * 주문상태변경이력 목록 조회
+     * @param params
+     * @return SOMap
+     * @throws Exception
+     */
+    SOMap selectOrderStatusHistList(SOMap params) throws Exception;
+
+	/**
+	 * 주문상태 갱신
+	 * @param params
+	 * @return int
+	 * @throws Exception
+	 */
+    int updateOrderStatus(SOMap params) throws Exception;
+    
+    /**
+     * 주문배송정보 목록조회
+     * @param params
+     * @return SOMap
+     * @throws Exception
+     */
+    SOMap selectOrderInvoiceList(SOMap params) throws Exception;
+
+	/**
+	 * 일괄출고 (배송추적요청)
+	 * @param params
+	 * @return int
+	 * @throws Exception
+	 */
+    int saveOrderInvoiceAll(SOMap params) throws Exception;
+
+	/**
+	 * 송장정보 일괄등록(엑셀)
+	 * @param params
+	 * @return int
+	 * @throws Exception
+	 */
+    int saveOrderInvoiceByExcel(SOMap params) throws Exception;
+
+	/**
+	 * 주문상품배송정보 추가
+	 * @param params
+	 * @return int
+	 * @throws Exception
+	 */
+    int insertComOrderGoodsDeliv(SOMap params) throws Exception;
+
+	/**
+	 * 주문상품배송정보 사용여부 갱신
+	 * @param params
+	 * @return int
+	 * @throws Exception
+	 */
+    int updateComOrderGoodsDelivUse(SOMap params) throws Exception;
+
+    /**
+     * 주문상품목록 조회
+     * @param params
+     * @return SOMap
+     * @throws Exception
+     */
+    SOMap selectOrderGoodsList(SOMap params) throws Exception;
+
+    /**
+     * 주문기본정보 조회
+     * @param params
+     * @return SOMap
+     * @throws Exception
+     */
+    SOMap selectOrderInfo(SOMap params) throws Exception;
+
+    /**
+     * 주문상세정보 조회
+     * @param params
+     * @return SOMap
+     * @throws Exception
+     */
+    SOMap selectOrderDetail(SOMap params) throws Exception;
+
+    /**
+     * 주문상세 클레임내역 조회
+     * @param params
+     * @return SOMap
+     * @throws Exception
+     */
+    SOMap selectClaimInfo(SOMap params) throws Exception;
+
+    /**
+     * 주문CS 처리내역 조회
+     * @param params
+     * @return SOMap
+     * @throws Exception
+     */
+    SOMap selectCsInfo(SOMap params) throws Exception;
+
+	/**
+	 * 관리자메모 추가
+	 * @param params
+	 * @return int
+	 * @throws Exception
+	 */
+    int insertOrderMemo(SOMap params) throws Exception;
+
+	/**
+	 * 관리자메모 사용여부 갱신
+	 * @param params
+	 * @return int
+	 * @throws Exception
+	 */
+    int updateOrderMemoUse(SOMap params) throws Exception;
+
+	/**
+	 * 직배송 안내문구 저장
+	 * @param params
+	 * @return int
+	 * @throws Exception
+	 */
+    int updateDirDelivMsg(SOMap params) throws Exception;
+    
+	/**
+	 * 배송중인 같은 운송장 건수 조회
+	 * @param params
+	 * @return int
+	 * @throws Exception
+	 */
+    int selectSameInvoiceCount(SOMap params) throws Exception;
+}

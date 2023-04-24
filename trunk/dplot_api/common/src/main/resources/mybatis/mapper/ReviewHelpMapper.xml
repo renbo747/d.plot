@@ -1,0 +1,34 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.dplot.mapper.ReviewHelpMapper">
+	<select id="selectReviewHelpCnt" parameterType="somap" resultType="int">
+	    /*ReviewHelpMapper.xml - selectReviewHelpCnt:: 리뷰 도움여부 정보 조회*/
+	    SELECT COUNT(*)
+		FROM t_review_help
+		WHERE 1 = 1
+		AND USERNO = #{userno}
+		AND REVIEWIDX  = #{reviewidx}
+	</select>
+	
+	<delete id="deleteReviewHelp" parameterType="somap">
+		/*ReviewHelpMapper.xml - updateReviewHelp :: 리뷰도움 삭제처리*/
+		DELETE 
+		FROM t_review_help
+		WHERE REVIEWIDX= #{reviewidx} 
+		AND USERNO= #{userno}
+	</delete>
+	
+	<insert id="insertReviewHelp" parameterType="somap">
+	   /*ReviewHelpMappe.xml - insertReviewHelp:: 리뷰도움 저장*/
+		INSERT INTO t_review_help(
+			  REVIEWIDX
+			, USERNO
+			, REGDATE
+		)VALUES(
+		      #{reviewidx}
+		    , #{userno}
+		    , now()
+		)
+	</insert>
+</mapper>

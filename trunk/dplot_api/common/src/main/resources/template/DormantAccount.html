@@ -1,0 +1,143 @@
+<!doctype html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport"
+        content="width=device-width, user-scalable=no, initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0">
+  <meta http-equiv="X-UA-Compatible" content="ie=edge">
+  <title>휴면계정 전환안내</title>
+
+  <!--font-->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@100;300;400;500;700;900&display=swap" rel="stylesheet">
+
+  <link th:each="font : ${fontList}" th:href="${font}" rel="stylesheet">
+</head>
+<body style="margin: 0;">
+  <div id="email-dormant-account" style="width: 800px; padding: 0 40px; margin: 0 auto; font-family: 'Noto Sans KR', sans-serif;">
+    <!-- 헤더 -->
+    <table style="width: 100%; padding: 30px 0 70px 0">
+      <tr>
+        <td>
+          <div>
+            <img th:src="${topLogo}" alt="로고">
+          </div>
+        </td>
+      </tr>
+    </table>
+    <table style="width: 100%;">
+      <tr>
+        <td style="text-align: center">
+          <span style="font-size: 26px; letter-spacing: -1.04px; font-weight: 500; color: #111111;">휴면계정 전환안내</span>
+        </td>
+      </tr>
+    </table>
+    <table style="width: 100%; padding: 80px 0 40px 0">
+      <tr>
+        <td>
+          <span style="font-size: 16px; letter-spacing: -.64px; line-height: 26px; font-weight: 400; color:#111111;">
+            안녕하세요?<br/>
+            [$NAME] 회원님은 장기간 D.PLOT에 로그인하지 않은 상태입니다. 휴면전환일자 이전에 로그인하지 않으면 개인정보보호를 위해 회원님의 계정이 휴면 상태로 전환될 예정임을 안내드립니다.
+          </span>
+        </td>
+      </tr>
+    </table>
+    <!-- 휴면전환일자 -->
+    <table style="width: 100%;">
+      <tr>
+        <td>
+          <span style="font-size: 16px; letter-spacing: -.64px; font-weight: 700; color: #111111; ">휴면전환일자</span>
+        </td>
+      </tr>
+      <tr>
+        <td style="padding: 14px 0 0 0;">
+          <span style="font-size: 14px; letter-spacing: -.56px; color: #666666; ">[$NOTE1]</span>
+        </td>
+      </tr>
+    </table>
+    <!-- 별도분리보관 개인정보항목 -->
+    <table style="width: 100%; padding-top: 40px;">
+      <tr>
+        <td>
+          <span style="font-size: 16px; letter-spacing: -.64px; font-weight: 700; color: #111111; ">별도분리보관 개인정보항목</span>
+        </td>
+      </tr>
+      <tr>
+        <td style="padding: 14px 0 0 0;">
+          <span style="font-size: 14px; letter-spacing: -.56px; color: #666666; ">이름, 휴대폰번호, 이메일주소, 성별, 생년월일, 주소</span>
+          <span style="display:block; font-size: 14px; letter-spacing: -.56px; color: #666666; padding-top: 6px; ">ㆍ정보통신망법 이용촉진 및 정보보호 등에 관한 법률에 의거하여 장기 미이용 회원님들의 개인정보는 분리하여 별도로 저장,관리됩니다</span>
+          <span style="display:block; font-size: 14px; letter-spacing: -.56px; color: #666666; padding-top: 20px; ">[$NOTE1] 이전에 로그인하시면, 사용 중인 계정의 지속적인 이용은 물론 할인쿠폰, 적립금 등의 다양한 회원 혜택을받을 수 있습니다.</span>
+        </td>
+      </tr>
+    </table>
+    <!-- 버튼 -->
+    <table style="width: 100%; padding: 80px 0;">
+      <tr style="width: 100%; vertical-align: middle">
+        <td>
+          <a th:href="${loginUrl}" style="display: block; text-decoration: none;">
+            <div style="width: 360px; height: 48px; margin: 0 auto; background-color: #333333; text-align: center; line-height: 48px;">
+              <span style="font-size: 16px; letter-spacing: -.64px; color: #ffffff;"><span style="font-family: 'AttenNew', sans-serif; ">D.PLOT</span> 로그인</span>
+            </div>
+          </a>
+        </td>
+      </tr>
+    </table>
+    <table style="width: 100%;">
+      <tr>
+        <td>
+          <span style="font-size: 16px; letter-spacing: -.64px; font-weight: 700; color: #111111; ">개인정보 보호를 위한 관련법령</span>
+        </td>
+      </tr>
+      <tr>
+        <td style="padding: 14px 0 0 0;">
+          <div>
+            <span style="font-size: 14px; letter-spacing: -.56px; color: #333333; font-weight: 500; ">제29조(개인정보의 파기)</span>
+            <span style="display:block; font-size: 14px; letter-spacing: -.56px; color: #666666; padding-top: 14px;">② 정보통신서비스 제공자등은 정보통신서비스를 1년의 기간 동안 이용하지 아니하는 이용자의 개인정보를 보호하기 위하여 대통령령으로<br /> 정하는 바에 따라 개인정보의 파기 등 필요한 조치를 취하여야 한다. 다만, 그 기간에 대하여 다른 법령 또는 이용자의 요청에 따라<br /> 달리 정한 경우에는 그에 따른다. &lt; 신설 2012.2.17, 2015.12.1&gt;</span>
+          </div>
+          <div style="padding-top: 30px;">
+            <span style="font-size: 14px; letter-spacing: -.56px; color: #333333; font-weight: 500; ">시행령 제16조(개인정보파기 등)</span>
+            <span style="display:block; font-size: 14px; letter-spacing: -.56px; color: #666666; padding-top: 14px;">② 정보통신서비스 제공자등은 이용자가 정보통신서비스를 법 제29조 제2항의 기간 동안 이용하지 아니하는 경우에는 이용자의 개인정보를 해당 기간 경과 후 즉시 파기하거나 다른 이용자의 개인정보와 분리하여 별도로 저장·관리하여야 한다. &lt; 개정 2016.5.31&gt;</span>
+          </div>
+        </td>
+      </tr>
+    </table>
+    <!-- 메일 푸터 -->
+    <table class="mail-footer" style="width: 100%; margin-top: 80px; background-color: #f8f8f8; padding: 40px 40px;">
+      <colgroup>
+        <col width="20%">
+        <col width="80%">
+      </colgroup>
+      <tr style="vertical-align: top; width: 100%;">
+        <td>
+          <div style="text-align: left; width: 100%;">
+            <img th:src="${footerLogo}" alt="footer logo">
+          </div>
+        </td>
+        <td>
+          <div style="margin-bottom: 10px; line-height: 1;">
+            <span style="color: #666666; font-size: 14px; letter-spacing: -.42px;">
+              본 메일은 발신 전용으로 회신이 되지 않습니다.<br />
+              문의사항은 [<a th:href="${mainUrl}" style="color:#666666;">D.PLOT 홈페이지</a>]를 이용해주시기 바랍니다.
+            </span>
+          </div>
+          <div style="margin-bottom: 4px;">
+            <span style="font-size: 14px; letter-spacing: -.42px; color: #666666;">주식회사 다다엠엔씨</span>
+            <span style="display:inline-block; margin: 0 10px; width: 1px; height: 10px; background-color: #dddddd;"></span>
+            <span style="font-size: 14px; letter-spacing: -.42px; color: #666666;">고객센터 1666-3642</span>
+<!--            <span style="display:inline-block; margin: 0 10px; width: 1px; height: 10px; background-color: #dddddd;"></span>-->
+<!--            <span style="font-size: 14px; letter-spacing: -.42px; color: #666666;">1:1 문의</span>-->
+          </div>
+          <div style="margin-bottom: 4px;">
+            <span style="font-size: 14px; letter-spacing: -.42px; color: #666666;">04377 서울특별시 용산구 한강대로23길 55 (한강로3가) 아이파크몰 6층</span>
+          </div>
+
+          <div>
+            <span style="font-size: 14px; letter-spacing: -.42px; color: #666666;">COPYRIGHT © D.PLOT. ALL RIGHTS RESERVED.</span>
+          </div>
+        </td>
+      </tr>
+    </table>
+  </div>
+</body>
+</html>

@@ -1,0 +1,113 @@
+.service {
+  padding: 0 20px;
+  .service-top {
+    padding-top: 60px;
+    padding-bottom: 60px;
+  }
+  .service-bottom {
+    padding-top: 60px;
+    padding-bottom: 60px;
+    background: #000;
+    margin: 0 -20px;
+  }
+  .service__header {
+    position: relative;
+    padding-bottom: 28px;
+    .header-text01 {
+      font-size: 25px;
+      line-height: 46px;
+      margin-bottom: 14px;
+      font-weight: 600;
+    }
+  }
+  .service-logo {
+    width: 256px;
+    img {
+      width: 100%;
+    }
+  }
+
+  .service-middle {
+    position: relative;
+  }
+
+  .service-line {
+    font-size: 30px;
+    line-height: 38px;
+    letter-spacing: -.78px;
+    span {
+      position: relative;
+      z-index: 2;
+    }
+    span:after {
+      position: absolute;
+      bottom: 5px;
+      left: 0;
+      z-index: -1;
+      content:"";
+      width: calc(100% + 10px);
+      height: 5px;
+      display: inline-block;
+      background: #ccfe00;
+    }
+  }
+
+  .service-text {
+    padding-top: 32px;
+    font-size: 14px;
+    line-height: 22px;
+    letter-spacing: -.56px;
+    color: #666;
+  }
+
+  .service-bottom {}
+
+  .service-bottom__title {
+    font-size: 32px;
+    font-weight: 600;
+    margin-bottom: 18px;
+    color: #ccff00;
+    text-align: center;
+  }
+
+  .service__ul {
+    max-width: 280px;
+    margin: 0 auto;
+    li + li {
+      margin-top: 60px;
+    }
+  }
+
+  .service-item {
+    .item__figure {
+      margin-bottom: 26px;
+      img {
+        width: 100%;
+      }
+    }
+    .item__title {
+      font-size: 21px;
+      line-height: 23px;
+      letter-spacing: -.84px;
+      font-weight: 700;
+      color: #fff;
+      margin-bottom: 16px;
+    }
+    .item__text {
+      font-size: 14px;
+      line-height: 22px;
+      letter-spacing: -.56px;
+      color: #888;
+      margin-bottom: 24px;
+    }
+    .item__tag-group {
+      font-size: 14px;
+      line-height: 20px;
+      letter-spacing: -.52px;
+      color: #bae021;
+      span {
+        display: block;
+      }
+    }
+  }
+}

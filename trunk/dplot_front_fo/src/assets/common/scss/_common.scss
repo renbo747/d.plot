@@ -1,0 +1,519 @@
+* {
+  word-break: break-all;
+  outline: 0;
+}
+
+html, body {
+  position: relative;
+}
+
+input {
+  &::-ms-clear {
+    display: none;
+  }
+  &::-ms-reveal {
+    display: none;
+  }
+}
+
+.dp-section + .dp-section {
+  margin-top: 80px;
+  @include media-breakpoint-up(xl) {
+    margin-top: 130px;
+  }
+}
+
+.single-ellipsis {
+  width: 100%;
+  display: inline-block;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  overflow: hidden;
+}
+
+.no-scrollbar {
+  -ms-overflow-style: none;
+  &::-webkit-scrollbar {
+    display:none;
+  }
+}
+
+/* 탭스 */
+.dp-tabs {
+  .nav-link {
+    padding: 0;
+  }
+  .nav-tabs {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    width: 100%;
+    margin-bottom: 30px;
+    background: #fff;
+    border: none;
+    @include media-breakpoint-up(xl) {
+      flex-wrap: nowrap;
+      margin-bottom: 50px;
+    }
+    .nav-item {
+      width: calc(33.333333% + 1px);
+      margin-right: -1px;
+      @include media-breakpoint-up(xl) {
+        width: calc(16.666666% + 1px);
+      }
+    }
+    .nav-item a {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      width: 100%;
+      height: 44px;
+      color: #999;
+      font-size: 16px;
+      letter-spacing: -.48px;
+      line-height: 20px;
+      border-radius: 0;
+      font-family: 'AttenNew', sans-serif;
+      border: 1px solid #ddd;
+      &.active {
+        position: relative;
+        border-color: #333;
+      }
+      @include media-breakpoint-up(xl) {
+        height: 60px;
+        font-size: 24px;
+        letter-spacing: -.72px;
+        line-height: 29px;
+      }
+    }
+    .nav-item a.active {
+      border: none;
+      background: #333;
+      color: #fff;
+    }
+  }
+
+  .tab-pane {
+    padding: 0;
+  }
+}
+
+.nav-tabs .nav-link {
+  outline: 0 !important;
+}
+
+/* 상품 목록 */
+.product-list {
+  list-style: none;
+  padding-left: 0;
+  padding-bottom: 0;
+  margin-bottom: 0;
+  @include media-breakpoint-up(xl) {
+    margin-bottom: 0;
+  }
+  li {
+    display: flex;
+    padding-bottom: 40px;
+    @include media-breakpoint-up(xl) {
+      padding-bottom: 80px;
+    }
+  }
+}
+
+.product-list.horizontal {
+  li {
+    padding-bottom: 0;
+  }
+  li + li {
+    padding-top: 24px;
+  }
+}
+
+// 로그인 dp-hr
+.dp-hr {
+  border: 0;
+  height: 6px;
+  background: $gray-100;
+  margin-top: 0;
+  margin-bottom: 0;
+  &.type02 {
+    background: $gray-100;
+  }
+  &.type03 {
+    background: $gray-400;
+  }
+  @include media-breakpoint-up(xl) {
+    height: 1px;
+    background: $gray-400;
+  }
+  &.h1 {
+    height: 1px;
+    background: $gray-400;
+  }
+  &.h6 {
+    height: 6px;
+    background: $gray-100;
+  }
+  &.gray100{
+    background-color: $gray-100;
+  }
+}
+
+.justify-margin {
+  margin-left: -20px;
+  margin-right: -20px;
+}
+
+// 첫번째 dp-panel은 pt-0부분 넣어주기
+.dp-panel {
+  padding-top: 30px;
+  padding-bottom: 30px;
+  @include media-breakpoint-up(xl) {
+    padding-top: 40px;
+    padding-bottom: 40px;
+  }
+}
+
+.dp-bar {
+  display: inline-block;
+  width: 1px;
+  height: 14px;
+  background:$gray-400;
+  margin-left: 18px;
+  margin-right: 18px;
+  &.h10 {
+    height: 10px;
+  }
+  &.h14 {
+    height: 14px;
+  }
+  &.h18 {
+    height: 18px;
+  }
+}
+
+.btn-mr10 {
+  margin-right: 10px;
+}
+
+.form-group {
+  margin-bottom: 10px;
+  @include media-breakpoint-up(xl) {
+    margin-bottom: 20px !important;
+  }
+}
+
+// ul dot 커스텀
+.ul-dot {
+  list-style-type: none;
+  padding-left: 0;
+  margin-bottom: 0;
+  li {
+    color: $gray-700;
+    position: relative;
+    padding-left: 8px;
+    font-size: 14px;
+    letter-spacing: -.56px;
+    word-break: keep-all;
+    @include media-breakpoint-up(xl) {
+      font-size: 16px;
+      letter-spacing: -.64px;
+    }
+    &::before {
+      position: absolute;
+      left: 0;
+      top: 11px;
+      content: "";
+      width: 2px;
+      height: 2px;
+      border-radius: 50%;
+      background-color: $gray-700;
+    }
+  }
+  li + li {
+    margin-top: 6px;
+  }
+}
+
+// margin-bottom 10 ~ 100 Class 선언
+@for $i from 1 through 10 {
+  .dp-mb-#{$i}0 {
+    margin-bottom: $i * 10px !important;
+  }
+}
+
+// margin-top 10 ~ 100 Class 선언
+@for $i from 1 through 10 {
+  .dp-mt-#{$i}0 {
+    margin-top: $i * 10px !important;
+  }
+}
+
+// detail add icon 커스텀
+.detail-add {
+  list-style-type: none;
+  padding-left: 0;
+  margin-bottom: 0;
+  li {
+    color: $gray-700;
+    position: relative;
+    padding-left: 20px;
+    font-size: 14px;
+    letter-spacing: -.56px;
+    word-break: keep-all;
+
+    display: flex;
+    justify-content: space-between;
+    span:last-child > span {
+      font-size: 14px;
+      font-family: 'AttenNew', sans-serif;
+      font-weight: 500;
+      margin-right: 2px;
+      @include media-breakpoint-up(xl) {
+        font-size: 18px;
+      }
+    }
+    span:last-child {
+      display: flex;
+      align-items: baseline;
+      font-size: 12px;
+      @include media-breakpoint-up(xl) {
+        font-size: 14px;
+      }
+    }
+    @include media-breakpoint-up(xl) {
+      font-size: 16px;
+      letter-spacing: -.64px;
+    }
+    &::before {
+      position: absolute;
+      left: 0;
+      top: 0;
+      content: "";
+      width: 16px;
+      height: 16px;
+      background: url('~@/assets/common/icon/icon-detail-add-gray-16px.svg') no-repeat 0;
+      background-size: 16px;
+    }
+  }
+  li + li {
+    margin-top: 6px;
+  }
+}
+
+//결제금액 scss
+.dp-pay__btn-group {
+  position: sticky;
+  top: 200px;
+  border: solid 1px $border-color;
+
+  .dp-hr-receipt {
+    height: 1px;
+    margin-bottom: 20px;
+    background-color: $black;
+  }
+
+  .btn-group {
+    width: 100%;
+  }
+
+  .dp-pay__price-summary {
+    padding: 0 30px;
+
+    .dp-pay__price-header {
+      padding-top: 50px;
+      padding-bottom: 20px;
+    }
+
+    .summary__text {
+      font-size: 14px;
+      letter-spacing: -.56px;
+      font-weight: 400;
+      color: $gray-700;
+    }
+
+    .summary__price {
+      font-size: 14px;
+      letter-spacing: -.56px;
+      color: $black;
+      margin-bottom: 0;
+
+      span {
+        font-size: 16px;
+        letter-spacing: -.48px;
+        font-weight: 500;
+      }
+    }
+  }
+
+  .dp-pay__price-summary-list {
+    margin-bottom: 24px;
+
+    li + li {
+      margin-top: 10px;
+    }
+    .delivery-only {
+      margin-left: 4px;
+    }
+    .delivery-only-btn {
+      height: 23px;
+      border-color: $border-color;
+      border-radius: 11.5px;
+      padding: 0 7px;
+      .delivery-only-btn__text {
+        font-size: 10px;
+        letter-spacing: -.4px;
+        color: $gray-700
+      }
+    }
+    .dp-order-price__text {
+      font-size: 14px;
+      letter-spacing: -.64px;
+    }
+    .dp-order-price__text-lg {
+      font-size: 16px;
+      letter-spacing: -.48px;
+    }
+  }
+
+
+  .dp-pay__price-footer {
+    padding-top: 12px;
+    padding-bottom: 12px;
+  }
+  .footer-summary__text {
+    font-size: 16px;
+    letter-spacing: -.64px;
+  }
+  .footer-summary__text-primary {
+    text-align: right;
+  }
+  .footer-summary__price-primary {
+    font-size: 14px;
+    letter-spacing: -.56px;
+  }
+
+  .btn-group {
+    padding: 0 30px 20px 30px;
+
+  }
+
+  // 이용약관 부분
+  .order-payment-agreement {
+    padding-top: 30px;
+    padding-bottom: 30px;
+  }
+  .order-payment-agreement__list {
+    padding-top: 20px;
+  }
+  .order-payment-agreement-header {
+    padding-bottom: 20px;
+  }
+  .order-payment-agreement-header__text {
+    font-size: 13px;
+    letter-spacing: -.52px;
+  }
+  .order-payment-agreement {
+    .order-payment-check {
+      .icon-arrow-down {
+        background-image: url("~@/assets/common/icon/icon-arrow-down-gray-16px.svg");
+      }
+    }
+  }
+  .order-payment-agreement__list__ul {
+    li + li {
+      margin-top: 10px;
+    }
+  }
+  .btn-group-text {
+    font-size: 16px;
+    letter-spacing: -.64px;
+  }
+}
+
+// 가격 내역?
+.dp-price-info {
+  li {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+  li + li {
+    margin-top: 8px;
+    @include media-breakpoint-up(xl) {
+      margin-top: 10px;
+    }
+  }
+  li.price-info__history {
+    flex-direction: column;
+    .history__depth01 {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      width: 100%;
+      margin-bottom: 10px;
+    }
+    .detail-add {
+      width: 100%;
+    }
+  }
+  .price-info__key {
+    display: flex;
+    align-items: center;
+    font-size: 14px;
+    letter-spacing: -.56px;
+    color: $gray-700;
+    white-space: nowrap;
+    @include media-breakpoint-up(xl) {
+      font-size: 16px;
+      letter-spacing: -.64px;
+    }
+    .btn {
+      margin-left: 12px;
+    }
+  }
+  .price-info__value {
+    font-family: 'AttenNew', sans-serif;
+    font-size: 14px;
+    letter-spacing: -.42px;
+    color: $black;
+    font-weight: 500;
+    @include media-breakpoint-up(xl) {
+      font-size: 18px;
+      letter-spacing: -.54px;
+    }
+  }
+  .price-info__unit {
+    font-size: 12px;
+    letter-spacing: -.48px;
+    font-weight: 400;
+    margin-left: 2px;
+    @include media-breakpoint-up(xl) {
+      font-size: 14px;
+      letter-spacing: -.56px;
+    }
+  }
+}
+
+.text-underline {
+  text-decoration: underline;
+}
+
+.word-break-all {
+  word-break: break-all;
+}
+
+.empty-data {
+  margin-top: 80px;
+  margin-bottom: 80px;
+  font-size: 14px;
+  letter-spacing: -.56px;
+  color: $gray-700;
+  text-align: center;
+  @include media-breakpoint-up(xl) {
+    font-size: 18px;
+    letter-spacing: -.72px;
+    color: $gray-700;
+    text-align: center;
+  }
+}

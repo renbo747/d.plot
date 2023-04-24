@@ -1,0 +1,28 @@
+.like-button {
+  width: 32px;
+  height: 32px;
+  background: rgba(17,17,17,.2);
+  border-radius: 50%;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+
+  @include media-breakpoint-up(lg) {
+    width: 42px;
+    height: 42px;
+  }
+
+  i {
+    line-height: 0;
+  }
+
+  img {
+    width: 18px;
+    height: 18px;
+    cursor: pointer;
+    @include media-breakpoint-up(lg) {
+      width: 24px;
+      height: 24px;
+    }
+  }
+}

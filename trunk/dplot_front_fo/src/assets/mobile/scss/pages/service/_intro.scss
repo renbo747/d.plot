@@ -1,0 +1,114 @@
+.service-intro {
+  margin-bottom: 30px;
+  .intro-body {
+    margin-top: 30px;
+  }
+  .intro-sub-title {
+    font-size: 18px;
+    letter-spacing: -.72px;
+    font-weight: 700;
+    margin-bottom: 10px;
+  }
+  .intro-text {
+    font-size: 14px;
+    letter-spacing: -.56px;
+    line-height: 22px;
+    color: $gray-700;
+    margin-bottom: 40px;
+    b {
+      color: $black;
+    }
+  }
+
+  .intro-contents-box {
+    margin: 0 -20px;
+    //padding: 38px 0 40px 0;
+    //background: $gray-800;
+    margin-bottom: 40px;
+    .intro-figure {
+      margin-bottom: 20px;
+      img {
+        width: 100%;
+      }
+    }
+    .intro-contents {
+      color: #fff;
+      text-align: center;
+      padding: 0 50px;
+      .content-text {
+        font-size: 14px;
+        line-height: 22px;
+        letter-spacing: -.56px;
+        margin-bottom: 0;
+      }
+    }
+  }
+  .intro-procedure {
+    .procedure-ul {
+      li {
+        position: relative;
+      }
+      li + li {
+        margin-top: 36px;
+        &:before {
+          position: absolute;
+          top: 0;
+          left: 50%;
+          transform: translate(-50%, -150%);
+          display: block;
+          content: '';
+          width: 20px;
+          height: 20px;
+          background: url("~@/assets/common/icon/icon-service-down-arrow.svg") no-repeat 0;
+          background-size: cover;
+        }
+      }
+    }
+    .procedure-item {
+      display: flex;
+      align-items: center;
+      width: 100%;
+      height: 70px;
+      border-radius: 15px 0 15px 0;
+      background: $gray-100;
+      padding-left: 15px;
+    }
+    .procedure-figure {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      width: 40px;
+      height: 40px;
+      margin-right: 10px;
+      margin-bottom: 0;
+    }
+    .procedure-contents {
+      line-height: 1;
+    }
+    .procedure-title {
+      font-size: 12px;
+      letter-spacing: -.36px;
+      font-weight: 400;
+      color: $gray-600;
+      margin-bottom: 0;
+    }
+    .procedure-text {
+      display: flex;
+      align-items: center;
+      font-size: 16px;
+      letter-spacing: -.56px;
+      font-weight: 500;
+      line-height: 20px;
+      color: $black;
+    }
+    .procedure-small {
+      position: relative;
+      top: 1px;
+      display: block;
+      font-size: 12px;
+      letter-spacing: -.48px;
+      color: $gray-700;
+      margin-left: 8px;
+    }
+  }
+}

@@ -1,0 +1,23 @@
+/*
+ * Page 단위 SCSS 관리
+ * 01. Main Page
+ * 02. Shop Page
+ * 03. Service Page
+ * 04. Member page 관리
+**/
+
+@import './main/main';
+@import './magazine/magazine';
+@import './shop/shop';
+@import './shop/promotion/promotion';
+@import './service/service';
+@import './member/member';
+@import './order/order';
+@import './mypage/mypage';
+@import './search/search';
+@import './main/detail';
+// 메인 팝업 modal scss 추가 (연결 후 삭제 가능)
+@import "./main/modal";
+@import './cs/cs';
+@import './etc/etc';
+@import './invitation/invitation';

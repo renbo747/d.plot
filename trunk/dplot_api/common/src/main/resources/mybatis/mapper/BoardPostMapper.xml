@@ -1,0 +1,1880 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.dplot.mapper.BoardPostMapper">
+
+    <!-- 게시판 저장 -->
+    <insert id="insertBoardPost" parameterType="somap" useGeneratedKeys="true" keyProperty="idx">
+        /* insertBoardPost */
+        INSERT INTO t_board_post
+            (
+            siteid, subject, userno, writer, content, linkurl1, linkurl2, ip, hits, istrash, regdate, isessnotice,
+            ispapopnotice, poststtime, postedtime, isallagree, postst, mumembertype, boardtype, faqtype,
+            <if test="sortnum != null and boardtype != null">sortnum,</if>
+            notice_desc, isrightnow, muappchtype, istopfix, mobilecontent, topfixsttime,
+            topedtime, isfaqmain
+        )
+        VALUES (
+        #{siteid, jdbcType=VARCHAR},
+        #{subject, jdbcType=VARCHAR},
+        #{userno, jdbcType=INTEGER},
+        #{writer, jdbcType=VARCHAR},
+        #{content, jdbcType=VARCHAR},
+        #{linkurl1, jdbcType=VARCHAR},
+        #{linkurl2, jdbcType=VARCHAR},
+        #{ip},
+        #{hits},
+        #{istrash},
+        now(),
+        #{isessnotice},
+        #{ispapopnotice},
+        <choose>
+            <when test='isrightnow != null and isrightnow == "T"'>    -- 즉시등록(현재시간)
+                date_format(now(), '%Y%m%d%H%i'),
+            </when>
+            <otherwise>
+                #{poststtime, jdbcType=VARCHAR},
+            </otherwise>
+        </choose>
+        #{postedtime, jdbcType=VARCHAR},
+        #{isallagree, jdbcType=CHAR},
+        #{postst, jdbcType=VARCHAR},
+        #{mumembertype, jdbcType=VARCHAR},
+        #{boardtype, jdbcType=VARCHAR},
+        #{faqtype, jdbcType=VARCHAR},
+        <if test="sortnum != null and boardtype != null">
+            (
+                SELECT a.sortnum
+                FROM (
+                SELECT ifnull(max(sortnum) + 1, 1) AS sortnum
+                FROM t_board_post
+                WHERE boardtype = #{boardtype}
+                ) a
+            ),
+        </if>
+        #{notice_desc, jdbcType=VARCHAR},
+        #{isrightnow, jdbcType=CHAR},
+        #{muappchtype, jdbcType=VARCHAR},
+        #{istopfix, jdbcType=CHAR},
+        #{mobilecontent, jdbcType=VARCHAR},
+        #{topfixsttime, jdbcType=VARCHAR},
+        #{topedtime, jdbcType=VARCHAR},
+        #{isfaqmain, jdbcType=VARCHAR}
+        )
+    </insert>
+
+    <!-- 게시판 조회수 증가 -->
+    <update id="updateBoardHits" parameterType="String">
+        /* updateBoardHits */
+        UPDATE t_board_post
+        SET Hits = (Hits + 1)
+        WHERE Idx = #{idx}
+    </update>
+
+    <!--  게시판 변경  -->
+    <update id="updateBoardPost" parameterType="somap">
+        /* updateBoardPost */
+        update t_board_post
+        <set>
+            <if test="subject != null">
+                subject = #{subject},
+            </if>
+            <if test="content != null">
+                content = #{content},
+            </if>
+            <if test="linkurl1 != null">
+                linkurl1 = #{linkurl1},
+            </if>
+            <if test="linkurl2 != null">
+                linkurl2 = #{linkurl2},
+            </if>
+            <if test="istrash != null">
+                istrash = #{istrash},
+            </if>
+            <if test="isessnotice != null">
+                isessnotice = #{isessnotice},
+            </if>
+            <if test="ispapopnotice != null">
+                ispapopnotice = #{ispapopnotice},
+            </if>
+            <if test="poststtime != null">
+                poststtime = #{poststtime},
+            </if>
+            <if test="postedtime != null">
+                postedtime = #{postedtime},
+            </if>
+            <if test="isallagree != null">
+                isallagree = #{isallagree},
+            </if>
+            <if test="postst != null">
+                postst = #{postst},
+            </if>
+            <if test="mumembertype != null">
+                mumembertype = #{mumembertype},
+            </if>
+            <if test="boardtype != null">
+                boardtype = #{boardtype},
+            </if>
+            <if test="faqtype != null">
+                faqtype = #{faqtype},
+            </if>
+            <if test="sortnum != null">
+                sortnum = #{sortnum},
+            </if>
+            <if test="notice_desc != null">
+                notice_desc = #{notice_desc},
+            </if>
+            <if test="isrightnow != null">
+                isrightnow = #{isrightnow},
+            </if>
+            <if test="muappchtype != null">
+                muappchtype = #{muappchtype},
+            </if>
+            <if test="istopfix != null">
+                istopfix = #{istopfix},
+            </if>
+            <if test="mobilecontent != null">
+                mobilecontent = #{mobilecontent},
+            </if>
+            <if test="topfixsttime != null">
+                topfixsttime = #{topfixsttime},
+            </if>
+            <if test="topedtime != null">
+                topedtime = #{topedtime},
+            </if>
+            <if test="moduserid != null">
+                moduserid = #{moduserid},
+            </if>
+            <if test="istrash != null">
+                istrash = #{istrash},
+            </if>
+            <if test="isdisplay != null">
+            	isdisplay = #{isdisplay},
+            </if>
+            <if test="isfaqmain != null">
+            	isfaqmain = #{isfaqmain},
+            </if>
+            moddate = now()
+        </set>
+        WHERE 1 = 1
+        <choose>
+            <when test="idxlist == null or idxlist.size == 0">
+                <if test="idx != null and idx != ''">
+                    AND idx = #{idx}
+                </if>
+            </when>
+            <otherwise>
+                AND idx IN
+                <foreach collection="idxlist" index="index" item="item" separator="," open="(" close=")">
+                    #{item}
+                </foreach>
+            </otherwise>
+        </choose>
+    </update>
+
+    <!-- 게시판 순서 변경 -->
+    <update id="updateBoardSortNum" parameterType="somap">
+        /* updateBoardSortNum */
+        UPDATE t_board_post
+        SET sortnum =
+            CASE idx
+            <foreach collection="list" index="index" item="item">
+                WHEN #{item.idx} THEN #{item.sortnum}
+            </foreach>
+            END
+        WHERE 1 = 1
+        AND siteid = #{siteid}
+        AND boardtype = #{boardtype}
+        AND idx in
+        <foreach collection="list" index="index" item="item" separator="," open="(" close=")">
+            #{item.idx}
+        </foreach>
+    </update>
+
+    <!-- 게시판 조회 -->
+    <select id="selectBoardPostDtl" parameterType="somap" resultType="somap">
+        /* selectBoardPostDtl */
+        SELECT idx, -- idx
+            subject, -- 제목
+            userno, -- 유저 번호
+            writer, -- 작성자
+            content, -- 내용
+            linkurl1, -- 링크1
+            linkurl2, -- 링크2
+            ip, -- ip
+            hits, -- 조회수
+            istrash, -- 사용여부
+            date_format(regdate, '%Y-%m-%d')             AS regdate,      -- 등록일
+            isessnotice, -- 필독공지여부
+            ispapopnotice, -- 입점사팝업공지여부
+            poststtime, -- 게시시작일
+            postedtime, -- 게시종료일
+            isallagree, -- 전체동의여부
+            postst, -- 게시상태
+            mumembertype, -- 다중대상회원유형
+            boardtype, -- 게시판종류
+            faqtype, -- FAQ 분류
+        	isfaqmain -- faq 메인여부
+        FROM t_board_post
+        WHERE 1 = 1
+        AND siteid = #{siteid}
+        <if test="boardtype != null and boardtype != ''">
+            AND boardtype = #{boardtype} -- 게시판 종류
+        </if>
+        <if test="idx != null and idx != ''">
+            AND idx = #{idx} -- 인덱스
+        </if>
+        <choose>
+            <when test="psort == 'isessnotice_desc'">
+                ORDER BY isessnotice DESC
+            </when>
+            <when test="psort == 'isessnotice_asc'">
+                ORDER BY isessnotice ASC
+            </when>
+            <when test="psort == 'writer_desc'">
+                ORDER BY writer DESC
+            </when>
+            <when test="psort == 'writer_asc'">
+                ORDER BY writer ASC
+            </when>
+            <when test="psort == 'regdate_desc'">
+                ORDER BY regdate DESC
+            </when>
+            <when test="psort == 'regdate_asc'">
+                ORDER BY regdate ASC
+            </when>
+            <when test="psort == 'hits_desc'">
+                ORDER BY hits DESC
+            </when>
+            <when test="psort == 'hits_asc'">
+                ORDER BY hits ASC
+            </when>
+            <otherwise>
+                ORDER BY idx DESC
+            </otherwise>
+        </choose>
+    </select>
+
+    <!-- 공지 사항 게시판 페이징 조회 -->
+    <select id="selectNoticePagingList" parameterType="somap" resultType="somap">
+        /* selectNoticePagingList */
+        SELECT
+            @ROWNUM := @ROWNUM + 1 as rn
+            , a.*
+        FROM
+        (
+            SELECT
+                a.idx -- 인덱스
+                , if(a.isessnotice = 'T', '필독', '일반') AS isessnotice -- 필독
+                , a.subject -- 제목
+                , a.content
+                , a.writer -- 작성자
+                , if(a.istrash = 'F', '사용', '미사용') as istrash
+                , str_to_date(a.regdate, '%Y-%m-%d') AS regdate -- 등록일
+                , a.hits -- 조회수
+                , a.isessnotice AS `sort` -- 필독 공지 여부
+                , a.ISTOPFIX -- 상단고정
+            FROM t_board_post a
+            -- 검색 조건
+            WHERE 1 = 1
+       	 	AND a.siteid = #{siteid}
+            <if test="sword != null and sword != ''">
+                <choose>
+                    <when test="skey == 'subject'">
+                        AND a.subject LIKE concat('%',#{sword}, '%') -- 직접 (제목)
+                    </when>
+                    <when test="skey == 'writer'">
+                        AND a.writer LIKE concat('%', #{sword}, '%') -- 직접 (작성자)
+                    </when>
+                    <when test="skey == 'content'">
+                        AND a.content LIKE concat('%', #{sword}, '%') -- 직접 (내용)
+                    </when>
+                    <otherwise>
+                        AND (
+                        a.subject LIKE concat('%',#{sword}, '%') -- 직접 (제목)
+                        OR a.writer LIKE concat('%', #{sword}, '%') -- 직접 (작성자)
+                        OR a.content LIKE concat('%', #{sword}, '%') -- 직접 (내용)
+                        )
+                    </otherwise>
+                </choose>
+            </if>
+            <if test="istrash != null and istrash != ''">
+                AND a.istrash = #{istrash} -- 사용 여부
+            </if>
+            <if test="isadmin == false">
+				AND a.istrash = 'F'
+			</if>
+            <if test="startdate != null and startdate != ''">
+                AND str_to_date(a.regdate, '%Y-%m-%d') BETWEEN #{startdate} AND #{enddate}
+            </if>
+            -- /검색 조건
+            AND a.boardtype = #{boardtype}
+        ) a, (SELECT @ROWNUM := #{indexpage}) AS b
+        <choose>
+            <when test="psort == 'topfix'">
+                ORDER BY a.ISTOPFIX = 'T' DESC, REGDATE DESC
+            </when>
+            <when test="psort == 'isessnotice_desc'">
+                ORDER BY a.sort = 'T' DESC, a.idx DESC
+            </when>
+            <when test="psort == 'isessnotice_asc'">
+                ORDER BY a.sort = 'T' ASC, a.idx DESC
+            </when>
+            <when test="psort == 'writer_desc'">
+                ORDER BY a.writer DESC, a.idx DESC
+            </when>
+            <when test="psort == 'writer_asc'">
+                ORDER BY a.writer = 'T' ASC, a.idx DESC
+            </when>
+            <when test="psort == 'regdate_desc'">
+                ORDER BY a.regdate DESC, a.idx DESC
+            </when>
+            <when test="psort == 'regdate_asc'">
+                ORDER BY a.regdate ASC, a.idx DESC
+            </when>
+            <when test="psort == 'hits_desc'">
+                ORDER BY a.hits DESC, a.idx DESC
+            </when>
+            <when test="psort == 'hits_asc'">
+                ORDER BY a.hits ASC, a.idx DESC
+            </when>
+            <otherwise>
+                ORDER BY a.sort = 'T' DESC, a.idx DESC
+            </otherwise>
+        </choose>
+<!--        LIMIT #{startPage}, #{endPage}-->
+<!--        <if test="indexpage != null and indexpage != ''">-->
+<!--        LIMIT #{indexpage}, #{limit} &#45;&#45; 페이징-->
+<!--        </if>-->
+        LIMIT
+        <if test="indexpage != null and indexpage != ''">
+            #{indexpage},
+        </if> #{limit} -- 페이징
+    </select>
+
+    <!-- 공지 사항 게시판 갯수 -->
+    <select id="selectNoticeListCount" parameterType="somap" resultType="Integer">
+        /* selectNoticeListCount */
+        SELECT count(*)
+        FROM t_board_post a, (SELECT @ROWNUM := 0) AS b
+        WHERE 1 = 1
+        AND a.siteid = #{siteid}
+        -- 검색 조건
+        <if test="sword != null and sword != ''">
+            <choose>
+                <when test="skey == 'subject'">
+                    AND a.subject LIKE concat('%',#{sword}, '%') -- 직접 (제목)
+                </when>
+                <when test="skey == 'writer'">
+                    AND a.writer LIKE concat('%', #{sword}, '%') -- 직접 (작성자)
+                </when>
+                <when test="skey == 'content'">
+                    AND a.content LIKE concat('%', #{sword}, '%') -- 직접 (내용)
+                </when>
+                <otherwise>
+                    AND (
+                    a.subject LIKE concat('%',#{sword}, '%') -- 직접 (제목)
+                    OR a.writer LIKE concat('%', #{sword}, '%') -- 직접 (작성자)
+                    OR a.content LIKE concat('%', #{sword}, '%') -- 직접 (내용)
+                    )
+                </otherwise>
+            </choose>
+        </if>
+        <if test="istrash != null and istrash != ''">
+            AND a.istrash = #{istrash} -- 사용 여부
+        </if>
+        <if test="isadmin == false">
+			AND a.istrash = 'F'
+		</if>
+        AND str_to_date(a.regdate, '%Y-%m-%d') BETWEEN #{startdate} AND #{enddate}
+        -- /검색 조건
+        AND a.boardtype = #{boardtype}
+    </select>
+
+    <!-- 동의 현황 리스트 페이징 조회 -->
+    <select id="selectConsentPagingList" parameterType="somap" resultType="somap">
+        /* selectConsentPagingList */
+        SELECT @ROWNUM := @ROWNUM + 1  AS rn
+            , a.*
+        FROM (
+            SELECT
+                a.idx -- idx
+                , if(a.isallagree = 'T', '전체', count(a.userno)) AS isallagree -- 파트너사
+                , a.subject -- 제목
+                , a.writer -- 작성자
+                , date_format(a.poststtime, '%Y-%m-%d %H:%i:%s') AS poststtime
+                , date_format(a.postedtime, '%Y-%m-%d %H:%i:%s') AS postedtime
+                , a.postst -- 상태
+                , ifnull(sum(case WHEN a.isagree = 'T' AND AGREEDATE IS NOT NULL THEN 1 end), 0) AS consent -- 동의
+                , ifnull(sum(case WHEN a.isagree = 'F' AND AGREEDATE IS NOT NULL THEN 1 end), 0) AS unconsent -- 미동의
+                , a.regdate
+            FROM (
+                SELECT
+                    a.idx
+                    , a.isallagree
+                    , a.subject
+                    , a.writer
+                    , str_to_date(poststtime, '%Y%m%d%H%i') as poststtime
+                    , str_to_date(postedtime, '%Y%m%d%H%i') as postedtime
+                    , FN_GET_CODENAME_STR(postst, 'POSTST') AS postst
+                    , a.userno
+                    , tbl.isagree
+                    , a.regdate
+                    , AGREEDATE
+                FROM t_board_post a
+                    LEFT JOIN (     -- 운영중, 승인 완료된 내역
+                        SELECT a.idx, postidx, a.userno, isagree, agreedate
+                        FROM t_board_agree a
+                            JOIN t_dealer b ON a.userno = b.userno
+                        WHERE 1 = 1
+                            -- AND b.dealerst = 'DST001'
+                            -- AND b.reqdealst = 'RDS002'
+                    ) tbl ON a.idx = tbl.postidx
+                WHERE 1 = 1
+        			AND a.siteid = #{siteid}
+                    AND a.boardtype = #{boardtype}
+                    AND a.istrash = 'F'
+                    <if test="isadmin == false">
+                    	AND tbl.userno = #{dealerno}
+                    </if>
+                -- 검색 조건
+                <if test="sword != null and sword != ''">
+                    <choose>
+                        <when test="skey == 'subject'">
+                            AND a.subject LIKE concat('%',#{sword}, '%') -- 직접 (제목)
+                        </when>
+                        <when test="skey == 'writer'">
+                            AND a.writer LIKE concat('%', #{sword}, '%') -- 직접 (작성자)
+                        </when>
+                    </choose>
+                </if>
+                <choose>
+                    <when test="sdate == 'start'">
+                        AND str_to_date(poststtime, '%Y%m%d') BETWEEN #{startdate} AND #{enddate}
+                    </when>
+                    <when test="sdate == 'end'">
+                        AND str_to_date(postedtime, '%Y%m%d') BETWEEN #{startdate} aNd #{enddate}
+                    </when>
+                </choose>
+                <if test="postst != null and postst != ''">
+                    AND a.postst = #{postst}
+                </if>
+                -- /검색 조건
+            ) a, (SELECT @ROWNUM := #{startpage}) AS b
+        GROUP BY a.idx
+        ) a
+        <choose>
+            <when test="psort == 'writer_desc'">
+                ORDER BY a.writer DESC
+            </when>
+            <when test="psort == 'writer_asc'">
+                ORDER BY a.writer ASC
+            </when>
+            <when test="psort == 'startdate_desc'">
+                ORDER BY a.poststtime DESC
+            </when>
+            <when test="psort == 'startdate_asc'">
+                ORDER BY a.poststtime ASC
+            </when>
+            <when test="psort == 'enddate_desc'">
+                ORDER BY a.postedtime DESC
+            </when>
+            <when test="psort == 'enddate_asc'">
+                ORDER BY a.postedtime ASC
+            </when>
+            <when test="psort == 'postst_desc'">
+                ORDER BY a.postst DESC
+            </when>
+            <when test="psort == 'postst_asc'">
+                ORDER BY a.postst ASC
+            </when>
+            <when test="psort == 'isagree_desc'">
+                ORDER BY a.consent DESC
+            </when>
+            <when test="psort == 'isagree_asc'">
+                ORDER BY a.consent ASC
+            </when>
+            <when test="psort == 'partneragree_desc'">
+                ORDER BY a.consent DESC
+            </when>
+            <when test="psort == 'partneragree_asc'">
+                ORDER BY a.consent ASC
+            </when>
+            <when test="psort == 'isnotagree_desc'">
+                ORDER BY a.unconsent DESC
+            </when>
+            <when test="psort == 'isnotagree_asc'">
+                ORDER BY a.unconsent ASC
+            </when>
+            <otherwise>
+            	<if test="isadmin == true">
+                ORDER BY a.idx desc
+            	</if>
+            	<if test="isadmin == false">
+                ORDER BY a.postst            		
+            	</if>
+            </otherwise>
+        </choose>
+        LIMIT #{startpage}, #{endpage} -- 페이징
+    </select>
+
+    <!--  동의 현황 게시판 상세 조회  -->
+    <select id="selectConsentDetail" parameterType="somap" resultType="somap">
+        /* selectConsentDetail */
+        SELECT a.writer                                              -- 작성자
+             , a.regdate                                             -- 등록일
+             , a.isallagree                                          -- 동의여부
+             , a.postst                                              -- 게시상태
+             , fn_get_codename(#{siteid},'POSTST',a.postst) as postname
+             , concat(date_format(fullstartdate, '%Y-%m-%d %H:%i'), ' ~ ',date_format(fullenddate, '%Y-%m-%d %H:%i')) as agreetime
+             , a.subject                                             -- 제목
+             , a.ispapopnotice                                       -- 팝업공지 여부
+             , a.content                                             -- 내용
+             , a.linkurl1                                            -- 링크1
+             , a.linkurl2                                            -- 링크2
+             , date_format(fullstartdate, '%Y-%m-%d') AS startYear   -- 게시 시작일 (연월일)
+             , date_format(fullstartdate, '%H')       AS startHour   -- 게시 시작일 (시간)
+             , date_format(fullstartdate, '%i')       AS startMinute -- 게시 시작일 (분)
+             , date_format(fullenddate, '%Y-%m-%d')   AS endYear     -- 게시 종료일 (연월일)
+             , date_format(fullenddate, '%H')         AS endHour     -- 게시 종료일 (시간)
+             , date_format(fullenddate, '%i')         AS endMinute   -- 게시 종료일 (분)
+             , a.idx
+             , group_concat(a.userno ORDER BY a.postidx)  AS nolist
+             , group_concat(a.name ORDER BY a.postidx)    AS namelist
+             , group_concat(a.userid ORDER BY a.postidx)    AS useridlist
+        FROM (
+                 SELECT a.writer
+                      , date_format(a.regdate, '%Y-%m-%d')         AS regdate
+                      , a.isallagree
+                      , a.postst
+                      , a.subject
+                      , str_to_date(a.poststtime, '%Y%m%d%H%i')    AS fullStartDate
+                      , str_to_date(a.postedtime, '%Y%m%d%H%i')    AS fullEndDate
+                      , if(a.ispapopnotice = 'T', 'true', 'false') AS ispapopnotice
+                      , a.content
+                      , a.linkurl1
+                      , a.linkurl2
+                      , a.idx
+                      , b.userno
+                      , tu.userid
+                      , td.name
+                      , b.postidx
+                 FROM t_board_post a
+                          LEFT JOIN t_board_agree b ON a.idx = b.postidx
+                          LEFT JOIN t_dealer td ON b.userno = td.userno
+                          LEFT JOIN t_user tu ON td.userno = tu.no
+                 WHERE 1 = 1
+                   AND a.siteid = #{siteid}
+                   AND a.idx = #{idx}
+                   AND a.istrash = 'F'
+             ) a;
+    </select>
+
+    <!--  동의 현황 전체, 진행, 중지, 종료 조회  -->
+    <select id="selectConsentListStateCount" parameterType="somap" resultType="somap">
+        /* selectConsentListStateCount */
+        SELECT
+            count(*) as total
+            ,ifnull(sum(a.wait), 0) AS wait    -- 진행중
+            , ifnull(sum(a.ongoing), 0) AS ongoing    -- 진행중
+            , ifnull(sum(a.stop), 0) AS stop        -- 중지
+            , ifnull(sum(a.end), 0) AS end          -- 종료
+        FROM (
+            SELECT
+                a.idx
+                , a.ongoing
+                , a.stop
+                , a.end
+                , a.wait
+            FROM (
+                SELECT
+                    a.idx
+                    , (case postst WHEN 'POS001' THEN 1 ELSE 0 end) AS wait
+                    , (case postst WHEN 'POS002' THEN 1 ELSE 0 end) AS ongoing
+                    , (case postst WHEN 'POS003' THEN 1 ELSE 0 end) AS stop
+                    , (case postst WHEN 'POS004' THEN 1 ELSE 0 end) AS end
+                FROM t_board_post a
+                    LEFT JOIN t_board_agree c ON a.idx = c.postidx
+                WHERE 1 = 1
+        			AND a.siteid = #{siteid}
+                    AND a.boardtype = #{boardtype}
+                    AND a.istrash = 'F'
+                    <if test="isadmin == false">
+                    	AND c.userno = #{dealerno}
+                    </if>
+                    -- 검색 조건
+                    <if test="sword != null and sword != ''">
+                        <choose>
+                            <when test="skey == 'subject'">
+                                AND a.subject LIKE concat('%',#{sword}, '%') -- 직접 (제목)
+                            </when>
+                            <when test="skey == 'writer'">
+                                AND a.writer LIKE concat('%', #{sword}, '%') -- 직접 (작성자)
+                            </when>
+                        </choose>
+                    </if>
+                    <choose>
+                        <when test="sdate == 'start'">
+                            AND str_to_date(poststtime, '%Y%m%d') BETWEEN #{startdate} AND #{enddate}
+                        </when>
+                        <when test="sdate == 'end'">
+                            AND str_to_date(postedtime, '%Y%m%d') BETWEEN #{startdate} AND #{enddate}
+                        </when>
+                    </choose>
+                    <if test="postst != null and postst != ''">
+                        AND a.postst = #{postst}
+                    </if>
+                    -- /검색 조건
+                ) a
+            GROUP BY a.idx
+        ) a
+    </select>
+
+    <!-- FAQ 페이징 조회 -->
+    <select id="selectFaqPagingList" parameterType="somap" resultType="somap">
+        /* BoardPostMapper.xml - selectFaqPagingList FAQ 페이징 조회 */
+        SELECT *
+        	, RANK() OVER(ORDER BY CASE WHEN a.sortnum IS NULL THEN 1 ELSE 0 END, a.sortnum asc, a.idx asc) as sortno
+        FROM (
+                SELECT if(istrash = 'F', sortnum, null) as sortnum
+                		, isfaqmain
+                        , subject                                                                                      -- 제목
+                        , content                                                                                      -- 내용
+                        , fn_get_codename_str(faqtype, 'FAQTYPE')                                      AS faqtypecode      -- 분류 구분
+                        , fn_get_codename_str(mumembertype, 'MUMEMBERTYPE')                            AS mumembertype -- 노출 대상
+                        , if(istrash = 'T', '미사용', '사용')                                               AS istrash      -- 사용여부
+                        , istrash as sortistrash
+                        , writer                                                                                       -- 작성자
+                        , date_format(regdate, '%Y-%m-%d')                                             AS regdate      -- 등록일
+                        , hits                                                                                         -- 조회수
+                        , idx
+                        , faqtype
+                FROM t_board_post
+                WHERE 1 = 1
+       	 		AND siteid = #{siteid}
+                <if test="sword != null and sword != ''">
+                    <choose>
+                        <when test="skey == 'subject'">
+                            AND subject LIKE concat('%',#{sword}, '%') -- 직접 (제목)
+                        </when>
+                        <when test="skey == 'writer'">
+                            AND writer LIKE concat('%', #{sword}, '%') -- 직접 (작성자)
+                        </when>
+                        <when test="skey == 'content'">
+                            AND content LIKE concat('%', #{sword}, '%') -- 직접 (내용)
+                        </when>
+                        <otherwise>
+                            AND (
+                            subject LIKE concat('%',#{sword}, '%') -- 직접 (제목)
+                            OR writer LIKE concat('%', #{sword}, '%') -- 직접 (작성자)
+                            OR content LIKE concat('%', #{sword}, '%') -- 직접 (내용)
+                            )
+                        </otherwise>
+                    </choose>
+                </if>
+                <if test="istrash != null and istrash != ''">
+                    AND istrash = #{istrash} -- 사용 여부
+                </if>
+                <if test="faqtype != null and faqtype != ''">
+                    AND faqtype = #{faqtype}     -- 분류
+                </if>
+                <if test="sword == null or sword == ''">
+                	<if test="startdate != null and startdate != ''">
+                    	AND str_to_date(regdate, '%Y-%m-%d')  BETWEEN #{startdate} AND #{enddate}
+                	</if>
+                </if>
+                <if test='isallmumember != "T"'>
+					<if test='mumembertypearr != null and mumembertypearr.size > 0'>
+						AND
+						<foreach index="index" collection="mumembertypearr" item="_item" open="(" close=")" separator="OR" >
+							mumembertype LIKE CONCAT('%', #{_item}, '%')
+						</foreach>
+					</if>
+				</if>
+                AND boardtype = #{boardtype} -- 게시판 종류
+                ) a
+        WHERE 1 = 1
+        <choose>
+            <when test="psort == 'sortnum_desc'">
+                ORDER BY sortistrash, sortnum DESC
+            </when>
+            <when test="psort == 'sortnum_asc'">
+                ORDER BY sortistrash, sortnum ASC
+            </when>
+            <when test="psort == 'faqtype_desc'">
+                ORDER BY sortistrash, faqtype DESC
+            </when>
+            <when test="psort == 'faqtype_asc'">
+                ORDER BY sortistrash, faqtype ASC
+            </when>
+            <when test="psort == 'regdate_desc'">
+                ORDER BY sortistrash, regdate DESC
+            </when>
+            <when test="psort == 'regdate_asc'">
+                ORDER BY sortistrash, regdate ASC
+            </when>
+            <when test="psort == 'hits_desc'">
+                ORDER BY sortistrash, hits DESC
+            </when>
+            <when test="psort == 'hits_asc'">
+                ORDER BY sortistrash, hits ASC
+            </when>
+            <otherwise>
+                ORDER BY sortistrash, sortnum
+            </otherwise>
+        </choose>
+        <if test='limit != null and limit != ""'>
+            limit
+            <choose>
+                <when test='page != null and page != ""'>#{page}, #{limit}</when>
+                <otherwise>#{limit}</otherwise>
+            </choose>
+        </if>
+    </select>
+    
+    <!-- FAQ 상태 조회 -->
+    <select id="selectFaqListStateCount" resultType="somap" parameterType="somap">
+        /* selectFaqListStateCount */
+        SELECT
+             count(*) AS total
+             ,  ifnull(sum(a.use), 0) AS `use`
+             , ifnull(sum(a.unuse),0) AS unuse
+        FROM (
+                /* selectFaqPagingList */
+                SELECT a.*
+                FROM (
+                        SELECT sortnum
+                            , subject                                                                                      -- 제목
+                            , content                                                                                      -- 내용
+                            , fn_get_codename_str(faqtype, 'FAQTYPE')                                      AS faqtypecode      -- 분류 구분
+                            , if(fn_get_codename_str(mumembertype, 'MUMEMBERTYPE') = '전체', '전체', '회원유형 별') AS mumembertype -- 노출 대상
+                            , if(istrash = 'T', '미사용', '사용')                                               AS istrash      -- 사용여부
+                            , writer                                                                                       -- 작성자
+                            , date_format(regdate, '%Y-%m-%d')                                             AS regdate      -- 등록일
+                            , hits                                                                                         -- 조회수
+                            , idx
+                            , faqtype
+                            , if(istrash = 'F', 1, 0) AS `use`
+                            , if(istrash = 'T', 1, 0) AS unuse
+                        FROM t_board_post
+                        WHERE 1 = 1
+        				AND siteid = #{siteid}
+                        AND boardtype = #{boardtype} -- 게시판 종류
+                        <if test="sword != null and sword != ''">
+                            <choose>
+                                <when test="skey == 'subject'">
+                                    AND subject LIKE concat('%',#{sword}, '%') -- 직접 (제목)
+                                </when>
+                                <when test="skey == 'writer'">
+                                    AND writer LIKE concat('%', #{sword}, '%') -- 직접 (작성자)
+                                </when>
+                                <when test="skey == 'content'">
+                                    AND content LIKE concat('%', #{sword}, '%') -- 직접 (내용)
+                                </when>
+                                <otherwise>
+                                    AND (
+                                    subject LIKE concat('%',#{sword}, '%') -- 직접 (제목)
+                                    OR writer LIKE concat('%', #{sword}, '%') -- 직접 (작성자)
+                                    OR content LIKE concat('%', #{sword}, '%') -- 직접 (내용)
+                                    )
+                                </otherwise>
+                            </choose>
+                        </if>
+                        <if test="istrash != null and istrash != ''">
+                            AND istrash = #{istrash} -- 사용 여부
+                        </if>
+                        <if test="faqtype != null and faqtype != ''">
+                            AND faqtype = #{faqtype}     -- 분류
+                        </if>
+                        <if test="startdate != null and startdate != ''">
+                            AND str_to_date(regdate, '%Y-%m-%d')  BETWEEN #{startdate} AND #{enddate}
+                        </if>
+                        <if test='isallmumember != "T"'>
+							<if test='mumembertypearr != null and mumembertypearr.size > 0'>
+								AND
+								<foreach index="index" collection="mumembertypearr" item="_item" open="(" close=")" separator="OR" >
+									mumembertype LIKE CONCAT('%', #{_item}, '%')
+								</foreach>
+							</if>
+						</if>
+                    ) a
+                WHERE 1 = 1
+             ) a, (SELECT @ROWNUM := 0) AS b
+         WHERE 1 = 1
+    </select>
+
+    <!-- 이벤트 당첨자 발표 리스트 조회 -->
+    <!-- [재호] 당첨자 수 컬럼 추가되면 요청해야함 (enter isfail 여부로 판별) -->
+    <select id="selectEventAnnounceList" resultType="somap" parameterType="somap">
+        <![CDATA[
+        /* selectEventAnnounceList */
+        SELECT @rownum := @rownum + 1 as rn,
+               a.*
+        FROM (
+                 SELECT a.subject                                                        AS announcesubject -- 발표 게시물 제목
+                      , b.subject                                                        AS eventsubject    -- 이벤트 제목
+                      , count(distinct c.userno)                                         AS count           -- 당첨자
+                      , a.hits
+                      , a.writer
+                      , if(a.isrightnow = 'T', '즉시', '예약')                               AS isrightnow      -- 예약여부
+                      , date_format(str_to_date(a.poststtime, '%Y%m%d%H%i'), '%Y-%m-%d') AS poststtime      -- 게시일자
+                      , date_format(a.regdate, '%Y-%m-%d')                               AS regdate         -- 등록일자
+                      , a.idx                                                                               -- idx
+                 FROM t_board_post a
+                          LEFT JOIN t_dadaevent b ON a.idx = b.postidx
+                          LEFT JOIN t_dadaevent_enter c ON b.eventidx = c.eventidx AND c.issucc = 'T' and c.istrash ='F'
+                 WHERE 1 = 1
+        			AND a.siteid = #{siteid}
+                   AND boardtype = #{boardtype}
+                 GROUP BY a.idx, b.subject
+             ) a, (SELECT @rownum := #{startpage}) temp
+        ]]>
+        WHERE 1 = 1
+        <if test="sword != null and sword != ''">
+            <choose>
+                <when test="skey == 'announcesubject'">
+                    AND a.announcesubject LIKE concat('%',#{sword}, '%') -- 직접 (당첨자발표제목)
+                </when>
+                <when test="skey == 'eventsubject'">
+                    AND a.eventsubject LIKE concat('%', #{sword}, '%') -- 직접 (이벤트제목)
+                </when>
+                <when test="skey == 'writer'">
+                    AND a.writer LIKE concat('%', #{sword}, '%') -- 직접 (작성자명)
+                </when>
+                <otherwise>
+                    AND (
+                    a.announcesubject LIKE concat('%',#{sword}, '%') -- 직접 (당첨자발표제목)
+                    OR a.eventsubject LIKE concat('%', #{sword}, '%') -- 직접 (이벤트제목)
+                    OR a.writer LIKE concat('%', #{sword}, '%') -- 직접 (작성자명)
+                    )
+                </otherwise>
+            </choose>
+        </if>
+        <choose>
+            <when test="sdate == 'poststtime'">
+                AND a.poststtime BETWEEN #{startdate} AND #{enddate}
+            </when>
+            <when test="sdate == 'regdate'">
+                AND date_format(a.regdate,'%Y-%m-%d') BETWEEN #{startdate} AND #{enddate}
+            </when>
+            <otherwise>
+                AND (
+                a.poststtime BETWEEN #{startdate} AND #{enddate}
+                OR date_format(a.regdate,'%Y-%m-%d') BETWEEN #{startdate} AND #{enddate}
+                )
+            </otherwise>
+        </choose>
+        <choose>
+            <when test="psort == 'count_desc'">
+                ORDER BY a.count DESC
+            </when>
+            <when test="psort == 'count_asc'">
+                ORDER BY a.count ASC
+            </when>
+            <when test="psort == 'hits_desc'">
+                ORDER BY a.hits DESC
+            </when>
+            <when test="psort == 'hits_asc'">
+                ORDER BY a.hits ASC
+            </when>
+            <when test="psort == 'poststtime_desc'">
+                ORDER BY a.poststtime DESC
+            </when>
+            <when test="psort == 'poststtime_asc'">
+                ORDER BY a.poststtime ASC
+            </when>
+            <when test="psort == 'regdate_desc'">
+                ORDER BY a.regdate DESC
+            </when>
+            <when test="psort == 'regdate_asc'">
+                ORDER BY a.regdate ASC
+            </when>
+        </choose>
+        LIMIT #{startpage}, #{endpage} -- 페이징
+    </select>
+
+    <!-- 이벤트 당첨자 발표 리스트 전체 건수 -->
+    <select id="selectEventAnnounceListStateCount" resultType="somap" parameterType="somap">
+    /* selectEventAnnounceListStateCount */
+    <![CDATA[
+        SELECT count(a.idx) AS total
+        FROM (
+                 SELECT a.subject                                                        AS announcesubject,
+                        b.subject                                                        AS eventsubject,
+                        a.writer,
+                        date_format(str_to_date(a.poststtime, '%Y%m%d%H%i'), '%Y-%m-%d') AS poststtime,
+                        date_format(a.regdate, '%Y-%m-%d')                               AS regdate,
+                        a.idx
+                 FROM t_board_post a
+                          JOIN t_dadaevent b ON a.idx = b.postidx
+                 WHERE 1 = 1
+                   AND a.siteid = #{siteid}
+                   AND boardtype = #{boardtype}
+             ) a
+        WHERE 1 = 1
+    ]]>
+        <if test="sword != null and sword != ''">
+            <choose>
+                <when test="skey == 'announcesubject'">
+                    AND a.announcesubject LIKE concat('%',#{sword}, '%') -- 직접 (당첨자발표제목)
+                </when>
+                <when test="skey == 'eventsubject'">
+                    AND a.eventsubject LIKE concat('%', #{sword}, '%') -- 직접 (이벤트제목)
+                </when>
+                <when test="skey == 'writer'">
+                    AND a.writer LIKE concat('%', #{sword}, '%') -- 직접 (작성자명)
+                </when>
+                <otherwise>
+                    AND (
+                    a.announcesubject LIKE concat('%',#{sword}, '%') -- 직접 (당첨자발표제목)
+                    OR a.eventsubject LIKE concat('%', #{sword}, '%') -- 직접 (이벤트제목)
+                    OR a.writer LIKE concat('%', #{sword}, '%') -- 직접 (작성자명)
+                    )
+                </otherwise>
+            </choose>
+        </if>
+        <choose>
+            <when test="sdate == 'poststtime'">
+                AND a.poststtime BETWEEN #{startdate} AND #{enddate}
+            </when>
+            <when test="sdate == 'regdate'">
+                AND date_format(a.regdate,'%Y-%m-%d') BETWEEN #{startdate} AND #{enddate}
+            </when>
+            <otherwise>
+                AND (
+                a.poststtime BETWEEN #{startdate} AND #{enddate}
+                OR date_format(a.regdate,'%Y-%m-%d') BETWEEN #{startdate} AND #{enddate}
+                )
+            </otherwise>
+        </choose>
+    </select>
+
+    <!-- 이벤트 당첨자 발표 상세 조회 -->
+    <select id="selectEventAnnounceDetail" resultType="somap" parameterType="somap">
+        /* selectEventAnnounceDetail */
+        SELECT date_format(a.poststtime, '%Y-%m-%d') AS fromYYYYMMDD, /* selectAdminEventDtl */
+               date_format(a.poststtime, '%H')       AS fromHH,
+               date_format(a.poststtime, '%i')       AS fromMM,
+               a.*
+        FROM (
+                 SELECT a.writer,                                                                             -- 작성자
+                        ifnull(a.hits, 0)                                                      AS hits,       -- 조회수
+                        date_format(a.regdate, '%Y-%m-%d')                                     AS regdate,    -- 등록일
+                        a.subject,                                                                            -- 제목
+                        a.notice_desc,                                                                        -- 설명
+                        a.isrightnow,                                                                         -- 예약 여부
+                        a.istrash,
+                        if(a.isrightnow = 'T',
+                           concat(date_format(now(), '%Y-%m-%d '), '00:', '59'),  -- 즉시게시일 경우 현재 날짜
+                           date_format(str_to_date(a.poststtime, '%Y%m%d%H%i'), '%Y-%m-%d %H:%i') -- 예약게시일 경우 DB 데이터
+                            )                                                                  AS poststtime, -- 게시일자
+                        c.eventidx,                                                                           -- 종료 이벤트
+                        a.content,                                                                            -- pc 내용
+                        a.mobilecontent,                                                                       -- 모바일 내용
+                        date_format(a.moddate, '%Y-%m-%d')                                     AS moddate       -- 수정일자
+                 FROM t_board_post a
+                          JOIN t_dadaevent c ON a.idx = c.postidx
+                 WHERE 1 = 1
+        		   AND a.siteid = #{siteid}
+                   AND c.siteid = #{siteid}
+                   AND boardtype = #{boardtype}
+                   AND idx = #{idx}
+             ) a
+        WHERE 1 = 1
+    </select>
+
+    <!-- 이벤트 발표 저장 가능 여부 -->
+    <select id="isAdminCanSaveCheckEventAnnounce" resultType="somap" parameterType="somap">
+        SELECT if((s1 + s2) = 2, true, false) AS issave
+        FROM (
+                 SELECT if(isrightnow = 'F', true, false)                              AS s1
+                      , if(str_to_date(poststtime, '%Y%m%d%H%i') > now(), true, false) AS s2
+                 FROM t_board_post
+                 WHERE 1 = 1
+        		   AND siteid = #{siteid}
+                   AND boardtype = 'NTT004'
+                   AND idx = #{idx}
+             ) a
+        WHERE 1 = 1
+    </select>
+
+	<!-- 운영관리 공지사항 목록 조회 -->
+	<select id="selectOperationNoticeList" resultType="somap" parameterType="somap">
+        /* BoardPostMapper.xml - selectOperationNoticeList 운영관리 공지사항 목록 조회  */
+        <![CDATA[
+        SELECT 
+        		@rownum:= @rownum + 1 as no,
+        ]]>
+               a.*
+        FROM (
+                 SELECT a.subject                                                       
+                      , a.hits
+                      , a.writer
+                      , a.istopfix
+                      , if(a.isrightnow = 'T', '즉시', '예약')                               AS isrightnow      -- 예약여부
+                      , date_format(str_to_date(a.poststtime, '%Y%m%d'), '%Y-%m-%d') AS poststtime      -- 게시일자
+                      , ifnull(date_format(str_to_date(a.topedtime, '%Y%m%d'), '%Y-%m-%d'),'-') AS topedtime      -- 게시일자
+                      , date_format(a.regdate, '%Y-%m-%d')                               AS regdate         -- 등록일자
+                      , a.regdate AS sortregdate
+                      , a.poststtime AS sortpoststtime
+                      , a.topedtime AS sorttopedtime
+                      , a.idx    
+                      , FN_GET_CODENAME_STR(a.muappchtype, 'MUAPPCHTYPE') AS muappchtype                                                                        
+                      , FN_GET_CODENAME_STR(a.mumembertype, 'MUMEMBERTYPE') AS mumembertype  
+                      , if(a.isdisplay = 'T', '노출', '미노출') 			AS isdisplay 
+                      <![CDATA[
+                      , CASE WHEN a.poststtime > date_format(now(),'%Y%m%d%H%i') THEN '게시전' 
+                      WHEN a.poststtime <= date_format(now(),'%Y%m%d%H%i') THEN '게시중'
+                      END AS postst
+                      ]]>
+                 FROM t_board_post a
+                 <where>
+        			AND a.siteid = #{siteid}
+					<if test="isdisplay != null and isdisplay != ''">
+			            AND isdisplay = #{isdisplay}
+					</if>
+					AND istrash = 'F'
+					<if test="istopfix != null and istopfix != ''">
+                 		AND istopfix = #{istopfix}
+					</if>
+                 	AND boardtype = 'NTT006'
+			        <if test="sword != null and sword != ''">
+			            <choose>
+			                <when test="skey == 'subject'">
+			                    AND a.subject LIKE concat('%',#{sword}, '%')
+			                </when>
+			                <when test="skey == 'regusername'">
+			                    AND a.writer LIKE concat('%', #{sword}, '%')
+			                </when>
+			                <otherwise>
+			                    AND (
+			                    a.subject LIKE concat('%',#{sword}, '%')
+			                    OR a.writer LIKE concat('%', #{sword}, '%') -- 직접 (작성자명)
+			                    )
+			                </otherwise>
+			            </choose>
+			        </if>
+			        <choose>
+			            <when test="stype == 'poststtime'">
+			                AND date_format(str_to_date(a.poststtime, '%Y%m%d'), '%Y-%m-%d') BETWEEN #{startdate} AND #{enddate}
+			            </when>
+			            <when test="stype == 'topedtime'">
+			                AND date_format(str_to_date(a.topedtime, '%Y%m%d'), '%Y-%m-%d') BETWEEN #{startdate} AND #{enddate}
+			            </when>
+			            <when test="stype == 'regdate'">
+			                AND date_format(a.regdate, '%Y-%m-%d') BETWEEN #{startdate} AND #{enddate}
+			            </when>
+			            <otherwise>
+			                AND (
+			                    date_format(str_to_date(a.poststtime, '%Y%m%d'), '%Y-%m-%d') BETWEEN #{startdate} AND #{enddate}
+			                	OR date_format(str_to_date(a.topedtime, '%Y%m%d'), '%Y-%m-%d') BETWEEN #{startdate} AND #{enddate}
+			                    OR date_format(a.regdate, '%Y-%m-%d') BETWEEN #{startdate} AND #{enddate}
+			                )
+			            </otherwise>
+			        </choose>
+					<if test='isallmuappch != "T"'>
+				        <if test='muappchtypearr != null and muappchtypearr.size > 0'>
+							AND
+							<foreach index="index" collection="muappchtypearr" item="_item" open="(" close=")" separator="OR" >
+								a.muappchtype LIKE CONCAT('%', #{_item}, '%')
+							</foreach>
+						</if>
+					</if>
+					<if test='isallmumember != "T"'>
+						<if test='mumembertypearr != null and mumembertypearr.size > 0'>
+							AND
+							<foreach index="index" collection="mumembertypearr" item="_item" open="(" close=")" separator="OR" >
+								a.mumembertype LIKE CONCAT('%', #{_item}, '%')
+							</foreach>
+						</if>
+					</if>
+					<if test='poststarr != null and poststarr.size > 0'>
+						AND
+						<foreach index="index" collection="poststarr" item="_item" open="(" close=")" separator="OR" >
+							<if test='_item == "POS001"'>
+								<![CDATA[
+									a.poststtime > date_format(now(),'%Y%m%d%H%i')
+								]]>
+							</if>
+							<if test='_item == "POS002"'>
+								<![CDATA[
+									a.poststtime <= date_format(now(),'%Y%m%d%H%i')
+								]]>
+							</if>
+						</foreach>
+					</if>
+			        </where>
+        ) a, (SELECT @rownum := #{startpage}) temp
+        <choose>
+            <when test="psort == 'hits_desc'">
+                ORDER BY a.istopfix DESC, a.hits DESC
+            </when>
+            <when test="psort == 'hits_asc'">
+                ORDER BY a.istopfix DESC, a.hits ASC
+            </when>
+            <when test="psort == 'poststtime_desc'">
+                ORDER BY a.istopfix DESC, a.sortpoststtime DESC
+            </when>
+            <when test="psort == 'poststtime_asc'">
+                ORDER BY a.istopfix DESC, a.sortpoststtime ASC
+            </when>
+            <when test="psort == 'topedtime_desc'">
+                ORDER BY a.istopfix DESC, a.sorttopedtime DESC
+            </when>
+            <when test="psort == 'topedtime_asc'">
+                ORDER BY a.istopfix DESC, a.sorttopedtime ASC
+            </when>
+            <when test="psort == 'regdate_desc'">
+                ORDER BY a.istopfix DESC, a.sortregdate DESC
+            </when>
+            <when test="psort == 'regdate_asc'">
+                ORDER BY a.istopfix DESC, a.sortregdate ASC
+            </when>
+            <otherwise>
+                ORDER BY a.istopfix DESC, a.sortregdate DESC
+            </otherwise>
+        </choose>
+        LIMIT #{startpage}, #{endpage} -- 페이징 
+    </select>
+    
+    <!-- 운영관리 공지사항 사용여부별 수량 조회 -->
+	<select id="selectOperationNoticeUseCnt" resultType="somap" parameterType="somap">
+        /* BoardPostMapper.xml - selectOperationNoticeUseCnt 운영관리 공지사항 사용여부별 수량 조회  */
+        SELECT     
+        	count(*) AS totalcnt   
+			,IFNULL(SUM(CASE isdisplay WHEN 'T' THEN 1 ELSE 0 END), 0) AS usecnt
+			,IFNULL(SUM(CASE isdisplay WHEN 'F' THEN 1 ELSE 0 END), 0) AS trashcnt                                                                       -- idx
+        FROM t_board_post a
+        <where>
+        AND a.siteid = #{siteid}
+		<if test="isdisplay != null and isdisplay != ''">
+            AND isdisplay = #{isdisplay}
+		</if>
+		AND istrash = 'F'
+		<if test="istopfix != null and istopfix != ''">
+            AND istopfix = #{istopfix}
+		</if>
+       	AND boardtype = 'NTT006'
+        <if test="sword != null and sword != ''">
+            <choose>
+                <when test="skey == 'subject'">
+                    AND a.subject LIKE concat('%',#{sword}, '%')
+                </when>
+                <when test="skey == 'regusername'">
+                    AND a.writer LIKE concat('%', #{sword}, '%')
+                </when>
+                <otherwise>
+                    AND (
+                    a.subject LIKE concat('%',#{sword}, '%')
+                    OR a.writer LIKE concat('%', #{sword}, '%') -- 직접 (작성자명)
+                    )
+                </otherwise>
+            </choose>
+        </if>
+        <choose>
+            <when test="stype == 'poststtime'">
+                AND date_format(str_to_date(a.poststtime, '%Y%m%d'), '%Y-%m-%d') BETWEEN #{startdate} AND #{enddate}
+            </when>
+            <when test="stype == 'topedtime'">
+                AND date_format(str_to_date(a.topedtime, '%Y%m%d'), '%Y-%m-%d') BETWEEN #{startdate} AND #{enddate}
+            </when>
+            <when test="stype == 'regdate'">
+                AND date_format(a.regdate, '%Y-%m-%d') BETWEEN #{startdate} AND #{enddate}
+            </when>
+            <otherwise>
+                AND (
+                    date_format(str_to_date(a.poststtime, '%Y%m%d'), '%Y-%m-%d') BETWEEN #{startdate} AND #{enddate}
+                	OR date_format(str_to_date(a.topedtime, '%Y%m%d'), '%Y-%m-%d') BETWEEN #{startdate} AND #{enddate}
+                    OR date_format(a.regdate, '%Y-%m-%d') BETWEEN #{startdate} AND #{enddate}
+                )
+            </otherwise>
+        </choose>
+		<if test='isallmuappch != "T"'>
+	        <if test='muappchtypearr != null and muappchtypearr.size > 0'>
+				AND
+				<foreach index="index" collection="muappchtypearr" item="_item" open="(" close=")" separator="OR" >
+					a.muappchtype LIKE CONCAT('%', #{_item}, '%')
+				</foreach>
+			</if>
+		</if>
+		<if test='isallmumember != "T"'>
+			<if test='mumembertypearr != null and mumembertypearr.size > 0'>
+				AND
+				<foreach index="index" collection="mumembertypearr" item="_item" open="(" close=")" separator="OR" >
+					a.mumembertype LIKE CONCAT('%', #{_item}, '%')
+				</foreach>
+			</if>
+		</if>
+		<if test='poststarr != null and poststarr.size > 0'>
+			AND
+			<foreach index="index" collection="poststarr" item="_item" open="(" close=")" separator="OR" >
+				<if test="_item == 'POS001'">
+					<![CDATA[
+						a.poststtime < date_format(now(),'%Y%m%d%H%i')
+					]]>
+				</if>
+				<if test="_item == 'POS002'">
+					<![CDATA[
+						a.poststtime <= date_format(now(),'%Y%m%d%H%i')
+					]]>
+				</if>
+			</foreach>
+		</if>
+        </where>
+    </select>
+    
+    <!-- 운영관리 공지사항 엑셀 목록 조회 -->
+	<select id="selectOperationNoticeExcelList" resultType="HashMap" parameterType="somap">
+        /* BoardPostMapper.xml - selectOperationNoticeExcelList 운영관리 공지사항 엑셀 목록 조회  */
+        <![CDATA[
+        SELECT
+        		@rownum:= @rownum + 1 as no,
+        ]]>
+               a.*
+        FROM (
+                 SELECT a.subject                                                       
+                      , a.hits
+                      , a.writer
+                      , if(a.istopfix = 'T','●','-') AS istopfix
+                      , if(a.isrightnow = 'T', '즉시', '예약')                               AS isrightnow      -- 예약여부
+                      , date_format(str_to_date(a.poststtime, '%Y%m%d'), '%Y-%m-%d') AS poststtime      -- 게시일자
+                      , ifnull(date_format(str_to_date(a.topedtime, '%Y%m%d'), '%Y-%m-%d'),'-') AS topedtime      -- 게시일자
+                      , date_format(a.regdate, '%Y-%m-%d')                               AS regdate         -- 등록일자
+                      , a.regdate AS sortregdate
+                      , a.poststtime AS sortpoststtime
+                      , a.topedtime AS sorttopedtime
+                      , a.idx    
+                      , FN_GET_CODENAME_STR(a.muappchtype, 'MUAPPCHTYPE') AS muappchtype                                                                        
+                      , FN_GET_CODENAME_STR(a.mumembertype, 'MUMEMBERTYPE') AS mumembertype  
+                      , if(a.isdisplay = 'T', '노출', '미노출') 			AS isdisplay 
+                      <![CDATA[
+                      , CASE WHEN a.poststtime > date_format(now(),'%Y%m%d%H%i') THEN '게시전' 
+                      WHEN a.poststtime <= date_format(now(),'%Y%m%d%H%i') THEN '게시중'
+                      END AS postst
+                      ]]>
+                 FROM t_board_post a
+                 <where>
+        		 AND a.siteid = #{siteid}
+                 	<if test="isdisplay != null and isdisplay != ''">
+			            AND isdisplay = #{isdisplay}
+					</if>
+					AND istrash = 'F'
+					<if test="istopfix != null and istopfix != ''">
+			            AND istopfix = #{istopfix}
+					</if>
+                 	AND boardtype = 'NTT006'
+			        <if test="sword != null and sword != ''">
+			            <choose>
+			                <when test="skey == 'subject'">
+			                    AND a.subject LIKE concat('%',#{sword}, '%')
+			                </when>
+			                <when test="skey == 'regusername'">
+			                    AND a.writer LIKE concat('%', #{sword}, '%')
+			                </when>
+			                <otherwise>
+			                    AND (
+			                    a.subject LIKE concat('%',#{sword}, '%')
+			                    OR a.writer LIKE concat('%', #{sword}, '%') -- 직접 (작성자명)
+			                    )
+			                </otherwise>
+			            </choose>
+			        </if>
+			        <choose>
+			            <when test="stype == 'poststtime'">
+			                AND date_format(str_to_date(a.poststtime, '%Y%m%d'), '%Y-%m-%d') BETWEEN #{startdate} AND #{enddate}
+			            </when>
+			            <when test="stype == 'topedtime'">
+			                AND date_format(str_to_date(a.topedtime, '%Y%m%d'), '%Y-%m-%d') BETWEEN #{startdate} AND #{enddate}
+			            </when>
+			            <when test="stype == 'regdate'">
+			                AND date_format(a.regdate, '%Y-%m-%d') BETWEEN #{startdate} AND #{enddate}
+			            </when>
+			            <otherwise>
+			                AND (
+			                    date_format(str_to_date(a.poststtime, '%Y%m%d'), '%Y-%m-%d') BETWEEN #{startdate} AND #{enddate}
+			                	OR date_format(str_to_date(a.topedtime, '%Y%m%d'), '%Y-%m-%d') BETWEEN #{startdate} AND #{enddate}
+			                    OR date_format(a.regdate, '%Y-%m-%d') BETWEEN #{startdate} AND #{enddate}
+			                )
+			            </otherwise>
+			        </choose>
+					<if test='isallmuappch != "T"'>
+				        <if test='muappchtypearr != null and muappchtypearr.size > 0'>
+							AND
+							<foreach index="index" collection="muappchtypearr" item="_item" open="(" close=")" separator="OR" >
+								a.muappchtype LIKE CONCAT('%', #{_item}, '%')
+							</foreach>
+						</if>
+					</if>
+					<if test='isallmumember != "T"'>
+						<if test='mumembertypearr != null and mumembertypearr.size > 0'>
+							AND
+							<foreach index="index" collection="mumembertypearr" item="_item" open="(" close=")" separator="OR" >
+								a.mumembertype LIKE CONCAT('%', #{_item}, '%')
+							</foreach>
+						</if>
+					</if>
+					<if test='poststarr != null and poststarr.size > 0'>
+						AND
+						<foreach index="index" collection="poststarr" item="_item" open="(" close=")" separator="OR" >
+							<if test="_item == 'POS001'">
+								<![CDATA[
+									a.poststtime > date_format(now(),'%Y%m%d%H%i')
+								]]>
+							</if>
+							<if test="_item == 'POS002'">
+								<![CDATA[
+									a.poststtime <= date_format(now(),'%Y%m%d%H%i')
+								]]>
+							</if>
+						</foreach>
+					</if>
+			        </where>
+        ) a, (SELECT @rownum := 0) temp
+        <choose>
+            <when test="psort == 'hits_desc'">
+                ORDER BY a.istopfix DESC, a.hits DESC
+            </when>
+            <when test="psort == 'hits_asc'">
+                ORDER BY a.istopfix DESC, a.hits ASC
+            </when>
+            <when test="psort == 'poststtime_desc'">
+                ORDER BY a.istopfix DESC, a.sortpoststtime DESC
+            </when>
+            <when test="psort == 'poststtime_asc'">
+                ORDER BY a.istopfix DESC, a.sortpoststtime ASC
+            </when>
+            <when test="psort == 'topedtime_desc'">
+                ORDER BY a.istopfix DESC, a.sorttopedtime DESC
+            </when>
+            <when test="psort == 'topedtime_asc'">
+                ORDER BY a.istopfix DESC, a.sorttopedtime ASC
+            </when>
+            <when test="psort == 'regdate_desc'">
+                ORDER BY a.istopfix DESC, a.sortregdate DESC
+            </when>
+            <when test="psort == 'regdate_asc'">
+                ORDER BY a.istopfix DESC, a.sortregdate ASC
+            </when>
+            <otherwise>
+                ORDER BY a.istopfix DESC, a.sortregdate DESC
+            </otherwise>
+        </choose>
+    </select>
+    
+    
+    <!-- 운영관리 공지사항 상세조회 -->
+	<select id="selectOperationNoticeDetail" resultType="somap" parameterType="somap">
+        /* BoardPostMapper.xml - selectOperationNoticeDetail 운영관리 공지사항 상세조회  */
+        SELECT
+        	isdisplay
+        	, subject
+        	, notice_desc
+        	, content
+        	, mobilecontent
+        	, isrightnow
+        	, isrightnow as oriisrightnow
+        	, poststtime
+        	, poststtime as oripoststtime
+        	, topedtime
+        	, muappchtype
+        	, mumembertype
+        	, istopfix
+        	, writer
+        	, hits
+        	, date_format(regdate, '%Y-%m-%d') as regdate
+        	, date_format(moddate, '%Y-%m-%d') as moddate
+        FROM t_board_post
+        <where>
+        	AND siteid = #{siteid}
+        	AND idx = #{idx}
+        </where>
+    </select>
+    
+    <!-- 게시판 삭제-->
+	<update id="deleteBoardPost" parameterType="somap">
+        /* BoardPostMapper.xml - deleteBoardPost 게시판 삭제  */
+        UPDATE t_board_post
+        SET istrash = 'T'
+        WHERE idx IN
+        <foreach collection="idxlist" index="index" item="item" separator="," open="(" close=")">
+            #{item}
+        </foreach>
+    </update>
+    
+    <!-- 노출중인 공지사항 수량 조회  -->
+	<select id="selectUseCount" parameterType="somap" resultType="Integer">
+        /* BoardPostMapper.xml - selectUseCount 노출중인 공지사항 수량 조회  */
+       	SELECT count(*) as count
+       	FROM t_board_post
+       	<where>
+        	AND siteid = #{siteid}
+	       	<choose>
+	            <when test="idxlist == null or idxlist.size == 0">
+	                <if test="idx != null and idx != ''">
+	                    AND idx != #{idx}
+	                </if>
+	            </when>
+	            <otherwise>
+	                AND idx NOT IN
+	                <foreach collection="idxlist" index="index" item="item" separator="," open="(" close=")">
+	                    #{item}
+	                </foreach>
+	            </otherwise>
+	        </choose>
+	        AND DATE_FORMAT(now(), '%Y%m%d%H%i') between poststtime and ifnull(topedtime, '9999999999')
+	        AND istrash = 'F'
+	        AND isdisplay = 'T'
+	        AND boardtype = 'NTT006'
+       	</where>
+    </select>
+    
+    <!-- 노출중인 공지사항 수량 조회  -->
+	<select id="selectFaqMainCnt" parameterType="somap" resultType="Integer">
+        /* BoardPostMapper.xml - selectUseCount 노출중인 공지사항 수량 조회  */
+       	SELECT count(*) as count
+       	FROM t_board_post
+       	<where>
+       		<if test="idx != null and idx != ''">
+		       	AND idx != #{idx}   		
+       		</if>
+	        AND ISTRASH = 'F'
+	        AND ISFAQMAIN = 'T'
+	        AND BOARDTYPE = #{boardtype}
+        	AND SITEID = #{siteid}
+       	</where>
+    </select>
+    
+    <select id="selectMainFaq" parameterType="somap" resultType="somap">
+		SELECT  /* BoardPostMapper.xml  selectMainFaq 자주하는질문 메인 노출 */
+			IDX
+			, BOARDIDX
+			, BOARDGROUPIDX
+			, SUBJECT
+			, WRITER
+			, EMAIL
+			, CONTENT
+			, ISNOTICE
+			, ISSECRET
+			, HITS
+			, REGDATE
+			, POSTSTTIME
+			, POSTEDTIME
+			, POSTST
+			, BOARDTYPE
+			, FAQTYPE
+			, NOTICE_DESC
+			, ISRIGHTNOW
+			, MUAPPCHTYPE
+			, ISTOPFIX
+			, MOBILECONTENT
+			, TOPFIXSTTIME
+			, TOPEDTIME
+			, MODUSERID
+			, MODDATE
+			, (select codename from t_common_code where cmclass='faqtype' and cmcode = FAQTYPE) as faqtypename
+		FROM t_board_post 
+		WHERE 
+		BOARDTYPE ='NTT003' 
+		AND SITEID = #{siteid}
+		AND MUMEMBERTYPE like concat('%',#{dadamembertype}, '%')
+		AND ISTRASH = 'F'
+		AND ISFAQMAIN = 'T'
+		ORDER BY sortnum
+		<if test='limit !=null and limit != ""'>
+		LIMIT #{page}, #{limit}
+		</if>		
+    </select>
+    
+	<!-- 고객센터 FAQ 검색-->    
+	<select id="selectFaq" parameterType="somap" resultType="somap">	
+		SELECT /* BoardPostMapper.xml  selectFaq 고객센터 FAQ 검색 */
+			AA.*
+		FROM (SELECT FLOOR((rnum-1) / #{perpage}+1) AS PAGENUMBER, A.*
+		FROM (SELECT 
+			<![CDATA[
+			@rownum:=@rownum+1 as rnum
+			]]>
+			, tbp.IDX
+			, tbp.SUBJECT
+			, tbp.CONTENT
+			, tbp.mobilecontent
+			, tbp.HITS
+			, (select codename from t_common_code where cmclass='faqtype' and cmcode = tbp.FAQTYPE) as faqtypename 			
+		FROM T_BOARD_POST tbp
+		WHERE 
+			<![CDATA[
+			(@rownum:=0)=0
+			]]>
+			AND	tbp.BOARDTYPE = 'NTT003' 
+	        AND tbp.SITEID = #{siteid}					
+		<if test='faqtype != null and faqtype != ""'>
+			AND tbp.FAQTYPE = #{faqtype}
+		</if>
+		<choose>
+			<when test='platform == "MAC001" and searchkeyword != null and searchkeyword != ""'>
+				AND (SUBJECT LIKE concat('%',#{searchkeyword}, '%') OR CONTENT LIKE concat('%',#{searchkeyword}, '%'))
+			</when>
+			<when test='platform != "MAC001" and searchkeyword != null and searchkeyword != ""'>
+				AND (SUBJECT LIKE concat('%',#{searchkeyword}, '%') OR MOBILECONTENT LIKE concat('%',#{searchkeyword}, '%'))
+			</when>
+		</choose>
+        AND tbp.siteid = #{siteid}
+		AND tbp.ISTRASH = 'F'
+		AND tbp.MUMEMBERTYPE like concat('%',#{dadamembertype}, '%')		
+		ORDER BY tbp.SORTNUM) A) AA
+		<if test='startpage != null and startpage != ""'>
+		WHERE PAGENUMBER = #{startpage}
+		</if>		
+		<if test='limit !=null and limit != ""'>
+		LIMIT #{page}, #{limit}
+		</if>
+	</select>
+	
+	<!-- 고객센터 FAQ 총 갯수 -->    
+	<select id="selectFaqCount" parameterType="somap" resultType="Integer">	
+		SELECT 
+			count(*)
+		FROM (SELECT FLOOR((rnum-1) / #{perpage}+1) AS PAGENUMBER, A.*
+		FROM (SELECT 
+			<![CDATA[
+			@rownum:=@rownum+1 as rnum
+			]]>
+			, tbp.IDX
+			, tbp.SUBJECT
+			, tbp.CONTENT
+			, tbp.HITS		
+		FROM T_BOARD_POST tbp
+		WHERE 
+			<![CDATA[
+			(@rownum:=0)=0
+			]]>
+			AND	tbp.BOARDTYPE = 'NTT003' 
+	        AND tbp.SITEID = #{siteid}					
+		<if test='faqtype != null and faqtype != ""'>
+			AND tbp.FAQTYPE = #{faqtype}
+		</if>
+		<choose>
+			<when test='platform == "MAC001" and searchkeyword != null and searchkeyword != ""'>
+				AND (SUBJECT LIKE concat('%',#{searchkeyword}, '%') OR CONTENT LIKE concat('%',#{searchkeyword}, '%'))
+			</when>
+			<when test='platform != "MAC001" and searchkeyword != null and searchkeyword != ""'>
+				AND (SUBJECT LIKE concat('%',#{searchkeyword}, '%') OR MOBILECONTENT LIKE concat('%',#{searchkeyword}, '%'))
+			</when>
+		</choose>
+        	AND tbp.siteid = #{siteid}	
+			AND tbp.ISTRASH = 'F'
+			AND tbp.MUMEMBERTYPE like concat('%',#{dadamembertype}, '%')					
+		ORDER BY tbp.SORTNUM) A) AA
+	</select>
+	
+	<!-- 고객센터 메인 공지사항 노출 (고정 최신글 + 최신글) -->	
+	<select id="selectMainNotice" parameterType="somap" resultType="somap">
+		SELECT /* BoardPostMapper.xml  selectMainNotice 고객센터 메인 공지사항 노출 */
+		     tbp.IDX
+			,tbp.BOARDIDX
+			,tbp.BOARDGROUPIDX
+			,tbp.SUBJECT
+			,tbp.USERKIND
+			,tbp.USERNO
+			,tbp.WRITER
+			,tbp.EMAIL
+			,tbp.CONTENT
+			,tbp.GID
+			,tbp.DEPTH
+			,tbp.THREAD
+			,tbp.THUMB
+			,tbp.THUMBWIDTH
+			,tbp.THUMBHEIGHT
+			,tbp.LINKURL1
+			,tbp.LINKURL2
+			,tbp.ISNOTICE
+			,tbp.ISSECRET
+			,tbp.ISHIDDEN
+			,tbp.IP
+			,tbp.HITS
+			,tbp.ISTRASH
+			,if(DATE_ADD(regdate, interval 3 day) <![CDATA[<=]]> now(), "false", "true") as ISREAD 						/* 3일간 최신글 노출 표시 */
+			,DATE_FORMAT(tbp.REGDATE, "%Y-%m-%d") as REGDATE															/* 등록일 FO 노출용 */
+			,DATE_FORMAT(tbp.REGDATE, "%Y%m%d%H%i%s") as REGDATESORT 													/* 등록일 기준으로 시분초까지 비교해서 정렬하기 위한 컬럼 */			
+			,DATE_FORMAT(STR_TO_DATE(tbp.POSTSTTIME, "%Y%m%d%H%i%s"), "%Y-%m-%d") as POSTSTTIME							/* 게시시작일자 FO 노출용 (FO 실제 노출 사용중) */
+			,STR_TO_DATE(tbp.POSTSTTIME, "%Y%m%d%H%i%s") as POSTSTTIMESORT												/* 게시시작일자 정렬용 */
+			,tbp.ISESSNOTICE
+			,tbp.ISPAPOPNOTICE
+			,tbp.POSTEDTIME
+			,tbp.ISALLAGREE
+			,tbp.POSTST
+			,tbp.MUMEMBERTYPE
+			,tbp.BOARDTYPE
+			,tbp.FAQTYPE
+			,tbp.SORTNUM
+			,tbp.NOTICE_DESC
+			,tbp.ISRIGHTNOW
+			,tbp.MUAPPCHTYPE
+			,tbp.ISTOPFIX
+			,if((tbp.ISTOPFIX = 'T' AND STR_TO_DATE(TOPFIXSTTIME, "%Y%m%d%H%i%s")  <![CDATA[<=]]>  now() 
+				AND STR_TO_DATE(TOPEDTIME , "%Y%m%d%H%i%s")  <![CDATA[>=]]>  now()),'T','F') as FTISTOPFIX				/* FO 노출용 현재 시간 확인하여 상단 고정인지 아닌지 판별 여부  */	 					
+			,if((tbp.ISTOPFIX = 'T' AND STR_TO_DATE(TOPFIXSTTIME, "%Y%m%d%H%i%s")  <![CDATA[<=]]>  now() 
+				AND STR_TO_DATE(TOPEDTIME , "%Y%m%d%H%i%s")  <![CDATA[>=]]>  now()),TOPFIXSTTIME,null) as TOPSORTTIME 	/* 상단 고정 정렬용  */
+			,tbp.MOBILECONTENT
+			,DATE_FORMAT(STR_TO_DATE(tbp.TOPFIXSTTIME, "%Y%m%d%H%i%s"),"%Y-%m-%d") as TOPFIXSTTIME
+			,DATE_FORMAT(STR_TO_DATE(tbp.TOPEDTIME, "%Y%m%d%H%i%s"),"%Y-%m-%d") as TOPEDTIME
+			,tbp.MODUSERID
+			,tbp.MODDATE
+			,tbp.ISDISPLAY
+		FROM t_board_post tbp
+		WHERE BOARDTYPE = 'NTT006' 
+		AND ISTRASH = 'F'
+		AND ISDISPLAY = 'T'
+		AND (STR_TO_DATE(tbp.POSTSTTIME, "%Y%m%d%H%i%s") <![CDATA[<=]]> now())			
+		AND SITEID = #{siteid}
+		AND MUMEMBERTYPE like concat('%',#{dadamembertype}, '%')
+		AND MUAPPCHTYPE like concat('%',#{platform}, '%')		        	
+		ORDER BY FIELD(FTISTOPFIX, 'T') DESC, TOPSORTTIME DESC, POSTSTTIMESORT DESC, ISRIGHTNOW ASC, REGDATESORT DESC
+		<if test='startpage != null and !startpage.equals("") and endpage != null and !endpage.equals("")'>
+			LIMIT #{startpage},#{endpage}
+		</if>			
+	</select>
+	
+	<!-- 고객센터 메인 공지사항 총 개수-->	
+	<select id="selectMainNoticeCount" parameterType="somap" resultType="Integer">
+		/* BoardPostMapper.xml  selectMainNoticeCount 고객센터 메인 공지사항 총 개수 */
+		SELECT count(*) 
+		FROM(
+			SELECT
+				 tbp.IDX
+				,tbp.BOARDIDX
+				,tbp.BOARDGROUPIDX
+				,tbp.SUBJECT
+				,tbp.USERKIND
+				,tbp.USERNO
+				,tbp.WRITER
+				,tbp.EMAIL
+				,tbp.CONTENT
+				,tbp.GID
+				,tbp.DEPTH
+				,tbp.THREAD
+				,tbp.THUMB
+				,tbp.THUMBWIDTH
+				,tbp.THUMBHEIGHT
+				,tbp.LINKURL1
+				,tbp.LINKURL2
+				,tbp.ISNOTICE
+				,tbp.ISSECRET
+				,tbp.ISHIDDEN
+				,tbp.IP
+				,tbp.HITS
+				,tbp.ISTRASH
+				,if(DATE_ADD(regdate, interval 3 day) <![CDATA[<=]]> now(), "false", "true") as ISREAD 						/* 3일간 최신글 노출 표시 */
+				,DATE_FORMAT(tbp.REGDATE, "%Y-%m-%d") as REGDATE															/* 등록일 FO 노출용 */
+				,DATE_FORMAT(tbp.REGDATE, "%Y%m%d%H%i%s") as REGDATESORT 													/* 등록일 기준으로 시분초까지 비교해서 정렬하기 위한 컬럼 */			
+				,DATE_FORMAT(STR_TO_DATE(tbp.POSTSTTIME, "%Y%m%d%H%i%s"), "%Y-%m-%d") as POSTSTTIME							/* 게시시작일자 FO 노출용 (FO 실제 노출 사용중) */
+				,STR_TO_DATE(tbp.POSTSTTIME, "%Y%m%d%H%i%s") as POSTSTTIMESORT												/* 게시시작일자 정렬용 */
+				,tbp.ISESSNOTICE
+				,tbp.ISPAPOPNOTICE
+				,tbp.POSTEDTIME
+				,tbp.ISALLAGREE
+				,tbp.POSTST
+				,tbp.MUMEMBERTYPE
+				,tbp.BOARDTYPE
+				,tbp.FAQTYPE
+				,tbp.SORTNUM
+				,tbp.NOTICE_DESC
+				,tbp.ISRIGHTNOW
+				,tbp.MUAPPCHTYPE
+				,tbp.ISTOPFIX
+				,if((tbp.ISTOPFIX = 'T' AND STR_TO_DATE(TOPFIXSTTIME, "%Y%m%d%H%i%s")  <![CDATA[<=]]>  now() 
+					AND STR_TO_DATE(TOPEDTIME , "%Y%m%d%H%i%s")  <![CDATA[>=]]>  now()),'T','F') as FTISTOPFIX				/* FO 노출용 현재 시간 확인하여 상단 고정인지 아닌지 판별 여부  */	 					
+				,if((tbp.ISTOPFIX = 'T' AND STR_TO_DATE(TOPFIXSTTIME, "%Y%m%d%H%i%s")  <![CDATA[<=]]>  now() 
+					AND STR_TO_DATE(TOPEDTIME , "%Y%m%d%H%i%s")  <![CDATA[>=]]>  now()),TOPFIXSTTIME,null) as TOPSORTTIME 	/* 상단 고정 정렬용  */
+				,tbp.MOBILECONTENT
+				,DATE_FORMAT(STR_TO_DATE(tbp.TOPFIXSTTIME, "%Y%m%d%H%i%s"),"%Y-%m-%d") as TOPFIXSTTIME
+				,DATE_FORMAT(STR_TO_DATE(tbp.TOPEDTIME, "%Y%m%d%H%i%s"),"%Y-%m-%d") as TOPEDTIME
+				,tbp.MODUSERID
+				,tbp.MODDATE
+				,tbp.ISDISPLAY
+			FROM t_board_post tbp
+			WHERE BOARDTYPE = 'NTT006' 
+			AND ISTRASH = 'F'
+			AND ISDISPLAY = 'T'				
+			AND (STR_TO_DATE(tbp.POSTSTTIME, "%Y%m%d%H%i%s") <![CDATA[<=]]> now())				
+		    AND SITEID = #{siteid}
+			AND MUMEMBERTYPE like concat('%',#{dadamembertype}, '%')
+			AND MUAPPCHTYPE like concat('%',#{platform}, '%')
+			) A
+	</select>
+	
+    <!-- 공지 사항 게시판 상세 조회 -->
+    <select id="selectNoticeDetail" parameterType="somap" resultType="somap">
+        /* selectNoticeDetail */
+        SELECT subject                                               -- 제목
+             , writer                                                -- 작성자
+             , content                                               -- 내용
+             , mobilecontent                                         -- 모바일 내용
+             , linkurl1                                              -- url1
+             , linkurl2                                              -- url2
+             , istrash                                               -- 사용여부
+             , regdate                                               -- 등록일
+             , isessnotice                                           -- 필독 공지 여부
+             , ispapopnotice                                         -- 팝업 공지 여부
+             , date_format(fullstartdate, '%Y-%m-%d') AS startYear   -- 게시 시작일 (연월일)
+             , date_format(fullstartdate, '%H')       AS startHour   -- 게시 시작일 (시간)
+             , date_format(fullstartdate, '%i')       AS startMinute -- 게시 시작일 (분)
+             , date_format(fullenddate, '%Y-%m-%d')   AS endYear     -- 게시 종료일 (연월일)
+             , date_format(fullenddate, '%H')         AS endHour     -- 게시 종료일 (시간)
+             , date_format(fullenddate, '%i')         AS endMinute   -- 게시 종료일 (분)
+             , idx
+             , FN_GET_FILE_URL(idx, 'FLT001',#{imgtype}) as fullpath
+			 , if(DATE_ADD(regdate, interval 3 day) <![CDATA[<=]]> now(), "false", "true") as ISREAD
+        FROM (
+                 SELECT subject
+                      , writer
+                      , content
+                      , mobilecontent
+                      , linkurl1
+                      , linkurl2
+                      , istrash
+                      , date_format(regdate, '%Y-%m-%d')         AS regdate
+                      , if(isessnotice = 'T', 'true', 'false')   AS isessnotice
+                      , if(ispapopnotice = 'T', 'true', 'false') AS ispapopnotice
+#                       , str_to_date(poststtime, '%Y%m%d%H%i')    AS fullStartDate
+#                       , str_to_date(postedtime, '%Y%m%d%H%i')    AS fullEndDate
+                      , if(poststtime = '', date_format(now(), '%Y-%m-%d 00:00:00'), str_to_date(poststtime, '%Y%m%d%H%i')) AS fullStartDate
+                      , if(postedtime = '', date_format(now(), '%Y-%m-%d 00:00:00'), str_to_date(postedtime, '%Y%m%d%H%i')) AS fullEndDate
+                      , idx
+                 FROM t_board_post
+                 WHERE 1=1
+                 AND IDX = #{idx}
+		       	 AND SITEID = #{siteid}
+             ) AS temp
+    </select>
+    
+    <select id="selectEventFront" parameterType="somap" resultType="somap">
+		SELECT /* BoardPostMapper.xml selectEvent Front 이벤트 당첨 내용 확인 */
+			IDX
+			, BOARDIDX
+			, BOARDGROUPIDX
+			, SUBJECT
+			, USERKIND
+			, USERNO
+			, WRITER
+			, EMAIL
+			, PW
+			, CONTENT
+			, GID
+			, DEPTH
+			, THREAD
+			, THUMB
+			, THUMBWIDTH
+			, THUMBHEIGHT
+			, LINKURL1
+			, LINKURL2
+			, ISNOTICE
+			, ISSECRET
+			, ISHIDDEN
+			, IP
+			, HITS
+			, ISTRASH
+			, REGDATE
+			, ISESSNOTICE
+			, ISPAPOPNOTICE
+			, POSTSTTIME
+			, POSTEDTIME
+			, ISALLAGREE
+			, POSTST
+			, MUMEMBERTYPE
+			, BOARDTYPE
+			, FAQTYPE
+			, SORTNUM
+			, NOTICE_DESC
+			, ISRIGHTNOW
+			, MUAPPCHTYPE
+			, ISTOPFIX
+			, MOBILECONTENT
+			, TOPFIXSTTIME
+			, TOPEDTIME
+			, MODUSERID
+			, MODDATE
+			, ISDISPLAY
+			, ISFAQMAIN
+		FROM t_board_post
+		WHERE idx = #{postidx} 
+		AND SITEID = #{siteid}
+		AND BOARDTYPE ='NTT004' 
+		AND ISTRASH = 'F'
+		AND ISDISPLAY = 'T'    
+    </select>
+
+    <select id="selectBoardPostDashBoard" parameterType="somap" resultType="somap">
+        /* BoardPostMapper.xml - selectBoardPostDashBoard */
+        SELECT
+            IDX
+             , SUBJECT
+             , BOARDTYPE
+             , DATE_FORMAT(REGDATE, '%Y-%m-%d') AS REGDATE
+        FROM T_BOARD_POST
+        WHERE SITEID = #{siteid}
+        AND ISTRASH = 'F'
+        AND BOARDTYPE = #{boardtype}
+        ORDER BY REGDATE DESC
+        LIMIT 5
+    </select>
+    
+    <select id="selectBoardPostDashBoardPopup" parameterType="somap" resultType="somap">
+        /* BoardPostMapper.xml - selectBoardPostDashBoardPopup */
+        SELECT
+            IDX
+             , SUBJECT
+             , BOARDTYPE
+             , CONTENT
+             , DATE_FORMAT(REGDATE, '%Y-%m-%d') AS REGDATE
+        FROM T_BOARD_POST
+        WHERE SITEID = #{siteid}
+        AND ISTRASH = 'F'
+        AND BOARDTYPE = #{boardtype}
+        AND ISPAPOPNOTICE = 'T'
+        AND DATE_FORMAT(NOW(), '%Y%m%d%H%i') BETWEEN poststtime AND postedtime
+        <if test="noticelist != null">
+        AND idx NOT IN 
+        <foreach collection="noticelist" item="item" open="(" separator="," close=")">
+        	#{item}
+        </foreach>
+        </if>
+        ORDER BY REGDATE
+    </select>
+        
+
+    <select id="selectAgreeDashBoard" parameterType="somap" resultType="somap">
+        SELECT
+            A.IDX
+             , SUBJECT
+             , BOARDTYPE
+             , DATE_FORMAT(REGDATE, '%Y-%m-%d') AS REGDATE
+        FROM T_BOARD_POST A INNER JOIN T_BOARD_AGREE B ON A.IDX = B.POSTIDX
+        WHERE A.SITEID = #{siteid}
+          AND A.ISTRASH = 'F'
+          AND A.BOARDTYPE = #{boardtype}
+          AND B.USERNO = #{userno}
+        ORDER BY A.REGDATE DESC
+        LIMIT 5
+    </select>
+    
+    <select id="selectAgreeDashBoardPopup" parameterType="somap" resultType="somap">
+        SELECT
+            A.IDX
+             , SUBJECT
+             , CONTENT
+             , BOARDTYPE
+             , CONCAT(DATE_FORMAT(STR_TO_DATE(a.poststtime, '%Y%m%d'), '%Y-%m-%d'),' ~ ', DATE_FORMAT(STR_TO_DATE(a.postedtime, '%Y%m%d'), '%Y-%m-%d')) AS posttime
+             , DATE_FORMAT(REGDATE, '%Y-%m-%d') AS REGDATE
+        FROM T_BOARD_POST A INNER JOIN T_BOARD_AGREE B ON A.IDX = B.POSTIDX
+        WHERE A.SITEID = #{siteid}
+          AND A.ISTRASH = 'F'
+          AND A.BOARDTYPE = #{boardtype}
+          AND B.USERNO = #{userno}
+          AND ISPAPOPNOTICE = 'T'
+          AND A.POSTST = 'POS002'
+          AND DATE_FORMAT(NOW(), '%Y%m%d%H%i') BETWEEN poststtime AND postedtime
+          AND B.AGREEDATE IS NULL
+        ORDER BY A.REGDATE
+    </select>
+</mapper>

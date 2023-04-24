@@ -1,0 +1,55 @@
+<?xml version="1.0"?>
+<project xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd" xmlns="http://maven.apache.org/POM/4.0.0"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
+  <modelVersion>4.0.0</modelVersion>
+	<parent>
+		<groupId>com.dplot</groupId>
+		<artifactId>api</artifactId>
+		<version>0.0.1</version>
+	</parent>
+	
+	<artifactId>common</artifactId>
+	<packaging>jar</packaging>
+	
+	<properties>
+		<main.basedir>${project.basedir}/..</main.basedir>
+	</properties>
+	
+	<dependencies>
+		<!-- KMC본인인증 암호화모듈 -->
+		<dependency>
+		    <groupId>com.icert.comm.secu</groupId>
+		    <artifactId>IcertSecuManger</artifactId>
+		    <version>1.8</version>
+		    <scope>system</scope>
+			<systemPath>${project.basedir}/src/main/webapp/WEB-INF/lib/ICERTSecu_JDK18.jar</systemPath>
+		</dependency>
+	</dependencies>
+	
+	<build>
+		<finalName>common</finalName>
+		<!-- java 소스 경로 위치 명시 -> jar에 class 위치하도록 -->
+        <sourceDirectory>src/main/java/</sourceDirectory>
+        <!-- resource 경로는 다른 프로젝트에서 설명 -->
+        <resources></resources>
+        <plugins>
+            <plugin>
+                <!-- mavne jar plugin -->
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-jar-plugin</artifactId>
+                <version>2.3.2</version>
+                <!-- 설정 정보 -->
+                <configuration>
+                    <archive>
+                        <manifest>
+                            <!-- jar로 package 될 때 classpath 추가 옵션 -->
+                            <addClasspath>true</addClasspath>
+                            <!-- 사용되는 라이브러리나 모듈들의 경로를 lib 디렉토리로 설정 -->
+                            <classpathPrefix>src/main/java/</classpathPrefix>
+                        </manifest>
+                    </archive>
+                </configuration>
+            </plugin>
+        </plugins>
+	</build>
+</project>

@@ -1,0 +1,48 @@
+.app-setting {
+  .app-setting__login {
+    align-items: center;
+    justify-content: space-between;
+  }
+  .setting__login__text {
+    width: 100%;
+  }
+  .setting__login__text__p {
+    font-size: 16px;
+    letter-spacing: -.64px;
+  }
+  .setting__login__button {
+    width: 100%;
+    display: flex;
+    justify-content: flex-end;
+  }
+  .setting__login__btn {
+    max-width: 90px;
+    padding: 0 25px;
+    &.logout {
+      padding: 0 19px;
+    }
+  }
+  .login__btn__text {
+    font-size: 14px;
+    letter-spacing: -.64px;
+
+  }
+  .setting__login__version__text {
+    .logout {
+      align-items: center;
+    }
+  }
+  .setting__version__text__p {
+    font-size: 14px;
+    letter-spacing: -.56px;
+    line-height: 1;
+  }
+  .setting__login__version {
+    width: 100%;
+    display: flex;
+    justify-content: flex-end;
+  }
+  .icon-arrow-right {
+    line-height: 1;
+  }
+}

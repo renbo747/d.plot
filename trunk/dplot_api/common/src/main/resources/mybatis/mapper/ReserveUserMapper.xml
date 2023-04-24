@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.dplot.mapper.ReserveUserMapper">
+	
+	<!-- 적립금예약대상회원 저장 -->
+	<insert id="insertReserveUserMember" parameterType="somap">
+		/* ReserveUserMapper.xml - insertReserveUserMember 적립금예약대상회원 저장 */
+		INSERT INTO T_RESERVE_USER (
+			  RESERVEIDX	/* 적립금IDX */
+			, USERNO  		/* 회원일련번호 */
+			, REGUSERID		/* 등록자ID */
+			, REGDATE  		/* 등록일시 */
+		) VALUES
+		<foreach collection="targetmemberlist" item="data" open="" separator="," close="">
+	    (	  #{reserveidx}
+	    	, #{data.userno}
+			, #{authuserid}
+	    	, NOW()
+	    )
+	    </foreach>
+	</insert>
+</mapper>

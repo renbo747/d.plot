@@ -1,0 +1,19 @@
+/*
+ * Mobile SCSS 관리
+
+ * 01. common:         Utility Class 혹은 Common Class 관리
+ * 02. layouts:        Layout Components SCSS 관리
+ * 03. lib:            Library Original CSS 관리
+ * 04. components:     UI Components SCSS 관리
+ * 05. Pages:          Page Components SCSS 관리
+ * 06. member:         login pages&modal SCSS 관리
+
+**/
+
+@import './common';
+@import './layouts/layouts';
+@import './lib/lib';
+@import './components/components';
+@import './pages/pages';
+@import './app/app';
+

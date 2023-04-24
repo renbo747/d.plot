@@ -1,0 +1,128 @@
+.mypage-restock {
+
+  //header
+  .restock-header {
+    align-items: center;
+    justify-content: space-between;
+    padding: 20px 0;
+  }
+
+  .product-cart__header.dp-mb-20 {
+    margin-bottom: 0 !important;
+  }
+
+  .dp-btn.btn-h32 {
+    padding: 0 15px;
+  }
+
+  .total__text {
+    font-size: 14px;
+    letter-spacing: -.56px;
+    line-height: 20px;
+    margin-bottom: 0;
+    color: $gray-800;
+  }
+
+  .header-cancel__btn {
+    border: solid 1px $border-color;
+  }
+
+  .cancel__btn__text {
+    font-size: 14px;
+    letter-spacing: -.56px;
+  }
+
+  //contents
+  .restock-body {
+    padding-top: 20px;
+    padding-bottom: 64px;
+  }
+
+  .restock-list__wrap {
+    padding-top: 10px;
+    padding-bottom: 10px;
+  }
+
+  .restock-list__date {
+    font-size: 12px;
+    letter-spacing: -.36px;
+    line-height: 14px;
+    font-family: 'atten-new', sans-serif;
+  }
+
+  .restock-list__item__li {
+    position: relative;
+    border-bottom: solid 1px $border-color;
+    padding-top: 20px;
+    padding-bottom: 20px;
+    &:first-child {
+      padding-top: 0;
+    }
+  }
+
+  .restock-list__alarm {
+    margin-top: 10px;
+  }
+
+  .list__alarm__text {
+    font-size: 12px;
+    letter-spacing: -.48px;
+    line-height: 17px;
+  }
+
+  //component scss 수정
+  .product-cart__header {
+    justify-content: flex-end;
+    .base-checkbox {
+      display: none;
+    }
+  }
+
+  .product-option {
+    ul {
+      li {
+        &:last-child {
+          display: none;
+        }
+      }
+    }
+  }
+
+  // 재입고알람 없을 때
+  .restock__circle {
+    height: calc((var(--vh, 1vh) * 100) - 110px);
+    padding-top: 80px;
+
+    .restock__list__empty {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      width: 94px;
+      height: 94px;
+      border-radius: 50%;
+      background-color: $gray-100;
+    }
+
+    .icon-alarm {
+      background-image: url("~@/assets/common/icon/icon-alarm-black-64px.svg");
+    }
+
+    .restock__list__text {
+      padding-top: 20px;
+    }
+
+    .restock__list__empty__text {
+      text-align: center;
+
+      p {
+        width: 102px;
+        margin-bottom: 0;
+        color: $gray-700;
+        font-size: 14px;
+        letter-spacing: -.56px;
+        line-height: 20px;
+        word-break: keep-all;
+      }
+    }
+  }
+}

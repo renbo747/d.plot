@@ -1,0 +1,362 @@
+<template>
+  <header class="the-header dplot_v2">
+    <div class="container">
+      <div class="container-inner header__inner">
+        <div class="header__left">
+          <h1 class="logo">
+            <a href="javascript:void(0);" :class="{ 'text-black': isBlack }" @click.prevent="goHome">
+              <logo :logo-color="currentColor" :is-page-logo="true" />
+            </a>
+          </h1>
+
+          <nav class="nav">
+            <ul
+              class="list-style-none main-menu"
+            >
+              <li class="nav__list"  v-on:mouseover.stop="mouseover">
+                <a class="nav__title atten-new" style="cursor:pointer;">CATEGORY</a>
+              </li>
+              <li class="nav__list" @mouseover="mouseleave">
+                <router-link class="nav__title atten-new" :to="{name:'shop-promotion', params: { init:true}}" :class="{active: false}">PROMOTION</router-link>
+              </li>
+              <li class="nav__list" @mouseover="mouseleave">
+                <router-link class="nav__title atten-new" :to="{name:'magazine-brand', params:{init:true}}" :class="{active: false}">BRAND</router-link>
+              </li>
+              <li class="nav__list" @mouseover="mouseleave">
+                <router-link class="nav__title atten-new" to="/magazine/trend?catename=ALL" :class="{active: false}">MAGAZINE</router-link>
+              </li>
+              <!-- <li class="nav__list" @mouseover="mouseleave" v-if="false">
+                <a class="nav__title atten-new">MAGAZINE</a>
+                <ul class="nav__sub-list list-style-none" :class="{ isOpen }">
+                  <li><router-link to="/service">전체보기</router-link></li>
+                  <li><router-link to="/service">브랜드</router-link></li>
+                  <li><router-link to="/service">트렌드</router-link></li>
+                  <li><router-link to="/service">상품</router-link></li>
+                </ul>
+              </li> -->
+            </ul>
+          </nav>
+        </div>
+        <div class="header__right">
+          <div class="menu">
+            <div class="menu-icon position-relative"  v-if="!($route.path.indexOf('/search/result') > -1)">
+              <i class="menu-icon menu-icon__search" @click="onSearchBox"></i>
+              <search-relation
+                v-if="isSearchBox"
+                v-model="searchKeyword"
+                placeholder="검색어를 입력해주세요"
+                :is-mobile="false"
+              />
+            </div>
+            <i
+              class="menu-icon menu-icon__cart"
+              @click="goPage('cart')"
+              :data-count="$store.state.cartCount"
+            ></i> 
+
+            <i class="menu-icon menu-icon__profile" @click="handleMypage"></i>
+            <!--  로그아웃 상태일 때 마이페이지  -->
+            <template v-if="!$store.state.isLogin">
+              <div
+                class="my-page-logout"
+                :class="{ showMypage: this.$store.state.isMypage }"
+              >
+                <div class="login-decription">
+                  회원님이세요? 로그인해주세요. <br />
+                  더 많은 혜택을 경험하실 수 있습니다.
+                </div>
+                <b-button
+                  class="dp-btn text-white btn-h38 login-btn"
+                  variant="gray-800"
+                  squared
+                  @click="handleLogin"
+                >
+                  <span>로그인</span>
+                </b-button>
+                <div class="signup-decription">
+                  회원이 아니시라고요? 간편하게 회원가입을 해보세요. 숨겨진
+                  보석이 당신을 기다리고 있을 수 있습니다.
+                </div>
+                <b-button
+                  class="dp-btn btn-h38"
+                  variant="outline-gray-800"
+                  squared
+                  @click="handleSignUp"
+                >
+                  <span>회원가입</span>
+                </b-button>
+              </div>
+            </template>
+
+            <!--   로그인 상태일 때 마이페이지 -->
+            <template v-else>
+              <div
+                class="my-page-login"
+                :class="{ showMypage: this.$store.state.isMypage }"
+              >
+                <ul class="list-style-none">
+                  <li>
+                    <a href="#" @click.prevent="goPage('mypage-dashboard')">
+                      <span
+                        :class="{
+                          'text-underline': $route.name == 'mypage-dashboard',
+                        }"
+                        >마이페이지</span
+                      >
+                    </a>
+                  </li>
+                  <li>
+                    <a href="#" @click.prevent="goPage('mypage-like')">
+                      <span
+                        :class="{
+                          'text-underline': $route.name == 'mypage-like',
+                        }"
+                        >LIKE</span
+                      >
+                    </a>
+                  </li>
+                  <li>
+                    <a href="#" @click.prevent="goPage('mypage-my-review')">
+                      <span
+                        :class="{
+                          'text-underline': $route.name == 'mypage-my-review',
+                        }"
+                        >나의 리뷰</span
+                      >
+                    </a>
+                  </li>
+                  <li>
+                    <a href="#" @click.prevent="logout()">
+                      <span>로그아웃</span>
+                    </a>
+                  </li>
+                </ul>
+                <div class="line"></div>
+                <div class="service-center">
+                  <i class="icon__tel"></i>
+                  <a class="cursor" href="#" @click.prevent="goPage('cs-main')">고객센터</a>
+                </div>
+              </div>
+            </template>
+          </div>
+        </div>
+      </div>
+    </div>
+    <!-- 서브메뉴 배경   -->
+    <div
+      class="nav__submenu-bg"
+      :class="{ isOpen }"
+      v-on:mouseover.stop="mouseover"
+      @mouseleave="mouseleave"
+      :style="{height: `${menuHeight}px`}"
+    >
+      <div class="inner_menus">
+        <ul v-for="(item, index) in cateList" :key="index">
+          <li><router-link :to="`/shop/list/${item.idx}`">{{item.name}} ></router-link></li>
+          <li v-for="depth2Itme in item.depth2idx?.split('|')" :key="depth2Itme.split('.')[0]"><router-link :to="`/shop/list/${depth2Itme.split('.')[0]}`">{{depth2Itme.split('.')[1]}}</router-link></li>
+        </ul>
+        
+      </div>
+    </div>
+  </header>
+</template>
+
+<script>
+import KmcCert from '@views.mobile/member/KmcCert.js'
+
+export default {
+  mixins : [KmcCert],
+  props: {
+    isBlack: {
+      type: Boolean,
+      default: true,
+    },
+  },
+  data() {
+    return {
+      // 헤더 메뉴
+      isOpen: false,
+      menuHeight: 0,
+      // 프로필 클릭 시 마이페이지
+      isMypage: false,
+      isLogin: false,
+      // 장바구니 클릭 시
+      isCart: false,
+      isShowCart: true,
+      // 검색창
+      isSearchBox: false,
+      // 검색키워드
+      searchKeyword: "",
+      cateList: [],
+      memberInfo: null,
+      // 장바구니 상품 데이터
+      cartList: [],
+      shopname: "",
+    };
+  },
+
+  methods: {
+    // 메뉴 효과
+    mouseover() {
+      this.isOpen = true;
+      this.$nextTick(()=>{
+        this.computedHeight();
+      })
+    },
+    mouseleave() {
+      this.isOpen = false;
+    },
+    computedHeight() {
+      const subMenuHeight = document.querySelectorAll('.inner_menus');
+      let longest = subMenuHeight[0].clientHeight;
+      for (let i = 0; i < subMenuHeight.length; i++) {
+        if (subMenuHeight[i].clientHeight > longest) {
+          longest = subMenuHeight[i].clientHeight;
+        }
+      }
+
+      if (longest !== 0) {
+        this.menuHeight = longest + 80;
+      }
+    },
+    handleMypage() {
+      this.$store.commit("isCart", false);
+      this.$store.commit("isMypage", !this.$store.state.isMypage);
+    },
+    handleCart() {
+      this.$store.commit("isMypage", false);
+      this.$store.commit("isCart", !this.$store.state.isCart);
+    },
+    handleLogin() {
+      this.$router.push("/member/login");
+    },
+    handleSignUp() {
+      this.$store.commit("isCart", false);
+      this.$store.commit("isMypage", false);
+      this.signup();
+      //this.$router.push({ name: "member-login", params: { isSignup: true } });
+    },
+    getCateList() {
+      this.$http.post("/category/pcMain", { depth: 1 }).then((result) => {
+        if (result.statusCode == 200) {
+          this.cateList = result.data.catelist;
+          //this.shopname = result.data.shopname;
+          //this.memberInfo = result.data.memberinfo;
+          this.$util.debug("이름::" + this.shopname);
+        }
+      });
+    },
+    // 장바구니 상품삭제
+    deleteProduct(item) {
+      let cartList = this.$store.state.cartList;
+      let temp = [];
+      for (let i = 0; i < cartList.length; i++) {
+        if (item.delearno == cartList[i].delearno) {
+          temp.push(cartList[i]);
+        }
+      }
+      let cnt = 0; //주문상품
+      let addCnt = 0; //추가주문상품
+
+      for (let i = 0; i < temp.length; i++) {
+        if (temp.isaddgoods == "T") {
+            addCnt++;
+          } else {
+            cnt++;
+          }
+      }
+
+      item.istrash = "T";
+      if (cnt == 0 && addCnt > 0) {
+        this.$eventBus.$emit(
+          "alert",
+          "알림",
+          "추가상품은 단독으로 구매가 불가능합니다."
+        );
+        item.istrash = "F";
+        return false;
+      }
+
+      this.$front.saveCart(this, [item], () => {
+        this.$toast.clear();
+        this.$toast.open("상품이 삭제되었습니다.");
+        
+        if(this.$route.name == 'cart') {
+          this.$router.replace({ name: "cart" });
+        }
+      });
+    },
+    goHome() {
+      if(this.$route.name == 'order' || this.$route.name == 'order-order-success') {
+        this.$router.push({name:'shop', params:{init:true}});
+      } else{
+        this.$router.push({name:'shop', params:{init:true}});
+      }
+    },
+    goPage(pageName) {
+      this.isMypage = false;
+      this.isCart = false;
+      this.isSearchBox = false;
+      this.$router.push({ name: pageName });
+    },
+    /********************************
+     * 로그아웃
+     ********************************/
+    logout() {
+      this.$http.post("/member/logout", {}).then((result) => {
+        if (result.statusCode == 200) {
+          this.isMypage = false;
+          this.isCart = false;
+          // 리다이렉트 패스 삭제
+          this.$storage.removeSessionStorage("redirectPath");
+          // 카트삭제
+          this.$store.commit("cartList", []);
+          this.$store.commit("cartCount", 0);
+          // 메인페이지 이동
+          this.$router.replace({ name: "shop", params:{init:true}});
+        } else {
+          this.$eventBus.$emit("alert", "알림", result.message);
+        }
+      });
+    },
+    onSearchBox() {
+      this.isSearchBox = true;
+      if (this.$route.name === "search-result") {
+        this.isSearchBox = false;
+      }
+    },
+  },
+  mounted() {
+    this.$util.debug("TheHeader Called!!!!!");
+    this.getCateList();
+    this.$front.getCartGoodsCount(this);
+  },
+  computed: {
+    currentColor() {
+      return !this.isBlack ?"#fff" : "#000";
+    },
+
+  },
+  watch: {
+    "$route.name"(value) {
+      if (value == "search-result") {
+        this.searchKeyword = "";
+        this.isSearchBox = false;
+      }
+    },
+    $route() {
+      this.isOpen = false;
+    },
+  },
+};
+</script>
+
+<style scoped>
+.the-header .nav__sub-list > li {
+  width : 120px !important;
+}
+
+.modal-open .the-header {
+  padding-right:17px !important;
+}
+</style>

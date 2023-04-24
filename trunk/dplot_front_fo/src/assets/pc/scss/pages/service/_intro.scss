@@ -1,0 +1,128 @@
+.service-intro {
+  .intro-header {
+    margin-bottom: 60px;
+  }
+  .certification-body {
+    align-items: flex-start;
+    justify-content: space-between;
+    margin-bottom: 40px;
+  }
+  .certification__info {
+    width: calc(100% - 504px);
+  }
+  .intro-title {
+    font-size: 42px;
+    line-height: 40px;
+    letter-spacing: -1.26px;
+    font-weight: 700;
+    margin-bottom: 0;
+  }
+
+  .intro-sub-title {
+    font-size: 20px;
+    letter-spacing: -1px;
+    font-weight: 700;
+    margin-bottom: 30px;
+  }
+  .intro-text {
+    font-size: 18px;
+    letter-spacing: -.64px;
+    line-height: 26px;
+    color: $gray-700;
+    margin-bottom: 40px;
+  }
+
+  .intro-contents-box {
+    //margin-left: 100px;
+    .intro-figure {
+      width: 404px;
+      img {
+        width: 100%;
+      }
+    }
+    .intro-contents {
+      color: #fff;
+      text-align: center;
+      .content-title {
+        font-size: 18px;
+        font-weight: 700;
+        letter-spacing: -.72px;
+        margin-bottom: 0;
+      }
+      .content-line {
+        width: 20px;
+        height: 1px;
+        margin: 18px auto;
+        background: #fff;
+      }
+      .content-text {
+        font-size: 16px;
+        line-height: 26px;
+        letter-spacing: -.64px;
+        margin-bottom: 0;
+      }
+    }
+  }
+  .intro-procedure {
+    .procedure-ul {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      li {
+        position: relative;
+      }
+      li + li {
+        &:before {
+          position: absolute;
+          top: 50%;
+          left: -50%;
+          transform: translate(150%, -50%);
+          display: block;
+          content: '';
+          width: 30px;
+          height: 10px;
+          background: url("~@/assets/common/icon/icon-service-arrow.svg") no-repeat 0;
+          background-size: cover;
+        }
+      }
+    }
+    .procedure-item {
+      width: 190px;
+      height: 205px;
+      border: 1px solid $gray-400;
+      border-radius: 15px 0 15px 0;
+      text-align: center;
+    }
+    .procedure-figure {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      width: 64px;
+      height: 64px;
+      border-radius: 50%;
+      background: $gray-100;
+      margin: 30px auto 18px auto;
+    }
+    .procedure-title {
+      font-size: 12px;
+      letter-spacing: -.36px;
+      font-weight: 600;
+      color: $gray-600;
+      margin-bottom: 6px;
+    }
+    .procedure-text {
+      display: block;
+      font-size: 14px;
+      letter-spacing: -.56px;
+      line-height: 20px;
+      color: $black;
+    }
+    .procedure-small {
+      display: block;
+      font-size: 12px;
+      letter-spacing: -.48px;
+      color: $gray-700;
+      margin-top: 6px;
+    }
+  }
+}

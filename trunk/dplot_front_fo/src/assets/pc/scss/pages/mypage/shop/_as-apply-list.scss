@@ -1,0 +1,165 @@
+.dp-as-apply-list-pc {
+
+  .form-select {
+    height: 48px;
+  }
+  .dp-hr {
+    height: 6px;
+    background: $gray-100;
+    margin-top: 30px;
+    margin-bottom: 34px;
+  }
+  .h1 {
+    margin-top: 0;
+    margin-bottom: 0;
+    padding-bottom: 30px;
+  }
+
+  // section as-apply-list__header
+  .as-apply-list__header {
+    .header__title__area {
+      padding-bottom: 60px;
+      .header__title {
+        font-size: 26px;
+        letter-spacing: -1.04px;
+        line-height: 28px;
+        font-weight: 700;
+      }
+    }
+    .header__description__area {
+      padding-bottom: 80px;
+      .header__description {
+        font-size: 18px;
+        letter-spacing: -.72px;
+        line-height: 26px;
+        color: $gray-700;
+      }
+    }
+    .as-apply__btn-area {
+      margin-left: 206px;
+      font-size: 16px;
+      .dp-btn {
+        width: 320px;
+      }
+    }
+  }
+
+  //section as-apply-list__body
+  .as-apply-list__body {
+    .select__area {
+      padding-bottom: 54px;
+      .form-select:first-child {
+        margin-right: 20px;
+      }
+    }
+    .as-product-info__wrap {
+      &:last-child {
+        .dp-hr {
+          display: none;
+        }
+      }
+    }
+    .as-product-info__area {
+      .as-product-info__header {
+        padding-bottom: 28px;
+      }
+      .apply-date {
+        font-size: 16px;
+        letter-spacing: -.48px;
+        line-height: 22px;
+        color: $gray-800;
+      }
+      .apply-detail__btn {
+        .dp-btn {
+          width: 100px;
+          height: 32px;
+        }
+        .detail-view {
+          font-size: 14px;
+          letter-spacing: -.56px;
+          line-height: 16px;
+        }
+      }
+      .apply__product-info__area {
+        .product-info__area {
+          margin-left: 16px;
+          width: calc(100% - 350px);
+          .delivery-status {
+            color: $primary;
+            font-size: 16px;
+            letter-spacing: -.64px;
+            font-weight: 500;
+            padding-bottom: 8px;
+          }
+          .product__ctg {
+            font-size: 14px;
+            letter-spacing: -.42px;
+            font-weight: 600;
+            padding-bottom: 4px;
+            //text-transform: uppercase;
+          }
+          .product__name {
+            width: 100%;
+            font-size: 16px;
+            letter-spacing: -.64px;
+            line-height: 28px;
+            color: $gray-700;
+            display: inline-block;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+            overflow: hidden;
+          }
+          .product__option {
+            font-size: 16px;
+            letter-spacing: -.64px;
+            line-height: 28px;
+            color: $gray-700;
+          }
+        }
+        .product__count__area {
+          width: 200px;
+          text-align: center;
+          .product__count {
+            font-size: 16px;
+            letter-spacing: -.64px;
+            color: $gray-700;
+          }
+        }
+        .product__price__area {
+          width: 130px;
+          text-align: right;
+          .product__price {
+            font-size: 18px;
+            letter-spacing: -.54px;
+            font-weight: 600;
+          }
+          .price-unit {
+            font-size: 14px;
+            letter-spacing: -.56px;
+            font-weight: 400;
+            margin-left: 2px;
+          }
+        }
+      }
+    }
+
+    // 신청 목록이 비어있을 떄
+    .as__empty-apply__area {
+      padding-top: 170px;
+      .icon-empty-apply__area {
+        width: 100px;
+        height: 100px;
+        background: $gray-100;
+        border-radius: 50%;
+        margin-bottom: 20px;
+      }
+      .as__empty-apply__text {
+        font-size: 18px;
+        letter-spacing: -.72px;
+        line-height: 22px;
+        color: $gray-700;
+      }
+    }
+  }
+
+}

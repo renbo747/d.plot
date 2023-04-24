@@ -1,0 +1,387 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.dplot.mapper.DadaEventCommentMapper">
+
+    <!-- 이벤트 댓글 리스트 조회 -->
+    <select id="selectAdminDadaEventCommentList" parameterType="somap" resultType="somap">
+        <![CDATA[ /* selectAdminDadaEventCommentList */
+        WITH dept1 AS (
+            SELECT *
+            FROM t_dadaevent_comment
+            WHERE 1 = 1
+              AND depth = 1
+              AND istrash = 'F'
+        )
+        SELECT CASE
+                   WHEN a.temp = - 1 THEN 'ㄴ'
+                   WHEN a.temp < 10 THEN concat('0', a.temp)
+                   WHEN a.temp >= 10 THEN a.temp
+                   END                                                       AS rn,
+               a.commentidx,
+               a.isblind,
+               a.comment,
+               a.likecount,
+               if(a.depth = 0, a.issecret, '-') AS issecret,
+               if(a.depth = 0, a.commentcount, '-') AS commentcount,
+               a.userid,
+               a.username,
+               a.reportcount,
+               a.regdate,
+               a.depth,
+               a.upcommentidx,
+               a.userno
+        FROM (
+                 SELECT a.temp,
+                        a.commentidx,
+                        a.depth,
+                        a.eventidx,
+                        if(a.isblind = 'T', '●', '-')               AS isblind,
+                        a.comment,
+                        (SELECT count(*) FROM t_evtcomment_like el WHERE a.commentidx = el.commentidx)   AS likecount,
+                        if(a.issecret = 'T', '비밀', '일반')            AS issecret,
+                        (SELECT count(*)
+                         FROM dept1 d1
+                         WHERE a.commentidx = d1.upcommentidx
+                           AND a.depth = 0
+                        )                                           AS commentcount,
+                        a.reguserid                                 AS userid,
+                        any_value(c.name)                           AS username,
+                        (SELECT count(*) FROM t_evtcomment_report er WHERE a.commentidx = er.commentidx) AS reportcount,
+                        date_format(a.regdate, '%Y-%m-%d')          AS regdate,
+                        a.upcommentidx,
+                        c.userno
+                 FROM (
+                 	SELECT *,if(depth = 0, @rownum := @rownum + 1, -1) AS temp
+                 	FROM t_dadaevent_comment
+                    , (SELECT @rownum := 0) temp
+	                WHERE 1 = 1
+	                AND eventidx = #{eventidx}
+	                AND istrash = 'F'
+                    ORDER BY depth, regdate desc
+                 ) a
+                 LEFT JOIN t_user b ON a.reguserid = b.userid
+                 LEFT JOIN t_member c ON b.no = c.userno
+             ) a
+        ]]>
+        ORDER BY RN, UPCOMMENTIDX, regdate
+        <if test="sort != null and sort != ''">
+            <choose>
+                <when test="sort == 'regdate_desc'">
+                    , a.regdate DESC
+                </when>
+                <when test="sort == 'regdate_asc'">
+                    , a.regdate ASC
+                </when>
+            </choose>
+        </if>
+    </select>
+
+    <!-- 이벤트 댓글 추가 -->
+    <insert id="insertDadaEventComment" parameterType="somap">
+        INSERT INTO t_dadaevent_comment /* insertDadaEventComment */
+        (commentidx, eventidx, comment, issecret, upcommentidx, depth, reguserid, regdate)
+        VALUES (null, #{eventidx}, #{comment}, #{issecret}, #{upcommentidx}, #{depth}, #{reguserid}, now())
+    </insert>
+
+    <!-- 이벤트 댓글 수정 -->
+    <update id="updateDadaEventComment" parameterType="somap">
+        UPDATE t_dadaevent_comment /* updateDadaEventComment */
+        <set>
+            <if test="comment != null">
+                comment = #{comment},
+            </if>
+            <if test="issecret != null">
+                issecret = #{issecret},
+            </if>
+            <if test="upcommentidx != null">
+                upcommentidx = #{upcommentidx},
+            </if>
+            <if test="depth != null">
+                depth = #{depth},
+            </if>
+            <if test="reguserid != null">
+                reguserid = #{reguserid},
+            </if>
+            <if test="regdate != null">
+                regdate = #{regdate},
+            </if>
+            <if test="moduserid != null">
+                moduserid = #{moduserid},
+            </if>
+            <if test="moddate != null">
+                moddate = #{moddate},
+            </if>
+            <if test="istrash != null">
+                istrash = #{istrash},
+            </if>
+            <if test="isblind != null">
+                isblind = #{isblind},
+            </if>
+        </set>
+        WHERE 1 = 1
+        <if test="eventidx != null">
+            AND eventidx = #{eventidx}
+        </if>
+        <if test="commentidxlist != null">
+            AND commentidx IN
+            <foreach collection="commentidxlist" open="(" separator="," close=")" item="item">
+                #{item}
+            </foreach>
+        </if>
+    </update>
+
+    <!-- 이벤트 댓글 삭제(istrash) -->
+    <update id="deleteDadaEventComment" parameterType="somap">
+        UPDATE t_dadaevent_comment /* deleteDadaEventComment */
+        SET istrash = 'T',
+        moduserid = #{moduserid},
+        moddate = now()
+        WHERE 1 = 1
+        AND (
+        commentidx IN
+        <foreach collection="commentidxlist" open="(" separator="," close=")" item="item">
+            #{item}
+        </foreach>
+        OR
+        upcommentidx IN
+        <foreach collection="commentidxlist" open="(" separator="," close=")" item="item">
+            #{item}
+        </foreach>
+        )
+    </update>
+
+    <!-- 엑셀 다운 - 이벤트 관리 댓글 -->
+    <select id="selectAdminCommentExcelDownload" parameterType="somap" resultType="somap">
+        /* selectAdminCommentExcelDownload */
+        <![CDATA[
+        WITH dept1 AS (
+            SELECT *
+            FROM t_dadaevent_comment
+            WHERE 1 = 1
+              AND depth = 1
+              AND istrash = 'F'
+        )
+        SELECT CASE
+                   WHEN a.temp = - 1 THEN 'ㄴ'
+                   WHEN a.temp < 10 THEN concat('0', a.temp)
+                   WHEN a.temp >= 10 THEN a.temp
+            END AS rn
+             , a.*
+        FROM (
+                 SELECT a.temp
+                      , a.depth
+                      , if(a.isblind = 'T', '●', '-')                               AS isblind        -- 블라인드
+                      , a.comment                                                                     -- 댓글
+                      , (SELECT count(*)
+                         FROM t_evtcomment_like el
+                         WHERE a.commentidx = el.commentidx)                        AS likecount      -- 좋아요
+                      , CONCAT(host, imgpath, imgfname)                             AS fullpath       -- 첨부
+                      , if(a.issecret = 'T', '비밀', '일반')                            AS issecret       -- 댓글구분
+                      , (SELECT count(*)
+                         FROM dept1 d1
+                         WHERE a.commentidx = d1.upcommentidx
+                           AND a.depth = 0)                                         AS commentcount   -- 답글
+                      , a.reguserid                                                 AS userid         -- 아이디
+                      , any_value(b.name)                                           AS username       -- 이름
+                      , (SELECT count(*)
+                         FROM t_evtcomment_report er
+                         WHERE a.commentidx = er.commentidx)                        AS reportcount    -- 신고수
+                      , date_format(a.regdate, '%Y-%m-%d')                          AS regdate        -- 등록일
+                      , b.mobile                                                                      -- 휴대폰번호
+                      , (SELECT count(*)
+		                   FROM t_comcoupon_memissue cm
+		                  WHERE cm.userno = b.userno
+		                    AND cm.isdownload = 'T'
+		                    AND cm.issuedate <= now()
+		                    AND cm.usedate IS NULL)									AS couponcount    -- 쿠폰
+                      , b.lastlogindate                                                               -- 최근접속일시
+                      , b.email                                                                       -- 이메일
+                      , if(e.total_paypoint is null, 0, e.total_paypoint) 			AS totpaypoint	  -- 총적립금
+                      , if(e.total_paypoint is null, 0, e.total_paypoint) -
+                        if(e.total_usepoint is null, 0, e.total_usepoint)           AS paypoint       -- 적립금
+                      , b.lastbuydate                                                                 -- 최근구매일시
+                      , if(gender = '100', '남', '여')                                AS gender         -- 성별
+                      , if(f.total_paypoint is null, 0, f.total_paypoint) -
+                        if(f.total_usepoint is null, 0, f.total_usepoint)           AS epoint         -- e포인트
+                      , b.frstbuydate                                                                 -- 첫 구매일자
+                      , birthdate                                                                     -- 생년월일
+                      , if(e.empreserve_point is null, 0, e.empreserve_point) -
+                        if(e.empreserve_usepoint is null, 0, e.empreserve_usepoint) AS payemploypoint -- 임직원적립금
+                      , b.regdate                                                   AS memregdate     -- 가입일자
+                      , concat(b.addr, ' ', b.addrdetail)                           AS address        -- 배송지 주소
+                      , a.commentidx                                                                  -- 코멘트 인덱스
+                      , a.upcommentidx                                                                -- 코멘트 상위 인덱스
+                 FROM (
+                 	SELECT *, if(depth = 0, @rownum := @rownum + 1, -1)  AS temp 
+                 	FROM t_dadaevent_comment
+                    , (SELECT @rownum := 0) temp
+                 	WHERE 1 = 1
+                    AND eventidx = #{eventidx}
+                    AND istrash = 'F'
+                    ORDER BY depth, regdate desc
+                  ) a
+                          LEFT JOIN t_user d
+                                    ON a.reguserid = d.userid
+                          LEFT JOIN t_member b
+                                    ON d.no = b.USERNO
+                          LEFT JOIN t_file c
+                                    ON a.commentidx = c.orgidx AND c.imgtype in ('IGT023', 'IGT024')
+                          LEFT JOIN (
+                     SELECT a.userno,
+                            sum(a.paypoint)                                          as total_paypoint,
+                            sum(b.usepoint)                                         as total_usepoint,
+                            sum(case when a.isempreserve = 'T' THEN a.paypoint END)  as empreserve_point,
+                            sum(case when a.isempreserve = 'T' THEN b.usepoint END) as empreserve_usepoint
+                     FROM t_reserve_pay a
+                        LEFT JOIN (
+                            SELECT respayidx, sum(usepoint) as usepoint
+                            FROM t_reserve_use
+                            GROUP BY respayidx
+                         ) b ON a.respayidx = b.respayidx
+                     GROUP BY a.userno
+                 ) e ON b.userno = e.userno
+                          LEFT JOIN (
+                     SELECT a.userno,
+                            sum(a.paypoint) as total_paypoint,
+                            sum(b.usepoint) as total_usepoint
+                     FROM t_epoint_pay a
+                              LEFT JOIN (
+                         SELECT epopayidx, sum(usepoint) as usepoint
+                         FROM t_epoint_use
+                         GROUP BY epopayidx
+                     ) b ON a.epopayidx = b.epopayidx
+                     GROUP BY a.userno
+                 ) f ON b.userno = f.userno
+        ]]>
+             ) a
+             ORDER BY rn, a.upcommentidx, regdate
+    </select>
+    
+    <insert id="insertEventComment" parameterType="somap">
+		INSERT INTO t_dadaevent_comment
+		(
+			EVENTIDX
+			, COMMENT
+			<if test='commentidx !=null and commentidx !=""'>
+			, UPCOMMENTIDX
+			</if>			
+			, DEPTH 
+			, REGUSERID
+		) 
+		values 
+		(
+			#{eventidx}
+			, #{comment}
+			<if test='commentidx !=null and commentidx !=""'>
+			, #{commentidx}
+			</if>			
+			, #{depth}
+			, #{userid}
+		)
+    </insert>
+    
+    <select id="selectCommentListDep0" parameterType="somap" resultType="somap">
+		SELECT /* DadaEventCommentMapper.xml selectCommentListDep0 댓글 리스트 Depth 0 */
+			AA.*
+			, if(
+				(moddate is not null),
+				concat(if((DATE(now()) = DATE(AA.date)), if(TIMESTAMPDIFF(hour, AA.date, now())= 0, '방금 전', concat(TIMESTAMPDIFF(hour, AA.date, now()),'시간 전')) ,date_format(AA.date, '%Y.%m.%d %H:%i')),if((DATE(now()) = DATE(MODDATE)), if(TIMESTAMPDIFF(hour, MODDATE, now())= 0, ' ( 방금 전 ', concat(' ( ',TIMESTAMPDIFF(hour, MODDATE, now()),'시간 전')) ,concat(' ( ',date_format(MODDATE, '%Y.%m.%d %H:%i'))),'수정됨 )')
+				,if((DATE(now()) = DATE(AA.date)), if(TIMESTAMPDIFF(hour, AA.date, now())= 0, '방금 전', concat(TIMESTAMPDIFF(hour, AA.date, now()),'시간 전')) ,date_format(AA.date, '%Y.%m.%d %H:%i'))
+			) as regdate
+			, if((select userid from t_user where no = #{userno}) = REGUSERID, 'true', 'false') as own					
+			FROM (SELECT FLOOR((rnum-1) / #{perpage}+1) AS PAGENUMBER, A.*
+			FROM (SELECT 
+					@rownum:=@rownum+1 as rnum
+					, COMMENTIDX 
+					, EVENTIDX 
+					, COMMENT
+					, ISSECRET 
+					, REGUSERID 
+					, REGDATE as date
+					, MODDATE
+				FROM 
+					t_dadaevent_comment 
+				WHERE 
+					(@rownum:=0)=0
+					AND EVENTIDX = #{eventidx} 
+					AND depth = 0
+					AND istrash = 'F'
+					AND isblind = 'F'			
+				ORDER BY REGDATE DESC) A) AA
+			<if test='startpage != null and startpage != ""'>
+			WHERE pagenumber = #{startpage}				
+			</if>
+    </select>
+    
+    <select id="selectCommentListDep0_Count" parameterType="somap" resultType="Integer">
+		SELECT /* DadaEventCommentMapper.xml selectCommentListDep0_Count 댓글 리스트 Depth 0 카운트*/
+			count(*)
+			FROM (SELECT FLOOR((rnum-1) / #{perpage}+1) AS PAGENUMBER, A.*
+			FROM (SELECT 
+					@rownum:=@rownum+1 as rnum
+					, COMMENTIDX 
+					, EVENTIDX 
+					, COMMENT 
+					, REGUSERID 
+					, REGDATE as date
+				FROM 
+					t_dadaevent_comment 
+				WHERE 
+					(@rownum:=0)=0
+					AND EVENTIDX = #{eventidx} 
+					AND depth = 0
+					AND istrash = 'F'
+					AND isblind = 'F'					
+				ORDER BY REGDATE DESC) A) AA
+    </select>
+    
+    <select id="selectCommentListDep1" parameterType="somap" resultType="somap">
+		SELECT /* DadaEventCommentMapper.xml selectCommentListDep1 댓글 리스트 Depth 1 */
+			COMMENTIDX 
+			, EVENTIDX 
+			, COMMENT 
+			, REGUSERID
+		, if(
+			(moddate is not null),
+			concat(if((DATE(now()) = DATE(REGDATE)), if(TIMESTAMPDIFF(hour, REGDATE, now())= 0, '방금 전', concat(TIMESTAMPDIFF(hour, REGDATE, now()),'시간 전')) ,date_format(REGDATE, '%Y.%m.%d %H:%i')),if((DATE(now()) = DATE(MODDATE)), if(TIMESTAMPDIFF(hour, MODDATE, now())= 0, ' ( 방금 전 ', concat(' ( ',TIMESTAMPDIFF(hour, MODDATE, now()),'시간 전')) ,concat(' ( ',date_format(MODDATE, '%Y.%m.%d %H:%i')))	,'수정됨 )')
+			,if((DATE(now()) = DATE(REGDATE)), if(TIMESTAMPDIFF(hour, REGDATE, now())= 0, '방금 전', concat(TIMESTAMPDIFF(hour, REGDATE, now()),'시간 전')) ,date_format(REGDATE, '%Y.%m.%d %H:%i'))
+		) as regdate
+			, if((select userid from t_user where no = #{userno}) = REGUSERID, 'true', 'false') as own			
+		FROM 
+			t_dadaevent_comment 
+		WHERE 
+			UPCOMMENTIDX = #{commentidx}
+			AND EVENTIDX = #{eventidx}
+			AND depth = 1 
+			AND istrash = 'F'
+			AND isblind = 'F'										
+			ORDER BY REGDATE DESC    
+    </select>
+    
+    <update id="deleteComment" parameterType="somap">
+		UPDATE /* DadaEventCommentMapper.xml deleteComment 댓글 삭제 처리 */
+			t_dadaevent_comment SET ISTRASH = 'T' 
+		WHERE COMMENTIDX = #{commentidx}
+		<if test='depth == 0'> 
+		OR UPCOMMENTIDX = #{commentidx}
+		</if>
+    </update>
+    
+    <update id="updateComment" parameterType="somap">
+		UPDATE 
+			t_dadaevent_comment 
+		SET comment = #{comment}, moddate = now()
+		WHERE COMMENTIDX = #{commentidx}
+		AND depth = #{depth}
+		AND ISTRASH = 'F'    
+    </update>
+    
+    <update id="updateReport" parameterType="somap">
+		UPDATE 
+			t_dadaevent_comment 
+		SET isblind = 'T'
+		WHERE COMMENTIDX = #{commentidx}
+		AND ISTRASH = 'F'    
+    </update>
+</mapper>

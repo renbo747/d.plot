@@ -1,0 +1,13 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="48" height="48" viewBox="0 0 48 48">
+    <path data-name="사각형 6500" style="fill:none" d="M0 0h48v48H0z"/>
+    <path data-name="빼기 1" d="M6076 13747.911h-40a454.6 454.6 0 0 0 .061-6.015c.14.01.287.015.44.015a6.5 6.5 0 0 0 0-13c-.149 0-.3 0-.442.015a522.054 522.054 0 0 0-.059-6.015h40v25z" transform="translate(-6032 -13711.91)" style="stroke-linecap:round;stroke-linejoin:round;stroke:#111;stroke-width:1.5px;fill:none"/>
+    <path data-name="선 730" transform="translate(21 17.501)" style="stroke:#111;stroke-width:1.5px;fill:none" d="M0 11.998 11.998 0"/>
+    <g data-name="타원 861" transform="translate(17 18)" style="stroke:#111;stroke-width:1.5px;fill:none">
+        <circle cx="3" cy="3" r="3" style="stroke:none"/>
+        <circle cx="3" cy="3" r="2.25" style="fill:none"/>
+    </g>
+    <g data-name="타원 862" transform="translate(31 23)" style="stroke:#111;stroke-width:1.5px;fill:none">
+        <circle cx="3" cy="3" r="3" style="stroke:none"/>
+        <circle cx="3" cy="3" r="2.25" style="fill:none"/>
+    </g>
+</svg>

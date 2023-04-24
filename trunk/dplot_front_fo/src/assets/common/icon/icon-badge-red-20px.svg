@@ -1,0 +1,6 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 20 20">
+    <path data-name="사각형 6532" style="opacity:.2;fill:none" d="M0 0h20v20H0z"/>
+    <path data-name="패스 16502" d="M240 586v7l2.5-2 2.5 2v-7z" transform="translate(-232.5 -573.667)" style="stroke-linejoin:round;fill:#00b2fd;stroke:#00b2fd"/>
+    <path data-name="다각형 11" d="M10.146 2.016a1 1 0 0 1 1.775.576l.032.588a1 1 0 0 0 1.256.912l.568-.151a1 1 0 0 1 1.1 1.509l-.322.5a1 1 0 0 0 .48 1.476l.553.213a1 1 0 0 1 0 1.866l-.553.213a1 1 0 0 0-.48 1.476l.322.5a1 1 0 0 1-1.1 1.509l-.568-.151a1 1 0 0 0-1.256.912l-.032.588a1 1 0 0 1-1.775.576l-.369-.455a1 1 0 0 0-1.553 0l-.369.455a1 1 0 0 1-1.775-.576l-.032-.588a1 1 0 0 0-1.256-.912l-.568.151a1 1 0 0 1-1.1-1.509l.322-.5a1 1 0 0 0-.48-1.476l-.55-.218a1 1 0 0 1 0-1.866l.553-.213a1 1 0 0 0 .48-1.476l-.322-.5a1 1 0 0 1 1.1-1.509l.568.151a1 1 0 0 0 1.256-.912l.032-.588a1 1 0 0 1 1.775-.576l.369.455a1 1 0 0 0 1.553 0z" style="fill:#f54c2b" transform="translate(1)"/>
+    <path data-name="패스 16503" d="m240 581.971 1.727 1.821 2.523-2.125" transform="translate(-232 -573.792)" style="stroke:#fff;stroke-linecap:round;stroke-linejoin:round;fill:none"/>
+</svg>

@@ -1,0 +1,125 @@
+.service {
+  .service-top {
+    padding-top: 120px;
+    padding-bottom: 60px;
+  }
+  .service-bottom {
+    padding-top: 120px;
+    padding-bottom: 120px;
+    background: #000;
+  }
+  .service__header {
+    position: relative;
+    padding-bottom: 70px;
+    .header-text01 {
+      font-size: 60px;
+      line-height: 72px;
+      letter-spacing: -.6px;
+      margin-bottom: 50px;
+      font-weight: 600;
+    }
+    .header-text02 {
+      position: absolute;
+      top: 0;
+      right: -148px;
+      font-size: 22px;
+      font-weight: 600;
+      transform: rotate(90deg);
+      transform-origin: left top;
+      margin-bottom: 0;
+    }
+  }
+  .service-logo {
+    width: 858px;
+    img {
+      width: 100%;
+    }
+  }
+
+  .service-middle {
+    position: relative;
+  }
+
+  .service-line {
+    position: absolute;
+    top: 0;
+    left: 0;
+    font-size: 86px;
+    line-height: 96px;
+    span {
+      position: relative;
+    }
+    span:after {
+      position: absolute;
+      bottom: 15px;
+      left: 0;
+      z-index: -1;
+      content:"";
+      width: calc(100% + 10px);
+      height: 15px;
+      display: inline-block;
+      background: #ccfe00;
+    }
+  }
+
+  .service-text {
+    padding: 210px 0 0 402px;
+    font-size: 24px;
+    line-height: 44px;
+    letter-spacing: -.96px;
+  }
+
+  .service-bottom {
+    margin-bottom: -200px;
+  }
+
+  .service-bottom__title {
+    font-size: 62px;
+    font-weight: 600;
+    margin-bottom: 40px;
+    color: #ccff00;
+    text-align: center;
+  }
+
+  .service__ul {
+    display: flex;
+    justify-content: space-between;
+    li {
+      display: flex;
+      max-width: 370px;
+    }
+  }
+
+  .service-item {
+    .item__figure {
+      margin-bottom: 38px;
+      img {
+        width: 100%;
+      }
+    }
+    .item__title {
+      font-size: 32px;
+      line-height: 48px;
+      letter-spacing: -1.44px;
+      font-weight: 700;
+      color: #fff;
+      margin-bottom: 30px;
+    }
+    .item__text {
+      font-size: 18px;
+      line-height: 32px;
+      letter-spacing: -.68px;
+      color: #888;
+      margin-bottom: 40px;
+    }
+    .item__tag-group {
+      font-size: 18px;
+      line-height: 34px;
+      letter-spacing: -.88px;
+      color: #bae021;
+      span {
+        display: block;
+      }
+    }
+  }
+}

@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.dplot.mapper.AttendDetailMapper">
+
+    <select id="selectAdminAttendDetailPopupList" parameterType="somap" resultType="somap">
+        SELECT str_to_date(attenddate, '%Y-%m-%d')   AS attenddateyyyymmdd -- 출석인정대상일
+             , date_format(attenddate, '%H:%i')      AS attenddatehhii     -- 출석체크
+             , if(isattend = 'T', 'Y', 'N')          AS isattend           -- 출석인정
+             , if(isattend = 'T', '인정', notatreason) AS notatreason        -- 인정여부 사유
+             , 0                                     AS benefitpaycount    -- 혜택지급
+        FROM t_attend_detail
+        WHERE 1 = 1
+          AND eventidx = #{eventidx}
+          AND userno = #{userno}
+        ORDER BY attenddate DESC
+    </select>
+</mapper>

@@ -1,0 +1,48 @@
+html, body {
+  font-family: 'Noto Sans KR', sans-serif;
+}
+
+body {
+  width: 100%;
+  min-width: 1280px;
+  overflow-x: auto;
+  color: $black;
+}
+
+a, a:hover {
+  color: #111;
+  text-decoration: none;
+}
+
+input {
+  -webkit-appearance: none;
+  -webkit-border-radius: 0;
+}
+
+.list-style-none {
+  list-style: none;
+  margin-bottom: 0;
+  padding-left: 0;
+}
+
+.container {
+  max-width: 1280px;
+  padding-right: 0;
+  padding-left: 0;
+}
+.container-inner {
+  padding: 0 20px;
+}
+
+.row {
+  margin-left: -10px;
+  margin-right: -10px;
+}
+
+[class^="col-"] {
+  padding-left: 10px;
+  padding-right: 10px;
+}
+.pc-top-padding {
+  padding-top: 100px;
+}

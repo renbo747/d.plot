@@ -1,0 +1,37 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.dplot.mapper.DealerMemoMapper">
+
+    <insert id="insertPartnersMemo" parameterType="somap">
+        INSERT INTO T_DEALER_MEMO(USERNO,ADMINMEMO,UPTDATE,reguserid) VALUES(#{userno}, #{adminmemo}, now(), #{reguserid})  /* DealerMemoMapper.xml - insertPartnersMemo 파트너사 메모 등록 */
+    </insert>
+
+    <update id="updatePartnersMemo" parameterType="somap">
+        UPDATE T_DEALER_MEMO SET  /* DealerMemoMapper.xml - updatePartnersMemo 파트너사 메모 수정*/
+        <if test="adminmemo != null">
+            ADMINMEMO = #{adminmemo},
+        </if>
+        <if test="isuse != null and isuse != ''">
+            ISUSE = #{isuse},
+        </if>
+        UPTDATE = NOW() WHERE IDX = #{idx}
+    </update>
+
+    <select id="selectPartnsersMemo" parameterType="somap" resultType="somap">
+        SELECT /* DealerMemoMapper.xml - selectPartnsersMemo 파트너사 메모 리스트 조회 */
+        @ROWNUM := @ROWNUM+1 AS ROWNUM, IDX, ADMINMEMO, DATE_FORMAT(regdate, '%Y-%m-%d %H:%i:%s') AS regdate, regUserId, (SELECT name from t_user a LEFT JOIN t_admin b ON a.no = b.userno where userid = aa.reguserid) as regUserName, 'T' AS READONLY
+        FROM T_DEALER_MEMO aa, (select @ROWNUM := 0) as b
+        WHERE USERNO = #{userno}
+          AND ISUSE = 'T'
+        ORDER BY ROWNUM DESC
+            LIMIT #{startpage}, #{endpage}
+    </select>
+
+    <select id="selectPartnersMemoCount" parameterType="somap" resultType="int">
+        SELECT COUNT(*) /* DealerMemoMapper.xml - selectPartnersMemoCount 파트너사 메모 리스트 카운트 */
+        FROM T_DEALER_MEMO
+        WHERE USERNO = #{userno}
+          AND ISUSE = 'T'
+    </select>
+</mapper>

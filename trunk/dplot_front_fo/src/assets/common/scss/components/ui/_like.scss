@@ -1,0 +1,45 @@
+.dp-like-button {
+  display: flex;
+  align-items: center;
+  cursor: pointer;
+  .dp-icon {
+    @include media-breakpoint-up(xl) {
+      width: 24px !important;
+      height: 24px !important;
+    }
+  }
+  .like-icon {
+    background: url("~@/assets/common/icon/icon-like-black-20px.svg") no-repeat 0;
+    @include media-breakpoint-up(xl) {
+      background-size: 24px !important;
+    }
+
+    &.active {
+      background: url("~@/assets/common/icon/icon-like-orange-20px.svg") no-repeat 0;
+      @include media-breakpoint-up(xl) {
+        background-size: 24px !important;
+      }
+    }
+  }
+  .dp-caption {
+    letter-spacing: 0.36px;
+    line-height: 17px;
+    font-weight: 500;
+    color: $gray-700;
+    @include media-breakpoint-up(xl) {
+      font-size: 16px;
+      letter-spacing: -.64px;
+    }
+  }
+}
+
+.review-report {
+  font-size: 12px;
+  letter-spacing: -0.48px;
+  line-height: 17px;
+  margin-left: 10px;
+  @include media-breakpoint-up(xl) {
+    font-size: 16px;
+    letter-spacing: -.64px;
+  }
+}

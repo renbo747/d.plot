@@ -1,0 +1,85 @@
+.mypage-order {
+  padding: 20px 0 80px;
+  min-height: calc(100vh - 110px);
+
+  .form-select {
+    color: $gray-800;
+  }
+
+  .product-cart__footer .dp-btn {
+    letter-spacing: -.96px;
+    white-space: nowrap;
+  }
+
+  .mypage-order__header {
+    display: flex;
+    margin-bottom: 30px;
+  }
+
+  .order-select + .order-select {
+    margin-left: 12px;
+  }
+
+  .order-body__top {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding-bottom: 14px;
+    border-bottom: 1px solid $gray-400;
+  }
+
+  .order-date {
+    font-size: 14px;
+    letter-spacing: -.42px;
+    line-height: 17px;
+    font-weight: 500;
+    color: $gray-800;
+  }
+
+  .order-detail__btn {
+    width: 93px;
+  }
+
+  .order__ul {
+    & > li + li {
+      margin-top: 40px;
+    }
+  }
+
+  .product-option ul {
+    font-size: 12px !important;
+    letter-spacing: -.48px !important;
+    line-height: 17px;
+  }
+
+  // 주문내역이 없을 때
+  .order__no-item {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    padding-top: 50px;
+  }
+  .cart__icon-container {
+    width: 94px;
+    height: 94px;
+    margin-bottom: 20px;
+    border-radius: 50%;
+    background-color: $gray-100;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+  .cart-icon {
+    width: 64px;
+    height: 64px;
+    background: url("~@assets.admin/common/icon/icon-bag-black-64px.svg") no-repeat 0;
+  }
+  .no-order__text {
+    color: $gray-700;
+    font-size: 14px;
+    letter-spacing: -.56px;
+    line-height: 20px;
+    margin-bottom: 0;
+  }
+}

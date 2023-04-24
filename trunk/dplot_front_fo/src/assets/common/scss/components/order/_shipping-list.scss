@@ -1,0 +1,120 @@
+.dp-shipping-list {
+  border: 1px solid $gray-400;
+
+  .shipping-list-container {
+    padding: 20px;
+  }
+
+  // 리스트 헤더
+  .shipping-list__header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 16px;
+    @include media-breakpoint-up(xl) {
+      margin-bottom: 14px;
+    }
+
+    .customer-name {
+      font-size: 14px;
+      letter-spacing: -.56px;
+      margin-right: 10px;
+      font-weight: 500;
+      @include media-breakpoint-up(xl) {
+        font-size: 16px;
+        letter-spacing: -.64px;
+        font-weight: 500;
+      }
+    }
+
+    .dp-badge {
+      @include media-breakpoint-up(xl) {
+        height: 24px;
+        font-size: 12px;
+        letter-spacing: -.48px;
+        border-radius: 12px;
+      }
+    }
+
+    .review-edit {
+      display: flex;
+      align-items: center;
+      font-size: 12px;
+      letter-spacing: -.48px;
+      color: $gray-800;
+      @include media-breakpoint-up(xl) {
+        font-size: 16px;
+        letter-spacing: -.64px;
+        line-height: 20px;
+      }
+    }
+
+    .dp-bar {
+      margin-left: 10px;
+      margin-right: 10px;
+      @include  media-breakpoint-up(xl) {
+        height: 14px;
+      }
+    }
+  }
+
+  // 리스트 바디
+   .shipping-list__body {
+     margin-bottom: 7px;
+     @include media-breakpoint-up(xl) {
+       margin-bottom: 0;
+     }
+
+     .shipping-address {
+       font-size: 13px;
+       letter-spacing: -.52px;
+       line-height: 22px;
+       color: $gray-700;
+       padding-bottom: 6px;
+       word-break: keep-all;
+
+       @include media-breakpoint-up(xl) {
+         font-size: 16px;
+         letter-spacing: -.64px;
+         line-height: 24px;
+       }
+     }
+
+     .customer-phone {
+       font-size: 14px;
+       letter-spacing: -.56px;
+       line-height: 20px;
+       color: $gray-700;
+       @include media-breakpoint-up(xl) {
+         font-size: 16px;
+         letter-spacing: -.64px;
+         line-height: 24px;
+       }
+     }
+   }
+
+    // 리스트 푸터
+  .select-btn-area {
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+
+    .dp-btn {
+      font-size: 14px;
+      letter-spacing: -.56px;
+      line-height: 20px;
+
+      @include media-breakpoint-up(xl) {
+        width: 120px;
+        height: 40px;
+        font-size: 16px;
+        letter-spacing: -.64px;
+        line-height: 24px;
+      }
+    }
+  }
+
+  .select-btn {
+    width: 100px;
+  }
+}

@@ -1,0 +1,36 @@
+.base-pagination {
+  display: flex;
+  align-items: center;
+  list-style: none;
+  padding-left: 0;
+  margin-bottom: 0;
+  li {
+    display: flex;
+    align-items: center;
+    line-height: 1;
+    margin-bottom: 0 !important;
+    padding-bottom: 0 !important;
+    .page-item {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      width: auto;
+      height: 20px;
+      font-size: 16px;
+      letter-spacing: -.48px;
+      margin-top: -2px;
+      color: $gray-700;
+      cursor: pointer;
+    }
+    .page-item.active {
+      color: #111;
+      font-weight: 600;
+    }
+  }
+  li + li {
+    margin-left: 20px;
+  }
+  .dp-icon {
+    cursor: pointer;
+  }
+}

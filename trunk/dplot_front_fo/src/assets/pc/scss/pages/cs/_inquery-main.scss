@@ -1,0 +1,712 @@
+.cs-inquiry {
+  .cursor {
+    cursor: pointer;
+  }
+  // -- Index page scss --
+  .cs-inquiry-header {
+    padding-bottom: 60px;
+  }
+  .cs-section__title {
+    font-size: 26px;
+    letter-spacing: -1.04px;
+  }
+  // bootstrap 탭 관련 css
+  .cs-inquiry-tabs {
+    .nav {
+      align-items: center;
+    }
+
+    .nav-tabs {
+      border-bottom: 0;
+    }
+
+    .nav-item {
+      width: 50%;
+      height: 50px;
+    }
+
+    .nav-link {
+      width: 100%;
+      height: 100%;
+      padding: 0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: $gray-700;
+      border-bottom: solid 2px $gray-400;
+      font-size: 18px;
+      letter-spacing: -.72px;
+      border-top: 0;
+      border-right: 0;
+      border-left: 0;
+
+      &.active {
+        color: $black;
+        border: 0;
+        border-bottom: solid 2px $black;
+        font-size: 22px;
+        letter-spacing: -.88px;
+        font-weight: 700;
+      }
+    }
+
+    .cs-inquiry__header {
+      display: flex;
+      .base-dropdown .dropdown__input {
+        height: 48px;
+      }
+      .base-dropdown .dropdown__input input {
+        font-size: 16px;
+        letter-spacing: -.64px;
+        font-weight: 400;
+        color: $gray-600;
+      }
+    }
+
+    .inquiry-select + .inquiry-select {
+      margin-left: 12px;
+    }
+  }
+  // 탭 아래 scss 시작 ( 1:1 문의 )
+  .cs-inquiry__header {
+    flex-direction: column;
+    margin-bottom: 0;
+    .cs-inquiry__header__btn {
+      align-items: center;
+      justify-content: space-between;
+      padding: 50px 0;
+      .icon-inquiry {
+        background-image: url("~@/assets/common/icon/icon-inquiry-black-20px.svg");
+      }
+    }
+    .cs-inquiry__btn__total {
+      font-size: 18px;
+      letter-spacing: -.72px;
+    }
+    .cs-inquiry__header-title {
+      font-size: 16px;
+      letter-spacing: -.64px;
+    }
+    .cs-inquiry__button {
+      padding: 0 120px;
+    }
+
+    //문의
+  }
+  // 1:1 문의
+  .inquiry__area {
+    .cs-inquiry__list__ul {
+      border-top: solid 1px $border-color;
+    }
+    .cs-inquiry__list__item {
+      padding-top: 20px;
+      padding-bottom: 20px;
+      border-bottom: solid 1px $border-color;
+
+    }
+    .inquiry__list__item {
+      flex-direction: column;
+    }
+    .inquiry__list__item__box {
+      margin-bottom: 20px;
+    }
+    .inquiry__list__item__state {
+      font-size: 16px;
+      letter-spacing: -.64px;
+    }
+    .inquiry__list__item__date {
+      font-size: 16px;
+      letter-spacing: -.64px;
+    }
+    .inquiry__list__item__text {
+      font-size: 18px;
+      letter-spacing: -.72px;
+      @include text-truncate();
+    }
+  }
+  // 상품 Q&A
+  .cs-product-qna__tab {
+    .cs-product-qna__header__text {
+      padding-bottom: 80px;
+    }
+    .qna__header__text__p {
+      font-size: 18px;
+      letter-spacing: -.72px;
+    }
+    .cs-product-qna__header__select {
+      .base-dropdown .dropdown__input {
+        height: 48px;
+      }
+      .base-dropdown .dropdown__input input {
+        font-size: 16px;
+        letter-spacing: -.64px;
+        font-weight: 400;
+        color: $gray-600;
+      }
+    }
+    .cs-qna-list-ul {
+      border-top: solid 1px $border-color;
+    }
+    .cs-qna-list__item {
+      padding-top: 30px;
+      padding-bottom: 30px;
+      border-bottom: solid 1px $border-color ;
+    }
+    .cs-qna-list__item__state {
+      align-items: center;
+    }
+    .cs-qna-list__item__state__text {
+      font-size: 16px;
+      letter-spacing: -.64px;
+    }
+    .cs-qna-list__item__state__date {
+      font-size: 16px;
+      letter-spacing: -.64px;
+    }
+    .cs-qna-list__item__state__icon {
+      line-height: 1;
+    }
+    .icon-lock {
+      background-image: url("~@/assets/common/icon/icon-lock-black-22px.svg");
+    }
+    .cs-qna-list__item__thumbnail {
+      margin-right: 16px;
+      background:#f9f9f9;
+    }
+    .cs-qna-list__item__text {
+      flex-direction: column;
+    }
+    .qna-item__title__h2 {
+      font-size: 20px;
+      letter-spacing: -.8px;
+    }
+    .qna-item__text__p {
+      font-size: 18px;
+      letter-spacing: -.72px;
+      display: -webkit-box;
+      word-wrap: break-word;
+      -webkit-line-clamp: 3;
+      -webkit-box-orient: vertical;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      height: 78px;
+    }
+  }
+  // 문의사항,qna 없을 때
+  .cs-inquiry__list__none {
+    padding-top: 180px;
+    .cs-inquiry__list__empty {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      width: 94px;
+      height: 94px;
+      border-radius: 50%;
+      background-color: $gray-100;
+    }
+    .icon-not-found {
+      background-image: url("~@/assets/common/icon/icon-not-found-black-64px.svg");
+    }
+    .cs-inquiry__list__text {
+      padding-top: 30px;
+    }
+    .cs-inquiry__list__empty__text__p {
+      font-size: 18px;
+      letter-spacing: -.72px;
+    }
+    //common scss
+    .mr-10 {
+      margin-right: 10px;
+    }
+  }
+
+  // -- Index page scss end  --
+
+  // detail page scss
+  .cs-inquiry-detail {
+    .dp-bar {
+      margin-left: 10px;
+      margin-right: 10px;
+    }
+    // 문의상태 scss
+    .inquiry-detail-state {
+      .inquiry-detail-state-header {
+        align-items: center;
+        justify-content: space-between;
+        padding-bottom: 20px;
+      }
+      .inquiry-detail-state-header__left {
+        align-items: center;
+      }
+      .detail-state-header__left__title {
+        font-size: 22px;
+        letter-spacing: -.88px;
+      }
+      .detail-state-header__left__date {
+        font-size: 16px;
+        letter-spacing: -.64px;
+      }
+      .inquiry-detail-edit-text {
+        font-size: 16px;
+        letter-spacing: -.64px;
+      }
+      .detail-state-body-header {
+        padding-bottom: 20px;
+      }
+      .detail-state-body-header__text {
+        font-size: 18px;
+        letter-spacing: -.72px;
+      }
+      .inquiry-detail-state-body-info {
+        padding: 30px;
+        background-color: $gray-100;
+        .info-answer {
+          position: relative;
+          margin-top: 40px;
+          padding-top: 40px;
+          border-top: 1px solid $gray-400;
+          padding-left: 30px;
+          &:before {
+            position: absolute;
+            top: 44px;
+            left: 0;
+            display: block;
+            content: '';
+            width: 15px;
+            height: 15px;
+            border-left: 1px solid $black;
+            border-bottom: 1px solid $black;
+          }
+          .info-answer-title {
+            font-size: 18px;
+            letter-spacing: -.72px;
+          }
+          .info-answer-date {
+            font-size: 16px;
+            letter-spacing: -.64px;
+          }
+          .info-answer-text {
+            font-size: 18px;
+            letter-spacing: -.72px;
+            line-height: 26px;
+          }
+        }
+      }
+      .state-body-info__p {
+        font-size: 18px;
+        letter-spacing: -.72px;
+      }
+    }
+    //slide section
+    .inquiry-detail-product {
+      .detail-product__info__item {
+        align-items: center;
+        justify-content: space-between;
+        &.order {
+          align-items: flex-start;
+        }
+      }
+      .info__item__title__p {
+        font-size: 16px;
+        letter-spacing: -.64px;
+      }
+
+      .detail-product__info__item__text {
+        width: calc(100% - 205px);
+      }
+
+      //swiper slide
+      .detail-product__info__slide {
+
+        .swiper-container {
+          margin-right: 0;
+        }
+        .product__info__slide__info {
+          width: 100%;
+          .swiper-slide {
+            width: 100%;
+          }
+        }
+        .info__slide__img {
+          width: 190px;
+          height: 190px;
+
+          figure {
+            margin-bottom: 0;
+          }
+
+          img {
+            width: 100%;
+          }
+        }
+
+        .product__info__slide__info {
+          position: relative;
+          margin-top: 40px;
+        }
+        .detail-product__info__slide__btn {
+          position: absolute;
+          top: 50%;
+          left: 0;
+          transform: translateY(-50%);
+          width: 100%;
+          display: flex;
+          align-items: center;
+          justify-content: space-between;
+          z-index: 1;
+          img {
+            width: 60%;
+          }
+        }
+        .swiper-btn-prev {
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          width: 36px;
+          height: 36px;
+          background-color: rgba(0,0,0,.2);
+          margin-left: 0;
+        }
+        .swiper-btn-next {
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          width: 36px;
+          height: 36px;
+          background-color: rgba(0,0,0,.2);
+          margin-right: 0;
+        }
+      }
+
+      // 답변 패드
+      .detail__info__text-box {
+        padding: 30px;
+        background-color: $gray-100;
+        text-align: center;
+        &.not-empty {
+          text-align: left;
+        }
+
+        .text-box-flex {
+          flex-direction: column;
+        }
+      }
+      .detail__info__text {
+        font-size: 18px;
+        letter-spacing: -.72px;
+      }
+      //문의하기 버튼
+      .detail-product__info__list__btn {
+        padding-top: 60px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+      }
+      .info__list__btn {
+        padding: 0 120px;
+      }
+    }
+    //swiper slide 공통
+    .detail-product__info__slide {
+      .swiper-container {
+        margin-right: -20px;
+      }
+
+      .product__info__slide__info {
+        width: 100%;
+        .swiper-slide {
+          width: 100px;
+        }
+      }
+      .info__slide__img {
+        width: 100px;
+        height: 100px;
+
+        figure {
+          margin-bottom: 0;
+        }
+
+        img {
+          width: 100%;
+        }
+      }
+    }
+
+    &.qna {
+      // QnA Page scss
+      .inquiry-detail-product {
+        .inquiry-qna-header {
+          padding-bottom: 12px;
+        }
+        .inquiry-qna-body__thumbnail {
+          padding-bottom: 40px;
+        }
+      }
+    }
+    .qna__header__title {
+      font-size: 22px;
+    }
+    .inquiry-qna-body__thumbnail {
+      align-items: center;
+    }
+    .qna__body-text {
+      font-size: 16px;
+      letter-spacing: -.64px;
+    }
+    .inquiry-qna-body__thumbnail__img {
+      margin-right: 14px;
+    }
+  }
+  // -- detail scss end --
+
+  //write page scss
+  .inquiry-write {
+
+    .section-title {
+      font-size: 22px;
+    }
+    .section-select {
+      .base-dropdown .dropdown__input {
+        height: 48px;
+      }
+    }
+    .inquiry-write-header {
+      padding-bottom: 20px;
+    }
+    .inquiry-write-header-top {
+      padding-bottom: 12px;
+      align-items: center;
+    }
+    .inquiry-write-btn {
+      padding: 0 40px;
+      border-color: $border-color;
+      margin-left: 12px;
+    }
+    .inquiry-write__items__name {
+      font-size: 16px;
+      letter-spacing: -.64px;
+    }
+    .inquiry-fourth-section-slide {
+      .image-upload .image-upload__label {
+        margin-left: 0;
+      }
+      .image-upload .image-upload__list {
+        width: calc(100% - 200px);
+        padding-right: 0;
+      }
+    }
+    .inquiry-footer-section {
+      padding-top: 60px;
+    }
+    .footer-section-btn {
+      padding:0 163px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    .inquiry-footer-section__btn {
+      font-size: 16px;
+      letter-spacing: -.64px;
+      color:$gray-800;
+      border-radius: 0;
+    }
+  }
+
+  // 입점문의 page scss
+  &.cs-store-inquiry {
+    .cs-store-inquiry-header {
+      padding-bottom: 50px;
+      h1 {
+        font-size: 18px;
+        letter-spacing: -.72px;
+        line-height: 26px;
+      }
+    }
+    .info__list__title {
+      font-size: 18px;
+      letter-spacing: -.72px;
+    }
+    .store-inquiry-info {
+      padding-top: 72px;
+    }
+    .store-inquiry-info__list {
+      li + li {
+        margin-top: 30px;
+      }
+    }
+    .store-inquiry-info__list__text {
+      margin-top: 15px;
+    }
+    .store-inquiry-form-p {
+      font-weight: 500;
+      margin-bottom: 20px;
+    }
+    .info__list__text__p {
+      position: relative;
+      padding-left: 8px;
+      font-size: 18px;
+      letter-spacing: -.56px;
+      color: $gray-700;
+      word-break: keep-all;
+
+      &::before {
+        position: absolute;
+        left: 0;
+        top: 11px;
+        content: "";
+        width: 2px;
+        height: 2px;
+        border-radius: 50%;
+        background-color: $gray-700;
+      }
+    }
+    .store-inquiry-btn__wrap {
+      padding: 40px 310px 0 310px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    .store-inquiry-btn {
+      width: 320px;
+    }
+    .store-inquiry-checkbox {
+      padding-top: 40px;
+    }
+    .magic-checkbox + label {
+      width: calc(100% - 50px);
+      font-size: 16px;
+      color: $black;
+    }
+  }
+
+  //common scss
+
+  //pagination
+  .inquiry-pagination {
+    align-items: center;
+    justify-content: center;
+  }
+  //간격
+  .mr-10 {
+    margin-right: 10px;
+  }
+  .mr-20 {
+    margin-right: 20px;
+  }
+  .mb-10 {
+    margin-bottom: 10px;
+  }
+}
+
+//modal scss
+
+// 주문상품선택 모달
+.select-product-modal {
+  .dp-panel {
+    padding: 30px 0;
+  }
+  .modal-dialog {
+    max-width: 600px;
+  }
+  .select-product-item-info {
+    padding-top: 30px;
+  }
+  .select-product-body {
+    .dp-product-cart {
+      width: 100%;
+    }
+    .dp-product-cart .product__price-area {
+      width: 30px;
+    }
+    .date__list__span {
+      font-size: 16px;
+    }
+    .select-product-date-bar {
+      margin: 0 10px;
+    }
+    .select-product-date__list__data {
+      padding-bottom: 24px;
+      border-bottom: solid 1px $border-color;
+    }
+    .select-product-item-ul {
+      .select-product-item-li + .select-product-item-li {
+        padding-top: 40px;
+      }
+    }
+    .footer-section-btn {
+      padding: 0 80px;
+    }
+  }
+  hr {
+    margin-bottom: 0;
+  }
+}
+
+// 이미지 모달
+.img-modal {
+  position: fixed;
+  top: 0;
+  left: 0;
+  z-index: 4000;
+  width: 100%;
+  height: 100%;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  background-color: rgba(0,0,0,.5);
+
+  .image-content {
+    position: relative;
+    width: 600px;
+    height: 600px;
+    overflow: hidden;
+  }
+
+  .modal-swiper-prev,
+  .modal-swiper-next {
+    position: absolute;
+    top: 50%;
+    transform: translateY(-50%);
+    z-index: 110;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 64px;
+    height: 64px;
+    background-color: rgba(0, 0, 0, 0.2);
+    background-image: none;
+    margin-right: 0;
+    cursor: pointer;
+    img {
+      width: 41px;
+    }
+  }
+  .modal-swiper-prev {
+    left: 0;
+  }
+  .modal-swiper-next {
+    right: 0;
+  }
+
+  figure {
+    width: 100%;
+    height: 100%;
+    margin-bottom: 0;
+
+    img {
+      width: 100%;
+    }
+  }
+
+  .dp-icon {
+    position: absolute;
+    top: -20px;
+    right: 0;
+    transform: translateY(-100%);
+    width: 40px;
+    height: 40px;
+    background: url("~@/assets/common/icon/icon-close-circle-white-32px.svg") no-repeat 0;
+    background-size: 40px !important;
+  }
+}
+

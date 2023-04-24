@@ -1,0 +1,12 @@
+<svg id="Group_21011" data-name="Group 21011" xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 16 16">
+    <defs>
+        <style>
+            .cls-2{fill:none;stroke:#ccc;stroke-linecap:round}
+        </style>
+    </defs>
+    <path id="Rectangle_6615" data-name="Rectangle 6615" style="fill:#fff" d="M0 0h16v16H0z"/>
+    <g id="Group_20926" data-name="Group 20926" transform="translate(6 4)">
+        <path id="Line_841" data-name="Line 841" class="cls-2" transform="translate(0 7)" d="M0 0h5.417"/>
+        <path id="Line_842" data-name="Line 842" class="cls-2" d="M0 0v7"/>
+    </g>
+</svg>

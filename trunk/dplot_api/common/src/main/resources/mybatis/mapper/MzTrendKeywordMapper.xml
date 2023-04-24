@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.dplot.mapper.MzTrendKeywordMapper">
+	<!-- 트렌드키워드 저장 -->
+	<insert id="insertTrendKeyword" parameterType="somap">
+        /* MzTrendKeywordMapper.xml - insertTrendKeyword 트렌드키워드 저장  */
+        INSERT INTO t_mztrend_keword
+        (tridx, keyword, reguserid, regdate)
+        VALUES
+        <foreach collection="keywordlist" index="index" item="item" separator=",">
+        	(#{tridx}, #{item.keyword}, #{reguserid}, now())
+        </foreach>
+    </insert>
+    
+    <!-- 트렌드키워드 조회 -->
+	<select id="selectTrendKeywordList" resultType="somap" parameterType="somap">
+        /* MzTrendKeywordMapper.xml - selectTrendKeywordList 트렌드키워드 조회  */
+        SELECT mztrkidx, keyword
+        FROM t_mztrend_keword
+        WHERE tridx = #{tridx}
+    </select>
+    
+    <!-- 트렌드키워드 삭제 -->
+	<delete id="deleteTrendKeyword" parameterType="somap">
+        /* MzTrendKeywordMapper.xml - deleteTrendKeyword 트렌드키워드 삭제  */
+        DELETE FROM t_mztrend_keword
+        WHERE mztrkidx IN 
+        <foreach collection="deletekeywordlist" item="item" open="(" close=")" separator=",">
+        	#{item}
+        </foreach>
+    </delete>
+</mapper>

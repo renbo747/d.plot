@@ -1,0 +1,204 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.dplot.mapper.TossreceiptMapper">
+	<select id="selectTossreceipt" parameterType="somap" resultType="somap">
+		SELECT
+			  orderidx
+			, clmidx
+			, paymentkey
+			, cardcompany
+			, cardnumber
+			, planmonth
+			, isinterfree
+			, appoveno
+			, isusecardpoint
+			, cardtype
+			, ownertype
+			, receipturl
+			, accounttype
+			, accntnumber
+			, virbank
+			, vircusname
+			, virdueday
+			, virrefundst
+			, isvirexpire
+			, trsbank
+			, mopcarrier
+			, mopmobileno
+			, cashreceipttype
+			, cashreceipturl
+			, virsecret
+		FROM t_tossreceipt t
+		WHERE 1 = 1
+		<choose>
+			<when test="clmidx != null">
+			AND clmidx = #{clmidx}
+			</when>
+			<otherwise>
+			AND orderidx = #{orderidx}
+			</otherwise>
+		</choose> 
+		
+	</select> 
+	
+	<insert id="insertTossreceipt" parameterType="somap" useGeneratedKeys="true" keyProperty="tossidx">
+		INSERT   /* TossreceiptMapper - insertTossreceipt 토스결제정보 저장*/
+			INTO t_tossreceipt (
+			  orderidx
+			, clmidx
+			, paymentkey
+			, cardcompany
+			, cardnumber
+			, planmonth
+			, isinterfree
+			, appoveno
+			, isusecardpoint
+			, cardtype
+			, ownertype
+			, receipturl
+			, accounttype
+			, accntnumber
+			, virbank
+			, vircusname
+			, virdueday
+			, virrefundst
+			, isvirexpire
+			, trsbank
+			, mopcarrier
+			, mopmobileno
+			, cashreceipttype
+			, cashreceipturl
+			, virsecret
+			, istrash
+			, reguserid
+			, regdate
+
+		) VALUES (
+			  #{orderidx}
+			, #{clmidx}
+			, #{paymentkey}
+			, #{cardcompany}
+			, #{cardnumber}
+			, #{planmonth}
+			, #{isinterfree}
+			, #{appoveno}
+			, #{isusecardpoint}
+			, #{cardtype}
+			, #{ownertype}
+			, #{receipturl}
+			, #{accounttype}
+			, #{accntnumber}
+			, #{virbank}
+			, #{vircusname}
+			, #{virdueday}
+			, #{virrefundst}
+			, #{isvirexpire}
+			, #{trsbank}
+			, #{mopcarrier}
+			, #{mopmobileno}
+			, #{cashreceipttype}
+			, #{cashreceipturl}
+			, #{virsecret}
+			, 'F'
+			, #{userid}
+			, sysdate()
+
+		)
+	</insert>
+	
+	<select id="selectOrderReceiptERPData" parameterType="somap" resultType="somap">
+		SELECT
+			TOSSIDX
+			 , ORDERIDX
+			 , CLMIDX
+			 , PAYMENTKEY
+			 , CARDCOMPANY
+			 , CARDNUMBER
+			 , PLANMONTH
+			 , ISINTERFREE
+			 , APPOVENO
+			 , ISUSECARDPOINT
+			 , CARDTYPE
+			 , OWNERTYPE
+			 , RECEIPTURL
+			 , ACCOUNTTYPE
+			 , ACCNTNUMBER
+			 , VIRBANK
+			 , VIRCUSNAME
+			 , VIRDUEDAY
+			 , VIRREFUNDST
+			 , ISVIREXPIRE
+			 , TRSBANK
+			 , MOPCARRIER
+			 , MOPMOBILENO
+			 , CASHRECEIPTTYPE
+			 , CASHRECEIPTURL
+			 , VIRSECRET
+		FROM T_TOSSRECEIPT
+		WHERE ORDERIDX = #{orgno}
+		AND ISTRASH = 'F'
+	</select>
+
+	<select id="selectClaimReceiptERPData" parameterType="somap" resultType="somap">
+		SELECT
+			TOSSIDX
+			 ,CLMIDX
+			 ,PAYMENTKEY
+			 ,CARDCOMPANY
+			 ,CARDNUMBER
+			 ,PLANMONTH
+			 ,ISINTERFREE
+			 ,APPOVENO
+			 ,ISUSECARDPOINT
+			 ,CARDTYPE
+			 ,OWNERTYPE
+			 ,RECEIPTURL
+			 ,ACCOUNTTYPE
+			 ,ACCNTNUMBER
+			 ,VIRBANK
+			 ,VIRCUSNAME
+			 ,VIRDUEDAY
+			 ,VIRREFUNDST
+			 ,ISVIREXPIRE
+			 ,TRSBANK
+			 ,MOPCARRIER
+			 ,MOPMOBILENO
+			 ,CASHRECEIPTTYPE
+			 ,CASHRECEIPTURL
+			 ,VIRSECRET
+		FROM T_TOSSRECEIPT
+		WHERE ISTRASH = 'F'
+		  AND ORDERIDX = #{orderidx}
+		UNION ALL
+		SELECT
+			TOSSIDX
+			 ,CLMIDX
+			 ,PAYMENTKEY
+			 ,CARDCOMPANY
+			 ,CARDNUMBER
+			 ,PLANMONTH
+			 ,ISINTERFREE
+			 ,APPOVENO
+			 ,ISUSECARDPOINT
+			 ,CARDTYPE
+			 ,OWNERTYPE
+			 ,RECEIPTURL
+			 ,ACCOUNTTYPE
+			 ,ACCNTNUMBER
+			 ,VIRBANK
+			 ,VIRCUSNAME
+			 ,VIRDUEDAY
+			 ,VIRREFUNDST
+			 ,ISVIREXPIRE
+			 ,TRSBANK
+			 ,MOPCARRIER
+			 ,MOPMOBILENO
+			 ,CASHRECEIPTTYPE
+			 ,CASHRECEIPTURL
+			 ,VIRSECRET
+		FROM T_TOSSRECEIPT
+		WHERE ISTRASH = 'F'
+		AND CLMIDX = #{clmidx}
+	</select>
+</mapper>

@@ -1,0 +1,119 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.dplot.mapper.ConfigTermMapper">
+
+	<select id="selectConfigTerm" parameterType="somap" resultType="somap" >
+		SELECT  /* ConfigTermMapper.xml - selectConfigTerm 이용약관 조회 */ 
+		    tct.idx,
+		    tct.termstype,
+		    fn_get_codename(#{siteid},'TERMSTYPE',tct.termstype) as termstypename,
+		    tcth.content,
+		    tct.isessen,
+		    IF(tct.isessen = 'T', '[필수]', '[선택]') AS prefix
+		FROM T_CONFIG_TERMS TCT 
+		INNER JOIN T_CONFIG_TERMS_HISTORY tcth 
+		ON tct.idx = tcth.termsidx 
+		AND tcth.iscurrent = 't'
+		WHERE siteid = #{siteid}
+		AND termstype IN 
+		<foreach index="index" collection="termslist" item="terms" open="(" close=")" separator="," >
+		#{terms}
+		</foreach>
+	</select>
+	
+	<select id="selectConfigTermCnt" parameterType="somap" resultType="somap" >
+		SELECT 
+			count(*) as total_cnt
+		FROM t_config_terms tct
+		JOIN t_config_terms_history tcth ON tct.idx = tcth.termsidx
+		JOIN t_user tu ON tct.reguserid = tu.userid
+		LEFT JOIN t_admin ta ON tu.no = ta.userno
+		<where>
+			AND tct.siteid = #{siteid}
+			<if test="termstype != '' and termstype != null">
+				AND termstype = #{termstype}
+			</if>
+			<if test='iscurrent == "T"'>
+				AND iscurrent = 'T'
+			</if>
+		</where>
+	</select>
+	
+	<!-- 이용약관 목록 조회 -->
+	<select id="selectTermsList" parameterType="somap" resultType="somap" >
+		SELECT  /* ConfigTermMapper.xml - selectTermsList 이용약관 목록 조회 */ 
+			a.*, FORMAT(@ROWNUM := @ROWNUM+1,0) AS no
+		FROM (
+			SELECT 
+				tcth.idx
+				, termsidx
+				, version
+				, CASE iscusterms WHEN 'T' THEN '고객약관' ELSE '파트너사약관' END as iscusterms
+				, fn_get_codename(#{siteid},'TERMSTYPE',tct.termstype) as termsname
+				, ta.name as regusername
+				, CASE isessen WHEN 'T' THEN '필수' ELSE '선택' END as isessen
+				, if(tcth.moddate is not null, DATE_FORMAT(tcth.moddate, '%Y-%m-%d %H:%i:%s'), DATE_FORMAT(tcth.regdate, '%Y-%m-%d %H:%i:%s')) as moddate
+			FROM t_config_terms tct
+			JOIN t_config_terms_history tcth ON tct.idx = tcth.termsidx
+			JOIN t_user tu ON tct.reguserid = tu.userid
+			LEFT JOIN t_admin ta ON tu.no = ta.userno
+			<where>
+				AND tct.siteid = #{siteid}
+				<if test="termstype != '' and termstype != null">
+					AND termstype = #{termstype}
+				</if>
+				<if test='iscurrent == "T"'>
+					AND iscurrent = 'T'
+				</if>
+			</where>
+			ORDER BY version desc
+		) a, (select @ROWNUM := #{startpage}) as b
+		limit #{startpage}, #{endpage}
+	</select>
+	
+	<!-- 이용약관 조회 -->
+	<select id="selectTerms" parameterType="somap" resultType="somap" >
+		SELECT  /* ConfigTermMapper.xml - selectTerms 이용약관 조회 */ 
+			tcth.idx
+			, tcth.termsidx
+			, CASE tct.iscusterms WHEN 'T' THEN '고객약관' ELSE '파트너사약관' END as iscusterms
+			, ta.name as reguserid
+			, tcth.version
+			, tct.isessen
+			, DATE_FORMAT(tcth.moddate, '%Y-%m-%d %H:%i:%s') as moddate
+			, fn_get_codename(#{siteid},'TERMSTYPE',tct.termstype) as termsname
+			, tct.termstype
+			, tcth.content
+		FROM t_config_terms tct
+		JOIN t_config_terms_history tcth ON tct.idx = tcth.termsidx
+		LEFT JOIN t_user tu ON tu.userid = tct.reguserid
+		LEFT JOIN t_admin ta ON ta.userno = tu.no 
+		<where>
+			AND tct.siteid = #{siteid}
+			<if test="idx != null and idx != ''">
+				AND tcth.idx = #{idx}
+			</if>
+			<if test="termsidx != null and termsidx != ''">
+				AND tcth.termsidx = #{termsidx}
+				AND tcth.iscurrent = 'T'
+			</if>
+		</where>
+	</select>
+	
+	<!-- 이용약관 수정 -->
+	<update id="updateTerms" parameterType="somap">
+		UPDATE t_config_terms /* ConfigTermMapper.xml - updateTerms 이용약관 수정 */
+		SET isessen = #{isessen}, moddate = now(), moduserid = #{authuserid}
+		WHERE idx = #{termsidx}
+	</update>
+
+	<select id="selectPartnersTerms" parameterType="somap" resultType="somap">
+		SELECT
+			TERMSTYPE, FN_GET_CODENAME(#{siteid}, 'TERMSTYPE', TERMSTYPE) AS TERMSNAME
+			 , (SELECT CONTENT FROM T_CONFIG_TERMS_HISTORY WHERE TERMSIDX = A.IDX ORDER BY VERSION DESC LIMIT 1) AS CONTENT
+		FROM T_CONFIG_TERMS A
+		WHERE SITEID = #{siteid}
+		  AND TERMSTYPE IN ('TRT007', 'TRT008', 'TRT009', 'TRT010', 'TRT011')
+	</select>
+</mapper>

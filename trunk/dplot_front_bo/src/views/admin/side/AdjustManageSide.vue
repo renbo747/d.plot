@@ -1,0 +1,58 @@
+<template>
+  <div>
+    <!-- 레프트영역 -->
+    <div class="left-menu">
+      <div class="inner">
+        <div class="title">
+          <i class="icons icon-calculate-t"></i>
+          <span>정산관리</span>
+        </div>
+        <ul class="menu">
+          <li v-for="menu in sideMenu" v-bind:key="menu.code">
+            <router-link :to="{name: menu.url}" v-bind:class="{ active: menu.isactive }" @click.native="onActive(menu.url)">
+              <span>{{ menu.name }}</span>
+              <i class="icon-expand" v-bind:class="{ active: menu.isactive }"></i>
+            </router-link>
+          </li>
+        </ul>
+      </div>
+    </div>
+    <!-- /레프트영역 -->
+    <router-view />
+  </div>
+</template>
+
+<script>
+export default {
+  name: 'AdjustManageSide',
+  data() {
+    return {
+      sideMenu: [],
+      parentCode: 'I'
+    }
+  },
+  mounted() {
+    let param = { pageCd : this.parentCode, path : this.$route.name, isloading : false }
+    this.$http.post('/admin/common/side-menu', param).then(result => {
+          this.sideMenu = result.data.sidemenu;
+        }).catch(error => {
+      this.$util.debug(error);
+    });
+  },
+  methods: {
+    onActive: function(path){
+      this.sideMenu.forEach( (obj) => {
+        obj.isactive = (obj.url === path);
+      })
+    },
+    // goAdjustMain: function(){
+    //   this.$router.push({name : 'admin.adjust.main'})
+    // },
+  },
+  watch: {
+    $route(to) {
+      this.onActive(to.name);
+    }
+  }
+}
+</script>

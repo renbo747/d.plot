@@ -1,0 +1,171 @@
+.dp-mypage-invitation {
+  padding-top: 30px;
+  padding-bottom: 80px;
+  .hr-h1 {
+    background: $gray-400;
+    margin-top: 20px;
+    margin-bottom: 20px;
+  }
+  .mypage-invitation__header {
+    padding-bottom: 24px;
+    .member__count {
+      font-size: 18px;
+      letter-spacing: -.0.72px;
+    }
+  }
+  .mypage-invitation__body {
+    // 초대로 가입한 친구가 있는경우
+    .invitation__wrap {
+      .invitation-member__ul {
+        .invitation-member__header {
+          padding-bottom: 14px;
+          .member-name {
+            font-size: 14px;
+            letter-spacing: .56px;
+            color: $gray-700;
+          }
+          .date {
+            font-size: 14px;
+            letter-spacing: .56px;
+            color: $gray-700;
+          }
+        }
+        .invitation-member__body {
+          .empty-benefit__p {
+            font-size: 16px;
+            letter-spacing: -.64px;
+          }
+          .benefit__ul {
+            .dp-badge {
+              padding: 0;
+              width: 55px;
+              margin-right: 8px;
+            }
+            .benefit__ul__p span {
+              font-size: 16px;
+              letter-spacing: -.64px;
+            }
+            li + li {
+              margin-top: 10px;
+            }
+          }
+        }
+      }
+    }
+    // 초대로 가입한 친구가 없는 경우
+    .empty__invitation__wrap {
+      .empty__invitation__header {
+        padding-bottom: 14px;
+        .empty__invitation__header__P {
+          font-size: 16px;
+          letter-spacing: -.64px;
+          line-height: 24px;
+          font-weight: 500;
+        }
+      }
+      .empty__invitation__body {
+        .empty__invitation__body__P {
+          font-size: 14px;
+          letter-spacing: -.56px;
+          line-height: 22px;
+          color: $gray-700;
+        }
+      }
+      .empty__invitation__footer {
+        padding-top: 50px;
+      }
+    }
+  }
+}
+
+// 친구초대 모달
+.friend-invitation-modal {
+  .dp-hr{
+    margin-top: 30px;
+    margin-bottom: 30px;
+  }
+  // section1
+  .benefit__section {
+    .invitation__title {
+      font-size: 18px;
+      letter-spacing: -.72px;
+      line-height: 28px;
+      padding-bottom: 14px;
+    }
+    .invitation__description {
+      color: $gray-700;
+      font-size: 14px;
+      letter-spacing: -.56px;
+      line-height: 22px;
+      padding-bottom: 30px;
+    }
+    .benefit__area {
+      .benefit__title {
+        font-size: 16px;
+        letter-spacing: -.64px;
+        line-height: 24px;
+        font-weight: 500;
+        padding-bottom: 14px;
+      }
+    }
+  }
+
+  // sescton2
+  .how-invitation__section {
+    .how-invitation__header {
+      padding-bottom: 24px;
+      .header__title {
+        font-size: 16px;
+        letter-spacing: -.64px;
+        font-weight: 500;
+      }
+    }
+    .how-invitation__body {
+      padding-bottom: 20px;
+      li + li {
+        padding-top: 30px;
+      }
+      li {
+        display: flex;
+      }
+      .step {
+        width: 54px;
+        font-size: 14px;
+        letter-spacing: -.56px;
+        font-weight: 500;
+      }
+      .step__description {
+        width: calc(100% - 54px );
+        font-size: 14px;
+        letter-spacing: -.56px;
+        word-break: keep-all;
+      }
+    }
+    .how-invitation__footer {
+      li {
+        border: 1px solid $gray-400;
+        height: 48px;
+        .invitation__div {
+          height: 48px;
+          padding-left: 16px;
+          padding-right: 8px;
+        }
+        .icon-left {
+          width: 18px;
+        }
+        .invitation__p {
+          font-size: 14px;
+          letter-spacing: -.56px;
+          padding-left: 10px;
+          width: calc(100% - 34px)
+        }
+        .icon-right {
+          width: 16px;
+        }
+      }
+      li + li {
+        margin-top: 10px;
+      }
+    }
+  }
+}

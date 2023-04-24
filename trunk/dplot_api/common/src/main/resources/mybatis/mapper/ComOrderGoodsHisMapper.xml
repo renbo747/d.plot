@@ -1,0 +1,79 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.dplot.mapper.ComOrderGoodsHisMapper">
+	
+	<insert id="insertComOrderGoodsHis" parameterType="somap" useGeneratedKeys="true" keyProperty="ordstidx">
+		INSERT   /* ComOrderGoodsHisMapper - insertComOrderGoodsHis 주문상태이력정보 저장*/
+			INTO t_comorder_goods_his (
+			  orgdelividx
+			, preval
+			, aftval
+			, reguserid
+			, regdate
+		) VALUES (
+			  #{orgdelividx}
+			, #{preval}
+			, #{aftval}
+			, #{userid}
+			, sysdate()
+		)
+	</insert>
+	
+	<insert id="insertComOrderGoodsHisAll" parameterType="somap">
+		INSERT   /* ComOrderGoodsHisMapper - insertComOrderGoodsHisAll 주문상태이력정보 일괄저장*/
+			INTO t_comorder_goods_his (
+			  orgdelividx
+			, preval
+			, aftval
+			, reguserid
+			, regdate
+		)
+		<choose>
+			<when test="orgdelividxlist != null and orgdelividxlist.size > 0">
+				SELECT
+					  orgdelividx
+					, ordstatus
+					, #{ordstatus}
+					, #{userid}
+					, sysdate()
+				FROM t_comorder_goods_deliv
+				WHERE orgdelividx IN
+				<foreach collection="orgdelividxlist" item="_orgdelividx" index="index" open="(" separator="," close=")">
+					#{_orgdelividx}
+				</foreach>
+			</when>
+			<otherwise>
+				SELECT
+					  orgdelividx
+					, ordstatus
+					, #{ordstatus}
+					, #{userid}
+					, sysdate()
+				FROM t_comorder_goods_deliv
+				WHERE orgdelividx = #{orgdelividx}
+			</otherwise>
+		</choose>
+	</insert>
+	
+	<select id="selectOrderStatusHistList" parameterType="somap" resultType="somap">
+		SELECT  /* CouponMapper.xml - selectOrderStatusHistList 관리자용 주문상태 변경이력 조회 */
+			  a.orgdelividx	/* 주문배송IDX */
+			, a.ordstidx	/* 주문상태IDX */
+			, FN_GET_CODENAME(NULL, 'ORDSTATUS', a.preval) AS prestatusname	/* 주문상태이전명 */
+			, FN_GET_CODENAME(NULL, 'ORDSTATUS', a.aftval) AS aftstatusname	/* 주문상태이후명 */
+			, DATE_FORMAT(a.regdate, '%Y-%m-%d %H:%i:%s') AS regdate			/* 변경일자 */
+			, a.reguserid	/* 처리자ID */
+		FROM t_comorder_goods_his a
+		WHERE 1 = 1
+		<choose>
+			<when test='orgdelividx != null and orgdelividx != ""'>
+			AND a.orgdelividx = #{orgdelividx}
+			</when>
+			<otherwise>
+			AND a.orgdelividx IN (SELECT orgdelividx FROM t_comorder_goods_deliv WHERE istrash = 'F' AND ordgdidx = #{ordgdidx})
+			</otherwise>
+		</choose>
+		ORDER BY a.regdate DESC, a.aftval DESC
+	</select>
+</mapper>

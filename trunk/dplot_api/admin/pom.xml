@@ -1,0 +1,125 @@
+<?xml version="1.0"?>
+<project xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd" xmlns="http://maven.apache.org/POM/4.0.0"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
+	<modelVersion>4.0.0</modelVersion>
+	<parent>
+		<groupId>com.dplot</groupId>
+		<artifactId>api</artifactId>
+		<version>0.0.1</version>
+	</parent>
+	
+	<artifactId>admin</artifactId>
+	
+	<packaging>war</packaging>
+	
+	<properties>
+		<main.basedir>${project.basedir}/..</main.basedir>
+	</properties>
+	
+	<dependencies>
+		<dependency>
+			<groupId>com.dplot</groupId>
+			<artifactId>common</artifactId>
+			<version>0.0.1</version>
+		</dependency>
+		
+		<!-- MySQL -->
+		<!-- Version upgrade : mysql-connector-java-5.1.38-bin.jar -> mysql-connector-java-8.0.23.jar -->
+		<dependency>
+		    <groupId>com.oracle.mysql</groupId>
+		    <artifactId>mysql</artifactId>
+		    <version>8.0.23</version>
+		    <scope>system</scope> 
+			<systemPath>${project.basedir}/src/main/webapp/WEB-INF/lib/mysql-connector-java-8.0.26.jar</systemPath>
+		</dependency>
+		<!-- MySQL -->
+		
+		<!-- FTP -->
+		<dependency>
+		    <groupId>org.apache.commons</groupId>
+		    <artifactId>net</artifactId>
+		    <version>2.0</version>
+		    <scope>system</scope>
+			<systemPath>${project.basedir}/src/main/webapp/WEB-INF/lib/commons-net-2.0.jar</systemPath>
+		</dependency>
+		<!-- FTP -->
+		
+		<!-- SFTP -->
+		<dependency>
+		    <groupId>com.jcraft.jsch</groupId>
+		    <artifactId>jsch</artifactId>
+		    <version>0.1.53</version>
+		    <scope>system</scope>
+			<systemPath>${project.basedir}/src/main/webapp/WEB-INF/lib/jsch-0.1.53.jar</systemPath>
+		</dependency>
+		<!-- SFTP -->
+		
+		
+		<!-- jwt token -->
+		<dependency>
+		    <groupId>com.nimbusds</groupId>
+		    <artifactId>nimbus-jose-jwt</artifactId>
+		    <version>4.34.1</version>
+		    <scope>system</scope>
+			<systemPath>${project.basedir}/src/main/webapp/WEB-INF/lib/nimbus-jose-jwt-4.34.1.jar</systemPath>
+		</dependency>
+		
+		<!-- KMC본인인증 암호화모듈 -->
+		<dependency>
+		    <groupId>com.icert.comm.secu</groupId>
+		    <artifactId>IcertSecuManger</artifactId>
+		    <version>1.8</version>
+		    <scope>system</scope>
+			<systemPath>${project.basedir}/src/main/webapp/WEB-INF/lib/ICERTSecu_JDK18.jar</systemPath>
+		</dependency>
+		
+		<dependency>
+			<groupId>net.sf</groupId>
+			<artifactId>jazzlib</artifactId>
+			<version>1.0</version>
+			<scope>system</scope>
+			<systemPath>${project.basedir}/src/main/webapp/WEB-INF/lib/jazzlib.jar</systemPath>
+		</dependency>
+		
+		<!-- 이미지리사이징시 에러방지 -->
+		<dependency>
+			<groupId>com.twelvemonkeys.imageio</groupId>
+			<artifactId>imageio-jpeg</artifactId>
+			<version>3.4.2</version>
+		</dependency>
+		<dependency>
+			<groupId>com.twelvemonkeys.imageio</groupId>
+			<artifactId>imageio-metadata</artifactId>
+			<version>3.4.2</version>
+		</dependency>
+		<dependency>
+			<groupId>com.twelvemonkeys.imageio</groupId>
+			<artifactId>imageio-core</artifactId>
+			<version>3.4.2</version>
+		</dependency>
+		<dependency>
+			<groupId>com.twelvemonkeys.imageio</groupId>
+			<artifactId>imageio-core</artifactId>
+			<version>3.4.2</version>
+		</dependency>
+		<dependency>
+			<groupId>com.twelvemonkeys.common</groupId>
+			<artifactId>common-io</artifactId>
+			<version>3.4.2</version>
+		</dependency>
+		<dependency>
+			<groupId>com.twelvemonkeys.common</groupId>
+			<artifactId>common-lang</artifactId>
+			<version>3.4.2</version>
+		</dependency>
+	</dependencies>
+	
+	<build>
+		<finalName>admin</finalName>
+		<resources>
+			<resource>
+                <directory>${main.basedir}/common/src/main/profile/${environment}</directory>
+            </resource>
+		</resources>
+	</build>
+</project>
